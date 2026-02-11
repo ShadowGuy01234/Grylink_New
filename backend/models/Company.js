@@ -22,7 +22,7 @@ const companySchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ['BUYER', 'PENDING'],
+      enum: ['BUYER', 'PENDING', 'NBFC'],
       default: 'PENDING',
     },
 

@@ -4,8 +4,10 @@ const Bill = require('../models/Bill');
 const CwcRf = require('../models/CwcRf');
 const Case = require('../models/Case');
 const ChatMessage = require('../models/ChatMessage');
+const GryLink = require('../models/GryLink');
+const authService = require('./authService');
 const cloudinary = require('../config/cloudinary');
-const { sendStatusUpdate, sendKycRequest } = require('./emailService');
+const { sendStatusUpdate, sendKycRequest, sendOnboardingLink } = require('./emailService');
 
 // Helper: upload buffer to Cloudinary via base64 data URI
 const uploadToCloudinary = async (fileBuffer, mimeType, options = {}) => {
@@ -191,6 +193,54 @@ const verifyDocument = async (docId, decision, notes, opsUserId) => {
   return doc;
 };
 
+// Invite NBFC (Ops onboarding)
+const inviteNbfc = async (data, opsUserId) => {
+  const { companyName, ownerName, email, phone, address } = data;
+
+  // Check if company already exists
+  const existing = await Company.findOne({ email });
+  if (existing) throw new Error('A company with this email already exists');
+
+  const company = new Company({
+    companyName,
+    ownerName,
+    email,
+    phone,
+    address,
+    salesAgentId: opsUserId, // Ops user acts as sales agent here
+    role: 'NBFC', // Explicitly set role
+    status: 'LEAD_CREATED',
+    statusHistory: [{ status: 'LEAD_CREATED', changedBy: opsUserId }],
+  });
+  await company.save();
+
+  // Create NBFC user
+  const user = await authService.createNbfcUser({
+    name: ownerName,
+    email,
+    phone,
+    companyId: company._id,
+  });
+  company.userId = user._id;
+  await company.save();
+
+  // Generate onboarding link
+  const gryLink = new GryLink({
+    companyId: company._id,
+    salesAgentId: opsUserId,
+    email,
+  });
+  await gryLink.save();
+
+  // Send onboarding email — uses grylink-portal which handles password setup
+  // and then redirects to partner-portal after onboarding is complete
+  const baseUrl = process.env.GRYLINK_FRONTEND_URL || 'http://localhost:5174';
+  const link = `${baseUrl}/onboarding/${gryLink.token}`;
+  await sendOnboardingLink(email, ownerName, link);
+
+  return { company, gryLink };
+};
+
 module.exports = {
   verifyCompanyDocs,
   verifyBill,
@@ -201,4 +251,5 @@ module.exports = {
   sendChatMessage,
   getCompanyDocuments,
   verifyDocument,
+  inviteNbfc,
 };

@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, trim: true },
     role: {
       type: String,
-      enum: ['sales', 'epc', 'subcontractor', 'ops', 'rmt', 'admin'],
+      enum: ['sales', 'epc', 'subcontractor', 'ops', 'rmt', 'admin', 'nbfc'],
       required: true,
     },
     isActive: { type: Boolean, default: true },

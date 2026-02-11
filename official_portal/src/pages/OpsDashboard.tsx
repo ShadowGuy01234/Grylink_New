@@ -112,7 +112,7 @@ const OpsDashboard = () => {
 
       {/* Tabs */}
       <div className="tabs">
-        {['companies', 'bills', 'kyc', 'cases'].map((tab) => (
+        {['companies', 'bills', 'kyc', 'cases', 'nbfc'].map((tab) => (
           <button key={tab} className={`tab ${activeTab === tab ? 'active' : ''}`}
             onClick={() => setActiveTab(tab)}>
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -243,6 +243,51 @@ const OpsDashboard = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* NBFC Tab */}
+      {activeTab === 'nbfc' && (
+        <div className="section" style={{ padding: '20px' }}>
+          <h2>Invite NBFC</h2>
+          <div className="card" style={{ maxWidth: '600px', padding: '24px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const form = e.target as HTMLFormElement;
+              const formData = new FormData(form);
+              const data = Object.fromEntries(formData.entries());
+              
+              try {
+                await opsApi.inviteNbfc(data);
+                toast.success('NBFC invited successfully!');
+                form.reset();
+              } catch (err: any) {
+                toast.error(err.response?.data?.error || 'Failed to invite NBFC');
+              }
+            }}>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Company Name *</label>
+                <input name="companyName" required placeholder="NBFC Name" className="form-control" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              </div>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Owner Name *</label>
+                <input name="ownerName" required placeholder="Contact Person" className="form-control" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              </div>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Email *</label>
+                <input name="email" type="email" required placeholder="nbfc@example.com" className="form-control" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              </div>
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Phone *</label>
+                <input name="phone" required placeholder="+91..." className="form-control" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              </div>
+              <div className="form-group" style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>Address *</label>
+                <input name="address" required placeholder="Office Address" className="form-control" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+              </div>
+              <button type="submit" className="btn-primary" style={{ width: '100%', padding: '12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>Send Invitation</button>
+            </form>
           </div>
         </div>
       )}

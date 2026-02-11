@@ -78,50 +78,60 @@ const createEpcUser = async ({ name, email, phone, companyId }) => {
   return user;
 };
 
-<<<<<<< HEAD
-// Register Sub-Contractor (Step 9 - matches EPC-added leads)
-const registerSubcontractor = async ({ name, email, password, phone, companyName }) => {
-  const SubContractor = require('../models/SubContractor');
-
-  // Check if user already exists
+// Create NBFC user (no password - set later via GryLink)
+const createNbfcUser = async ({ name, email, phone, companyId }) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw new Error('User with this email already exists');
+    throw new Error("User with this email already exists");
   }
 
-  // Check if this email matches an EPC-added lead
+  const user = new User({
+    name,
+    email,
+    phone,
+    role: "nbfc",
+    companyId,
+  });
+  await user.save();
+  return user;
+};
+
+// Register Sub-Contractor (Step 9 - matches EPC-added leads)
+const registerSubcontractor = async ({ name, email, password, phone, companyName }) => {
+  const SubContractor = require("../models/SubContractor");
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error("User with this email already exists");
+  }
+
   let subContractor = await SubContractor.findOne({ email: email.toLowerCase() });
 
   if (!subContractor) {
-    // No matching lead - we can still allow registration but flag for sales follow-up
-    // For now, throw error - sales must add them first through EPC
-    throw new Error('No matching sub-contractor lead found. Please contact your EPC company to add you to their vendor list first.');
+    throw new Error("No matching sub-contractor lead found. Please contact your EPC company to add you to their vendor list first.");
   }
 
-  // Create user account
   const user = new User({
     name,
     email,
     password,
     phone,
-    role: 'subcontractor',
+    role: "subcontractor",
   });
   await user.save();
 
-  // Link user to sub-contractor record and update status
   subContractor.userId = user._id;
   subContractor.contactName = subContractor.contactName || name;
   subContractor.companyName = subContractor.companyName || companyName;
   subContractor.phone = subContractor.phone || phone;
-  subContractor.status = 'PROFILE_INCOMPLETE';
+  subContractor.status = "PROFILE_INCOMPLETE";
   subContractor.statusHistory.push({
-    status: 'PROFILE_INCOMPLETE',
+    status: "PROFILE_INCOMPLETE",
     changedAt: new Date(),
-    notes: 'User account created',
+    notes: "User account created",
   });
   await subContractor.save();
 
-  // Update user with subContractorId reference
   user.subContractorId = subContractor._id;
   await user.save();
 
@@ -141,14 +151,10 @@ const registerSubcontractor = async ({ name, email, password, phone, companyName
       linkedEpcId: subContractor.linkedEpcId,
     },
   };
-=======
+};
+
 // Create SubContractor user (no password - set later via GryLink)
-const createSubContractorUser = async ({
-  name,
-  email,
-  phone,
-  subContractorId,
-}) => {
+const createSubContractorUser = async ({ name, email, phone, subContractorId }) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return existingUser; // SC may already have an account
@@ -163,7 +169,6 @@ const createSubContractorUser = async ({
   });
   await user.save();
   return user;
->>>>>>> 933bf83b1733c50c23edb35d5c3bcd8f848cc6c0
 };
 
 module.exports = {
@@ -172,9 +177,7 @@ module.exports = {
   generateToken,
   setPasswordViaGryLink,
   createEpcUser,
-<<<<<<< HEAD
+  createNbfcUser,
   registerSubcontractor,
-=======
   createSubContractorUser,
->>>>>>> 933bf83b1733c50c23edb35d5c3bcd8f848cc6c0
 };

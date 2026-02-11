@@ -5,7 +5,7 @@
   "description": "GryLink Onboarding Portal for EPC & NBFC (link.gryork.com)",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5174",
+    "dev": "vite --port 5177",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
