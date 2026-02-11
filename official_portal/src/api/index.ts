@@ -61,6 +61,9 @@ export const opsApi = {
   getCompanyDocuments: (id: string) => api.get(`/ops/companies/${id}/documents`),
   verifyDocument: (id: string, data: { decision: string; notes?: string }) =>
     api.post(`/ops/documents/${id}/verify`, data),
+  
+  // NBFC
+  inviteNbfc: (data: any) => api.post('/ops/nbfc/invite', data),
 };
 
 // Cases

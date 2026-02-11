@@ -78,10 +78,29 @@ const createEpcUser = async ({ name, email, phone, companyId }) => {
   return user;
 };
 
+// Create NBFC user (no password - set later via GryLink)
+const createNbfcUser = async ({ name, email, phone, companyId }) => {
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }
+
+  const user = new User({
+    name,
+    email,
+    phone,
+    role: 'nbfc',
+    companyId,
+  });
+  await user.save();
+  return user;
+};
+
 module.exports = {
   register,
   login,
   generateToken,
   setPasswordViaGryLink,
   createEpcUser,
+  createNbfcUser,
 };
