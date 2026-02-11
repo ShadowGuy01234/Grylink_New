@@ -14,10 +14,21 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: [
-    process.env.GRYLINK_FRONTEND_URL || 'http://localhost:5173',
-    process.env.OFFICIAL_PORTAL_URL || 'http://localhost:5174',
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (e.g. curl, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    // In development, allow all localhost origins
+    if (process.env.NODE_ENV !== 'production' && origin.match(/^http:\/\/localhost:\d+$/)) {
+      return callback(null, true);
+    }
+    // In production, check against env vars
+    const allowed = [
+      process.env.GRYLINK_FRONTEND_URL,
+      process.env.OFFICIAL_PORTAL_URL,
+    ].filter(Boolean);
+    if (allowed.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 app.use(express.json());
