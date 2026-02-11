@@ -3,9 +3,16 @@
   "version": "1.0.0",
   "description": "Gryork Platform Monorepo",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\" \"npm run dev --prefix official_portal\"",
-    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend && npm install --prefix official_portal",
-    "build:all": "npm run build --prefix backend && npm run build --prefix frontend && npm run build --prefix official_portal"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:subcontractor\" \"npm run dev:grylink\" \"npm run dev:partner\" \"npm run dev:admin\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:public": "npm run dev --prefix Gryork-public",
+    "dev:subcontractor": "npm run dev --prefix subcontractor-portal",
+    "dev:grylink": "npm run dev --prefix grylink-portal",
+    "dev:partner": "npm run dev --prefix partner-portal",
+    "dev:admin": "npm run dev --prefix official_portal",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:public\" \"npm run dev:subcontractor\" \"npm run dev:grylink\" \"npm run dev:partner\" \"npm run dev:admin\"",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix Gryork-public && npm install --prefix subcontractor-portal && npm install --prefix grylink-portal && npm install --prefix partner-portal && npm install --prefix official_portal",
+    "build:all": "npm run build --prefix Gryork-public && npm run build --prefix subcontractor-portal && npm run build --prefix grylink-portal && npm run build --prefix partner-portal && npm run build --prefix official_portal"
   },
   "keywords": [],
   "author": "",

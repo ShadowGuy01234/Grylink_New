@@ -39,6 +39,41 @@
 
 ---
 
+## 🌐 Multi-Domain Architecture
+
+The platform is deployed across multiple subdomains, each serving a specific purpose:
+
+| Domain | Portal | Purpose | Port (Dev) |
+|--------|--------|---------|------------|
+| `gryork.com` | Gryork-public | Public marketing website | 5176 |
+| `app.gryork.com` | subcontractor-portal | Sub-contractor registration & dashboard | 5173 |
+| `link.gryork.com` | grylink-portal | Magic link onboarding for EPC/NBFC | 5174 |
+| `partner.gryork.com` | partner-portal | EPC & NBFC partner dashboard | 5175 |
+| `admin.gryork.com` | official_portal | Internal admin (Sales, Ops, RMT) | 5177 |
+
+### Portal Directory Structure
+```
+├── Gryork-public/          # Next.js public website
+├── subcontractor-portal/   # React + Vite (sub-contractors)
+├── grylink-portal/         # React + Vite (magic link onboarding)
+├── partner-portal/         # React + Vite (EPC/NBFC)
+├── official_portal/        # React + Vite (internal admin)
+└── backend/                # Express.js API server
+```
+
+### Authentication Flow by Portal
+
+1. **Public Site** → Links to appropriate portal login
+2. **GryLink Portal** → Token-based onboarding → Redirects to partner-portal
+3. **Partner Portal** → JWT auth, restricted to `epc`/`nbfc` roles
+4. **SubContractor Portal** → JWT auth, restricted to `subcontractor` role
+5. **Admin Portal** → JWT auth, restricted to `sales`/`ops`/`admin` roles
+
+### CORS Configuration
+Backend accepts requests from all `*.gryork.com` subdomains in production.
+
+---
+
 ## 👥 User Roles & Permissions
 
 ### 1. Sales Team
