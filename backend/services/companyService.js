@@ -5,20 +5,13 @@ const XLSX = require('xlsx');
 const cloudinary = require('../config/cloudinary');
 const { sendStatusUpdate } = require('./emailService');
 
-// Helper: upload buffer to Cloudinary
-const uploadToCloudinary = (fileBuffer, options = {}) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: options.folder || 'gryork/documents',
-        resource_type: options.resource_type || 'auto',
-      },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    stream.end(fileBuffer);
+// Helper: upload buffer to Cloudinary via base64 data URI
+const uploadToCloudinary = async (fileBuffer, mimeType, options = {}) => {
+  const b64 = Buffer.from(fileBuffer).toString('base64');
+  const dataUri = `data:${mimeType || 'application/octet-stream'};base64,${b64}`;
+  return cloudinary.uploader.upload(dataUri, {
+    folder: options.folder || 'gryork/documents',
+    resource_type: options.resource_type || 'auto',
   });
 };
 
@@ -32,7 +25,7 @@ const uploadDocuments = async (companyId, files, documentTypes, userId) => {
     const file = files[i];
 
     // Upload to Cloudinary
-    const cloudResult = await uploadToCloudinary(file.buffer, {
+    const cloudResult = await uploadToCloudinary(file.buffer, file.mimetype, {
       folder: 'gryork/documents',
     });
 

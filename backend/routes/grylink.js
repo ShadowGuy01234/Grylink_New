@@ -32,7 +32,7 @@ router.post('/set-password', async (req, res) => {
     const result = await grylinkService.setPassword(token, password);
     res.json({
       message: 'Password set successfully',
-      user: { id: result.user._id, name: result.user.name, email: result.user.email },
+      user: { id: result.user._id, name: result.user.name, email: result.user.email, role: result.user.role, companyId: result.user.companyId },
       token: result.token,
     });
   } catch (error) {
