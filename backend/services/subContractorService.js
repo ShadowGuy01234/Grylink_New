@@ -200,12 +200,62 @@ const getDashboard = async (userId) => {
 
   if (!subContractor) throw new Error('Sub-contractor not found');
 
-  const [bills, cwcRfs] = await Promise.all([
+  const Case = require('../models/Case');
+  const Bid = require('../models/Bid');
+
+  const [bills, cwcRfs, cases] = await Promise.all([
     Bill.find({ subContractorId: subContractor._id }).sort({ createdAt: -1 }),
     CwcRf.find({ subContractorId: subContractor._id }).sort({ createdAt: -1 }),
+    Case.find({ subContractorId: subContractor._id })
+      .populate('billId', 'billNumber amount')
+      .sort({ createdAt: -1 }),
   ]);
 
-  return { subContractor, bills, cwcRfs };
+  // Get bids for this sub-contractor's cases
+  const caseIds = cases.map(c => c._id);
+  const bids = await Bid.find({ caseId: { $in: caseIds } })
+    .populate('epcId', 'companyName')
+    .sort({ createdAt: -1 });
+
+  return { subContractor, bills, cwcRfs, cases, bids };
+};
+
+// Get incoming bids for sub-contractor
+const getIncomingBids = async (userId) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error('Sub-contractor not found');
+
+  const Case = require('../models/Case');
+  const Bid = require('../models/Bid');
+
+  const cases = await Case.find({ subContractorId: subContractor._id });
+  const caseIds = cases.map(c => c._id);
+
+  const bids = await Bid.find({ caseId: { $in: caseIds } })
+    .populate('epcId', 'companyName')
+    .populate('nbfcId', 'companyName')
+    .populate({
+      path: 'caseId',
+      populate: { path: 'billId', select: 'billNumber amount' }
+    })
+    .sort({ createdAt: -1 });
+
+  return bids;
+};
+
+// Get cases for sub-contractor
+const getCases = async (userId) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error('Sub-contractor not found');
+
+  const Case = require('../models/Case');
+  
+  const cases = await Case.find({ subContractorId: subContractor._id })
+    .populate('billId', 'billNumber amount fileUrl fileName')
+    .populate('linkedEpcId', 'companyName')
+    .sort({ createdAt: -1 });
+
+  return cases;
 };
 
 module.exports = {
@@ -214,4 +264,6 @@ module.exports = {
   submitCwcRf,
   respondToBid,
   getDashboard,
+  getIncomingBids,
+  getCases,
 };

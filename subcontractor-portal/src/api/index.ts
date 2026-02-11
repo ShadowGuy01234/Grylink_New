@@ -29,6 +29,11 @@ export const scApi = {
   }),
   getCases: () => api.get('/subcontractor/cases'),
   getBills: () => api.get('/subcontractor/bills'),
+  getBids: () => api.get('/subcontractor/bids'),
+  respondToBid: (bidId: string, data: { decision: string; counterOffer?: any }) => 
+    api.post(`/subcontractor/bids/${bidId}/respond`, data),
+  submitCwc: (data: { billId: string; paymentReference?: string }) => 
+    api.post('/subcontractor/cwc', data),
 };
 
 export default api;

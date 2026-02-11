@@ -127,9 +127,26 @@ const getBidsForCase = async (caseId) => {
     .populate('epcId', 'companyName');
 };
 
+// Get my bids (for EPC/NBFC)
+const getMyBids = async (companyId, role) => {
+  const query = role === 'nbfc' ? { nbfcId: companyId } : { epcId: companyId };
+  return Bid.find(query)
+    .sort({ createdAt: -1 })
+    .populate('epcId', 'companyName')
+    .populate('nbfcId', 'companyName')
+    .populate({
+      path: 'caseId',
+      populate: [
+        { path: 'subContractorId', select: 'companyName ownerName' },
+        { path: 'billId', select: 'billNumber amount' }
+      ]
+    });
+};
+
 module.exports = {
   placeBid,
   negotiate,
   lockCommercial,
   getBidsForCase,
+  getMyBids,
 };

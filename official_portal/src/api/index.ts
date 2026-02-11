@@ -41,6 +41,7 @@ export const salesApi = {
   getLeads: () => api.get('/sales/leads'),
   getSubContractors: () => api.get('/sales/subcontractors'),
   getDashboard: () => api.get('/sales/dashboard'),
+  markContacted: (id: string, notes?: string) => api.patch(`/sales/subcontractors/${id}/contacted`, { notes }),
 };
 
 // Ops

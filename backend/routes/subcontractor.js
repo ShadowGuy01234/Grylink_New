@@ -74,4 +74,53 @@ router.get('/dashboard', authenticate, authorize('subcontractor'), async (req, r
   }
 });
 
+// GET /api/subcontractor/profile - Get profile (alias for dashboard)
+router.get('/profile', authenticate, authorize('subcontractor'), async (req, res) => {
+  try {
+    const data = await subContractorService.getDashboard(req.user._id);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/subcontractor/bids - Get incoming bids (Step 18)
+router.get('/bids', authenticate, authorize('subcontractor'), async (req, res) => {
+  try {
+    const bids = await subContractorService.getIncomingBids(req.user._id);
+    res.json(bids);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/subcontractor/cases - Get cases
+router.get('/cases', authenticate, authorize('subcontractor'), async (req, res) => {
+  try {
+    const cases = await subContractorService.getCases(req.user._id);
+    res.json(cases);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/subcontractor/bill - Upload bill (single file)
+router.post(
+  '/bill',
+  authenticate,
+  authorize('subcontractor'),
+  uploadBills.array('bills', 10),
+  async (req, res) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'At least one bill file is required' });
+      }
+      const bills = await subContractorService.uploadBill(req.user._id, req.files, req.body);
+      res.status(201).json(bills);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
 module.exports = router;

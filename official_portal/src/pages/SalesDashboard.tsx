@@ -7,6 +7,8 @@ const SalesDashboard = () => {
   const [subContractors, setSubContractors] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [contactModal, setContactModal] = useState<any>(null);
+  const [contactNotes, setContactNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     companyName: '', ownerName: '', email: '', phone: '', address: ''
@@ -48,6 +50,19 @@ const SalesDashboard = () => {
     }
   };
 
+  const handleMarkContacted = async () => {
+    if (!contactModal) return;
+    try {
+      await salesApi.markContacted(contactModal._id, contactNotes);
+      toast.success('Sub-contractor marked as contacted');
+      setContactModal(null);
+      setContactNotes('');
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to update');
+    }
+  };
+
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
       LEAD_CREATED: 'badge-yellow',
@@ -61,7 +76,16 @@ const SalesDashboard = () => {
     return <span className={`badge ${colors[status] || 'badge-gray'}`}>{status}</span>;
   };
 
+  const contactedBadge = (sc: any) => {
+    if (sc.contactedAt) {
+      return <span className="badge badge-green">✓ Contacted</span>;
+    }
+    return <span className="badge badge-yellow">Not contacted</span>;
+  };
+
   if (loading) return <div className="page-loading">Loading dashboard...</div>;
+
+  const pendingContact = subContractors.filter(sc => !sc.contactedAt);
 
   return (
     <div className="dashboard">
@@ -86,9 +110,9 @@ const SalesDashboard = () => {
           <h3>{subContractors.length}</h3>
           <p>Sub-Contractors</p>
         </div>
-        <div className="stat-card">
-          <h3>{leads.filter(l => l.status === 'LEAD_CREATED').length}</h3>
-          <p>Pending Leads</p>
+        <div className="stat-card highlight">
+          <h3>{pendingContact.length}</h3>
+          <p>Pending Contact</p>
         </div>
       </div>
 
@@ -138,6 +162,8 @@ const SalesDashboard = () => {
                 <th>Email</th>
                 <th>Linked EPC</th>
                 <th>Status</th>
+                <th>Contact Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -148,10 +174,21 @@ const SalesDashboard = () => {
                   <td>{sc.email}</td>
                   <td>{sc.linkedEpcId?.companyName || '—'}</td>
                   <td>{statusBadge(sc.status)}</td>
+                  <td>{contactedBadge(sc)}</td>
+                  <td>
+                    {!sc.contactedAt && (
+                      <button className="btn-sm btn-primary" onClick={() => setContactModal(sc)}>
+                        📞 Mark Contacted
+                      </button>
+                    )}
+                    {sc.contactedAt && sc.contactNotes && (
+                      <span className="notes-hint" title={sc.contactNotes}>📝 Has notes</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {subContractors.length === 0 && (
-                <tr><td colSpan={5} className="empty-state">No sub-contractors yet</td></tr>
+                <tr><td colSpan={7} className="empty-state">No sub-contractors yet</td></tr>
               )}
             </tbody>
           </table>
@@ -196,6 +233,32 @@ const SalesDashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Modal */}
+      {contactModal && (
+        <div className="modal-overlay" onClick={() => setContactModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Mark as Contacted</h2>
+            <p>Sub-Contractor: <strong>{contactModal.companyName || contactModal.email}</strong></p>
+            <p>Email: {contactModal.email}</p>
+            {contactModal.phone && <p>Phone: {contactModal.phone}</p>}
+            <div className="form-group">
+              <label>Contact Notes (optional)</label>
+              <textarea
+                placeholder="Notes from the call..."
+                value={contactNotes}
+                onChange={(e) => setContactNotes(e.target.value)}
+              />
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-secondary" onClick={() => setContactModal(null)}>Cancel</button>
+              <button type="button" className="btn-primary" onClick={handleMarkContacted}>
+                Mark as Contacted
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -33,6 +33,16 @@ router.get('/subcontractors', authenticate, authorize('sales', 'admin'), async (
   }
 });
 
+// PATCH /api/sales/subcontractors/:id/contacted - Mark sub-contractor as contacted
+router.patch('/subcontractors/:id/contacted', authenticate, authorize('sales', 'admin'), async (req, res) => {
+  try {
+    const result = await salesService.markSubContractorContacted(req.params.id, req.user._id, req.body.notes);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // GET /api/sales/dashboard - Get dashboard stats
 router.get('/dashboard', authenticate, authorize('sales', 'admin'), async (req, res) => {
   try {

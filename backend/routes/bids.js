@@ -59,4 +59,14 @@ router.get('/case/:caseId', authenticate, async (req, res) => {
   }
 });
 
+// GET /api/bids/my - Get my bids (for EPC/NBFC)
+router.get('/my', authenticate, authorize('epc', 'nbfc'), async (req, res) => {
+  try {
+    const bids = await bidService.getMyBids(req.user.companyId, req.user.role);
+    res.json(bids);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
