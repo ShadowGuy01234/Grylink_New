@@ -446,7 +446,7 @@ export default function ForSubcontractorsPage() {
               transition={{ delay: 0.2 }}
             >
               <a
-                href="/contact"
+                href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173"}
                 className="btn-primary bg-white text-accent-700 hover:bg-gray-100"
               >
                 Get Started Today

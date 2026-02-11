@@ -6,99 +6,124 @@ Get the entire Gryork platform up and running in minutes.
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js** 16+ and npm (or yarn)
+- **Node.js** 18+ and npm (or yarn)
 - **MongoDB** 5.0+ (local or MongoDB Atlas)
 - **Git**
 
-## 🎯 Quick Setup (5 minutes)
+## 🌐 Platform Architecture
 
-### 1. Clone the Repository
+| Portal | Directory | Port | URL (Dev) | Purpose |
+|--------|-----------|------|-----------|---------|
+| Public Site | `Gryork-public/` | 5176 | http://localhost:5176 | Marketing website |
+| SubContractor | `subcontractor-portal/` | 5173 | http://localhost:5173 | Sub-contractor dashboard |
+| GryLink | `grylink-portal/` | 5174 | http://localhost:5174 | Magic link onboarding |
+| Partner | `partner-portal/` | 5175 | http://localhost:5175 | EPC/NBFC dashboard |
+| Admin | `official_portal/` | 5177 | http://localhost:5177 | Internal admin |
+| Backend | `backend/` | 5000 | http://localhost:5000 | API server |
 
-```bash
-cd /Users/apple/Desktop/Gryork\ New/Grylink
-```
+## 🎯 Quick Setup
 
-### 2. Set Up Backend
+### 1. Set Up Backend
 
-```bash
+```powershell
 cd backend
-
-# Install dependencies
 npm install
 
-# Create .env file
-cat > .env << EOF
-# Server Configuration
-PORT=5000
-NODE_ENV=development
+# Copy .env.example to .env and configure
+copy .env.example .env
+# Edit .env with your MongoDB URI, Cloudinary keys, etc.
 
-# Database
-MONGODB_URI=mongodb://localhost:27017/gryork
-
-# JWT Secret (generate a random string)
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-
-# Cloudinary Configuration (for file uploads)
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
-
-# Email Configuration (optional for development)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASSWORD=your-app-password
-
-# Frontend URLs
-GRYLINK_FRONTEND_URL=http://localhost:5173
-OFFICIAL_PORTAL_URL=http://localhost:5174
-EOF
-
-# Start backend server
 npm run dev
 ```
 
-Backend will run on **http://localhost:5000**
+Backend API runs on **http://localhost:5000**
 
-### 3. Set Up Frontend (GryLink Portal)
+### 2. Set Up Portals (Choose what you need)
 
-Open a new terminal:
-
-```bash
-cd frontend
-
-# Install dependencies
+**SubContractor Portal (port 5173):**
+```powershell
+cd subcontractor-portal
 npm install
-
-# Create .env file
-cat > .env << EOF
-VITE_API_URL=http://localhost:5000/api
-EOF
-
-# Start frontend
 npm run dev
 ```
 
-Frontend will run on **http://localhost:5173**
+**GryLink Onboarding Portal (port 5174):**
+```powershell
+cd grylink-portal
+npm install
+npm run dev
+```
 
-### 4. Set Up Official Portal (Optional)
+**Partner Portal - EPC/NBFC (port 5175):**
+```powershell
+cd partner-portal
+npm install
+npm run dev
+```
 
-Open another terminal:
+**Public Website (port 5176):**
+```powershell
+cd Gryork-public
+npm install
+npm run dev
+```
 
-```bash
+**Admin Portal (port 5177):**
+```powershell
 cd official_portal
-
-# Install dependencies
 npm install
-
-# Create .env file
-cat > .env << EOF
-VITE_API_URL=http://localhost:5000/api
-EOF
-
-# Start portal
 npm run dev
 ```
+
+### 3. Environment Variables
+
+Each portal needs a `.env` file with at minimum:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_PUBLIC_SITE_URL=http://localhost:5176
+```
+
+See `.env.example` in each directory for full configuration.
+
+---
+
+## 🔑 Test Accounts
+
+After running the seed script (`npm run seed` in backend/), use these accounts:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@gryork.com | password123 |
+| Sales | sales@gryork.com | password123 |
+| Ops | ops@gryork.com | password123 |
+| EPC | epc@example.com | password123 |
+| SubContractor | sc@example.com | password123 |
+
+---
+
+## 📱 User Flows
+
+### Sub-Contractor Flow
+1. Go to http://localhost:5173 (subcontractor-portal)
+2. Register new account or login
+3. Complete profile
+4. Upload bills
+5. Track case status
+
+### EPC/NBFC Partner Flow
+1. Receive GryLink email
+2. Go to http://localhost:5174 (grylink-portal)
+3. Complete onboarding → Redirected to partner-portal
+4. Login at http://localhost:5175
+5. Upload documents, manage sub-contractors, place bids
+
+### Admin Flow
+1. Go to http://localhost:5177 (official_portal)
+2. Login with sales/ops/admin credentials
+3. Manage leads, verify documents, process cases
+
+---
 
 Official Portal will run on **http://localhost:5174**
 
