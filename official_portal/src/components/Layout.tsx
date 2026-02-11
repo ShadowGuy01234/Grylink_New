@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HiOutlineLogout, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineUserGroup, HiOutlineChartBar } from 'react-icons/hi';
+import { HiOutlineLogout, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineUserGroup, HiOutlineChartBar, HiOutlineCog } from 'react-icons/hi';
 
 const Layout = () => {
   const { user, logout } = useAuth();
@@ -13,6 +13,9 @@ const Layout = () => {
   };
 
   const navItems = [
+    ...(user?.role === 'admin'
+      ? [{ to: '/admin', icon: <HiOutlineCog />, label: 'Admin' }]
+      : []),
     ...(user?.role === 'sales' || user?.role === 'admin'
       ? [{ to: '/sales', icon: <HiOutlineChartBar />, label: 'Sales' }]
       : []),

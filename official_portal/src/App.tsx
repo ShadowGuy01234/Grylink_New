@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import SalesDashboard from './pages/SalesDashboard';
 import OpsDashboard from './pages/OpsDashboard';
 import CasesPage from './pages/CasesPage';
+import AdminDashboard from './pages/AdminDashboard';
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -28,6 +29,7 @@ const AppRoutes = () => {
 
   // Logged in — role-based dashboard routes
   const homeRoute =
+    user.role === 'admin' ? '/admin' :
     user.role === 'sales' ? '/sales' :
     user.role === 'ops' ? '/ops' :
     '/cases';
@@ -41,6 +43,9 @@ const AppRoutes = () => {
         } />
         <Route path="ops" element={
           ['ops', 'admin'].includes(user.role) ? <OpsDashboard /> : <Navigate to={homeRoute} replace />
+        } />
+        <Route path="admin" element={
+          user.role === 'admin' ? <AdminDashboard /> : <Navigate to={homeRoute} replace />
         } />
         <Route path="cases" element={<CasesPage />} />
       </Route>

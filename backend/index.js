@@ -52,6 +52,7 @@ app.use('/api/ops', require('./routes/ops'));
 app.use('/api/cases', require('./routes/cases'));
 app.use('/api/bids', require('./routes/bids'));
 app.use('/api/grylink', require('./routes/grylink'));
+app.use('/api/admin', require('./routes/admin'));
 
 // 404 handler
 app.use((req, res) => {

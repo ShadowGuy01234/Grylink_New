@@ -74,4 +74,18 @@ export const bidsApi = {
   getBidsForCase: (caseId: string) => api.get(`/bids/case/${caseId}`),
 };
 
+// Admin - User Management
+export const adminApi = {
+  getUsers: (params?: { role?: string; isActive?: boolean; search?: string }) => 
+    api.get('/admin/users', { params }),
+  getUser: (id: string) => api.get(`/admin/users/${id}`),
+  createUser: (data: { name: string; email: string; password: string; phone?: string; role: string }) => 
+    api.post('/admin/users', data),
+  updateUser: (id: string, data: { name?: string; email?: string; phone?: string; role?: string; isActive?: boolean; password?: string }) => 
+    api.put(`/admin/users/${id}`, data),
+  deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+  restoreUser: (id: string) => api.post(`/admin/users/${id}/restore`),
+  getStats: () => api.get('/admin/stats'),
+};
+
 export default api;
