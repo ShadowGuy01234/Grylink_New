@@ -63,6 +63,29 @@ const getSubContractorLeads = async (salesAgentId) => {
     .populate('userId', 'name email');
 };
 
+// Mark sub-contractor as contacted
+const markSubContractorContacted = async (subContractorId, salesAgentId, notes) => {
+  const subContractor = await SubContractor.findById(subContractorId);
+  if (!subContractor) throw new Error('Sub-contractor not found');
+  
+  // Verify sales agent owns this SC
+  if (subContractor.salesAgentId?.toString() !== salesAgentId.toString()) {
+    throw new Error('Unauthorized to update this sub-contractor');
+  }
+
+  subContractor.contactedAt = new Date();
+  subContractor.contactedBy = salesAgentId;
+  subContractor.contactNotes = notes || '';
+  subContractor.statusHistory.push({
+    status: 'CONTACTED',
+    changedBy: salesAgentId,
+    notes,
+  });
+  await subContractor.save();
+
+  return subContractor;
+};
+
 // Get dashboard stats
 const getDashboardStats = async (salesAgentId) => {
   const [companies, subContractors] = await Promise.all([
@@ -83,5 +106,6 @@ module.exports = {
   createCompanyLead,
   getLeads,
   getSubContractorLeads,
+  markSubContractorContacted,
   getDashboardStats,
 };

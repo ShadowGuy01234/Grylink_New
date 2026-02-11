@@ -10,6 +10,7 @@ const DashboardPage = () => {
   const [profile, setProfile] = useState<any>(null);
   const [subContractors, setSubContractors] = useState<any[]>([]);
   const [cases, setCases] = useState<any[]>([]);
+  const [myBids, setMyBids] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('documents');
 
@@ -27,16 +28,23 @@ const DashboardPage = () => {
   const [bidModal, setBidModal] = useState<any>(null);
   const [bidForm, setBidForm] = useState({ bidAmount: '', fundingDurationDays: '' });
 
+  // Negotiation state
+  const [negotiatingBid, setNegotiatingBid] = useState<string | null>(null);
+  const [counterOffer, setCounterOffer] = useState({ amount: '', duration: '', message: '' });
+
   const fetchData = async () => {
     try {
-      const [profileRes, scRes, casesRes] = await Promise.all([
+      const promises: Promise<any>[] = [
         companyApi.getProfile(),
         companyApi.getSubContractors(),
         casesApi.getCases(),
-      ]);
+        bidsApi.getMyBids(),
+      ];
+      const [profileRes, scRes, casesRes, bidsRes] = await Promise.all(promises);
       setProfile(profileRes.data);
       setSubContractors(scRes.data);
       setCases(casesRes.data);
+      setMyBids(bidsRes.data || []);
     } catch {
       toast.error('Failed to load data');
     } finally {
@@ -123,18 +131,47 @@ const DashboardPage = () => {
     }
   };
 
+  const handleNegotiate = async (bidId: string) => {
+    try {
+      await bidsApi.negotiate(bidId, {
+        amount: parseFloat(counterOffer.amount),
+        duration: parseInt(counterOffer.duration) || undefined,
+        message: counterOffer.message,
+      });
+      toast.success('Counter-offer sent!');
+      setNegotiatingBid(null);
+      setCounterOffer({ amount: '', duration: '', message: '' });
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Negotiation failed');
+    }
+  };
+
+  const handleLockBid = async (bidId: string) => {
+    if (!confirm('Are you sure you want to lock this commercial agreement? This action cannot be undone.')) return;
+    try {
+      await bidsApi.lockBid(bidId);
+      toast.success('Commercial agreement locked!');
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Lock failed');
+    }
+  };
+
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
       LEAD_CREATED: 'badge-yellow', CREDENTIALS_CREATED: 'badge-blue', DOCS_SUBMITTED: 'badge-purple',
       ACTION_REQUIRED: 'badge-red', ACTIVE: 'badge-green', pending: 'badge-yellow', verified: 'badge-green',
       rejected: 'badge-red', READY_FOR_COMPANY_REVIEW: 'badge-purple', EPC_VERIFIED: 'badge-green',
-      BID_PLACED: 'badge-blue', COMMERCIAL_LOCKED: 'badge-green',
+      BID_PLACED: 'badge-blue', COMMERCIAL_LOCKED: 'badge-green', NEGOTIATION_IN_PROGRESS: 'badge-yellow',
+      SUBMITTED: 'badge-blue', ACCEPTED: 'badge-green', REJECTED: 'badge-red',
     };
     return <span className={`badge ${colors[status] || 'badge-gray'}`}>{status.replace(/_/g, ' ')}</span>;
   };
 
   const isEpc = user?.role === 'epc';
   const isNbfc = user?.role === 'nbfc';
+  const activeBids = myBids.filter((b: any) => ['SUBMITTED', 'NEGOTIATION_IN_PROGRESS'].includes(b.status));
 
   if (loading) return <div className="page-loading">Loading dashboard...</div>;
 
@@ -161,11 +198,10 @@ const DashboardPage = () => {
         <button className={`tab ${activeTab === 'cases' ? 'active' : ''}`} onClick={() => setActiveTab('cases')}>
           📋 Cases & Bills
         </button>
-        {isNbfc && (
-          <button className={`tab ${activeTab === 'bids' ? 'active' : ''}`} onClick={() => setActiveTab('bids')}>
-            💰 My Bids
-          </button>
-        )}
+        <button className={`tab ${activeTab === 'bids' ? 'active' : ''}`} onClick={() => setActiveTab('bids')}>
+          💰 My Bids
+          {activeBids.length > 0 && <span className="tab-badge">{activeBids.length}</span>}
+        </button>
       </div>
 
       {/* Documents Tab (EPC only) */}
@@ -333,11 +369,119 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Bids Tab (NBFC only) */}
-      {activeTab === 'bids' && isNbfc && (
+      {/* Bids Tab */}
+      {activeTab === 'bids' && (
         <div className="section">
           <h2>My Bids</h2>
-          <p className="empty-state">Bids placed by your organization will appear here.</p>
+          <p className="description">Track your placed bids and negotiate terms.</p>
+
+          <div className="bids-list">
+            {myBids.map((bid: any) => (
+              <div key={bid._id} className="bid-card">
+                <div className="bid-header">
+                  <h3>Case #{bid.caseId?.caseNumber || 'N/A'}</h3>
+                  {statusBadge(bid.status)}
+                </div>
+                <div className="bid-details">
+                  <div className="detail">
+                    <span className="label">Sub-Contractor:</span>
+                    <span>{bid.caseId?.subContractorId?.companyName || '—'}</span>
+                  </div>
+                  <div className="detail">
+                    <span className="label">Bill Amount:</span>
+                    <span>₹{bid.caseId?.billId?.amount?.toLocaleString() || 'N/A'}</span>
+                  </div>
+                  <div className="detail">
+                    <span className="label">Your Bid:</span>
+                    <span className="highlight">₹{bid.bidAmount?.toLocaleString()}</span>
+                  </div>
+                  <div className="detail">
+                    <span className="label">Duration:</span>
+                    <span>{bid.fundingDurationDays} days</span>
+                  </div>
+                </div>
+
+                {/* Negotiation history */}
+                {bid.negotiations?.length > 0 && (
+                  <div className="negotiations">
+                    <h4>Negotiation History</h4>
+                    {bid.negotiations.map((n: any, i: number) => (
+                      <div key={i} className={`negotiation-item ${n.proposedByRole}`}>
+                        <span className="role">{n.proposedByRole === 'epc' ? 'You' : 'Sub-Contractor'}</span>
+                        <span>₹{n.counterAmount?.toLocaleString()} for {n.counterDuration} days</span>
+                        {n.message && <p className="message">"{n.message}"</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Actions */}
+                {['SUBMITTED', 'NEGOTIATION_IN_PROGRESS'].includes(bid.status) && (
+                  <div className="bid-actions">
+                    {negotiatingBid === bid._id ? (
+                      <div className="negotiate-form">
+                        <h4>Send Counter-Offer</h4>
+                        <div className="form-grid">
+                          <div className="form-group">
+                            <label>Amount (₹)</label>
+                            <input type="number" value={counterOffer.amount}
+                              onChange={(e) => setCounterOffer({ ...counterOffer, amount: e.target.value })} />
+                          </div>
+                          <div className="form-group">
+                            <label>Duration (days)</label>
+                            <input type="number" value={counterOffer.duration}
+                              onChange={(e) => setCounterOffer({ ...counterOffer, duration: e.target.value })} />
+                          </div>
+                          <div className="form-group full-span">
+                            <label>Message</label>
+                            <input value={counterOffer.message}
+                              onChange={(e) => setCounterOffer({ ...counterOffer, message: e.target.value })} />
+                          </div>
+                        </div>
+                        <div className="button-group">
+                          <button className="btn-primary" onClick={() => handleNegotiate(bid._id)}
+                            disabled={!counterOffer.amount}>Send Counter-Offer</button>
+                          <button className="btn-secondary" onClick={() => setNegotiatingBid(null)}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="button-group">
+                        <button className="btn-warning" onClick={() => setNegotiatingBid(bid._id)}>
+                          ↔ Counter-Offer
+                        </button>
+                        <button className="btn-success" onClick={() => handleLockBid(bid._id)}>
+                          🔒 Lock Agreement
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Locked info */}
+                {bid.status === 'COMMERCIAL_LOCKED' && bid.lockedTerms && (
+                  <div className="locked-terms">
+                    <h4>🔒 Commercial Locked</h4>
+                    <p>Final Amount: ₹{bid.lockedTerms.finalAmount?.toLocaleString()}</p>
+                    <p>Duration: {bid.lockedTerms.finalDuration} days</p>
+                    <p>Locked: {new Date(bid.lockedTerms.lockedAt).toLocaleDateString()}</p>
+                  </div>
+                )}
+
+                {bid.status === 'REJECTED' && (
+                  <div className="rejected-info">
+                    <p>❌ This bid was rejected by the sub-contractor.</p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {myBids.length === 0 && (
+              <div className="empty-state">
+                <p>No bids placed yet.</p>
+                <p className="hint">Go to Cases & Bills to place bids on verified cases.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

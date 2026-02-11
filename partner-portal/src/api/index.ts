@@ -53,6 +53,7 @@ export const casesApi = {
 export const bidsApi = {
   placeBid: (data: any) => api.post('/bids', data),
   getBid: (id: string) => api.get(`/bids/${id}`),
+  getMyBids: () => api.get('/bids/my'),
   negotiate: (id: string, counterOffer: any) => api.post(`/bids/${id}/negotiate`, { counterOffer }),
   lockBid: (id: string) => api.post(`/bids/${id}/lock`),
   getBidsForCase: (caseId: string) => api.get(`/bids/case/${caseId}`),

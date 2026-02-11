@@ -62,4 +62,52 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// POST /api/auth/register-subcontractor - Sub-contractor self-registration (Step 9)
+router.post('/register-subcontractor', async (req, res) => {
+  try {
+    const { name, email, password, phone, companyName } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required' });
+    }
+
+    const result = await authService.registerSubcontractor({
+      name,
+      email,
+      password,
+      phone,
+      companyName,
+    });
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// GET /api/auth/check-email/:email - Check if email is a valid SC lead
+router.get('/check-email/:email', async (req, res) => {
+  try {
+    const SubContractor = require('../models/SubContractor');
+    const email = req.params.email.toLowerCase();
+
+    const sc = await SubContractor.findOne({ email }).populate('linkedEpcId', 'companyName');
+    if (!sc) {
+      return res.json({ found: false });
+    }
+
+    // Check if already has a user account
+    if (sc.userId) {
+      return res.json({ found: true, hasAccount: true });
+    }
+
+    res.json({
+      found: true,
+      hasAccount: false,
+      linkedEpc: sc.linkedEpcId?.companyName || 'Unknown Company',
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

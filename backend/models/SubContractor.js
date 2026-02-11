@@ -25,6 +25,11 @@ const subContractorSchema = new mongoose.Schema(
     // Selected EPC during profile completion
     selectedEpcId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
 
+    // Sales contact tracking (Step 8)
+    contactedAt: { type: Date },
+    contactedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    contactNotes: { type: String, trim: true },
+
     statusHistory: [
       {
         status: String,
