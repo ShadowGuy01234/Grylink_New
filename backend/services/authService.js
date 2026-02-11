@@ -78,10 +78,75 @@ const createEpcUser = async ({ name, email, phone, companyId }) => {
   return user;
 };
 
+// Register Sub-Contractor (Step 9 - matches EPC-added leads)
+const registerSubcontractor = async ({ name, email, password, phone, companyName }) => {
+  const SubContractor = require('../models/SubContractor');
+
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }
+
+  // Check if this email matches an EPC-added lead
+  let subContractor = await SubContractor.findOne({ email: email.toLowerCase() });
+
+  if (!subContractor) {
+    // No matching lead - we can still allow registration but flag for sales follow-up
+    // For now, throw error - sales must add them first through EPC
+    throw new Error('No matching sub-contractor lead found. Please contact your EPC company to add you to their vendor list first.');
+  }
+
+  // Create user account
+  const user = new User({
+    name,
+    email,
+    password,
+    phone,
+    role: 'subcontractor',
+  });
+  await user.save();
+
+  // Link user to sub-contractor record and update status
+  subContractor.userId = user._id;
+  subContractor.contactName = subContractor.contactName || name;
+  subContractor.companyName = subContractor.companyName || companyName;
+  subContractor.phone = subContractor.phone || phone;
+  subContractor.status = 'PROFILE_INCOMPLETE';
+  subContractor.statusHistory.push({
+    status: 'PROFILE_INCOMPLETE',
+    changedAt: new Date(),
+    notes: 'User account created',
+  });
+  await subContractor.save();
+
+  // Update user with subContractorId reference
+  user.subContractorId = subContractor._id;
+  await user.save();
+
+  const token = generateToken(user);
+  return {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      subContractorId: subContractor._id,
+    },
+    token,
+    subContractor: {
+      id: subContractor._id,
+      status: subContractor.status,
+      linkedEpcId: subContractor.linkedEpcId,
+    },
+  };
+};
+
 module.exports = {
   register,
   login,
   generateToken,
   setPasswordViaGryLink,
   createEpcUser,
+  registerSubcontractor,
 };

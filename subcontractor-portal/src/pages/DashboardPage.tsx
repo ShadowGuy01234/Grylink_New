@@ -100,13 +100,17 @@ const DashboardPage = () => {
 
   const handleBidResponse = async (bidId: string, decision: 'accept' | 'reject' | 'negotiate') => {
     try {
-      const data: { decision: string; counterOffer?: any } = { decision };
+      const data: { 
+        decision: 'accept' | 'reject' | 'negotiate'; 
+        counterOffer?: number;
+        counterDuration?: number;
+        message?: string;
+      } = { decision };
+      
       if (decision === 'negotiate' && counterOffer.amount) {
-        data.counterOffer = {
-          amount: parseFloat(counterOffer.amount),
-          duration: parseInt(counterOffer.duration) || undefined,
-          message: counterOffer.message,
-        };
+        data.counterOffer = parseFloat(counterOffer.amount);
+        data.counterDuration = parseInt(counterOffer.duration) || undefined;
+        data.message = counterOffer.message || undefined;
       }
       await scApi.respondToBid(bidId, data);
       toast.success(decision === 'accept' ? 'Bid accepted!' : decision === 'reject' ? 'Bid rejected' : 'Counter-offer sent!');

@@ -20,23 +20,6 @@ export const authApi = {
 
 // Sub-contractor APIs
 export const scApi = {
-<<<<<<< HEAD
-  getProfile: () => api.get('/subcontractor/profile'),
-  updateProfile: (data: any) => api.put('/subcontractor/profile', data),
-  uploadDocuments: (formData: FormData) => api.post('/subcontractor/kyc', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  submitBill: (formData: FormData) => api.post('/subcontractor/bill', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  getCases: () => api.get('/subcontractor/cases'),
-  getBills: () => api.get('/subcontractor/bills'),
-  getBids: () => api.get('/subcontractor/bids'),
-  respondToBid: (bidId: string, data: { decision: string; counterOffer?: any }) => 
-    api.post(`/subcontractor/bids/${bidId}/respond`, data),
-  submitCwc: (data: { billId: string; paymentReference?: string }) => 
-    api.post('/subcontractor/cwc', data),
-=======
   getProfile: () => api.get("/subcontractor/profile"),
   updateProfile: (data: any) => api.put("/subcontractor/profile", data),
   uploadDocuments: (formData: FormData) =>
@@ -49,21 +32,22 @@ export const scApi = {
     }),
   getCases: () => api.get("/subcontractor/cases"),
   getBills: () => api.get("/subcontractor/bills"),
-  submitCwc: (data: {
-    caseId?: string;
-    grylink?: string;
-    amount: number;
-    details?: string;
-  }) => api.post("/subcontractor/cwc", data),
+  getBids: () => api.get("/subcontractor/bids"),
   respondToBid: (
     bidId: string,
     data: {
       decision: "accept" | "reject" | "negotiate";
       counterOffer?: number;
+      counterDuration?: number;
+      message?: string;
     },
   ) => api.post(`/subcontractor/bids/${bidId}/respond`, data),
+  submitCwc: (data: {
+    billId?: string;
+    paymentReference?: string;
+    amount?: number;
+  }) => api.post("/subcontractor/cwc", data),
   getDashboard: () => api.get("/subcontractor/dashboard"),
->>>>>>> 27b58c6ff018f59e5a590604941825bf4f863de5
 };
 
 export default api;

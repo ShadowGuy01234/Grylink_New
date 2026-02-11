@@ -110,4 +110,31 @@ router.get('/subcontractors', authenticate, authorize('epc'), async (req, res) =
   }
 });
 
+// GET /api/company/active - Get all active EPC companies (for SC profile completion)
+router.get('/active', authenticate, async (req, res) => {
+  try {
+    const Company = require('../models/Company');
+    const companies = await Company.find({ status: 'ACTIVE', role: 'BUYER' })
+      .select('companyName _id')
+      .sort({ companyName: 1 });
+    res.json(companies);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/company/info/:id - Get basic company info by ID
+router.get('/info/:id', authenticate, async (req, res) => {
+  try {
+    const Company = require('../models/Company');
+    const company = await Company.findById(req.params.id).select('companyName _id status');
+    if (!company) {
+      return res.status(404).json({ error: 'Company not found' });
+    }
+    res.json(company);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
