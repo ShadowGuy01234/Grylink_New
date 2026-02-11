@@ -1,15 +1,11 @@
 const cloudinary = require('../config/cloudinary');
 
-const uploadToCloudinary = async (fileBuffer, folder, resourceType = 'auto') => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: `gryork/${folder}`, resource_type: resourceType },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    );
-    stream.end(fileBuffer);
+const uploadToCloudinary = async (fileBuffer, folder, resourceType = 'auto', mimeType = 'application/octet-stream') => {
+  const b64 = Buffer.from(fileBuffer).toString('base64');
+  const dataUri = `data:${mimeType};base64,${b64}`;
+  return cloudinary.uploader.upload(dataUri, {
+    folder: `gryork/${folder}`,
+    resource_type: resourceType,
   });
 };
 

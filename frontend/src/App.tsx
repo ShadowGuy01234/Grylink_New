@@ -3,10 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
-import EpcDashboard from './pages/EpcDashboard';
-import SubContractorDashboard from './pages/SubContractorDashboard';
+import EpcDashboardNew from './pages/EpcDashboardNew';
+import SubContractorDashboardNew from './pages/SubContractorDashboardNew';
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -20,9 +21,10 @@ const AppRoutes = () => {
   if (!user) {
     return (
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding/:token" element={<OnboardingPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
@@ -36,10 +38,10 @@ const AppRoutes = () => {
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to={homeRoute} replace />} />
         <Route path="epc" element={
-          user.role === 'epc' ? <EpcDashboard /> : <Navigate to={homeRoute} replace />
+          user.role === 'epc' ? <EpcDashboardNew /> : <Navigate to={homeRoute} replace />
         } />
         <Route path="subcontractor" element={
-          user.role === 'subcontractor' ? <SubContractorDashboard /> : <Navigate to={homeRoute} replace />
+          user.role === 'subcontractor' ? <SubContractorDashboardNew /> : <Navigate to={homeRoute} replace />
         } />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

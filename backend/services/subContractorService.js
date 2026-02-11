@@ -6,17 +6,13 @@ const User = require('../models/User');
 const cloudinary = require('../config/cloudinary');
 const { sendSalesNotification } = require('./emailService');
 
-// Helper: upload buffer to Cloudinary
-const uploadToCloudinary = (fileBuffer, options = {}) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: options.folder || 'gryork/bills', resource_type: 'auto' },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    stream.end(fileBuffer);
+// Helper: upload buffer to Cloudinary via base64 data URI
+const uploadToCloudinary = async (fileBuffer, mimeType, options = {}) => {
+  const b64 = Buffer.from(fileBuffer).toString('base64');
+  const dataUri = `data:${mimeType || 'application/octet-stream'};base64,${b64}`;
+  return cloudinary.uploader.upload(dataUri, {
+    folder: options.folder || 'gryork/bills',
+    resource_type: 'auto',
   });
 };
 
@@ -83,7 +79,7 @@ const uploadBill = async (userId, files, data) => {
   const bills = [];
   for (const file of files) {
     // Upload to Cloudinary
-    const cloudResult = await uploadToCloudinary(file.buffer, { folder: 'gryork/bills' });
+    const cloudResult = await uploadToCloudinary(file.buffer, file.mimetype, { folder: 'gryork/bills' });
 
     const bill = new Bill({
       subContractorId: subContractor._id,

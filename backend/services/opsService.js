@@ -7,17 +7,13 @@ const ChatMessage = require('../models/ChatMessage');
 const cloudinary = require('../config/cloudinary');
 const { sendStatusUpdate, sendKycRequest } = require('./emailService');
 
-// Helper: upload buffer to Cloudinary
-const uploadToCloudinary = (fileBuffer, options = {}) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: options.folder || 'gryork/kyc', resource_type: 'auto' },
-      (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      }
-    );
-    stream.end(fileBuffer);
+// Helper: upload buffer to Cloudinary via base64 data URI
+const uploadToCloudinary = async (fileBuffer, mimeType, options = {}) => {
+  const b64 = Buffer.from(fileBuffer).toString('base64');
+  const dataUri = `data:${mimeType || 'application/octet-stream'};base64,${b64}`;
+  return cloudinary.uploader.upload(dataUri, {
+    folder: options.folder || 'gryork/kyc',
+    resource_type: 'auto',
   });
 };
 
@@ -162,7 +158,7 @@ const sendChatMessage = async (cwcRfId, senderId, senderRole, content, file) => 
   };
 
   if (file) {
-    const cloudResult = await uploadToCloudinary(file.buffer, { folder: 'gryork/kyc' });
+    const cloudResult = await uploadToCloudinary(file.buffer, file.mimetype, { folder: 'gryork/kyc' });
     messageData.fileUrl = cloudResult.secure_url;
     messageData.cloudinaryPublicId = cloudResult.public_id;
     messageData.fileName = file.originalname;
