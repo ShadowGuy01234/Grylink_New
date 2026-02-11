@@ -250,26 +250,125 @@ const OpsDashboard = () => {
       {/* Verify Modal */}
       {verifyModal && (
         <div className="modal-overlay" onClick={() => setVerifyModal(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%' }}>
             <h2>Review: {verifyModal.name}</h2>
-            <div className="form-group">
-              <label>Notes</label>
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add verification notes..." />
-            </div>
-            <div className="modal-actions">
-              <button className="btn-danger" onClick={() => {
-                if (verifyModal.type === 'company') handleVerifyCompany(verifyModal.id, 'reject');
-                else handleVerifyBill(verifyModal.id, 'reject');
-              }}>Reject</button>
-              <button className="btn-success" onClick={() => {
-                if (verifyModal.type === 'company') handleVerifyCompany(verifyModal.id, 'approve');
-                else handleVerifyBill(verifyModal.id, 'approve');
-              }}>Approve</button>
-            </div>
+            
+            {verifyModal.type === 'company' && (
+              <CompanyReview 
+                companyId={verifyModal.id} 
+                onClose={() => { setVerifyModal(null); fetchData(); }} 
+              />
+            )}
+
+            {verifyModal.type === 'bill' && (
+              <>
+                <div className="form-group">
+                  <label>Notes</label>
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add verification notes..." />
+                </div>
+                <div className="modal-actions">
+                  <button className="btn-danger" onClick={() => handleVerifyBill(verifyModal.id, 'reject')}>Reject</button>
+                  <button className="btn-success" onClick={() => handleVerifyBill(verifyModal.id, 'approve')}>Approve</button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+const CompanyReview = ({ companyId, onClose }: { companyId: string, onClose: () => void }) => {
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [previewDoc, setPreviewDoc] = useState<any>(null);
+
+  useEffect(() => {
+    const loadDocs = async () => {
+      try {
+        const res = await opsApi.getCompanyDocuments(companyId);
+        setDocuments(res.data);
+      } catch (err) {
+        toast.error('Failed to load documents');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDocs();
+  }, [companyId]);
+
+  const handleVerifyDoc = async (docId: string, decision: string) => {
+    try {
+      await opsApi.verifyDocument(docId, { decision });
+      toast.success(`Document ${decision === 'approve' ? 'verified' : 'rejected'}`);
+      setDocuments(docs => docs.map(d => d._id === docId ? { ...d, status: decision === 'approve' ? 'verified' : 'rejected' } : d));
+    } catch (err) {
+      toast.error('Failed to update document status');
+    }
+  };
+
+  const handleVerifyCompany = async (decision: string) => {
+    try {
+      await opsApi.verifyCompany(companyId, { decision });
+      toast.success(`Company ${decision === 'approve' ? 'approved' : 'rejected'}`);
+      onClose();
+    } catch (err) {
+      toast.error('Failed to update company status');
+    }
+  };
+
+  if (loading) return <div>Loading documents...</div>;
+
+  return (
+    <div className="company-review">
+      <div className="docs-list">
+        <h3>Submitted Documents</h3>
+        {documents.map(doc => (
+          <div key={doc._id} className="doc-item" style={{ 
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+            padding: '10px', borderBottom: '1px solid #eee' 
+          }}>
+            <div>
+              <strong>{doc.documentType}</strong>
+              <div style={{ fontSize: '0.8em', color: '#666' }}>{doc.fileName}</div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <span className={`badge badge-${doc.status === 'verified' ? 'green' : doc.status === 'rejected' ? 'red' : 'yellow'}`}>
+                {doc.status}
+              </span>
+              <button className="btn-sm btn-secondary" onClick={() => setPreviewDoc(doc)}>Preview</button>
+              {doc.status === 'pending' && (
+                <>
+                  <button className="btn-sm btn-success" onClick={() => handleVerifyDoc(doc._id, 'approve')}>✓</button>
+                  <button className="btn-sm btn-danger" onClick={() => handleVerifyDoc(doc._id, 'reject')}>✗</button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+        {documents.length === 0 && <p>No documents found.</p>}
+      </div>
+
+      {previewDoc && (
+        <div className="doc-preview" style={{ marginTop: '20px', border: '1px solid #ddd', padding: '10px' }}>
+          <h4>Preview: {previewDoc.documentType} <button style={{float:'right'}} onClick={() => setPreviewDoc(null)}>Close</button></h4>
+          <iframe 
+            src={previewDoc.fileUrl} 
+            title="Document Preview"
+            style={{ width: '100%', height: '500px', border: 'none' }} 
+          />
+        </div>
+      )}
+
+      <div className="company-actions" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
+        <h4>Final Decision</h4>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-danger" onClick={() => handleVerifyCompany('reject')}>Reject Company</button>
+          <button className="btn-success" onClick={() => handleVerifyCompany('approve')}>Approve Company</button>
+        </div>
+      </div>
     </div>
   );
 };

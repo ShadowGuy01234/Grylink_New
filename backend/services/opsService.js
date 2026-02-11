@@ -169,6 +169,28 @@ const sendChatMessage = async (cwcRfId, senderId, senderRole, content, file) => 
   return chatMessage;
 };
 
+// Get all documents for a company
+const getCompanyDocuments = async (companyId) => {
+  return Document.find({ companyId }).sort({ createdAt: -1 });
+};
+
+// Verify a single document
+const verifyDocument = async (docId, decision, notes, opsUserId) => {
+  const doc = await Document.findById(docId);
+  if (!doc) throw new Error('Document not found');
+
+  if (decision === 'approve') {
+    doc.status = 'verified';
+    doc.verifiedBy = opsUserId;
+    doc.verifiedAt = new Date();
+  } else {
+    doc.status = 'rejected';
+  }
+  doc.verificationNotes = notes;
+  await doc.save();
+  return doc;
+};
+
 module.exports = {
   verifyCompanyDocs,
   verifyBill,
@@ -177,4 +199,6 @@ module.exports = {
   getPendingVerifications,
   getChatMessages,
   sendChatMessage,
+  getCompanyDocuments,
+  verifyDocument,
 };

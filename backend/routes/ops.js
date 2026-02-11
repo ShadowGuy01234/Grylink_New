@@ -126,4 +126,34 @@ router.post(
   }
 );
 
+// GET /api/ops/companies/:id/documents - Get company documents
+router.get('/companies/:id/documents', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const docs = await opsService.getCompanyDocuments(req.params.id);
+    res.json(docs);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/ops/documents/:id/verify - Verify single document
+router.post(
+  '/documents/:id/verify',
+  authenticate,
+  authorize('ops', 'admin'),
+  async (req, res) => {
+    try {
+      const { decision, notes } = req.body;
+      if (!decision || !['approve', 'reject'].includes(decision)) {
+        return res.status(400).json({ error: 'Decision must be approve or reject' });
+      }
+
+      const doc = await opsService.verifyDocument(req.params.id, decision, notes, req.user._id);
+      res.json(doc);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
 module.exports = router;

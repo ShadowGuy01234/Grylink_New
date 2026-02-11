@@ -37,20 +37,36 @@ const EpcDashboardNew = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Modals
-  const [showDocModal, setShowDocModal] = useState(false);
   const [showSCModal, setShowSCModal] = useState(false);
   const [showBidModal, setShowBidModal] = useState(false);
 
   // Forms
-  const [docFiles, setDocFiles] = useState<File[]>([]);
-  const [selectedDocType, setSelectedDocType] = useState('');
-  const [uploading, setUploading] = useState(false);
+  const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
 
-  const [scForm, setScForm] = useState({ 
-    companyName: '', 
-    contactName: '', 
-    email: '', 
-    phone: '' 
+  const handleSingleUpload = async (type: string, file: File) => {
+    setUploadingDocs(prev => ({ ...prev, [type]: true }));
+    try {
+      const formData = new FormData();
+      formData.append('documents', file);
+      formData.append('documentTypes', JSON.stringify([type]));
+
+      await companyApi.uploadDocuments(formData);
+      toast.success('Document uploaded successfully!');
+
+      // Refresh data
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Upload failed');
+    } finally {
+      setUploadingDocs(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const [scForm, setScForm] = useState({
+    companyName: '',
+    contactName: '',
+    email: '',
+    phone: ''
   });
   const [addingSC, setAddingSC] = useState(false);
 
@@ -65,11 +81,11 @@ const EpcDashboardNew = () => {
         companyApi.getSubContractors(),
         casesApi.getCases(),
       ]);
-      
+
       setProfile(profileRes.data);
       setSubContractors(scRes.data);
       setCases(casesRes.data);
-      
+
       // Extract documents from profile
       if (profileRes.data?.documents) {
         setDocuments(profileRes.data.documents);
@@ -260,11 +276,8 @@ const EpcDashboardNew = () => {
           </p>
         </div>
         <div className="header-actions">
-          <Button icon={<HiOutlineUpload />} onClick={() => setShowDocModal(true)}>
-            Upload Document
-          </Button>
           <Button icon={<HiOutlineUserAdd />} variant="success" onClick={() => setShowSCModal(true)}>
-            Add Sub-Contractor
+            Upload Sub-Contractor
           </Button>
         </div>
       </div>
@@ -354,27 +367,92 @@ const EpcDashboardNew = () => {
       {/* Documents Tab */}
       {activeTab === 'documents' && (
         <Card title="Company Documents">
-          {documents.length > 0 ? (
-            <div className="doc-grid">
-              {documents.map((doc: any, idx: number) => (
-                <div key={idx} className="doc-card">
-                  <div className="doc-type">{doc.documentType}</div>
-                  <div className="doc-name">{doc.fileName}</div>
-                  <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="doc-link">
-                    View Document →
-                  </a>
+          <div className="doc-list-container">
+            {DOCUMENT_TYPES.map((docType) => {
+              const existingDoc = documents.find(d => d.documentType === docType.value);
+              const isUploading = uploadingDocs[docType.value];
+
+              return (
+                <div key={docType.value} className="doc-row-item" style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  padding: '16px', 
+                  borderBottom: '1px solid #eee' 
+                }}>
+                  <div className="doc-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="doc-icon" style={{ 
+                      width: '40px', height: '40px', 
+                      borderRadius: '8px', 
+                      background: existingDoc ? '#e6f7ed' : '#f5f5f5',
+                      color: existingDoc ? '#10b981' : '#6b7280',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '20px'
+                    }}>
+                      <HiOutlineDocumentText />
+                    </div>
+                    <div>
+                      <div className="doc-label" style={{ fontWeight: 600 }}>{docType.label}</div>
+                      <div className="doc-status" style={{ fontSize: '12px', color: '#6b7280' }}>
+                        {existingDoc ? (
+                          <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <HiOutlineCheckCircle /> Uploaded on {new Date(existingDoc.createdAt).toLocaleDateString()}
+                          </span>
+                        ) : 'Required'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="doc-actions" style={{ display: 'flex', gap: '8px' }}>
+                    {existingDoc && (
+                      <a 
+                        href={existingDoc.fileUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="btn btn-sm btn-ghost"
+                        style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', height: '32px', padding: '0 12px', border: '1px solid #e5e7eb', borderRadius: '6px', color: '#374151', fontSize: '14px' }}
+                      >
+                        View
+                      </a>
+                    )}
+                    
+                    <div>
+                      <input
+                        type="file"
+                        id={`upload-${docType.value}`}
+                        style={{ display: 'none' }}
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleSingleUpload(docType.value, file);
+                          e.target.value = '';
+                        }}
+                        disabled={isUploading}
+                      />
+                      <label 
+                        htmlFor={`upload-${docType.value}`}
+                        className={`btn btn-sm ${existingDoc ? 'btn-secondary' : 'btn-primary'}`}
+                        style={{ 
+                          cursor: isUploading ? 'wait' : 'pointer', 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          height: '32px', 
+                          padding: '0 12px', 
+                          borderRadius: '6px', 
+                          fontSize: '14px',
+                          background: existingDoc ? '#f3f4f6' : '#2563eb',
+                          color: existingDoc ? '#374151' : '#ffffff',
+                          border: 'none'
+                        }}
+                      >
+                        {isUploading ? 'Uploading...' : (existingDoc ? 'Update' : 'Upload')}
+                      </label>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <HiOutlineDocumentText style={{ fontSize: '48px', marginBottom: '12px', opacity: 0.5 }} />
-              <p>No documents uploaded yet</p>
-              <Button onClick={() => setShowDocModal(true)} className="mt-4">
-                Upload Your First Document
-              </Button>
-            </div>
-          )}
+              );
+            })}
+          </div>
         </Card>
       )}
 
@@ -418,42 +496,6 @@ const EpcDashboardNew = () => {
         </Card>
       )}
 
-      {/* Upload Document Modal */}
-      <Modal
-        isOpen={showDocModal}
-        onClose={() => setShowDocModal(false)}
-        title="Upload Document"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setShowDocModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUploadDocument} loading={uploading}>
-              Upload
-            </Button>
-          </>
-        }
-      >
-        <div className="form-group">
-          <label>Document Type *</label>
-          <select
-            value={selectedDocType}
-            onChange={(e) => setSelectedDocType(e.target.value)}
-            required
-          >
-            <option value="">Select document type...</option>
-            {DOCUMENT_TYPES.map((dt) => (
-              <option key={dt.value} value={dt.value}>{dt.label}</option>
-            ))}
-          </select>
-        </div>
-        <FileUpload
-          onFilesChange={setDocFiles}
-          accept=".pdf,.jpg,.jpeg,.png"
-          multiple={false}
-          label="Drop document here or click to browse"
-        />
-      </Modal>
 
       {/* Add Sub-Contractor Modal */}
       <Modal
