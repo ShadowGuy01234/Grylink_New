@@ -18,6 +18,13 @@ export const authApi = {
   updateProfile: (data: any) => api.put("/auth/profile", data),
 };
 
+// GryLink APIs - for onboarding
+export const grylinkApi = {
+  validate: (token: string) => api.get(`/grylink/validate/${token}`),
+  setPassword: (token: string, password: string) =>
+    api.post("/grylink/set-password", { token, password }),
+};
+
 // Sub-contractor APIs
 export const scApi = {
   getProfile: () => api.get("/subcontractor/profile"),
@@ -48,6 +55,15 @@ export const scApi = {
     amount?: number;
   }) => api.post("/subcontractor/cwc", data),
   getDashboard: () => api.get("/subcontractor/dashboard"),
+};
+
+// KYC Chat APIs - for chat-based document exchange with Ops
+export const kycApi = {
+  getMessages: (cwcRfId: string) => api.get(`/ops/kyc/${cwcRfId}/chat`),
+  sendMessage: (cwcRfId: string, data: FormData) =>
+    api.post(`/ops/kyc/${cwcRfId}/chat`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
 };
 
 export default api;

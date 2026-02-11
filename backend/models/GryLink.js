@@ -1,17 +1,32 @@
-const mongoose = require('mongoose');
-const { v4: uuidv4 } = require('uuid');
+const mongoose = require("mongoose");
+const { v4: uuidv4 } = require("uuid");
 
 const gryLinkSchema = new mongoose.Schema(
   {
     token: { type: String, unique: true, default: () => uuidv4() },
-    companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
-    salesAgentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
+    subContractorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubContractor",
+    },
+    salesAgentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     email: { type: String, required: true, lowercase: true, trim: true },
+
+    // Type of link - company or subcontractor
+    linkType: {
+      type: String,
+      enum: ["company", "subcontractor"],
+      default: "company",
+    },
 
     status: {
       type: String,
-      enum: ['active', 'used', 'expired'],
-      default: 'active',
+      enum: ["active", "used", "expired"],
+      default: "active",
     },
 
     expiresAt: {
@@ -21,12 +36,12 @@ const gryLinkSchema = new mongoose.Schema(
 
     usedAt: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Check if link is valid
 gryLinkSchema.methods.isValid = function () {
-  return this.status === 'active' && this.expiresAt > new Date();
+  return this.status === "active" && this.expiresAt > new Date();
 };
 
-module.exports = mongoose.model('GryLink', gryLinkSchema);
+module.exports = mongoose.model("GryLink", gryLinkSchema);

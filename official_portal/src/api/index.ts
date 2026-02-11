@@ -86,6 +86,21 @@ export const bidsApi = {
   getBidsForCase: (caseId: string) => api.get(`/bids/case/${caseId}`),
 };
 
+// RMT - Risk Management Team
+export const rmtApi = {
+  getPendingCases: () => api.get("/cases/rmt/pending"),
+  submitRiskAssessment: (
+    caseId: string,
+    data: {
+      riskScore: number;
+      riskLevel: "low" | "medium" | "high" | "critical";
+      assessment: string;
+      recommendation: "approve" | "reject" | "needs_review";
+      notes?: string;
+    },
+  ) => api.post(`/cases/${caseId}/risk-assessment`, data),
+};
+
 // Admin - User Management
 export const adminApi = {
   getUsers: (params?: { role?: string; isActive?: boolean; search?: string }) =>

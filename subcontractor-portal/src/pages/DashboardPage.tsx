@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { scApi } from '../api';
+import React, { useState, useEffect, useRef } from 'react';
+import { scApi, kycApi } from '../api';
 import toast from 'react-hot-toast';
 
 const DashboardPage = () => {
@@ -25,6 +25,15 @@ const DashboardPage = () => {
   // Bids response
   const [respondingBid, setRespondingBid] = useState<string | null>(null);
   const [counterOffer, setCounterOffer] = useState({ amount: '', duration: '', message: '' });
+
+  // KYC Chat state
+  const [selectedCwcRf, setSelectedCwcRf] = useState<any>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatFile, setChatFile] = useState<File | null>(null);
+  const [sendingChat, setSendingChat] = useState(false);
+  const [loadingChat, setLoadingChat] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const fetchData = async () => {
     try {
@@ -122,6 +131,45 @@ const DashboardPage = () => {
     }
   };
 
+  // KYC Chat functions
+  const fetchChatMessages = async (cwcRfId: string) => {
+    setLoadingChat(true);
+    try {
+      const res = await kycApi.getMessages(cwcRfId);
+      setChatMessages(res.data.messages || []);
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch {
+      toast.error('Failed to load chat');
+    } finally {
+      setLoadingChat(false);
+    }
+  };
+
+  const openChat = (cwcRf: any) => {
+    setSelectedCwcRf(cwcRf);
+    setActiveTab('kyc-chat');
+    fetchChatMessages(cwcRf._id);
+  };
+
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatMessage.trim() && !chatFile) return;
+    setSendingChat(true);
+    try {
+      const formData = new FormData();
+      formData.append('content', chatMessage);
+      if (chatFile) formData.append('file', chatFile);
+      await kycApi.sendMessage(selectedCwcRf._id, formData);
+      setChatMessage('');
+      setChatFile(null);
+      fetchChatMessages(selectedCwcRf._id);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to send');
+    } finally {
+      setSendingChat(false);
+    }
+  };
+
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
       LEAD_CREATED: 'badge-yellow', PROFILE_INCOMPLETE: 'badge-yellow', PROFILE_COMPLETED: 'badge-green',
@@ -138,6 +186,7 @@ const DashboardPage = () => {
   const sc = dashboard?.subContractor;
   const verifiedBills = dashboard?.bills?.filter((b: any) => b.status === 'VERIFIED') || [];
   const pendingBids = dashboard?.bids?.filter((b: any) => b.status === 'SUBMITTED' || b.status === 'NEGOTIATION_IN_PROGRESS') || [];
+  const pendingKyc = dashboard?.cwcRfs?.filter((c: any) => ['ACTION_REQUIRED', 'KYC_REQUIRED', 'KYC_IN_PROGRESS'].includes(c.status)) || [];
 
   return (
     <div className="dashboard-page">
@@ -154,11 +203,12 @@ const DashboardPage = () => {
       </div>
 
       <div className="tabs">
-        {['profile', 'bills', 'cwc', 'cases', 'bids'].map(t => (
-          <button key={t} className={`tab ${activeTab === t ? 'active' : ''}`}
+        {['profile', 'bills', 'cwc', 'cases', 'bids', 'kyc'].map(t => (
+          <button key={t} className={`tab ${activeTab === t || (t === 'kyc' && activeTab === 'kyc-chat') ? 'active' : ''}`}
             onClick={() => setActiveTab(t)}>
-            {t.toUpperCase()}
+            {t === 'kyc' ? 'KYC Chat' : t.toUpperCase()}
             {t === 'bids' && pendingBids.length > 0 && <span className="tab-badge">{pendingBids.length}</span>}
+            {t === 'kyc' && pendingKyc.length > 0 && <span className="tab-badge">{pendingKyc.length}</span>}
           </button>
         ))}
       </div>
@@ -416,6 +466,102 @@ const DashboardPage = () => {
                 <p className="hint">Once your cases are verified by the EPC company, you'll receive funding offers here.</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* KYC Tab - List of CWC RFs requiring action */}
+      {activeTab === 'kyc' && (
+        <div className="section">
+          <h2>KYC Document Requests</h2>
+          <p className="section-note">Chat with Ops team to submit required documents</p>
+          <div className="table-wrapper">
+            <table>
+              <thead><tr><th>CWC RF</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                {pendingKyc.map((c: any) => (
+                  <tr key={c._id}>
+                    <td>{c._id.slice(-8).toUpperCase()}</td>
+                    <td>{statusBadge(c.status)}</td>
+                    <td>
+                      <button className="btn-secondary btn-sm" onClick={() => openChat(c)}>
+                        Open Chat
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {pendingKyc.length === 0 && (
+                  <tr><td colSpan={3} className="empty-state">No pending KYC requests</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* KYC Chat Interface */}
+      {activeTab === 'kyc-chat' && selectedCwcRf && (
+        <div className="section">
+          <div className="chat-header">
+            <button className="btn-back" onClick={() => setActiveTab('kyc')}>← Back</button>
+            <h2>KYC Chat - #{selectedCwcRf._id.slice(-8).toUpperCase()}</h2>
+            {statusBadge(selectedCwcRf.status)}
+          </div>
+
+          <div className="chat-container">
+            {loadingChat ? (
+              <div className="chat-loading">Loading messages...</div>
+            ) : (
+              <div className="chat-messages">
+                {chatMessages.length === 0 && (
+                  <div className="empty-state">No messages yet. Ops will request documents here.</div>
+                )}
+                {chatMessages.map((msg: any) => (
+                  <div key={msg._id} className={`chat-message ${msg.senderRole === 'subcontractor' ? 'sent' : 'received'}`}>
+                    <div className="message-header">
+                      <span className="sender">{msg.senderRole === 'subcontractor' ? 'You' : 'Ops'}</span>
+                      <span className="time">{new Date(msg.createdAt).toLocaleString()}</span>
+                    </div>
+                    {msg.content && <div className="message-content">{msg.content}</div>}
+                    {msg.fileUrl && (
+                      <a href={msg.fileUrl} target="_blank" rel="noreferrer" className="message-file">
+                        📎 {msg.fileName || 'Attachment'}
+                      </a>
+                    )}
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
+            )}
+
+            <form onSubmit={handleSendChat} className="chat-input-form">
+              <div className="chat-input-row">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  disabled={sendingChat}
+                />
+                <label className="file-attach-btn">
+                  📎
+                  <input
+                    type="file"
+                    style={{ display: 'none' }}
+                    onChange={(e) => setChatFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+                <button type="submit" className="btn-primary" disabled={sendingChat || (!chatMessage.trim() && !chatFile)}>
+                  {sendingChat ? '...' : 'Send'}
+                </button>
+              </div>
+              {chatFile && (
+                <div className="file-preview">
+                  📎 {chatFile.name}
+                  <button type="button" onClick={() => setChatFile(null)}>✕</button>
+                </div>
+              )}
+            </form>
           </div>
         </div>
       )}
