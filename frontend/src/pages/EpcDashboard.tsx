@@ -16,6 +16,23 @@ const EpcDashboard = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [docTypes, setDocTypes] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
+
+  const handleSingleUpload = async (type: string, file: File) => {
+    setUploadingDocs(prev => ({ ...prev, [type]: true }));
+    try {
+      const formData = new FormData();
+      formData.append('documents', file);
+      formData.append('documentTypes', JSON.stringify([type]));
+      await companyApi.uploadDocuments(formData);
+      toast.success(`${type.replace(/_/g, ' ')} uploaded!`);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Upload failed');
+    } finally {
+      setUploadingDocs(prev => ({ ...prev, [type]: false }));
+    }
+  };
 
   // Sub-contractor state
   const [showAddSC, setShowAddSC] = useState(false);
@@ -162,34 +179,44 @@ const EpcDashboard = () => {
           </div>
 
           {profile?.company?.status === 'CREDENTIALS_CREATED' || profile?.company?.status === 'ACTION_REQUIRED' ? (
-            <form onSubmit={handleUploadDocs} className="upload-form">
-              <p className="upload-hint">Upload the required documents: CIN, GST, PAN, Board Resolution, Bank Statements (12 months), Audited Financials (2 years), Project details, Cash-flow details</p>
-              <div className="file-select">
-                <input type="file" multiple onChange={(e) => {
-                  const selected = Array.from(e.target.files || []);
-                  setFiles(selected);
-                  setDocTypes(selected.map(() => 'OTHER'));
-                }} />
-              </div>
-              {files.length > 0 && (
-                <div className="file-list">
-                  {files.map((f, i) => (
-                    <div key={i} className="file-item">
-                      <span>{f.name}</span>
-                      <select value={docTypes[i]} onChange={(e) => {
-                        const updated = [...docTypes]; updated[i] = e.target.value; setDocTypes(updated);
-                      }}>
-                        {DOCUMENT_TYPES.map(dt => <option key={dt} value={dt}>{dt.replace(/_/g, ' ')}</option>)}
-                        <option value="OTHER">OTHER</option>
-                      </select>
+            <div className="docs-list">
+              {DOCUMENT_TYPES.map((type) => {
+                const existing = profile?.documents?.find((d: any) => d.documentType === type);
+                const isUploading = uploadingDocs[type];
+
+                return (
+                  <div key={type} className="doc-upload-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px', borderBottom: '1px solid #eee' }}>
+                    <div style={{ fontWeight: 500 }}>{type.replace(/_/g, ' ')}</div>
+                    <div>
+                      {existing ? (
+                        <span className="badge badge-green" style={{ marginRight: '10px' }}>Uploaded</span>
+                      ) : (
+                        <span className="badge badge-red" style={{ marginRight: '10px' }}>Missing</span>
+                      )}
+                      
+                      <input
+                        type="file"
+                        id={`upload-${type}`}
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleSingleUpload(type, file);
+                          e.target.value = ''; // Reset input
+                        }}
+                        disabled={isUploading}
+                      />
+                      <label 
+                        htmlFor={`upload-${type}`} 
+                        className={`btn-sm btn-primary ${isUploading ? 'disabled' : ''}`}
+                        style={{ cursor: isUploading ? 'not-allowed' : 'pointer', display: 'inline-block' }}
+                      >
+                        {isUploading ? 'Uploading...' : (existing ? 'Update' : 'Upload')}
+                      </label>
                     </div>
-                  ))}
-                </div>
-              )}
-              <button type="submit" className="btn-primary" disabled={uploading || files.length === 0}>
-                {uploading ? 'Uploading...' : 'Upload Documents'}
-              </button>
-            </form>
+                  </div>
+                );
+              })}
+            </div>
           ) : null}
 
           {/* Existing documents */}

@@ -56,6 +56,11 @@ export const opsApi = {
   getChatMessages: (id: string) => api.get(`/ops/kyc/${id}/chat`),
   sendChatMessage: (id: string, data: FormData) =>
     api.post(`/ops/kyc/${id}/chat`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+
+  // Documents
+  getCompanyDocuments: (id: string) => api.get(`/ops/companies/${id}/documents`),
+  verifyDocument: (id: string, data: { decision: string; notes?: string }) =>
+    api.post(`/ops/documents/${id}/verify`, data),
 };
 
 // Cases
