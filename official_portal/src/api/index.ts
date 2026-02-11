@@ -38,18 +38,11 @@ export const authApi = {
 
 // Sales
 export const salesApi = {
-<<<<<<< HEAD
-  createLead: (data: any) => api.post('/sales/leads', data),
-  getLeads: () => api.get('/sales/leads'),
-  getSubContractors: () => api.get('/sales/subcontractors'),
-  getDashboard: () => api.get('/sales/dashboard'),
-  markContacted: (id: string, notes?: string) => api.patch(`/sales/subcontractors/${id}/contacted`, { notes }),
-=======
   createLead: (data: any) => api.post("/sales/leads", data),
   getLeads: () => api.get("/sales/leads"),
   getSubContractors: () => api.get("/sales/subcontractors"),
   getDashboard: () => api.get("/sales/dashboard"),
->>>>>>> 27b58c6ff018f59e5a590604941825bf4f863de5
+  markContacted: (id: string, notes?: string) => api.patch(`/sales/subcontractors/${id}/contacted`, { notes }),
 };
 
 // Ops
