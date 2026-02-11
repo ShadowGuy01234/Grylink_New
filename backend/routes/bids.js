@@ -8,11 +8,9 @@ router.post("/", authenticate, authorize("epc"), async (req, res) => {
   try {
     const { caseId, bidAmount, fundingDurationDays } = req.body;
     if (!caseId || !bidAmount || !fundingDurationDays) {
-      return res
-        .status(400)
-        .json({
-          error: "caseId, bidAmount, and fundingDurationDays are required",
-        });
+      return res.status(400).json({
+        error: "caseId, bidAmount, and fundingDurationDays are required",
+      });
     }
 
     const result = await bidService.placeBid(
@@ -82,19 +80,21 @@ router.get("/case/:caseId", authenticate, async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
 // GET /api/bids/my - Get my bids (for EPC/NBFC)
-router.get('/my', authenticate, authorize('epc', 'nbfc'), async (req, res) => {
+router.get("/my", authenticate, authorize("epc", "nbfc"), async (req, res) => {
   try {
     const bids = await bidService.getMyBids(req.user.companyId, req.user.role);
     res.json(bids);
-=======
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /api/bids/:id - Get a specific bid
 router.get("/:id", authenticate, async (req, res) => {
   try {
     const bid = await bidService.getBid(req.params.id);
     res.json(bid);
->>>>>>> 27b58c6ff018f59e5a590604941825bf4f863de5
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
