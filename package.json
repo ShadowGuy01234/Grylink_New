@@ -1,0 +1,16 @@
+{
+  "name": "gryork-monorepo",
+  "version": "1.0.0",
+  "description": "Gryork Platform Monorepo",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\" \"npm run dev --prefix official_portal\"",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend && npm install --prefix official_portal",
+    "build:all": "npm run build --prefix backend && npm run build --prefix frontend && npm run build --prefix official_portal"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
