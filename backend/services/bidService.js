@@ -1,14 +1,21 @@
-const Bid = require('../models/Bid');
-const Case = require('../models/Case');
-const SubContractor = require('../models/SubContractor');
-const User = require('../models/User');
-const { sendBidNotification } = require('./emailService');
+const Bid = require("../models/Bid");
+const Case = require("../models/Case");
+const SubContractor = require("../models/SubContractor");
+const User = require("../models/User");
+const { sendBidNotification } = require("./emailService");
 
 // Step 17: EPC places bid
-const placeBid = async (caseId, epcId, userId, bidAmount, fundingDurationDays) => {
+const placeBid = async (
+  caseId,
+  epcId,
+  userId,
+  bidAmount,
+  fundingDurationDays,
+) => {
   const caseDoc = await Case.findById(caseId);
-  if (!caseDoc) throw new Error('Case not found');
-  if (caseDoc.status !== 'EPC_VERIFIED') throw new Error('Case must be EPC_VERIFIED to place a bid');
+  if (!caseDoc) throw new Error("Case not found");
+  if (caseDoc.status !== "EPC_VERIFIED")
+    throw new Error("Case must be EPC_VERIFIED to place a bid");
 
   const bid = new Bid({
     caseId,
@@ -16,14 +23,14 @@ const placeBid = async (caseId, epcId, userId, bidAmount, fundingDurationDays) =
     placedBy: userId,
     bidAmount,
     fundingDurationDays,
-    status: 'SUBMITTED',
-    statusHistory: [{ status: 'SUBMITTED', changedBy: userId }],
+    status: "SUBMITTED",
+    statusHistory: [{ status: "SUBMITTED", changedBy: userId }],
   });
   await bid.save();
 
   // Update case status
-  caseDoc.status = 'BID_PLACED';
-  caseDoc.statusHistory.push({ status: 'BID_PLACED', changedBy: userId });
+  caseDoc.status = "BID_PLACED";
+  caseDoc.statusHistory.push({ status: "BID_PLACED", changedBy: userId });
   await caseDoc.save();
 
   // Notify sub-contractor
@@ -36,7 +43,7 @@ const placeBid = async (caseId, epcId, userId, bidAmount, fundingDurationDays) =
         scUser.name,
         caseDoc.caseNumber,
         bidAmount,
-        fundingDurationDays
+        fundingDurationDays,
       );
     }
   }
@@ -47,16 +54,16 @@ const placeBid = async (caseId, epcId, userId, bidAmount, fundingDurationDays) =
 // Step 19: Negotiate
 const negotiate = async (bidId, userId, counterOffer) => {
   const bid = await Bid.findById(bidId);
-  if (!bid) throw new Error('Bid not found');
+  if (!bid) throw new Error("Bid not found");
 
-  if (!['SUBMITTED', 'NEGOTIATION_IN_PROGRESS'].includes(bid.status)) {
-    throw new Error('Bid is not available for negotiation');
+  if (!["SUBMITTED", "NEGOTIATION_IN_PROGRESS"].includes(bid.status)) {
+    throw new Error("Bid is not available for negotiation");
   }
 
   const user = await User.findById(userId);
-  const proposedByRole = user.role === 'epc' ? 'epc' : 'subcontractor';
+  const proposedByRole = user.role === "epc" ? "epc" : "subcontractor";
 
-  bid.status = 'NEGOTIATION_IN_PROGRESS';
+  bid.status = "NEGOTIATION_IN_PROGRESS";
   bid.negotiations.push({
     counterAmount: counterOffer.amount,
     counterDuration: counterOffer.duration,
@@ -64,14 +71,20 @@ const negotiate = async (bidId, userId, counterOffer) => {
     proposedByRole,
     message: counterOffer.message,
   });
-  bid.statusHistory.push({ status: 'NEGOTIATION_IN_PROGRESS', changedBy: userId });
+  bid.statusHistory.push({
+    status: "NEGOTIATION_IN_PROGRESS",
+    changedBy: userId,
+  });
   await bid.save();
 
   // Update case status
   const caseDoc = await Case.findById(bid.caseId);
-  if (caseDoc && caseDoc.status !== 'NEGOTIATION_IN_PROGRESS') {
-    caseDoc.status = 'NEGOTIATION_IN_PROGRESS';
-    caseDoc.statusHistory.push({ status: 'NEGOTIATION_IN_PROGRESS', changedBy: userId });
+  if (caseDoc && caseDoc.status !== "NEGOTIATION_IN_PROGRESS") {
+    caseDoc.status = "NEGOTIATION_IN_PROGRESS";
+    caseDoc.statusHistory.push({
+      status: "NEGOTIATION_IN_PROGRESS",
+      changedBy: userId,
+    });
     await caseDoc.save();
   }
 
@@ -81,30 +94,34 @@ const negotiate = async (bidId, userId, counterOffer) => {
 // Step 19: Lock commercial agreement
 const lockCommercial = async (bidId, userId) => {
   const bid = await Bid.findById(bidId);
-  if (!bid) throw new Error('Bid not found');
+  if (!bid) throw new Error("Bid not found");
 
-  if (!['SUBMITTED', 'NEGOTIATION_IN_PROGRESS'].includes(bid.status)) {
-    throw new Error('Bid cannot be locked in current status');
+  if (!["SUBMITTED", "NEGOTIATION_IN_PROGRESS"].includes(bid.status)) {
+    throw new Error("Bid cannot be locked in current status");
   }
 
   // Get final terms from last negotiation or original bid
   const lastNegotiation = bid.negotiations[bid.negotiations.length - 1];
-  const finalAmount = lastNegotiation ? lastNegotiation.counterAmount : bid.bidAmount;
-  const finalDuration = lastNegotiation ? lastNegotiation.counterDuration : bid.fundingDurationDays;
+  const finalAmount = lastNegotiation
+    ? lastNegotiation.counterAmount
+    : bid.bidAmount;
+  const finalDuration = lastNegotiation
+    ? lastNegotiation.counterDuration
+    : bid.fundingDurationDays;
 
-  bid.status = 'COMMERCIAL_LOCKED';
+  bid.status = "COMMERCIAL_LOCKED";
   bid.lockedTerms = {
     finalAmount,
     finalDuration,
     lockedAt: new Date(),
   };
-  bid.statusHistory.push({ status: 'COMMERCIAL_LOCKED', changedBy: userId });
+  bid.statusHistory.push({ status: "COMMERCIAL_LOCKED", changedBy: userId });
   await bid.save();
 
   // Update case
   const caseDoc = await Case.findById(bid.caseId);
   if (caseDoc) {
-    caseDoc.status = 'COMMERCIAL_LOCKED';
+    caseDoc.status = "COMMERCIAL_LOCKED";
     caseDoc.lockedAt = new Date();
     caseDoc.commercialSnapshot = {
       bidId: bid._id,
@@ -112,7 +129,10 @@ const lockCommercial = async (bidId, userId) => {
       finalDuration,
       lockedAt: new Date(),
     };
-    caseDoc.statusHistory.push({ status: 'COMMERCIAL_LOCKED', changedBy: userId });
+    caseDoc.statusHistory.push({
+      status: "COMMERCIAL_LOCKED",
+      changedBy: userId,
+    });
     await caseDoc.save();
   }
 
@@ -123,8 +143,18 @@ const lockCommercial = async (bidId, userId) => {
 const getBidsForCase = async (caseId) => {
   return Bid.find({ caseId })
     .sort({ createdAt: -1 })
-    .populate('placedBy', 'name email')
-    .populate('epcId', 'companyName');
+    .populate("placedBy", "name email")
+    .populate("epcId", "companyName");
+};
+
+// Get a specific bid by ID
+const getBid = async (bidId) => {
+  const bid = await Bid.findById(bidId)
+    .populate("placedBy", "name email")
+    .populate("epcId", "companyName")
+    .populate("caseId");
+  if (!bid) throw new Error("Bid not found");
+  return bid;
 };
 
 // Get my bids (for EPC/NBFC)
@@ -148,5 +178,9 @@ module.exports = {
   negotiate,
   lockCommercial,
   getBidsForCase,
+<<<<<<< HEAD
   getMyBids,
+=======
+  getBid,
+>>>>>>> 27b58c6ff018f59e5a590604941825bf4f863de5
 };
