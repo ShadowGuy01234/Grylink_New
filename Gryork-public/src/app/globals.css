@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply font-sans text-gray-600 antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-primary-900 font-bold;
+  }
+}
+
+@layer components {
+  /* Primary Button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 
+           bg-primary-600 text-white font-semibold rounded-lg
+           transition-all duration-200 ease-out
+           hover:bg-primary-500 hover:-translate-y-0.5 
+           hover:shadow-lg hover:shadow-primary-600/30
+           active:bg-primary-900 active:translate-y-0
+           disabled:bg-gray-300 disabled:cursor-not-allowed disabled:translate-y-0;
+  }
+  
+  /* Secondary Button (Green) */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 
+           bg-accent-500 text-white font-semibold rounded-lg
+           transition-all duration-200 ease-out
+           hover:bg-accent-700 hover:-translate-y-0.5 
+           hover:shadow-lg hover:shadow-accent-500/30
+           active:bg-accent-800 active:translate-y-0;
+  }
+  
+  /* Outline Button */
+  .btn-outline {
+    @apply inline-flex items-center justify-center px-6 py-3 
+           bg-transparent border-2 border-primary-600 text-primary-600 
+           font-semibold rounded-lg transition-all duration-200
+           hover:bg-primary-600 hover:text-white;
+  }
+  
+  /* Ghost Button */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 text-primary-600 font-semibold
+           transition-all duration-200 hover:underline;
+  }
+
+  /* Card */
+  .card {
+    @apply bg-white rounded-xl border border-gray-200 p-6
+           shadow-sm transition-all duration-200
+           hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg
+           text-gray-900 placeholder-gray-400
+           transition-all duration-150
+           focus:outline-none focus:border-primary-600 
+           focus:ring-2 focus:ring-primary-600/10;
+  }
+
+  /* Label */
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1.5;
+  }
+
+  /* Section */
+  .section {
+    @apply py-16 md:py-24;
+  }
+
+  /* Container */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-accent-500;
+  }
+}
