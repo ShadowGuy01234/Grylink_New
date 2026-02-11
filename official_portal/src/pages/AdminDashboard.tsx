@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { adminApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
@@ -48,9 +48,9 @@ const AdminDashboard = () => {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const params: any = {};
+      const params: { role?: string; isActive?: boolean; search?: string } = {};
       if (filterRole) params.role = filterRole;
       if (filterActive) params.isActive = filterActive === "active";
       if (searchQuery) params.search = searchQuery;
@@ -66,11 +66,11 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterRole, filterActive, searchQuery]);
 
   useEffect(() => {
     fetchData();
-  }, [filterRole, filterActive, searchQuery]);
+  }, [fetchData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +78,13 @@ const AdminDashboard = () => {
 
     try {
       if (editingUser) {
-        const updateData: any = {
+        const updateData: {
+          name: string;
+          email: string;
+          phone: string;
+          role: string;
+          password?: string;
+        } = {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
@@ -95,8 +101,9 @@ const AdminDashboard = () => {
       }
       closeModal();
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Operation failed");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Operation failed");
     } finally {
       setSubmitting(false);
     }
@@ -112,8 +119,11 @@ const AdminDashboard = () => {
         toast.success("User activated");
       }
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to update user status");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(
+        error.response?.data?.error || "Failed to update user status",
+      );
     }
   };
 
@@ -386,7 +396,9 @@ const AdminDashboard = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, role: e.target.value })
                   }
-                  disabled={editingUser && currentUser?.id === editingUser._id}
+                  disabled={
+                    !!(editingUser && currentUser?.id === editingUser._id)
+                  }
                 >
                   {ROLES.map((r) => (
                     <option key={r} value={r}>
