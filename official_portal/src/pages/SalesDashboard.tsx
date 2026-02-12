@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { salesApi } from '../api';
 import toast from 'react-hot-toast';
 
 const SalesDashboard = () => {
   const [leads, setLeads] = useState<any[]>([]);
   const [subContractors, setSubContractors] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [_stats, setStats] = useState<any>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [contactModal, setContactModal] = useState<any>(null);
   const [contactNotes, setContactNotes] = useState('');

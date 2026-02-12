@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { opsApi, casesApi } from '../api';
 import toast from 'react-hot-toast';
 
@@ -26,19 +26,8 @@ const OpsDashboard = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
 
-  const handleVerifyCompany = async (id: string, decision: string) => {
-    try {
-      await opsApi.verifyCompany(id, { decision, notes });
-      toast.success(`Company ${decision === 'approve' ? 'approved' : 'rejected'}`);
-      setVerifyModal(null);
-      setNotes('');
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to verify');
-    }
-  };
+  useEffect(() => { fetchData(); }, []);
 
   const handleVerifyBill = async (id: string, decision: string) => {
     try {
