@@ -156,4 +156,19 @@ router.post(
   }
 );
 
+// POST /api/ops/nbfc/invite - Invite NBFC
+router.post(
+  '/nbfc/invite',
+  authenticate,
+  authorize('ops', 'admin'),
+  async (req, res) => {
+    try {
+      const result = await opsService.inviteNbfc(req.body, req.user._id);
+      res.status(201).json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
 module.exports = router;
