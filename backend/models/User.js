@@ -9,12 +9,13 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, trim: true },
     role: {
       type: String,
-      enum: ['sales', 'epc', 'subcontractor', 'ops', 'rmt', 'admin'],
+      enum: ['sales', 'epc', 'subcontractor', 'ops', 'rmt', 'nbfc', 'founder', 'admin'],
       required: true,
     },
     isActive: { type: Boolean, default: true },
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
     subContractorId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubContractor' },
+    nbfcId: { type: mongoose.Schema.Types.ObjectId, ref: 'Nbfc' },
   },
   { timestamps: true }
 );

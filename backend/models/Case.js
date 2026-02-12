@@ -33,6 +33,15 @@ const caseSchema = new mongoose.Schema(
         "BID_PLACED",
         "NEGOTIATION_IN_PROGRESS",
         "COMMERCIAL_LOCKED",
+        // NBFC workflow statuses
+        "PENDING_NBFC_SHARE",
+        "SHARED_WITH_NBFC",
+        "NBFC_APPROVED",
+        "NBFC_REJECTED",
+        "ESCROW_SETUP",
+        "DISBURSED",
+        "COMPLETED",
+        "OVERDUE",
       ],
       default: "READY_FOR_COMPANY_REVIEW",
     },
@@ -59,6 +68,40 @@ const caseSchema = new mongoose.Schema(
     // Commercial lock snapshot
     commercialSnapshot: { type: mongoose.Schema.Types.Mixed },
     lockedAt: { type: Date },
+
+    // NBFC sharing (SOP Phase 6)
+    nbfcSharing: [{
+      nbfc: { type: mongoose.Schema.Types.ObjectId, ref: "Nbfc" },
+      sharedAt: { type: Date },
+      sharedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      status: {
+        type: String,
+        enum: ["PENDING", "APPROVED", "REJECTED", "WITHDRAWN"],
+        default: "PENDING",
+      },
+      response: {
+        respondedAt: { type: Date },
+        approvalDetails: {
+          fundingPercentage: Number,
+          interestRate: Number,
+          tenorDays: Number,
+        },
+        rejectionReason: String,
+      },
+    }],
+
+    // Selected NBFC (after approval)
+    selectedNbfc: { type: mongoose.Schema.Types.ObjectId, ref: "Nbfc" },
+
+    // Transaction reference
+    transactionId: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
+
+    // SLA tracking reference
+    slaId: { type: mongoose.Schema.Types.ObjectId, ref: "Sla" },
+
+    // Deal value for threshold checks
+    dealValue: { type: Number },
+    requiresFounderApproval: { type: Boolean, default: false },
 
     statusHistory: [
       {

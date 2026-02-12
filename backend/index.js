@@ -80,6 +80,17 @@ app.use("/api/bids", require("./routes/bids"));
 app.use("/api/grylink", require("./routes/grylink"));
 app.use("/api/admin", require("./routes/admin"));
 
+// SOP Compliance Routes
+app.use("/api/nbfc", require("./routes/nbfc"));
+app.use("/api/blacklist", require("./routes/blacklist"));
+app.use("/api/transactions", require("./routes/transaction"));
+app.use("/api/sla", require("./routes/sla"));
+app.use("/api/approvals", require("./routes/approval"));
+app.use("/api/risk-assessment", require("./routes/riskAssessment"));
+app.use("/api/agents", require("./routes/agent"));
+app.use("/api/rekyc", require("./routes/rekyc"));
+app.use("/api/cron", require("./routes/cron"));
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
@@ -92,6 +103,10 @@ app.use((err, req, res, next) => {
     .status(500)
     .json({ error: "Something went wrong!", message: err.message });
 });
+
+// Initialize cron jobs
+const { initializeCronJobs } = require("./config/cronJobs");
+initializeCronJobs();
 
 // Start server
 app.listen(PORT, () => {

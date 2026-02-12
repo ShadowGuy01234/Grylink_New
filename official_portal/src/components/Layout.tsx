@@ -8,6 +8,7 @@ import {
   HiOutlineUserGroup,
   HiOutlineChartBar,
   HiOutlineCog,
+  HiOutlineExclamationCircle,
 } from "react-icons/hi";
 
 const Layout = () => {
@@ -19,15 +20,20 @@ const Layout = () => {
     navigate("/login");
   };
 
+  const isAdmin = user?.role === "admin" || user?.role === "founder";
+
   const navItems = [
-    ...(user?.role === "admin"
+    ...(isAdmin
       ? [{ to: "/admin", icon: <HiOutlineCog />, label: "Admin" }]
       : []),
-    ...(user?.role === "sales" || user?.role === "admin"
+    ...(user?.role === "sales" || isAdmin
       ? [{ to: "/sales", icon: <HiOutlineChartBar />, label: "Sales" }]
       : []),
-    ...(user?.role === "ops" || user?.role === "admin"
+    ...(user?.role === "ops" || isAdmin
       ? [{ to: "/ops", icon: <HiOutlineShieldCheck />, label: "Ops" }]
+      : []),
+    ...(user?.role === "rmt" || user?.role === "ops" || isAdmin
+      ? [{ to: "/rmt", icon: <HiOutlineExclamationCircle />, label: "RMT" }]
       : []),
     { to: "/cases", icon: <HiOutlineClipboardList />, label: "Cases" },
   ];

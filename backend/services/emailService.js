@@ -96,6 +96,91 @@ const sendSalesNotification = async (email, name, message) => {
   await sendEmail(email, 'Gryork - Sales Notification', html);
 };
 
+/**
+ * SOP-related email notifications
+ */
+
+// Re-KYC notification
+const sendReKycNotification = async (entity, trigger, details) => {
+  const email = entity.email || entity.ownerEmail;
+  const name = entity.companyName || entity.name;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #f59e0b;">Re-KYC Required</h2>
+      <p>Dear ${name},</p>
+      <p>A re-verification of your KYC documents has been triggered due to: <strong>${trigger}</strong></p>
+      <p>Please log in to the platform and submit the required updated documents.</p>
+      ${details.previousBank ? `<p><strong>Bank Change Detected:</strong> ${details.previousBank} → ${details.newBank}</p>` : ''}
+      <hr style="border: none; border-top: 1px solid #eee;" />
+      <p style="color: #999; font-size: 12px;">Gryork Platform</p>
+    </div>
+  `;
+  await sendEmail(email, 'Gryork - Re-KYC Required', html);
+};
+
+// SLA reminder
+const sendSlaReminder = async (sla, milestone) => {
+  // Would need case and recipient info from SLA
+  const daysLeft = Math.ceil((new Date(milestone.targetDate) - new Date()) / (1000 * 60 * 60 * 24));
+  console.log(`[EMAIL] SLA Reminder: Milestone "${milestone.name}" due in ${daysLeft} days`);
+  // Implementation depends on SLA recipient structure
+};
+
+// KYC expiry reminder
+const sendKycExpiryReminder = async (company) => {
+  const email = company.ownerEmail;
+  const name = company.companyName;
+  const validUntil = new Date(company.kycVerification.validUntil).toLocaleDateString('en-IN');
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #f59e0b;">KYC Expiring Soon</h2>
+      <p>Dear ${name},</p>
+      <p>Your KYC verification is expiring on <strong>${validUntil}</strong>.</p>
+      <p>Please log in to the platform and submit updated documents to maintain your active status.</p>
+      <hr style="border: none; border-top: 1px solid #eee;" />
+      <p style="color: #999; font-size: 12px;">Gryork Platform</p>
+    </div>
+  `;
+  await sendEmail(email, 'Gryork - KYC Expiring Soon', html);
+};
+
+// Overdue upcoming notification (1 month before CWC due)
+const sendOverdueUpcomingNotification = async (transaction) => {
+  const dueDate = new Date(transaction.cwcDueDate).toLocaleDateString('en-IN');
+  
+  // Send to SC
+  if (transaction.seller?.email) {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #f59e0b;">Payment Due Date Reminder</h2>
+        <p>Dear ${transaction.seller.name},</p>
+        <p>This is a reminder that the CWC payment for your transaction is due on <strong>${dueDate}</strong>.</p>
+        <p>Please ensure timely payment to maintain your good standing.</p>
+        <p><strong>Amount:</strong> ₹${transaction.amount?.toLocaleString()}</p>
+        <hr style="border: none; border-top: 1px solid #eee;" />
+        <p style="color: #999; font-size: 12px;">Gryork Platform</p>
+      </div>
+    `;
+    await sendEmail(transaction.seller.email, 'Gryork - Payment Due Date Reminder', html);
+  }
+};
+
+// Overdue alert (past due)
+const sendOverdueAlert = async (transaction) => {
+  // Internal notification to ops team
+  console.log(`[EMAIL] Overdue Alert: Transaction ${transaction._id} is past due`);
+  // Would send to ops team email
+};
+
+// Critical overdue alert (30+ days past due)
+const sendCriticalOverdueAlert = async (transaction) => {
+  // Internal notification to founders
+  console.log(`[EMAIL] CRITICAL Overdue Alert: Transaction ${transaction._id} is 30+ days past due`);
+  // Would send to founder email
+};
+
 module.exports = {
   sendEmail,
   sendOnboardingLink,
@@ -103,4 +188,11 @@ module.exports = {
   sendBidNotification,
   sendKycRequest,
   sendSalesNotification,
+  // SOP notifications
+  sendReKycNotification,
+  sendSlaReminder,
+  sendKycExpiryReminder,
+  sendOverdueUpcomingNotification,
+  sendOverdueAlert,
+  sendCriticalOverdueAlert,
 };

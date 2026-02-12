@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import NbfcDashboard from './pages/NbfcDashboard';
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -22,11 +23,22 @@ const AppRoutes = () => {
     );
   }
 
+  // NBFC users get NBFC dashboard, EPC users get EPC dashboard
+  const defaultRoute = user.role === 'nbfc' ? '/nbfc' : '/dashboard';
+
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route index element={<Navigate to={defaultRoute} replace />} />
+        <Route 
+          path="dashboard" 
+          element={user.role === 'epc' ? <DashboardPage /> : <Navigate to={defaultRoute} replace />} 
+        />
+        <Route 
+          path="nbfc" 
+          element={user.role === 'nbfc' ? <NbfcDashboard /> : <Navigate to={defaultRoute} replace />} 
+        />
+        <Route path="*" element={<Navigate to={defaultRoute} replace />} />
       </Route>
     </Routes>
   );

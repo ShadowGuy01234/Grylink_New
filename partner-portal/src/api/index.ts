@@ -59,4 +59,5 @@ export const bidsApi = {
   getBidsForCase: (caseId: string) => api.get(`/bids/case/${caseId}`),
 };
 
+export { api };
 export default api;
