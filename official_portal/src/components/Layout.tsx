@@ -9,6 +9,7 @@ import {
   HiOutlineChartBar,
   HiOutlineCog,
   HiOutlineExclamationCircle,
+  HiOutlineStar,
 } from "react-icons/hi";
 
 const Layout = () => {
@@ -21,8 +22,12 @@ const Layout = () => {
   };
 
   const isAdmin = user?.role === "admin" || user?.role === "founder";
+  const isFounder = user?.role === "founder";
 
   const navItems = [
+    ...(isFounder
+      ? [{ to: "/founder", icon: <HiOutlineStar />, label: "Founder" }]
+      : []),
     ...(isAdmin
       ? [{ to: "/admin", icon: <HiOutlineCog />, label: "Admin" }]
       : []),

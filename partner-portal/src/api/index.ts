@@ -59,5 +59,15 @@ export const bidsApi = {
   getBidsForCase: (caseId: string) => api.get(`/bids/case/${caseId}`),
 };
 
+// ============= NBFC APIs =============
+export const nbfcApi = {
+  getDashboard: () => api.get('/nbfc/dashboard'),
+  getCases: () => api.get('/nbfc/cases'),
+  respondToCase: (caseId: string, data: any) => api.post(`/nbfc/${caseId}/respond`, data),
+  getTransactions: () => api.get('/transactions'),
+  requestReKyc: (entityType: string, entityId: string, reason: string) =>
+    api.post('/rekyc/nbfc-request', { entityType, entityId, reason }),
+};
+
 export { api };
 export default api;

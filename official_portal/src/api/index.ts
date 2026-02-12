@@ -199,6 +199,50 @@ export const nbfcApi = {
     api.post(`/nbfc/share/${caseId}`, { nbfcIds }),
 };
 
+// Agent Management (SOP Section 11)
+export const agentApi = {
+  getAll: () => api.get("/agents"),
+  getById: (id: string) => api.get(`/agents/${id}`),
+  create: (data: any) => api.post("/agents", data),
+  getDashboard: () => api.get("/agents/dashboard"),
+  introduceEpc: (agentId: string, companyId: string) =>
+    api.post(`/agents/${agentId}/introduce-epc`, { companyId }),
+  processCommission: (transactionId: string) =>
+    api.post(`/agents/process-commission/${transactionId}`),
+  markCommissionPaid: (agentId: string, commissionIndex: number, paymentRef: string) =>
+    api.post(`/agents/${agentId}/commission/${commissionIndex}/pay`, { paymentRef }),
+  reportMisconduct: (agentId: string, type: string, description: string, evidence?: string[]) =>
+    api.post(`/agents/${agentId}/misconduct`, { type, description, evidence }),
+  handleMisconductDecision: (agentId: string, misconductIndex: number, decision: string, action: string) =>
+    api.post(`/agents/${agentId}/misconduct/${misconductIndex}/decision`, { decision, action }),
+};
+
+// Re-KYC (SOP Section 8)
+export const rekycApi = {
+  getPending: (entityType?: string) => api.get("/rekyc/pending", { params: { entityType } }),
+  getExpiring: (days?: number) => api.get("/rekyc/expiring", { params: { days } }),
+  getTriggers: () => api.get("/rekyc/triggers"),
+  triggerCompany: (companyId: string, trigger: string, details?: any) =>
+    api.post(`/rekyc/trigger/company/${companyId}`, { trigger, details }),
+  triggerSubContractor: (scId: string, trigger: string, details?: any) =>
+    api.post(`/rekyc/trigger/subcontractor/${scId}`, { trigger, details }),
+  nbfcRequest: (entityType: string, entityId: string, reason: string) =>
+    api.post("/rekyc/nbfc-request", { entityType, entityId, reason }),
+  complete: (entityType: string, entityId: string, documents?: string[]) =>
+    api.post(`/rekyc/complete/${entityType}/${entityId}`, { documents }),
+};
+
+// Cron Jobs (Admin)
+export const cronApi = {
+  getStatus: () => api.get("/cron/status"),
+  runDormant: () => api.post("/cron/run/dormant"),
+  runSlaReminders: () => api.post("/cron/run/sla-reminders"),
+  runKycExpiry: () => api.post("/cron/run/kyc-expiry"),
+  runOverdueNotifications: () => api.post("/cron/run/overdue-notifications"),
+  runActualOverdue: () => api.post("/cron/run/actual-overdue"),
+  runAll: () => api.post("/cron/run/all"),
+};
+
 export { api };
 
 export default api;

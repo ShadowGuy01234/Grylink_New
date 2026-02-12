@@ -37,6 +37,13 @@ const users = [
     password: 'password123',
     role: 'rmt',
     phone: '6666666666'
+  },
+  {
+    name: 'Founder',
+    email: 'founder@gryork.com',
+    password: 'password123',
+    role: 'founder',
+    phone: '5555555555'
   }
 ];
 

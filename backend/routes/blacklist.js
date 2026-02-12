@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const blacklistService = require('../services/blacklistService');
 
 // Check if entity is blacklisted (used during onboarding)
-router.post('/check', auth, async (req, res) => {
+router.post('/check', authenticate, async (req, res) => {
   try {
     const { pan, gstin, email } = req.body;
     const isBlacklisted = await blacklistService.checkBlacklist({ pan, gstin, email });
@@ -15,12 +15,8 @@ router.post('/check', auth, async (req, res) => {
 });
 
 // Report entity for blacklisting
-router.post('/report', auth, async (req, res) => {
+router.post('/report', authenticate, authorize('sales', 'ops', 'admin', 'founder'), async (req, res) => {
   try {
-    // Only Sales, Ops can report
-    if (!['sales', 'ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized to report blacklisting' });
-    }
     const result = await blacklistService.reportForBlacklist(req.body, req.user.id);
     res.status(201).json(result);
   } catch (error) {
@@ -29,11 +25,8 @@ router.post('/report', auth, async (req, res) => {
 });
 
 // Get all blacklist entries
-router.get('/', auth, async (req, res) => {
+router.get('/', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     const entries = await blacklistService.getBlacklist(req.query);
     res.json(entries);
   } catch (error) {
@@ -42,11 +35,8 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Get pending blacklist requests (Ops Manager)
-router.get('/pending', auth, async (req, res) => {
+router.get('/pending', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     const entries = await blacklistService.getPendingBlacklists();
     res.json(entries);
   } catch (error) {
@@ -55,11 +45,8 @@ router.get('/pending', auth, async (req, res) => {
 });
 
 // Approve blacklist (Ops Manager)
-router.post('/:id/approve', auth, async (req, res) => {
+router.post('/:id/approve', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized to approve blacklisting' });
-    }
     const result = await blacklistService.approveBlacklist(req.params.id, req.user.id, req.body.notes);
     res.json(result);
   } catch (error) {
@@ -68,11 +55,8 @@ router.post('/:id/approve', auth, async (req, res) => {
 });
 
 // Reject blacklist request
-router.post('/:id/reject', auth, async (req, res) => {
+router.post('/:id/reject', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized to reject blacklisting' });
-    }
     const result = await blacklistService.rejectBlacklistRequest(req.params.id, req.user.id, req.body.notes);
     res.json(result);
   } catch (error) {
@@ -81,11 +65,8 @@ router.post('/:id/reject', auth, async (req, res) => {
 });
 
 // Revoke blacklist (Founders only)
-router.post('/:id/revoke', auth, async (req, res) => {
+router.post('/:id/revoke', authenticate, authorize('admin', 'founder'), async (req, res) => {
   try {
-    if (!['admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Only Founders can revoke blacklisting' });
-    }
     const result = await blacklistService.revokeBlacklist(req.params.id, req.user.id, req.body.reason);
     res.json(result);
   } catch (error) {

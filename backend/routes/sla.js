@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const slaService = require('../services/slaService');
 
 // Create SLA for a case
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -17,7 +17,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Get SLA dashboard
-router.get('/dashboard', auth, async (req, res) => {
+router.get('/dashboard', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -30,7 +30,7 @@ router.get('/dashboard', auth, async (req, res) => {
 });
 
 // Get active SLAs
-router.get('/active', auth, async (req, res) => {
+router.get('/active', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -43,7 +43,7 @@ router.get('/active', auth, async (req, res) => {
 });
 
 // Get overdue SLAs
-router.get('/overdue', auth, async (req, res) => {
+router.get('/overdue', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -56,7 +56,7 @@ router.get('/overdue', auth, async (req, res) => {
 });
 
 // Check all milestones (cron job endpoint)
-router.post('/check-milestones', auth, async (req, res) => {
+router.post('/check-milestones', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder', 'system'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -69,7 +69,7 @@ router.post('/check-milestones', auth, async (req, res) => {
 });
 
 // Get SLA by case ID
-router.get('/case/:caseId', auth, async (req, res) => {
+router.get('/case/:caseId', authenticate, async (req, res) => {
   try {
     const sla = await slaService.getSlaByCase(req.params.caseId);
     if (!sla) {
@@ -82,7 +82,7 @@ router.get('/case/:caseId', auth, async (req, res) => {
 });
 
 // Complete a milestone
-router.post('/:id/milestone/:milestone/complete', auth, async (req, res) => {
+router.post('/:id/milestone/:milestone/complete', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -99,7 +99,7 @@ router.post('/:id/milestone/:milestone/complete', auth, async (req, res) => {
 });
 
 // Send reminder
-router.post('/:id/reminder', auth, async (req, res) => {
+router.post('/:id/reminder', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -112,7 +112,7 @@ router.post('/:id/reminder', auth, async (req, res) => {
 });
 
 // Mark entity as dormant
-router.post('/dormant', auth, async (req, res) => {
+router.post('/dormant', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });

@@ -66,6 +66,9 @@ const companySchema = new mongoose.Schema(
     // SLA Tracking
     slaId: { type: mongoose.Schema.Types.ObjectId, ref: 'Sla' },
 
+    // Agent introduction (SOP Section 11 - commission tracking)
+    introducedByAgent: { type: mongoose.Schema.Types.ObjectId, ref: 'Agent' },
+
     statusHistory: [
       {
         status: String,

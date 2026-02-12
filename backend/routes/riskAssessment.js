@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const riskAssessmentService = require('../services/riskAssessmentService');
 
 // Create risk assessment for seller (RMT initiates)
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
     if (!['rmt', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -20,7 +20,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Get risk dashboard
-router.get('/dashboard', auth, async (req, res) => {
+router.get('/dashboard', authenticate, async (req, res) => {
   try {
     if (!['rmt', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -33,7 +33,7 @@ router.get('/dashboard', auth, async (req, res) => {
 });
 
 // Get pending assessments (RMT queue)
-router.get('/pending', auth, async (req, res) => {
+router.get('/pending', authenticate, async (req, res) => {
   try {
     if (!['rmt', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -46,7 +46,7 @@ router.get('/pending', auth, async (req, res) => {
 });
 
 // Get assessment by ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const assessment = await riskAssessmentService.getAssessmentById(req.params.id);
     if (!assessment) {
@@ -59,7 +59,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Get assessment by seller ID
-router.get('/seller/:sellerId', auth, async (req, res) => {
+router.get('/seller/:sellerId', authenticate, async (req, res) => {
   try {
     const assessment = await riskAssessmentService.getAssessmentBySeller(req.params.sellerId);
     if (!assessment) {
@@ -72,7 +72,7 @@ router.get('/seller/:sellerId', auth, async (req, res) => {
 });
 
 // Update checklist item
-router.put('/:id/checklist/:item', auth, async (req, res) => {
+router.put('/:id/checklist/:item', authenticate, async (req, res) => {
   try {
     if (!['rmt', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -90,7 +90,7 @@ router.put('/:id/checklist/:item', auth, async (req, res) => {
 });
 
 // Complete assessment (approve/reject)
-router.post('/:id/complete', auth, async (req, res) => {
+router.post('/:id/complete', authenticate, async (req, res) => {
   try {
     if (!['rmt', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });

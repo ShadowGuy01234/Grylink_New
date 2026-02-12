@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const agentService = require('../services/agentService');
 
 // Create agent
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
     if (!['sales', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -17,7 +17,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Get agent dashboard
-router.get('/dashboard', auth, async (req, res) => {
+router.get('/dashboard', authenticate, async (req, res) => {
   try {
     if (!['sales', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -30,7 +30,7 @@ router.get('/dashboard', auth, async (req, res) => {
 });
 
 // Get all agents
-router.get('/', auth, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
   try {
     if (!['sales', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -43,7 +43,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Get agent by ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const agent = await agentService.getAgentById(req.params.id);
     if (!agent) {
@@ -56,7 +56,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Register EPC introduction
-router.post('/:id/introduce-epc', auth, async (req, res) => {
+router.post('/:id/introduce-epc', authenticate, async (req, res) => {
   try {
     if (!['sales', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -69,7 +69,7 @@ router.post('/:id/introduce-epc', auth, async (req, res) => {
 });
 
 // Process commission (called after first CWC)
-router.post('/process-commission/:transactionId', auth, async (req, res) => {
+router.post('/process-commission/:transactionId', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -82,7 +82,7 @@ router.post('/process-commission/:transactionId', auth, async (req, res) => {
 });
 
 // Mark commission as paid
-router.post('/:id/commission/:index/pay', auth, async (req, res) => {
+router.post('/:id/commission/:index/pay', authenticate, async (req, res) => {
   try {
     if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -99,7 +99,7 @@ router.post('/:id/commission/:index/pay', auth, async (req, res) => {
 });
 
 // Report misconduct
-router.post('/:id/misconduct', auth, async (req, res) => {
+router.post('/:id/misconduct', authenticate, async (req, res) => {
   try {
     if (!['sales', 'ops', 'admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -112,7 +112,7 @@ router.post('/:id/misconduct', auth, async (req, res) => {
 });
 
 // Handle misconduct decision (Founders only)
-router.post('/:id/misconduct/:index/decision', auth, async (req, res) => {
+router.post('/:id/misconduct/:index/decision', authenticate, async (req, res) => {
   try {
     if (!['admin', 'founder'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Only Founders can decide on misconduct' });

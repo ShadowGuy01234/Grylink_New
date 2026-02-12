@@ -1,14 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const transactionService = require('../services/transactionService');
 
 // Create transaction (when NBFC approves)
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticate, authorize('nbfc', 'ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['nbfc', 'ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     const transaction = await transactionService.createTransaction({
       ...req.body,
       approvedBy: req.user.id,
@@ -20,7 +17,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Get transactions (with filters)
-router.get('/', auth, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
   try {
     const filters = {};
     if (req.user.role === 'nbfc') filters.nbfc = req.user.companyId;
@@ -36,11 +33,8 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Get overdue transactions (Ops)
-router.get('/overdue', auth, async (req, res) => {
+router.get('/overdue', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     const transactions = await transactionService.getOverdueTransactions();
     res.json(transactions);
   } catch (error) {
@@ -49,7 +43,7 @@ router.get('/overdue', auth, async (req, res) => {
 });
 
 // Get transaction by ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const transaction = await transactionService.getTransactionById(req.params.id);
     if (!transaction) {
@@ -62,11 +56,8 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Setup escrow/TRA
-router.post('/:id/escrow', auth, async (req, res) => {
+router.post('/:id/escrow', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     const transaction = await transactionService.setupEscrow(req.params.id, req.body);
     res.json(transaction);
   } catch (error) {
@@ -75,11 +66,8 @@ router.post('/:id/escrow', auth, async (req, res) => {
 });
 
 // Initiate disbursement
-router.post('/:id/disburse', auth, async (req, res) => {
+router.post('/:id/disburse', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     const transaction = await transactionService.initiateDisbursement(req.params.id, req.body);
     res.json(transaction);
   } catch (error) {
@@ -88,11 +76,8 @@ router.post('/:id/disburse', auth, async (req, res) => {
 });
 
 // Track repayment
-router.post('/:id/repayment', auth, async (req, res) => {
+router.post('/:id/repayment', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     const transaction = await transactionService.trackRepayment(req.params.id, req.body);
     res.json(transaction);
   } catch (error) {
@@ -101,11 +86,8 @@ router.post('/:id/repayment', auth, async (req, res) => {
 });
 
 // Mark overdue
-router.post('/:id/overdue', auth, async (req, res) => {
+router.post('/:id/overdue', authenticate, authorize('ops', 'admin', 'founder'), async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
     const transaction = await transactionService.handleOverdue(req.params.id);
     res.json(transaction);
   } catch (error) {

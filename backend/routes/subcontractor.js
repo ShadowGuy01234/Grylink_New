@@ -228,4 +228,42 @@ router.post(
   }
 );
 
+// POST /api/subcontractor/bills/:id/wcc - Upload WCC (SOP Phase 6)
+router.post(
+  '/bills/:id/wcc',
+  authenticate,
+  authorize('subcontractor'),
+  uploadBills.single('wcc'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'WCC file is required' });
+      }
+      const result = await subContractorService.uploadWcc(req.user._id, req.params.id, req.file);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// POST /api/subcontractor/bills/:id/measurement-sheet - Upload Measurement Sheet (SOP Phase 6)
+router.post(
+  '/bills/:id/measurement-sheet',
+  authenticate,
+  authorize('subcontractor'),
+  uploadBills.single('measurementSheet'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'Measurement sheet file is required' });
+      }
+      const result = await subContractorService.uploadMeasurementSheet(req.user._id, req.params.id, req.file);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
 module.exports = router;

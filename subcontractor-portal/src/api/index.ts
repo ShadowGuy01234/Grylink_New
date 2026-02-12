@@ -37,6 +37,15 @@ export const scApi = {
     api.post("/subcontractor/bill", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+  // WCC and Measurement Sheet uploads (SOP Phase 6)
+  uploadWcc: (billId: string, formData: FormData) =>
+    api.post(`/subcontractor/bills/${billId}/wcc`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  uploadMeasurementSheet: (billId: string, formData: FormData) =>
+    api.post(`/subcontractor/bills/${billId}/measurement-sheet`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
   getCases: () => api.get("/subcontractor/cases"),
   getBills: () => api.get("/subcontractor/bills"),
   getBids: () => api.get("/subcontractor/bids"),

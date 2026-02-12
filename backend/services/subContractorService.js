@@ -285,18 +285,86 @@ const getBills = async (userId) => {
   return bills;
 };
 
-// Get all cases for sub-contractor
-const Case = require("../models/Case");
-const getCases = async (userId) => {
+// Upload WCC (Work Completion Certificate) - SOP Phase 6
+const uploadWcc = async (userId, billId, file) => {
   const subContractor = await SubContractor.findOne({ userId });
   if (!subContractor) throw new Error("Sub-contractor not found");
 
-  const cases = await Case.find({ subContractorId: subContractor._id })
-    .populate("epcId", "companyName")
-    .populate("bills")
-    .sort({ createdAt: -1 });
+  const bill = await Bill.findOne({ _id: billId, subContractorId: subContractor._id });
+  if (!bill) throw new Error("Bill not found or access denied");
 
-  return cases;
+  // Upload to Cloudinary
+  const result = await uploadToCloudinary(file.buffer, file.mimetype, {
+    folder: "gryork/wcc",
+  });
+
+  bill.wcc = {
+    uploaded: true,
+    fileName: file.originalname,
+    fileUrl: result.secure_url,
+    cloudinaryPublicId: result.public_id,
+    uploadedAt: new Date(),
+    uploadedBy: userId,
+    verified: false,
+  };
+
+  // Update bill status if measurement sheet is also uploaded
+  if (bill.measurementSheet?.uploaded) {
+    bill.status = "UNDER_REVIEW";
+  } else {
+    bill.status = "PENDING_MEASUREMENT";
+  }
+
+  bill.statusHistory.push({
+    status: bill.status,
+    changedAt: new Date(),
+    changedBy: userId,
+    notes: "WCC uploaded",
+  });
+
+  await bill.save();
+  return bill;
+};
+
+// Upload Measurement Sheet - SOP Phase 6
+const uploadMeasurementSheet = async (userId, billId, file) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  const bill = await Bill.findOne({ _id: billId, subContractorId: subContractor._id });
+  if (!bill) throw new Error("Bill not found or access denied");
+
+  // Upload to Cloudinary
+  const result = await uploadToCloudinary(file.buffer, file.mimetype, {
+    folder: "gryork/measurement-sheets",
+  });
+
+  bill.measurementSheet = {
+    uploaded: true,
+    fileName: file.originalname,
+    fileUrl: result.secure_url,
+    cloudinaryPublicId: result.public_id,
+    uploadedAt: new Date(),
+    uploadedBy: userId,
+    certified: false,
+  };
+
+  // Update bill status if WCC is also uploaded
+  if (bill.wcc?.uploaded) {
+    bill.status = "UNDER_REVIEW";
+  } else {
+    bill.status = "PENDING_WCC";
+  }
+
+  bill.statusHistory.push({
+    status: bill.status,
+    changedAt: new Date(),
+    changedBy: userId,
+    notes: "Measurement sheet uploaded",
+  });
+
+  await bill.save();
+  return bill;
 };
 
 module.exports = {
@@ -305,10 +373,9 @@ module.exports = {
   submitCwcRf,
   respondToBid,
   getDashboard,
-<<<<<<< HEAD
   getIncomingBids,
-=======
   getBills,
->>>>>>> 27b58c6ff018f59e5a590604941825bf4f863de5
   getCases,
+  uploadWcc,
+  uploadMeasurementSheet,
 };
