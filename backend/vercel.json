@@ -14,16 +14,8 @@
     ],
     "crons": [
         {
-            "path": "/api/cron/daily",
+            "path": "/api/cron/all_tasks",
             "schedule": "0 0 * * *"
-        },
-        {
-            "path": "/api/cron/sla",
-            "schedule": "0 */6 * * *"
-        },
-        {
-            "path": "/api/cron/kyc",
-            "schedule": "0 9 * * 1"
         }
     ]
 }

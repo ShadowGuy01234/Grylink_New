@@ -95,48 +95,36 @@ module.exports = app;
 }
 ```
 
-4. **Handle Cron Jobs** — `node-cron` won't work in serverless (no long-running process). Migrate to **Vercel Cron Jobs**:
+4. **Handle Cron Jobs** — Consolidate all jobs into a single file to stay within Vercel Hobby limits (max 2 jobs, daily frequency).
 
-   Create `backend/api/cron/daily.js`:
+   Create `backend/api/cron/all_tasks.js`:
    ```js
-   const { markDormantSubContractors, checkOverdueNotifications, checkActualOverdue } = require('../../config/cronJobs');
+   const {
+     markDormantSubContractors,
+     checkOverdueNotifications,
+     checkActualOverdue,
+     checkSlaReminders,
+     checkKycExpiry,
+   } = require('../../config/cronJobs');
 
    module.exports = async (req, res) => {
      if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
        return res.status(401).json({ error: 'Unauthorized' });
      }
-     const results = {
-       dormant: await markDormantSubContractors(),
-       overdue: await checkOverdueNotifications(),
-       actualOverdue: await checkActualOverdue(),
-     };
-     res.json({ success: true, results });
-   };
-   ```
 
-   Create `backend/api/cron/sla.js`:
-   ```js
-   const { checkSlaReminders } = require('../../config/cronJobs');
-
-   module.exports = async (req, res) => {
-     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-       return res.status(401).json({ error: 'Unauthorized' });
+     try {
+       const results = {
+         dormant: await markDormantSubContractors(),
+         overdue: await checkOverdueNotifications(),
+         actualOverdue: await checkActualOverdue(),
+         slaReminders: await checkSlaReminders(), // Daily check
+         kycExpiry: await checkKycExpiry(),       // Daily check (low overhead)
+       };
+       res.json({ success: true, results });
+     } catch (error) {
+       console.error('[CRON] Error:', error);
+       res.status(500).json({ error: error.message });
      }
-     const result = await checkSlaReminders();
-     res.json({ success: true, result });
-   };
-   ```
-
-   Create `backend/api/cron/kyc.js`:
-   ```js
-   const { checkKycExpiry } = require('../../config/cronJobs');
-
-   module.exports = async (req, res) => {
-     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-       return res.status(401).json({ error: 'Unauthorized' });
-     }
-     const result = await checkKycExpiry();
-     res.json({ success: true, result });
    };
    ```
 
@@ -145,16 +133,8 @@ module.exports = app;
    {
      "crons": [
        {
-         "path": "/api/cron/daily",
+         "path": "/api/cron/all_tasks",
          "schedule": "0 0 * * *"
-       },
-       {
-         "path": "/api/cron/sla",
-         "schedule": "0 */6 * * *"
-       },
-       {
-         "path": "/api/cron/kyc",
-         "schedule": "0 9 * * 1"
        }
      ]
    }
