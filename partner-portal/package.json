@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "axios": "^1.6.0",
-    "gryork-monorepo": "file:..",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.4.1",

@@ -104,12 +104,19 @@ app.use((err, req, res, next) => {
     .json({ error: "Something went wrong!", message: err.message });
 });
 
-// Initialize cron jobs
-const { initializeCronJobs } = require("./config/cronJobs");
-initializeCronJobs();
+// Initialize cron jobs (only when NOT on Vercel — Vercel uses HTTP-triggered crons)
+if (!process.env.VERCEL) {
+  const { initializeCronJobs } = require("./config/cronJobs");
+  initializeCronJobs();
+}
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-});
+// Start server (only when NOT on Vercel — Vercel handles this automatically)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  });
+}
+
+// Export for Vercel Serverless Functions
+module.exports = app;
