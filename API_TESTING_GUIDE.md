@@ -2,10 +2,27 @@
 
 Complete API testing commands for all endpoints.
 
+---
+
+## Deployed URLs
+
+| Portal | URL | Description |
+|--------|-----|-------------|
+| **Backend API** | https://grylink-backend.vercel.app | REST API Server |
+| **Gryork Public** | https://gryork-public.vercel.app | Public Marketing Website |
+| **Sub-Contractor Portal** | https://app-gryork.vercel.app | Sub-Contractor Dashboard |
+| **GryLink Portal** | https://link-gryork.vercel.app | EPC/NBFC Onboarding Portal |
+| **Partner Portal** | https://partner-gryork.vercel.app | EPC & NBFC Partner Dashboard |
+| **Official Portal** | https://official-gryork.vercel.app | Internal Admin (Sales, Ops, RMT) |
+
+---
+
 ## Setup
 
+### Local Development
+
 ```powershell
-# Set base URL
+# Set base URL for local development
 $BASE = "http://localhost:5000/api"
 
 # Login function
@@ -22,6 +39,49 @@ $OPS_TOKEN = Login "ops@gryork.com"
 $RMT_TOKEN = Login "rmt@gryork.com"
 $FOUNDER_TOKEN = Login "founder@gryork.com"
 ```
+
+### Production Testing
+
+```powershell
+# Set base URL for production
+$BASE = "https://grylink-backend.vercel.app/api"
+
+# Login function (same as above)
+function Login($email) {
+    $body = @{ email = $email; password = "password123" } | ConvertTo-Json
+    $result = Invoke-RestMethod -Uri "$BASE/auth/login" -Method POST -Body $body -ContentType "application/json"
+    return $result.token
+}
+
+# Tokens for each role
+$ADMIN_TOKEN = Login "admin@gryork.com"
+$SALES_TOKEN = Login "sales@gryork.com"
+$OPS_TOKEN = Login "ops@gryork.com"
+$RMT_TOKEN = Login "rmt@gryork.com"
+$FOUNDER_TOKEN = Login "founder@gryork.com"
+```
+
+### Quick Health Check
+
+```powershell
+# Local
+Invoke-RestMethod -Uri "http://localhost:5000/api/health"
+
+# Production
+Invoke-RestMethod -Uri "https://grylink-backend.vercel.app/api/health"
+```
+
+---
+
+## Test Accounts
+
+| Role | Email | Password | Access |
+|------|-------|----------|--------|
+| Admin | admin@gryork.com | password123 | Full system access |
+| Sales | sales@gryork.com | password123 | Lead management, contacts |
+| Operations | ops@gryork.com | password123 | KYC verification, documents |
+| Risk Management | rmt@gryork.com | password123 | Risk assessment |
+| Founder | founder@gryork.com | password123 | Approvals, oversight |
 
 ---
 
