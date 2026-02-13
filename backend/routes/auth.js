@@ -110,4 +110,36 @@ router.get('/check-email/:email', async (req, res) => {
   }
 });
 
+// PUT /api/auth/profile - Update user profile
+router.put('/profile', async (req, res) => {
+  try {
+    const { authenticate } = require('../middleware/auth');
+    const jwt = require('jsonwebtoken');
+    const User = require('../models/User');
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const { name, phone } = req.body;
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+
+    await user.save();
+    
+    const updatedUser = user.toObject();
+    delete updatedUser.password;
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = router;

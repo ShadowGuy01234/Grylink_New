@@ -307,7 +307,7 @@ const MyCwcrfsPage: React.FC = () => {
 
               <div className="cwcrf-actions">
                 <button
-                  onClick={() => setSelectedCwcrf(cwcrf)}
+                  onClick={() => navigate(`/cwcrf/${cwcrf._id}`)}
                   className="btn-secondary"
                 >
                   View Details
