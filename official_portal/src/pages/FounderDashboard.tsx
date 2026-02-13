@@ -2,15 +2,46 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { agentApi, approvalApi, rekycApi, transactionApi, cronApi } from '../api';
 
+interface OverdueTransaction {
+  _id: string;
+  transactionNumber: string;
+  sellerId?: { companyName: string };
+  buyerId?: { companyName: string };
+  billAmount?: number;
+  amount: number;
+  dueDate: string;
+  repayment?: {
+    dueDate?: string;
+    overdueBy?: number;
+    status?: string;
+  };
+}
+
+interface MisconductRecord {
+  type: string;
+  reportedAt: string;
+  founderDecision?: string;
+}
+
+interface CronJob {
+  name: string;
+  schedule: string;
+  description: string;
+}
+
+interface CronStatusData {
+  jobs: CronJob[];
+}
+
 interface Agent {
   _id: string;
   name: string;
   email: string;
   phone: string;
   status: string;
-  introducedEpcs: any[];
-  commissions: any[];
-  misconductHistory: any[];
+  introducedEpcs: Array<{ _id: string; name: string }>;
+  commissions: Array<{ amount: number; date: string }>;
+  misconductHistory: MisconductRecord[];
   metrics: {
     totalEpcsIntroduced: number;
     totalCommissionEarned: number;
@@ -44,11 +75,11 @@ const FounderDashboard: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [rekyc, setRekyc] = useState<ReKycPending[]>([]);
-  const [overdueTransactions, setOverdueTransactions] = useState<any[]>([]);
+  const [overdueTransactions, setOverdueTransactions] = useState<OverdueTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('approvals');
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [cronStatus, setCronStatus] = useState<any>(null);
+  const [cronStatus, setCronStatus] = useState<CronStatusData | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -84,8 +115,9 @@ const FounderDashboard: React.FC = () => {
       }
       toast.success(`Request ${action}d`);
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Action failed');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || 'Action failed');
     }
   };
 
@@ -94,8 +126,9 @@ const FounderDashboard: React.FC = () => {
       await agentApi.handleMisconductDecision(agentId, index, decision, action);
       toast.success('Misconduct decision recorded');
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to process');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || 'Failed to process');
     }
   };
 
@@ -104,8 +137,9 @@ const FounderDashboard: React.FC = () => {
       await rekycApi.complete(entityType, entityId);
       toast.success('Re-KYC completed');
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to complete');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || 'Failed to complete');
     }
   };
 
@@ -130,8 +164,9 @@ const FounderDashboard: React.FC = () => {
         default: return;
       }
       toast.success(res.data.message || 'Job completed');
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Job failed');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || 'Job failed');
     }
   };
 
@@ -386,7 +421,7 @@ const FounderDashboard: React.FC = () => {
                     <tr><th>Job</th><th>Schedule</th><th>Description</th></tr>
                   </thead>
                   <tbody>
-                    {cronStatus.jobs.map((job: any, i: number) => (
+                    {cronStatus.jobs.map((job: CronJob, i: number) => (
                       <tr key={i}>
                         <td>{job.name}</td>
                         <td>{job.schedule}</td>
@@ -439,7 +474,7 @@ const FounderDashboard: React.FC = () => {
                         <tr><th>Type</th><th>Date</th><th>Status</th><th>Action</th></tr>
                       </thead>
                       <tbody>
-                        {selectedAgent.misconductHistory.map((m: any, i: number) => (
+                        {selectedAgent.misconductHistory.map((m: MisconductRecord, i: number) => (
                           <tr key={i}>
                             <td>{m.type}</td>
                             <td>{new Date(m.reportedAt).toLocaleDateString()}</td>

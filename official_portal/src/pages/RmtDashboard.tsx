@@ -56,7 +56,13 @@ interface MatchingNbfc {
 }
 
 interface CwcafFormData {
-  riskAssessment: {
+  sellerProfileSummary: {
+    businessAge: number;
+    totalTransactions: number;
+    averageInvoiceValue: number;
+    repaymentHistory: string;
+  };
+  riskAssessmentDetails: {
     invoiceAging: { score: number; remarks: string };
     buyerCreditworthiness: { score: number; remarks: string };
     sellerTrackRecord: { score: number; remarks: string };
@@ -64,6 +70,19 @@ interface CwcafFormData {
   };
   riskCategory: "LOW" | "MEDIUM" | "HIGH";
   rmtRecommendation: string;
+}
+
+interface DashboardData {
+  total: number;
+  inProgress: number;
+  approved: number;
+  rejected: number;
+  riskBreakdown?: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+  avgRiskScore?: number;
 }
 
 interface RiskAssessment {
@@ -101,7 +120,7 @@ const RmtDashboard: React.FC = () => {
   const [assessments, setAssessments] = useState<RiskAssessment[]>([]);
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [cwcrfs, setCwcrfs] = useState<Cwcrf[]>([]);
-  const [dashboard, setDashboard] = useState<any>(null);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("assessments");
   const [selectedAssessment, setSelectedAssessment] =
@@ -114,7 +133,13 @@ const RmtDashboard: React.FC = () => {
   const [matchingNbfcs, setMatchingNbfcs] = useState<MatchingNbfc[]>([]);
   const [selectedNbfcs, setSelectedNbfcs] = useState<string[]>([]);
   const [cwcafForm, setCwcafForm] = useState<CwcafFormData>({
-    riskAssessment: {
+    sellerProfileSummary: {
+      businessAge: 0,
+      totalTransactions: 0,
+      averageInvoiceValue: 0,
+      repaymentHistory: "",
+    },
+    riskAssessmentDetails: {
       invoiceAging: { score: 0, remarks: "" },
       buyerCreditworthiness: { score: 0, remarks: "" },
       sellerTrackRecord: { score: 0, remarks: "" },
@@ -165,8 +190,9 @@ const RmtDashboard: React.FC = () => {
       setChecklistModal(null);
       setChecklistNotes("");
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to update");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to update");
     }
   };
 
@@ -181,8 +207,9 @@ const RmtDashboard: React.FC = () => {
       });
       toast.success(`Assessment ${decision.toLowerCase()}d`);
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to complete");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to complete");
     }
   };
 
@@ -196,8 +223,9 @@ const RmtDashboard: React.FC = () => {
       });
       toast.success(`Request ${action}d`);
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to process");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to process");
     }
   };
 
@@ -205,17 +233,7 @@ const RmtDashboard: React.FC = () => {
     if (!selectedCwcrf) return;
 
     try {
-      const avgScore =
-        (cwcafForm.riskAssessment.invoiceAging.score +
-          cwcafForm.riskAssessment.buyerCreditworthiness.score +
-          cwcafForm.riskAssessment.sellerTrackRecord.score +
-          cwcafForm.riskAssessment.collateralCoverage.score) /
-        4;
-
-      await cwcrfApi.generateCwcaf(selectedCwcrf._id, {
-        ...cwcafForm,
-        overallRiskScore: avgScore,
-      });
+      await cwcrfApi.generateCwcaf(selectedCwcrf._id, cwcafForm);
 
       toast.success("CWCAF generated successfully");
       setShowCwcafModal(false);
@@ -223,7 +241,13 @@ const RmtDashboard: React.FC = () => {
 
       // Reset form
       setCwcafForm({
-        riskAssessment: {
+        sellerProfileSummary: {
+          businessAge: 0,
+          totalTransactions: 0,
+          averageInvoiceValue: 0,
+          repaymentHistory: "",
+        },
+        riskAssessmentDetails: {
           invoiceAging: { score: 0, remarks: "" },
           buyerCreditworthiness: { score: 0, remarks: "" },
           sellerTrackRecord: { score: 0, remarks: "" },
@@ -232,8 +256,9 @@ const RmtDashboard: React.FC = () => {
         riskCategory: "MEDIUM",
         rmtRecommendation: "",
       });
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to generate CWCAF");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to generate CWCAF");
     }
   };
 
@@ -243,7 +268,7 @@ const RmtDashboard: React.FC = () => {
       const response = await cwcrfApi.getMatchingNbfcs(cwcrf._id);
       setMatchingNbfcs(response.data.data || []);
       setShowNbfcModal(true);
-    } catch (err: any) {
+    } catch {
       toast.error("Failed to fetch matching NBFCs");
     }
   };
@@ -262,8 +287,9 @@ const RmtDashboard: React.FC = () => {
       setShowNbfcModal(false);
       setSelectedNbfcs([]);
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to share with NBFCs");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to share with NBFCs");
     }
   };
 
@@ -839,14 +865,14 @@ const RmtDashboard: React.FC = () => {
                       type="range"
                       min="0"
                       max="100"
-                      value={cwcafForm.riskAssessment.invoiceAging.score}
+                      value={cwcafForm.riskAssessmentDetails.invoiceAging.score}
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          riskAssessment: {
-                            ...cwcafForm.riskAssessment,
+                          riskAssessmentDetails: {
+                            ...cwcafForm.riskAssessmentDetails,
                             invoiceAging: {
-                              ...cwcafForm.riskAssessment.invoiceAging,
+                              ...cwcafForm.riskAssessmentDetails.invoiceAging,
                               score: Number(e.target.value),
                             },
                           },
@@ -857,19 +883,19 @@ const RmtDashboard: React.FC = () => {
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>0</span>
                       <span className="font-semibold">
-                        {cwcafForm.riskAssessment.invoiceAging.score}
+                        {cwcafForm.riskAssessmentDetails.invoiceAging.score}
                       </span>
                       <span>100</span>
                     </div>
                     <textarea
-                      value={cwcafForm.riskAssessment.invoiceAging.remarks}
+                      value={cwcafForm.riskAssessmentDetails.invoiceAging.remarks}
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          riskAssessment: {
-                            ...cwcafForm.riskAssessment,
+                          riskAssessmentDetails: {
+                            ...cwcafForm.riskAssessmentDetails,
                             invoiceAging: {
-                              ...cwcafForm.riskAssessment.invoiceAging,
+                              ...cwcafForm.riskAssessmentDetails.invoiceAging,
                               remarks: e.target.value,
                             },
                           },
@@ -894,15 +920,15 @@ const RmtDashboard: React.FC = () => {
                       min="0"
                       max="100"
                       value={
-                        cwcafForm.riskAssessment.buyerCreditworthiness.score
+                        cwcafForm.riskAssessmentDetails.buyerCreditworthiness.score
                       }
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          riskAssessment: {
-                            ...cwcafForm.riskAssessment,
+                          riskAssessmentDetails: {
+                            ...cwcafForm.riskAssessmentDetails,
                             buyerCreditworthiness: {
-                              ...cwcafForm.riskAssessment.buyerCreditworthiness,
+                              ...cwcafForm.riskAssessmentDetails.buyerCreditworthiness,
                               score: Number(e.target.value),
                             },
                           },
@@ -913,21 +939,21 @@ const RmtDashboard: React.FC = () => {
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>0</span>
                       <span className="font-semibold">
-                        {cwcafForm.riskAssessment.buyerCreditworthiness.score}
+                        {cwcafForm.riskAssessmentDetails.buyerCreditworthiness.score}
                       </span>
                       <span>100</span>
                     </div>
                     <textarea
                       value={
-                        cwcafForm.riskAssessment.buyerCreditworthiness.remarks
+                        cwcafForm.riskAssessmentDetails.buyerCreditworthiness.remarks
                       }
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          riskAssessment: {
-                            ...cwcafForm.riskAssessment,
+                          riskAssessmentDetails: {
+                            ...cwcafForm.riskAssessmentDetails,
                             buyerCreditworthiness: {
-                              ...cwcafForm.riskAssessment.buyerCreditworthiness,
+                              ...cwcafForm.riskAssessmentDetails.buyerCreditworthiness,
                               remarks: e.target.value,
                             },
                           },
@@ -951,14 +977,14 @@ const RmtDashboard: React.FC = () => {
                       type="range"
                       min="0"
                       max="100"
-                      value={cwcafForm.riskAssessment.sellerTrackRecord.score}
+                      value={cwcafForm.riskAssessmentDetails.sellerTrackRecord.score}
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          riskAssessment: {
-                            ...cwcafForm.riskAssessment,
+                          riskAssessmentDetails: {
+                            ...cwcafForm.riskAssessmentDetails,
                             sellerTrackRecord: {
-                              ...cwcafForm.riskAssessment.sellerTrackRecord,
+                              ...cwcafForm.riskAssessmentDetails.sellerTrackRecord,
                               score: Number(e.target.value),
                             },
                           },
@@ -969,19 +995,19 @@ const RmtDashboard: React.FC = () => {
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>0</span>
                       <span className="font-semibold">
-                        {cwcafForm.riskAssessment.sellerTrackRecord.score}
+                        {cwcafForm.riskAssessmentDetails.sellerTrackRecord.score}
                       </span>
                       <span>100</span>
                     </div>
                     <textarea
-                      value={cwcafForm.riskAssessment.sellerTrackRecord.remarks}
+                      value={cwcafForm.riskAssessmentDetails.sellerTrackRecord.remarks}
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          riskAssessment: {
-                            ...cwcafForm.riskAssessment,
+                          riskAssessmentDetails: {
+                            ...cwcafForm.riskAssessmentDetails,
                             sellerTrackRecord: {
-                              ...cwcafForm.riskAssessment.sellerTrackRecord,
+                              ...cwcafForm.riskAssessmentDetails.sellerTrackRecord,
                               remarks: e.target.value,
                             },
                           },
@@ -1005,14 +1031,14 @@ const RmtDashboard: React.FC = () => {
                       type="range"
                       min="0"
                       max="100"
-                      value={cwcafForm.riskAssessment.collateralCoverage.score}
+                      value={cwcafForm.riskAssessmentDetails.collateralCoverage.score}
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          riskAssessment: {
-                            ...cwcafForm.riskAssessment,
+                          riskAssessmentDetails: {
+                            ...cwcafForm.riskAssessmentDetails,
                             collateralCoverage: {
-                              ...cwcafForm.riskAssessment.collateralCoverage,
+                              ...cwcafForm.riskAssessmentDetails.collateralCoverage,
                               score: Number(e.target.value),
                             },
                           },
@@ -1023,21 +1049,21 @@ const RmtDashboard: React.FC = () => {
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>0</span>
                       <span className="font-semibold">
-                        {cwcafForm.riskAssessment.collateralCoverage.score}
+                        {cwcafForm.riskAssessmentDetails.collateralCoverage.score}
                       </span>
                       <span>100</span>
                     </div>
                     <textarea
                       value={
-                        cwcafForm.riskAssessment.collateralCoverage.remarks
+                        cwcafForm.riskAssessmentDetails.collateralCoverage.remarks
                       }
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          riskAssessment: {
-                            ...cwcafForm.riskAssessment,
+                          riskAssessmentDetails: {
+                            ...cwcafForm.riskAssessmentDetails,
                             collateralCoverage: {
-                              ...cwcafForm.riskAssessment.collateralCoverage,
+                              ...cwcafForm.riskAssessmentDetails.collateralCoverage,
                               remarks: e.target.value,
                             },
                           },
@@ -1054,10 +1080,10 @@ const RmtDashboard: React.FC = () => {
                     <span className="font-medium">Overall Risk Score: </span>
                     <span className="text-2xl font-bold">
                       {(
-                        (cwcafForm.riskAssessment.invoiceAging.score +
-                          cwcafForm.riskAssessment.buyerCreditworthiness.score +
-                          cwcafForm.riskAssessment.sellerTrackRecord.score +
-                          cwcafForm.riskAssessment.collateralCoverage.score) /
+                        (cwcafForm.riskAssessmentDetails.invoiceAging.score +
+                          cwcafForm.riskAssessmentDetails.buyerCreditworthiness.score +
+                          cwcafForm.riskAssessmentDetails.sellerTrackRecord.score +
+                          cwcafForm.riskAssessmentDetails.collateralCoverage.score) /
                         4
                       ).toFixed(2)}
                     </span>
