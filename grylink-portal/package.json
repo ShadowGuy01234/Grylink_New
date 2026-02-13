@@ -5,7 +5,7 @@
   "description": "GryLink Onboarding Portal for EPC & NBFC (link.gryork.com)",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5177",
+    "dev": "vite --port 5174",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^1.6.0",
     "dotenv": "^17.2.4",
+    "lucide-react": "^0.563.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.4.1",

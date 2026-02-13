@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { HiX } from 'react-icons/hi';
 
 interface ModalProps {

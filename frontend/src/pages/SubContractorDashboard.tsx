@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { subContractorApi, bidsApi, kycApi } from '../api';
+import { useState, useEffect } from 'react';
+import { subContractorApi } from '../api';
 import toast from 'react-hot-toast';
 
 const SubContractorDashboard = () => {
@@ -87,16 +87,6 @@ const SubContractorDashboard = () => {
       fetchData();
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Submit failed');
-    }
-  };
-
-  const handleBidResponse = async (bidId: string, decision: string) => {
-    try {
-      await subContractorApi.respondToBid(bidId, { decision });
-      toast.success(`Bid ${decision}ed!`);
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Response failed');
     }
   };
 

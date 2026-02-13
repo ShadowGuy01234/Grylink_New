@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { companyApi, casesApi, bidsApi } from '../api';
 import toast from 'react-hot-toast';
-import { HiOutlineUpload, HiOutlineUserAdd, HiOutlineClipboardCheck, HiOutlineCurrencyRupee } from 'react-icons/hi';
+import { HiOutlineUpload, HiOutlineUserAdd, HiOutlineClipboardCheck } from 'react-icons/hi';
 
 const DOCUMENT_TYPES = ['CIN', 'GST', 'PAN', 'BOARD_RESOLUTION', 'BANK_STATEMENTS', 'AUDITED_FINANCIALS', 'PROJECT_DETAILS', 'CASHFLOW_DETAILS'];
 
@@ -13,9 +13,6 @@ const EpcDashboard = () => {
   const [activeTab, setActiveTab] = useState('documents');
 
   // Document upload state
-  const [files, setFiles] = useState<File[]>([]);
-  const [docTypes, setDocTypes] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
 
   const handleSingleUpload = async (type: string, file: File) => {
@@ -61,25 +58,6 @@ const EpcDashboard = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
-
-  const handleUploadDocs = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (files.length === 0) return toast.error('Select files to upload');
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      files.forEach((f) => formData.append('documents', f));
-      formData.append('documentTypes', JSON.stringify(docTypes));
-      await companyApi.uploadDocuments(formData);
-      toast.success('Documents uploaded!');
-      setFiles([]); setDocTypes([]);
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Upload failed');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleAddSC = async (e: React.FormEvent) => {
     e.preventDefault();

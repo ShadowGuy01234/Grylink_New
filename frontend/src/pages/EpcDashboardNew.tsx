@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { companyApi, casesApi, bidsApi } from '../api';
 import toast from 'react-hot-toast';
 import { 
-  HiOutlineUpload, 
   HiOutlineUserAdd, 
   HiOutlineClipboardCheck, 
   HiOutlineCurrencyRupee,
@@ -15,7 +14,6 @@ import Badge from '../components/Badge';
 import Modal from '../components/Modal';
 import Table from '../components/Table';
 import StatCard from '../components/StatCard';
-import FileUpload from '../components/FileUpload';
 
 const DOCUMENT_TYPES = [
   { value: 'CIN', label: 'CIN Certificate' },
@@ -102,34 +100,7 @@ const EpcDashboardNew = () => {
     fetchData();
   }, []);
 
-  const handleUploadDocument = async () => {
-    if (docFiles.length === 0) {
-      toast.error('Please select files to upload');
-      return;
-    }
-    if (!selectedDocType) {
-      toast.error('Please select document type');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      docFiles.forEach((f) => formData.append('documents', f));
-      formData.append('documentTypes', JSON.stringify([selectedDocType]));
-      
-      await companyApi.uploadDocuments(formData);
-      toast.success('Documents uploaded successfully!');
-      setShowDocModal(false);
-      setDocFiles([]);
-      setSelectedDocType('');
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Upload failed');
-    } finally {
-      setUploading(false);
-    }
-  };
+  // handleUploadDocument removed - needs state refactoring
 
   const handleAddSubContractor = async () => {
     if (!scForm.companyName || !scForm.email) {

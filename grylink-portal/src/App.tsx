@@ -1,6 +1,7 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import HomePage from './pages/HomePage';
 import OnboardingPage from './pages/OnboardingPage';
 
 const App = () => {
@@ -10,6 +11,7 @@ const App = () => {
         style: { background: '#1a1a2e', color: '#e0e0e0', borderRadius: '8px' },
       }} />
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/onboarding/:token" element={<OnboardingPage />} />
         <Route path="*" element={<InvalidLinkPage />} />
       </Routes>
