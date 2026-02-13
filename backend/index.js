@@ -105,6 +105,7 @@ app.use("/api/bids", require("./routes/bids"));
 app.use("/api/grylink", require("./routes/grylink"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/cwcrf", require("./routes/cwcrf")); // CWCRF workflow routes
+app.use("/api/rmt", require("./routes/rmt")); // RMT dashboard routes
 
 // SOP Compliance Routes
 app.use("/api/nbfc", require("./routes/nbfc"));

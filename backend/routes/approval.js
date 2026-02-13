@@ -1,12 +1,15 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { authenticate, authorize } = require('../middleware/auth');
-const approvalService = require('../services/approvalService');
+const { authenticate, authorize } = require("../middleware/auth");
+const approvalService = require("../services/approvalService");
 
 // Create approval request
-router.post('/', authenticate, async (req, res) => {
+router.post("/", authenticate, async (req, res) => {
   try {
-    const request = await approvalService.createApprovalRequest(req.body, req.user.id);
+    const request = await approvalService.createApprovalRequest(
+      req.body,
+      req.user.id,
+    );
     res.status(201).json(request);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -14,7 +17,7 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 // Get my pending approvals
-router.get('/my-pending', authenticate, async (req, res) => {
+router.get("/my-pending", authenticate, async (req, res) => {
   try {
     const requests = await approvalService.getMyPendingApprovals(req.user.id);
     res.json(requests);
@@ -24,7 +27,7 @@ router.get('/my-pending', authenticate, async (req, res) => {
 });
 
 // Get pending count for current user's role
-router.get('/pending-count', authenticate, async (req, res) => {
+router.get("/pending-count", authenticate, async (req, res) => {
   try {
     const count = await approvalService.getPendingCountByRole(req.user.role);
     res.json({ count });
@@ -33,11 +36,24 @@ router.get('/pending-count', authenticate, async (req, res) => {
   }
 });
 
-// Get all approval requests (with filters)
-router.get('/', authenticate, async (req, res) => {
+// Get pending approvals for dashboard (RMT/Admin/Founder)
+router.get("/pending", authenticate, async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized' });
+    if (!["rmt", "ops", "admin", "founder"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    const requests = await approvalService.getMyPendingApprovals(req.user.id);
+    res.json({ data: requests });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get all approval requests (with filters)
+router.get("/", authenticate, async (req, res) => {
+  try {
+    if (!["ops", "admin", "founder"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Not authorized" });
     }
     const requests = await approvalService.getApprovalRequests(req.query);
     res.json(requests);
@@ -47,11 +63,11 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // Get approval request by ID
-router.get('/:id', authenticate, async (req, res) => {
+router.get("/:id", authenticate, async (req, res) => {
   try {
     const request = await approvalService.getApprovalRequestById(req.params.id);
     if (!request) {
-      return res.status(404).json({ message: 'Approval request not found' });
+      return res.status(404).json({ message: "Approval request not found" });
     }
     res.json(request);
   } catch (error) {
@@ -60,13 +76,13 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // Approve request
-router.post('/:id/approve', authenticate, async (req, res) => {
+router.post("/:id/approve", authenticate, async (req, res) => {
   try {
     const request = await approvalService.processApproval(
       req.params.id,
       req.user.id,
-      'approve',
-      req.body.comments
+      "approve",
+      req.body.comments,
     );
     res.json(request);
   } catch (error) {
@@ -75,13 +91,13 @@ router.post('/:id/approve', authenticate, async (req, res) => {
 });
 
 // Reject request
-router.post('/:id/reject', authenticate, async (req, res) => {
+router.post("/:id/reject", authenticate, async (req, res) => {
   try {
     const request = await approvalService.processApproval(
       req.params.id,
       req.user.id,
-      'reject',
-      req.body.comments
+      "reject",
+      req.body.comments,
     );
     res.json(request);
   } catch (error) {
@@ -90,15 +106,15 @@ router.post('/:id/reject', authenticate, async (req, res) => {
 });
 
 // Escalate request
-router.post('/:id/escalate', authenticate, async (req, res) => {
+router.post("/:id/escalate", authenticate, async (req, res) => {
   try {
-    if (!['ops', 'admin', 'founder'].includes(req.user.role)) {
-      return res.status(403).json({ message: 'Not authorized to escalate' });
+    if (!["ops", "admin", "founder"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Not authorized to escalate" });
     }
     const request = await approvalService.escalateRequest(
       req.params.id,
       req.user.id,
-      req.body.reason
+      req.body.reason,
     );
     res.json(request);
   } catch (error) {

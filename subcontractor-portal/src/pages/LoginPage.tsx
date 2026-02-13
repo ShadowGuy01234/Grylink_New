@@ -202,18 +202,26 @@ const LoginPage = () => {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="name">Your Name{nameFromEpc ? '' : ' (Optional)'}</label>
+              <label htmlFor="name">
+                Your Name{nameFromEpc ? "" : " (Optional)"}
+              </label>
               <input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => !nameFromEpc && setName(e.target.value)}
                 placeholder="John Doe"
-                className={nameFromEpc ? 'input-disabled' : ''}
+                className={nameFromEpc ? "input-disabled" : ""}
                 readOnly={nameFromEpc}
               />
               {nameFromEpc && (
-                <small style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 4 }}>
+                <small
+                  style={{
+                    color: "var(--text-muted)",
+                    fontSize: 12,
+                    marginTop: 4,
+                  }}
+                >
                   Name provided by {linkedEpc}
                 </small>
               )}
