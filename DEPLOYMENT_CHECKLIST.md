@@ -4,6 +4,40 @@ Complete this checklist before deploying Gryork to production.
 
 ---
 
+## 🌐 Current Vercel Deployments
+
+| Portal | Vercel URL | Description |
+|--------|------------|-------------|
+| **Backend API** | https://grylink-backend.vercel.app | REST API Server |
+| **Gryork Public** | https://gryork-public.vercel.app | Public Marketing Website |
+| **Sub-Contractor Portal** | https://app-gryork.vercel.app | Sub-Contractor Dashboard |
+| **GryLink Portal** | https://link-gryork.vercel.app | EPC/NBFC Onboarding Portal |
+| **Partner Portal** | https://partner-gryork.vercel.app | Partner Dashboard (EPC & NBFC) |
+| **Official Portal** | https://official-gryork.vercel.app | Internal Admin (Sales, Ops, RMT) |
+
+### Vercel Environment Variables
+
+Each frontend portal needs:
+```bash
+VITE_API_URL=https://grylink-backend.vercel.app/api
+```
+
+Backend needs:
+```bash
+NODE_ENV=production
+MONGODB_URI=<your_mongodb_atlas_uri>
+JWT_SECRET=<your_secure_jwt_secret>
+CLOUDINARY_CLOUD_NAME=<your_cloud_name>
+CLOUDINARY_API_KEY=<your_api_key>
+CLOUDINARY_API_SECRET=<your_api_secret>
+EMAIL_HOST=<your_smtp_host>
+EMAIL_PORT=587
+EMAIL_USER=<your_email_user>
+EMAIL_PASS=<your_email_password>
+```
+
+---
+
 ## 📋 Pre-Deployment Checklist
 
 ### 🔐 Security
@@ -65,9 +99,12 @@ EMAIL_USER=apikey
 EMAIL_PASSWORD=<sendgrid_api_key>
 EMAIL_FROM=noreply@gryork.com
 
-# Frontend URLs
-GRYLINK_FRONTEND_URL=https://grylink.gryork.com
-OFFICIAL_PORTAL_URL=https://portal.gryork.com
+# Frontend URLs (Vercel)
+PUBLIC_SITE_URL=https://gryork-public.vercel.app
+SUBCONTRACTOR_PORTAL_URL=https://app-gryork.vercel.app
+GRYLINK_PORTAL_URL=https://link-gryork.vercel.app
+PARTNER_PORTAL_URL=https://partner-gryork.vercel.app
+OFFICIAL_PORTAL_URL=https://official-gryork.vercel.app
 
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
@@ -76,7 +113,7 @@ RATE_LIMIT_MAX_REQUESTS=100
 
 #### Frontend (.env.production)
 ```bash
-VITE_API_URL=https://api.gryork.com/api
+VITE_API_URL=https://grylink-backend.vercel.app/api
 ```
 
 ### 📦 Build & Optimization

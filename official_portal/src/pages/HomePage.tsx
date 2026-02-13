@@ -86,15 +86,12 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white text-gray-900 overflow-hidden">
-      {/* Hero Background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0A2463] via-[#1E5AAF] to-[#3B82F6]" />
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-32 px-6 bg-gradient-to-br from-[#0A2463] via-[#1E5AAF] to-[#3B82F6]">
+        {/* Decorative elements */}
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-white/10 rounded-full blur-[100px] animate-pulse" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[#22C55E]/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
-
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-32 px-6">
+        
         <motion.div 
           className="max-w-6xl mx-auto text-center"
           initial="initial"

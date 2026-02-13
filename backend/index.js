@@ -14,11 +14,20 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware - CORS Configuration for Multi-Domain Architecture
 // Domain Structure:
+//   Production (Vercel):
+//   - gryork-public.vercel.app     : Public Website
+//   - app-gryork.vercel.app        : Sub-Contractor Portal
+//   - link-gryork.vercel.app       : GryLink Onboarding Portal
+//   - partner-gryork.vercel.app    : Partner Portal (EPC/NBFC)
+//   - official-gryork.vercel.app   : Official Portal (Sales, Ops, Admin)
+//   - grylink-backend.vercel.app   : Backend API
+//   
+//   Custom Domains (Future):
 //   - gryork.com          : Public Website
 //   - app.gryork.com      : Sub-Contractor Portal
-//   - link.gryork.com     : GryLink Onboarding (EPC/NBFC)
-//   - partner.gryork.com  : EPC & NBFC Portal
-//   - admin.gryork.com    : Internal Admin (Sales, Ops)
+//   - link.gryork.com     : GryLink Onboarding
+//   - partner.gryork.com  : Partner Portal
+//   - admin.gryork.com    : Internal Admin
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -33,22 +42,38 @@ app.use(
         return callback(null, true);
       }
 
-      // In production, check against allowed origins
-      const allowedOrigins = [
-        process.env.PUBLIC_SITE_URL, // gryork.com
-        process.env.SUBCONTRACTOR_PORTAL_URL, // app.gryork.com
-        process.env.GRYLINK_PORTAL_URL, // link.gryork.com
-        process.env.PARTNER_PORTAL_URL, // partner.gryork.com
-        process.env.ADMIN_PORTAL_URL, // admin.gryork.com
-        // Legacy env vars for backward compatibility
-        process.env.GRYLINK_FRONTEND_URL,
+      // Vercel deployment URLs
+      const vercelOrigins = [
+        'https://gryork-public.vercel.app',
+        'https://app-gryork.vercel.app',
+        'https://link-gryork.vercel.app',
+        'https://partner-gryork.vercel.app',
+        'https://official-gryork.vercel.app',
+        'https://grylink-backend.vercel.app',
+      ];
+
+      if (vercelOrigins.includes(origin)) return callback(null, true);
+
+      // Environment variable origins (for custom domains)
+      const envOrigins = [
+        process.env.PUBLIC_SITE_URL,
+        process.env.SUBCONTRACTOR_PORTAL_URL,
+        process.env.GRYLINK_PORTAL_URL,
+        process.env.PARTNER_PORTAL_URL,
+        process.env.ADMIN_PORTAL_URL,
         process.env.OFFICIAL_PORTAL_URL,
+        process.env.GRYLINK_FRONTEND_URL,
       ].filter(Boolean);
 
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (envOrigins.includes(origin)) return callback(null, true);
 
-      // Also allow all gryork.com subdomains in production
+      // Allow all gryork.com subdomains
       if (origin.match(/^https:\/\/([\w-]+\.)?gryork\.com$/)) {
+        return callback(null, true);
+      }
+
+      // Allow all Vercel preview deployments for gryork
+      if (origin.match(/^https:\/\/[\w-]+-gryork\.vercel\.app$/)) {
         return callback(null, true);
       }
 
