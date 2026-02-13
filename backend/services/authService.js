@@ -97,43 +97,75 @@ const createNbfcUser = async ({ name, email, phone, companyId }) => {
 };
 
 // Register Sub-Contractor (Step 9 - matches EPC-added leads)
-const registerSubcontractor = async ({ name, email, password, phone, companyName }) => {
+const registerSubcontractor = async ({
+  name,
+  email,
+  password,
+  phone,
+  companyName,
+}) => {
   const SubContractor = require("../models/SubContractor");
 
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new Error("User with this email already exists");
-  }
-
-  let subContractor = await SubContractor.findOne({ email: email.toLowerCase() });
+  let subContractor = await SubContractor.findOne({
+    email: email.toLowerCase(),
+  });
 
   if (!subContractor) {
-    throw new Error("No matching sub-contractor lead found. Please contact your EPC company to add you to their vendor list first.");
+    throw new Error(
+      "No matching sub-contractor lead found. Please contact your EPC company to add you to their vendor list first.",
+    );
   }
 
-  const user = new User({
-    name,
-    email,
-    password,
-    phone,
-    role: "subcontractor",
-  });
-  await user.save();
+  let existingUser = await User.findOne({ email });
+  let user;
 
-  subContractor.userId = user._id;
+  if (existingUser) {
+    // If user exists but has no password (first-time setup), set the password
+    if (!existingUser.password) {
+      existingUser.password = password;
+      if (name) existingUser.name = name;
+      if (phone) existingUser.phone = phone;
+      await existingUser.save();
+      user = existingUser;
+    } else {
+      throw new Error(
+        "User with this email already exists and has a password. Please login instead.",
+      );
+    }
+  } else {
+    // Create new user
+    user = new User({
+      name,
+      email,
+      password,
+      phone,
+      role: "subcontractor",
+    });
+    await user.save();
+  }
+
+  // Update SubContractor record
+  if (!subContractor.userId) {
+    subContractor.userId = user._id;
+  }
   subContractor.contactName = subContractor.contactName || name;
   subContractor.companyName = subContractor.companyName || companyName;
   subContractor.phone = subContractor.phone || phone;
-  subContractor.status = "PROFILE_INCOMPLETE";
-  subContractor.statusHistory.push({
-    status: "PROFILE_INCOMPLETE",
-    changedAt: new Date(),
-    notes: "User account created",
-  });
+
+  if (subContractor.status === "LEAD" || !subContractor.status) {
+    subContractor.status = "PROFILE_INCOMPLETE";
+    subContractor.statusHistory.push({
+      status: "PROFILE_INCOMPLETE",
+      changedAt: new Date(),
+      notes: "User account created",
+    });
+  }
   await subContractor.save();
 
-  user.subContractorId = subContractor._id;
-  await user.save();
+  if (!user.subContractorId) {
+    user.subContractorId = subContractor._id;
+    await user.save();
+  }
 
   const token = generateToken(user);
   return {
@@ -154,7 +186,12 @@ const registerSubcontractor = async ({ name, email, password, phone, companyName
 };
 
 // Create SubContractor user (no password - set later via GryLink)
-const createSubContractorUser = async ({ name, email, phone, subContractorId }) => {
+const createSubContractorUser = async ({
+  name,
+  email,
+  phone,
+  subContractorId,
+}) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return existingUser; // SC may already have an account

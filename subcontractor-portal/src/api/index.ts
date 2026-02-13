@@ -16,6 +16,15 @@ export const authApi = {
     api.post("/auth/login", data),
   me: () => api.get("/auth/me"),
   updateProfile: (data: any) => api.put("/auth/profile", data),
+  checkEmail: (email: string) =>
+    api.get(`/auth/check-email/${encodeURIComponent(email)}`),
+  registerSubcontractor: (data: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    companyName?: string;
+  }) => api.post("/auth/register-subcontractor", data),
 };
 
 // GryLink APIs - for onboarding

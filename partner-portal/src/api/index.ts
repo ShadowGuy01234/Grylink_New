@@ -45,6 +45,8 @@ export const companyApi = {
       headers: { "Content-Type": "multipart/form-data" },
     }),
   getSubContractors: () => api.get("/company/subcontractors"),
+  deleteSubContractor: (id: string) =>
+    api.delete(`/company/subcontractors/${id}`),
 };
 
 // ============= Cases APIs =============
