@@ -23,6 +23,18 @@ const Layout = () => {
     setIsDarkMode(!isDarkMode);
   };
 
+  // Get user initials for avatar
+  const getInitials = (name: string) => {
+    return (
+      name
+        ?.split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2) || "U"
+    );
+  };
+
   return (
     <div className="app-layout">
       <header className="topbar">
@@ -42,9 +54,14 @@ const Layout = () => {
           >
             {isDarkMode ? "☀️" : "🌙"}
           </button>
-          <span className="topbar-user">{user?.name}</span>
-          <span className="role-badge">{user?.role?.toUpperCase()}</span>
-          <button onClick={logout} className="btn-secondary btn-sm">
+          <div className="topbar-user">
+            <div className="user-avatar">{getInitials(user?.name || "")}</div>
+            <div className="user-info">
+              <span className="user-name">{user?.name}</span>
+              <span className="role-badge">{user?.role?.toUpperCase()}</span>
+            </div>
+          </div>
+          <button onClick={logout} className="btn-logout">
             Logout
           </button>
         </div>
