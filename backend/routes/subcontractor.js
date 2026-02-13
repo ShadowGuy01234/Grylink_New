@@ -332,8 +332,9 @@ router.get(
 );
 
 // ==================== KYC DOCUMENT ROUTES ====================
+// Note: Specific routes (/kyc/upload, /kyc/status) must come BEFORE dynamic route (/kyc/:documentType)
 
-// POST /api/subcontractor/kyc/upload - Upload KYC document
+// POST /api/subcontractor/kyc/upload - Upload KYC document (legacy with documentType in body)
 router.post(
   "/kyc/upload",
   authenticate,
@@ -371,6 +372,34 @@ router.get(
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+// POST /api/subcontractor/kyc/:documentType - Upload KYC document (dynamic route for frontend)
+router.post(
+  "/kyc/:documentType",
+  authenticate,
+  authorize("subcontractor"),
+  uploadBills.single("document"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Document file is required" });
+      }
+      const { documentType } = req.params;
+      const validTypes = ["panCard", "aadhaarCard", "gstCertificate", "cancelledCheque", "incorporationCertificate", "bankStatement"];
+      if (!validTypes.includes(documentType)) {
+        return res.status(400).json({ error: `Invalid document type. Valid types: ${validTypes.join(", ")}` });
+      }
+      const result = await subContractorService.uploadKycDocument(
+        req.user._id,
+        documentType,
+        req.file,
+      );
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
   },
 );

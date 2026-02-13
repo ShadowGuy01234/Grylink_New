@@ -1,5 +1,4 @@
-
-import { Outlet } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
@@ -12,7 +11,10 @@ const Layout = () => {
         <div className="topbar-left">
           <a href={publicSiteUrl} className="topbar-logo">Gryork</a>
           <nav className="topbar-nav">
-            <a href="/" className="active">Dashboard</a>
+            <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink>
+            <NavLink to="/cwcrf" className={({ isActive }) => isActive ? 'active' : ''}>New CWCRF</NavLink>
+            <NavLink to="/my-cwcrfs" className={({ isActive }) => isActive ? 'active' : ''}>My CWCRFs</NavLink>
+            <NavLink to="/kyc" className={({ isActive }) => isActive ? 'active' : ''}>KYC</NavLink>
           </nav>
         </div>
         <div className="topbar-right">

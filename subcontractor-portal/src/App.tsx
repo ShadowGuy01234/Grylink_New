@@ -9,6 +9,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ProfileCompletionPage from "./pages/ProfileCompletionPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import CwcrfSubmissionPage from "./pages/CwcrfSubmissionPage";
+import CwcrfDetailPage from "./pages/CwcrfDetailPage";
 import SellerDeclarationPage from "./pages/SellerDeclarationPage";
 import KycUploadPage from "./pages/KycUploadPage";
 import MyCwcrfsPage from "./pages/MyCwcrfsPage";
@@ -76,6 +77,7 @@ const AppRoutes = () => {
         <Route path="declaration" element={<SellerDeclarationPage />} />
         <Route path="kyc" element={<KycUploadPage />} />
         <Route path="cwcrf" element={<CwcrfSubmissionPage />} />
+        <Route path="cwcrf/:id" element={<CwcrfDetailPage />} />
         <Route path="my-cwcrfs" element={<MyCwcrfsPage />} />
         <Route path="complete-profile" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
