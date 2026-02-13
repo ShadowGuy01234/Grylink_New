@@ -6,15 +6,44 @@ const XLSX = require("xlsx");
 const cloudinary = require("../config/cloudinary");
 const { sendStatusUpdate, sendOnboardingLink } = require("./emailService");
 const authService = require("./authService");
+const { deleteFromCloudinary } = require("./cloudinaryService");
 
 // Helper: upload buffer to Cloudinary via base64 data URI
 const uploadToCloudinary = async (fileBuffer, mimeType, options = {}) => {
   const b64 = Buffer.from(fileBuffer).toString("base64");
   const dataUri = `data:${mimeType || "application/octet-stream"};base64,${b64}`;
-  return cloudinary.uploader.upload(dataUri, {
+
+  // Determine resource_type based on mime type
+  let resourceType = options.resource_type || "auto";
+  if (!options.resource_type) {
+    if (mimeType && mimeType.startsWith("image/")) {
+      resourceType = "image";
+    } else if (
+      mimeType === "application/pdf" ||
+      (mimeType && !mimeType.startsWith("image/"))
+    ) {
+      resourceType = "raw"; // PDFs and other documents must use 'raw' type
+    } else {
+      resourceType = "raw";
+    }
+  }
+
+  // For raw uploads (PDFs), include the file extension in public_id for proper browser display
+  const uploadOptions = {
     folder: options.folder || "gryork/documents",
-    resource_type: options.resource_type || "auto",
-  });
+    resource_type: resourceType,
+  };
+
+  // If a filename is provided in options, use it (with extension) as public_id
+  if (options.filename && resourceType === "raw") {
+    // Generate a unique ID with the file extension preserved
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const ext = options.filename.split(".").pop() || "pdf";
+    uploadOptions.public_id = `${timestamp}_${randomStr}.${ext}`;
+  }
+
+  return cloudinary.uploader.upload(dataUri, uploadOptions);
 };
 
 // Step 5: EPC uploads documents
@@ -25,24 +54,73 @@ const uploadDocuments = async (companyId, files, documentTypes, userId) => {
   const documents = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
+    const docType = documentTypes[i] || "OTHER";
 
-    // Upload to Cloudinary
+    // Check if document already exists for this company and type
+    const existingDoc = await Document.findOne({
+      companyId,
+      documentType: docType,
+    });
+
+    // Upload new file to Cloudinary
     const cloudResult = await uploadToCloudinary(file.buffer, file.mimetype, {
       folder: "gryork/documents",
+      filename: file.originalname,
     });
 
-    const doc = new Document({
-      companyId,
-      uploadedBy: userId,
-      documentType: documentTypes[i] || "OTHER",
+    console.log(`✅ Document uploaded to Cloudinary:`, {
       fileName: file.originalname,
+      documentType: docType,
       fileUrl: cloudResult.secure_url,
-      cloudinaryPublicId: cloudResult.public_id,
-      fileSize: file.size,
-      mimeType: file.mimetype,
+      publicId: cloudResult.public_id,
+      isReplacement: !!existingDoc,
     });
-    await doc.save();
-    documents.push(doc);
+
+    if (existingDoc) {
+      // Replace existing document
+      // Delete old file from Cloudinary
+      if (existingDoc.cloudinaryPublicId) {
+        try {
+          await deleteFromCloudinary(existingDoc.cloudinaryPublicId);
+          console.log(
+            `🗑️ Deleted old document from Cloudinary:`,
+            existingDoc.cloudinaryPublicId,
+          );
+        } catch (err) {
+          console.error(`⚠️ Failed to delete old document:`, err.message);
+        }
+      }
+
+      // Update existing document
+      existingDoc.fileName = file.originalname;
+      existingDoc.fileUrl = cloudResult.secure_url;
+      existingDoc.cloudinaryPublicId = cloudResult.public_id;
+      existingDoc.fileSize = file.size;
+      existingDoc.mimeType = file.mimetype;
+      existingDoc.uploadedBy = userId;
+      existingDoc.status = "pending"; // Reset to pending for re-verification
+      existingDoc.verificationNotes = undefined;
+      existingDoc.verifiedBy = undefined;
+      existingDoc.verifiedAt = undefined;
+      await existingDoc.save();
+      documents.push(existingDoc);
+      console.log(`🔄 Updated existing document:`, docType);
+    } else {
+      // Create new document
+      const doc = new Document({
+        companyId,
+        uploadedBy: userId,
+        documentType: docType,
+        fileName: file.originalname,
+        fileUrl: cloudResult.secure_url,
+        cloudinaryPublicId: cloudResult.public_id,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+      });
+      await doc.save();
+      documents.push(doc);
+      console.log(`✨ Created new document:`, docType);
+    }
   }
 
   // Update company status
@@ -63,7 +141,27 @@ const getCompanyProfile = async (companyId) => {
   ]);
 
   if (!company) throw new Error("Company not found");
-  return { company, documents };
+
+  // Remove duplicate documents (keep only the latest per type)
+  const uniqueDocs = [];
+  const seenTypes = new Set();
+  for (const doc of documents) {
+    if (!seenTypes.has(doc.documentType)) {
+      seenTypes.add(doc.documentType);
+      uniqueDocs.push(doc);
+    }
+  }
+
+  console.log(
+    `📄 Company Profile - Total docs: ${documents.length}, Unique docs: ${uniqueDocs.length}`,
+  );
+  uniqueDocs.forEach((doc) => {
+    console.log(
+      `  - ${doc.documentType}: ${doc.fileName} | URL: ${doc.fileUrl}`,
+    );
+  });
+
+  return { company, documents: uniqueDocs };
 };
 
 // Step 7 Option A: Manual sub-contractor entry

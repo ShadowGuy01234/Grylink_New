@@ -1,28 +1,107 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Lock, ArrowRight, Building2, Shield, TrendingUp, Zap } from 'lucide-react';
+import { authApi } from '@/api';
+import { 
+  Mail, Lock, ArrowRight, Building2, Shield, TrendingUp, Zap, 
+  ArrowLeft, AlertCircle, CheckCircle2, User 
+} from 'lucide-react';
+
+type Step = 'email' | 'not-found' | 'create-password' | 'login';
 
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
+  const [nameFromEpc, setNameFromEpc] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [linkedEpc, setLinkedEpc] = useState('');
 
   const publicSiteUrl = import.meta.env.VITE_PUBLIC_SITE_URL || 'http://localhost:5176';
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const features = [
+    { icon: Building2, title: 'Bill Management', desc: 'Track and manage all your invoices in one place' },
+    { icon: Shield, title: 'Secure Platform', desc: 'Bank-grade security for your transactions' },
+    { icon: TrendingUp, title: 'Quick Financing', desc: 'Get paid faster with bill discounting' },
+    { icon: Zap, title: 'Real-time Updates', desc: 'Stay informed with instant notifications' },
+  ];
+
+  const handleCheckEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim()) {
+      toast.error('Please enter your email');
+      return;
+    }
     setLoading(true);
     try {
-      await login(email, password);
+      const res = await authApi.checkEmail(email.trim().toLowerCase());
+      const data = res.data;
+
+      if (!data.found) {
+        setStep('not-found');
+      } else if (data.hasAccount) {
+        setStep('login');
+      } else {
+        setLinkedEpc(data.linkedEpc || 'your EPC company');
+        if (data.contactName) {
+          setName(data.contactName);
+          setNameFromEpc(true);
+        }
+        setStep('create-password');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to check email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authApi.registerSubcontractor({
+        name: name.trim() || email.split('@')[0],
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      localStorage.setItem('token', res.data.token);
+      toast.success('Account created successfully!');
+      window.location.href = '/';
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to create account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) {
+      toast.error('Please enter your password');
+      return;
+    }
+    setLoading(true);
+    try {
+      await login(email.trim().toLowerCase(), password);
       toast.success('Welcome back!');
       navigate('/');
     } catch (err: any) {
@@ -32,12 +111,31 @@ const LoginPage = () => {
     }
   };
 
-  const features = [
-    { icon: Building2, title: 'Bill Management', desc: 'Track and manage all your invoices in one place' },
-    { icon: Shield, title: 'Secure Platform', desc: 'Bank-grade security for your transactions' },
-    { icon: TrendingUp, title: 'Quick Financing', desc: 'Get paid faster with bill discounting' },
-    { icon: Zap, title: 'Real-time Updates', desc: 'Stay informed with instant notifications' },
-  ];
+  const handleBack = () => {
+    setStep('email');
+    setPassword('');
+    setConfirmPassword('');
+    setName('');
+    setNameFromEpc(false);
+  };
+
+  const getStepTitle = () => {
+    switch (step) {
+      case 'email': return 'Welcome to Gryork';
+      case 'not-found': return 'Email Not Found';
+      case 'create-password': return 'Create Your Account';
+      case 'login': return 'Welcome Back';
+    }
+  };
+
+  const getStepDescription = () => {
+    switch (step) {
+      case 'email': return 'Enter your email to continue';
+      case 'not-found': return 'This email is not registered';
+      case 'create-password': return `You've been added by ${linkedEpc}`;
+      case 'login': return 'Enter your password to sign in';
+    }
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -108,85 +206,259 @@ const LoginPage = () => {
               <div className="lg:hidden mb-4">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Gryork</h1>
               </div>
-              <CardTitle className="text-2xl font-bold text-gray-900">Welcome back</CardTitle>
+              {step !== 'email' && (
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </button>
+              )}
+              <CardTitle className="text-2xl font-bold text-gray-900">{getStepTitle()}</CardTitle>
               <CardDescription className="text-gray-500">
-                Sign in to manage your bills and payments
+                {getStepDescription()}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    required
-                    icon={<Mail className="h-4 w-4" />}
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-gray-700">Password</Label>
-                    <Link 
-                      to="/forgot-password" 
-                      className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    icon={<Lock className="h-4 w-4" />}
-                    className="h-11"
-                  />
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full h-11" 
-                  variant="gradient"
-                  isLoading={loading}
-                >
-                  {!loading && (
-                    <>
-                      Sign In
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </form>
-
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <p className="text-center text-sm text-gray-600">
-                  New to Gryork?{' '}
-                  <Link 
-                    to="/register" 
-                    className="font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+              <AnimatePresence mode="wait">
+                {/* Step 1: Email Input */}
+                {step === 'email' && (
+                  <motion.form
+                    key="email"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    onSubmit={handleCheckEmail}
+                    className="space-y-5"
                   >
-                    Create an account
-                  </Link>
-                </p>
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-gray-700">Email Address</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          required
+                          autoFocus
+                          className="h-11 pl-10"
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" 
+                      disabled={loading}
+                    >
+                      {loading ? 'Checking...' : (
+                        <>
+                          Continue
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </motion.form>
+                )}
 
-              <div className="mt-4 text-center">
-                <a 
-                  href={`${publicSiteUrl}/for-subcontractors`}
-                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Learn more about Gryork for Sub-Contractors →
-                </a>
-              </div>
+                {/* Step 2a: Email Not Found */}
+                {step === 'not-found' && (
+                  <motion.div
+                    key="not-found"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-5"
+                  >
+                    <div className="p-4 bg-red-50 border border-red-100 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-red-800">Email Not Registered</p>
+                          <p className="text-sm text-red-600 mt-1">
+                            The email <strong>{email}</strong> is not in our system.
+                          </p>
+                          <p className="text-sm text-red-600 mt-2">
+                            Please contact your EPC company to add you as a sub-contractor vendor first.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleBack}
+                      variant="outline"
+                      className="w-full h-11"
+                    >
+                      Try Another Email
+                    </Button>
+                  </motion.div>
+                )}
+
+                {/* Step 2b: Create Password (First Time) */}
+                {step === 'create-password' && (
+                  <motion.form
+                    key="create-password"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    onSubmit={handleCreatePassword}
+                    className="space-y-5"
+                  >
+                    <div className="p-4 bg-green-50 border border-green-100 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-green-800">Welcome!</p>
+                          <p className="text-sm text-green-600">
+                            You've been added by <strong>{linkedEpc}</strong>. Create a password to get started.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-gray-700">Email</Label>
+                      <Input
+                        type="email"
+                        value={email}
+                        disabled
+                        className="h-11 bg-gray-50"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-gray-700">
+                        Your Name {!nameFromEpc && <span className="text-gray-400">(Optional)</span>}
+                      </Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="name"
+                          type="text"
+                          value={name}
+                          onChange={(e) => !nameFromEpc && setName(e.target.value)}
+                          placeholder="John Doe"
+                          className={`h-11 pl-10 ${nameFromEpc ? 'bg-gray-50' : ''}`}
+                          readOnly={nameFromEpc}
+                        />
+                      </div>
+                      {nameFromEpc && (
+                        <p className="text-xs text-gray-500">Name provided by {linkedEpc}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-gray-700">Create Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Minimum 6 characters"
+                          required
+                          minLength={6}
+                          className="h-11 pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-gray-700">Confirm Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Re-enter password"
+                          required
+                          className="h-11 pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" 
+                      disabled={loading}
+                    >
+                      {loading ? 'Creating Account...' : 'Create Account'}
+                    </Button>
+                  </motion.form>
+                )}
+
+                {/* Step 2c: Login with Password */}
+                {step === 'login' && (
+                  <motion.form
+                    key="login"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    onSubmit={handleLogin}
+                    className="space-y-5"
+                  >
+                    <div className="space-y-2">
+                      <Label className="text-gray-700">Email</Label>
+                      <Input
+                        type="email"
+                        value={email}
+                        disabled
+                        className="h-11 bg-gray-50"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-gray-700">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Enter your password"
+                          required
+                          autoFocus
+                          className="h-11 pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" 
+                      disabled={loading}
+                    >
+                      {loading ? 'Signing in...' : (
+                        <>
+                          Sign In
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+
+              {step === 'email' && (
+                <div className="mt-6 text-center">
+                  <a 
+                    href={`${publicSiteUrl}/for-subcontractors`}
+                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Learn more about Gryork for Sub-Contractors →
+                  </a>
+                </div>
+              )}
             </CardContent>
           </Card>
 

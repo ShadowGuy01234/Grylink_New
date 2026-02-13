@@ -289,7 +289,7 @@ const caseSchema = new mongoose.Schema(
 );
 
 // Auto-generate case number
-caseSchema.pre("save", async function (next) {
+caseSchema.pre("save", async function () {
   if (!this.caseNumber) {
     const count = await mongoose.model("Case").countDocuments();
     this.caseNumber = `GRY-${String(count + 1).padStart(6, "0")}`;
@@ -305,7 +305,6 @@ caseSchema.pre("save", async function (next) {
       .countDocuments({ rmtCaseNumber: { $exists: true } });
     this.rmtCaseNumber = `RMT-CWC-${String(rmtCount + 1).padStart(4, "0")}`;
   }
-  next();
 });
 
 // Index for efficient queries

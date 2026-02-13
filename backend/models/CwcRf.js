@@ -195,7 +195,7 @@ const cwcRfSchema = new mongoose.Schema(
 );
 
 // Auto-generate CWCRF number
-cwcRfSchema.pre("save", async function (next) {
+cwcRfSchema.pre("save", async function () {
   if (!this.cwcRfNumber) {
     const count = await mongoose.model("CwcRf").countDocuments();
     this.cwcRfNumber = `CWCRF-${String(count + 1).padStart(6, "0")}`;
@@ -205,7 +205,6 @@ cwcRfSchema.pre("save", async function (next) {
     this.cwcRequest = this.cwcRequest || {};
     this.cwcRequest.invoiceAmount = this.invoiceDetails.invoiceAmount;
   }
-  next();
 });
 
 // Index for efficient queries
