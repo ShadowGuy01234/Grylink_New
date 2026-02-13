@@ -42,7 +42,8 @@ export const salesApi = {
   getLeads: () => api.get("/sales/leads"),
   getSubContractors: () => api.get("/sales/subcontractors"),
   getDashboard: () => api.get("/sales/dashboard"),
-  markContacted: (id: string, notes?: string) => api.patch(`/sales/subcontractors/${id}/contacted`, { notes }),
+  markContacted: (id: string, notes?: string) =>
+    api.patch(`/sales/subcontractors/${id}/contacted`, { notes }),
 };
 
 // Ops
@@ -66,9 +67,9 @@ export const opsApi = {
     api.get(`/ops/companies/${id}/documents`),
   verifyDocument: (id: string, data: { decision: string; notes?: string }) =>
     api.post(`/ops/documents/${id}/verify`, data),
-  
+
   // NBFC
-  inviteNbfc: (data: any) => api.post('/ops/nbfc/invite', data),
+  inviteNbfc: (data: any) => api.post("/ops/nbfc/invite", data),
 };
 
 // Cases
@@ -95,6 +96,48 @@ export const rmtApi = {
       notes?: string;
     },
   ) => api.post(`/cases/${caseId}/risk-assessment`, data),
+};
+
+// CWCRF/CWCAF APIs for RMT
+export const cwcrfApi = {
+  // Get CWCRFs in RMT queue
+  getRmtQueue: () => api.get("/cwcrf/rmt/queue"),
+
+  // Generate CWCAF for a CWCRF
+  generateCwcaf: (
+    cwcrfId: string,
+    cwcafData: {
+      sellerProfileSummary: {
+        businessAge: number;
+        totalTransactions: number;
+        averageInvoiceValue: number;
+        repaymentHistory: string;
+      };
+      riskAssessmentDetails: {
+        invoiceAging: { score: number; remarks: string };
+        buyerCreditworthiness: { score: number; remarks: string };
+        sellerTrackRecord: { score: number; remarks: string };
+        collateralCoverage: { score: number; remarks: string };
+      };
+      riskCategory: "LOW" | "MEDIUM" | "HIGH";
+      rmtRecommendation: string;
+    },
+  ) => api.post(`/cwcrf/${cwcrfId}/rmt/generate-cwcaf`, cwcafData),
+
+  // Get CWCAF details
+  getCwcaf: (cwcrfId: string) => api.get(`/cwcrf/${cwcrfId}/cwcaf`),
+
+  // Share with NBFCs
+  shareWithNbfcs: (cwcrfId: string, nbfcIds: string[]) =>
+    api.post(`/cwcrf/${cwcrfId}/share-with-nbfcs`, { nbfcIds }),
+
+  // Get matching NBFCs for a CWCRF
+  getMatchingNbfcs: (cwcrfId: string) =>
+    api.get(`/cwcrf/${cwcrfId}/matching-nbfcs`),
+
+  // Move CWCRF to NBFC process
+  moveToNbfcProcess: (cwcrfId: string, nbfcId: string) =>
+    api.post(`/cwcrf/${cwcrfId}/move-to-nbfc-process`, { nbfcId }),
 };
 
 // Admin - User Management
@@ -130,10 +173,14 @@ export const riskAssessmentApi = {
   getDashboard: () => api.get("/risk-assessment/dashboard"),
   getPending: () => api.get("/risk-assessment/pending"),
   getById: (id: string) => api.get(`/risk-assessment/${id}`),
-  getBySeller: (sellerId: string) => api.get(`/risk-assessment/seller/${sellerId}`),
+  getBySeller: (sellerId: string) =>
+    api.get(`/risk-assessment/seller/${sellerId}`),
   create: (sellerId: string) => api.post("/risk-assessment", { sellerId }),
-  updateChecklist: (id: string, item: string, data: { verified: boolean; notes?: string }) =>
-    api.put(`/risk-assessment/${id}/checklist/${item}`, data),
+  updateChecklist: (
+    id: string,
+    item: string,
+    data: { verified: boolean; notes?: string },
+  ) => api.put(`/risk-assessment/${id}/checklist/${item}`, data),
   complete: (id: string, decision: "APPROVE" | "REJECT", notes?: string) =>
     api.post(`/risk-assessment/${id}/complete`, { decision, notes }),
 };
@@ -180,12 +227,16 @@ export const blacklistApi = {
 
 // Transactions
 export const transactionApi = {
-  getAll: (params?: { status?: string }) => api.get("/transactions", { params }),
+  getAll: (params?: { status?: string }) =>
+    api.get("/transactions", { params }),
   getById: (id: string) => api.get(`/transactions/${id}`),
   getOverdue: () => api.get("/transactions/overdue"),
-  setupEscrow: (id: string, data: any) => api.post(`/transactions/${id}/escrow`, data),
-  disburse: (id: string, data: any) => api.post(`/transactions/${id}/disburse`, data),
-  trackRepayment: (id: string, data: any) => api.post(`/transactions/${id}/repayment`, data),
+  setupEscrow: (id: string, data: any) =>
+    api.post(`/transactions/${id}/escrow`, data),
+  disburse: (id: string, data: any) =>
+    api.post(`/transactions/${id}/disburse`, data),
+  trackRepayment: (id: string, data: any) =>
+    api.post(`/transactions/${id}/repayment`, data),
 };
 
 // NBFC Management (Admin)
@@ -209,18 +260,39 @@ export const agentApi = {
     api.post(`/agents/${agentId}/introduce-epc`, { companyId }),
   processCommission: (transactionId: string) =>
     api.post(`/agents/process-commission/${transactionId}`),
-  markCommissionPaid: (agentId: string, commissionIndex: number, paymentRef: string) =>
-    api.post(`/agents/${agentId}/commission/${commissionIndex}/pay`, { paymentRef }),
-  reportMisconduct: (agentId: string, type: string, description: string, evidence?: string[]) =>
+  markCommissionPaid: (
+    agentId: string,
+    commissionIndex: number,
+    paymentRef: string,
+  ) =>
+    api.post(`/agents/${agentId}/commission/${commissionIndex}/pay`, {
+      paymentRef,
+    }),
+  reportMisconduct: (
+    agentId: string,
+    type: string,
+    description: string,
+    evidence?: string[],
+  ) =>
     api.post(`/agents/${agentId}/misconduct`, { type, description, evidence }),
-  handleMisconductDecision: (agentId: string, misconductIndex: number, decision: string, action: string) =>
-    api.post(`/agents/${agentId}/misconduct/${misconductIndex}/decision`, { decision, action }),
+  handleMisconductDecision: (
+    agentId: string,
+    misconductIndex: number,
+    decision: string,
+    action: string,
+  ) =>
+    api.post(`/agents/${agentId}/misconduct/${misconductIndex}/decision`, {
+      decision,
+      action,
+    }),
 };
 
 // Re-KYC (SOP Section 8)
 export const rekycApi = {
-  getPending: (entityType?: string) => api.get("/rekyc/pending", { params: { entityType } }),
-  getExpiring: (days?: number) => api.get("/rekyc/expiring", { params: { days } }),
+  getPending: (entityType?: string) =>
+    api.get("/rekyc/pending", { params: { entityType } }),
+  getExpiring: (days?: number) =>
+    api.get("/rekyc/expiring", { params: { days } }),
   getTriggers: () => api.get("/rekyc/triggers"),
   triggerCompany: (companyId: string, trigger: string, details?: any) =>
     api.post(`/rekyc/trigger/company/${companyId}`, { trigger, details }),

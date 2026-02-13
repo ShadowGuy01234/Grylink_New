@@ -215,21 +215,21 @@ const getDashboard = async (userId) => {
 
   if (!subContractor) throw new Error("Sub-contractor not found");
 
-  const Case = require('../models/Case');
-  const Bid = require('../models/Bid');
+  const Case = require("../models/Case");
+  const Bid = require("../models/Bid");
 
   const [bills, cwcRfs, cases] = await Promise.all([
     Bill.find({ subContractorId: subContractor._id }).sort({ createdAt: -1 }),
     CwcRf.find({ subContractorId: subContractor._id }).sort({ createdAt: -1 }),
     Case.find({ subContractorId: subContractor._id })
-      .populate('billId', 'billNumber amount')
+      .populate("billId", "billNumber amount")
       .sort({ createdAt: -1 }),
   ]);
 
   // Get bids for this sub-contractor's cases
-  const caseIds = cases.map(c => c._id);
+  const caseIds = cases.map((c) => c._id);
   const bids = await Bid.find({ caseId: { $in: caseIds } })
-    .populate('epcId', 'companyName')
+    .populate("epcId", "companyName")
     .sort({ createdAt: -1 });
 
   return { subContractor, bills, cwcRfs, cases, bids };
@@ -238,20 +238,20 @@ const getDashboard = async (userId) => {
 // Get incoming bids for sub-contractor
 const getIncomingBids = async (userId) => {
   const subContractor = await SubContractor.findOne({ userId });
-  if (!subContractor) throw new Error('Sub-contractor not found');
+  if (!subContractor) throw new Error("Sub-contractor not found");
 
-  const Case = require('../models/Case');
-  const Bid = require('../models/Bid');
+  const Case = require("../models/Case");
+  const Bid = require("../models/Bid");
 
   const cases = await Case.find({ subContractorId: subContractor._id });
-  const caseIds = cases.map(c => c._id);
+  const caseIds = cases.map((c) => c._id);
 
   const bids = await Bid.find({ caseId: { $in: caseIds } })
-    .populate('epcId', 'companyName')
-    .populate('nbfcId', 'companyName')
+    .populate("epcId", "companyName")
+    .populate("nbfcId", "companyName")
     .populate({
-      path: 'caseId',
-      populate: { path: 'billId', select: 'billNumber amount' }
+      path: "caseId",
+      populate: { path: "billId", select: "billNumber amount" },
     })
     .sort({ createdAt: -1 });
 
@@ -261,13 +261,13 @@ const getIncomingBids = async (userId) => {
 // Get cases for sub-contractor
 const getCases = async (userId) => {
   const subContractor = await SubContractor.findOne({ userId });
-  if (!subContractor) throw new Error('Sub-contractor not found');
+  if (!subContractor) throw new Error("Sub-contractor not found");
 
-  const Case = require('../models/Case');
-  
+  const Case = require("../models/Case");
+
   const cases = await Case.find({ subContractorId: subContractor._id })
-    .populate('billId', 'billNumber amount fileUrl fileName')
-    .populate('linkedEpcId', 'companyName')
+    .populate("billId", "billNumber amount fileUrl fileName")
+    .populate("linkedEpcId", "companyName")
     .sort({ createdAt: -1 });
 
   return cases;
@@ -290,7 +290,10 @@ const uploadWcc = async (userId, billId, file) => {
   const subContractor = await SubContractor.findOne({ userId });
   if (!subContractor) throw new Error("Sub-contractor not found");
 
-  const bill = await Bill.findOne({ _id: billId, subContractorId: subContractor._id });
+  const bill = await Bill.findOne({
+    _id: billId,
+    subContractorId: subContractor._id,
+  });
   if (!bill) throw new Error("Bill not found or access denied");
 
   // Upload to Cloudinary
@@ -331,7 +334,10 @@ const uploadMeasurementSheet = async (userId, billId, file) => {
   const subContractor = await SubContractor.findOne({ userId });
   if (!subContractor) throw new Error("Sub-contractor not found");
 
-  const bill = await Bill.findOne({ _id: billId, subContractorId: subContractor._id });
+  const bill = await Bill.findOne({
+    _id: billId,
+    subContractorId: subContractor._id,
+  });
   if (!bill) throw new Error("Bill not found or access denied");
 
   // Upload to Cloudinary
@@ -367,6 +373,204 @@ const uploadMeasurementSheet = async (userId, billId, file) => {
   return bill;
 };
 
+// ==================== SELLER DECLARATION ====================
+
+// Accept seller declaration (Step 4 - Hard Gate)
+const acceptDeclaration = async (userId) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  if (subContractor.sellerDeclaration?.accepted) {
+    throw new Error("Declaration already accepted");
+  }
+
+  subContractor.sellerDeclaration = {
+    accepted: true,
+    acceptedAt: new Date(),
+    ipAddress: null, // Can be added from request
+    declarationVersion: "1.0",
+  };
+
+  subContractor.statusHistory.push({
+    status: "DECLARATION_ACCEPTED",
+    changedBy: userId,
+    notes: "Seller declaration accepted by user",
+  });
+
+  await subContractor.save();
+  return { success: true, message: "Declaration accepted successfully" };
+};
+
+// Get declaration status
+const getDeclarationStatus = async (userId) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  return {
+    declarationAccepted: subContractor.sellerDeclaration?.accepted || false,
+    declarationAcceptedAt: subContractor.sellerDeclaration?.acceptedAt,
+    declarationVersion: subContractor.sellerDeclaration?.declarationVersion,
+  };
+};
+
+// ==================== KYC DOCUMENT MANAGEMENT ====================
+
+// Upload KYC document
+const uploadKycDocument = async (userId, documentType, file) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  // Validate document type
+  const validTypes = [
+    "panCard",
+    "aadhaarCard",
+    "gstCertificate",
+    "cancelledCheque",
+    "incorporationCertificate",
+    "bankStatement",
+  ];
+  if (!validTypes.includes(documentType)) {
+    throw new Error("Invalid document type");
+  }
+
+  // Upload to Cloudinary
+  const result = await uploadToCloudinary(file.buffer, file.mimetype, {
+    folder: `gryork/kyc/${subContractor._id}`,
+  });
+
+  // Initialize kycDocuments if not exists
+  if (!subContractor.kycDocuments) {
+    subContractor.kycDocuments = {};
+  }
+
+  // Update the specific document
+  subContractor.kycDocuments[documentType] = {
+    uploaded: true,
+    url: result.secure_url,
+    cloudinaryPublicId: result.public_id,
+    uploadedAt: new Date(),
+    status: "PENDING",
+  };
+
+  // Recalculate KYC status
+  const requiredDocs = [
+    "panCard",
+    "aadhaarCard",
+    "gstCertificate",
+    "cancelledCheque",
+  ];
+  const uploadedRequired = requiredDocs.filter(
+    (doc) => subContractor.kycDocuments[doc]?.uploaded,
+  ).length;
+
+  if (uploadedRequired === requiredDocs.length) {
+    // All required docs uploaded - check if all verified
+    const allVerified = requiredDocs.every(
+      (doc) => subContractor.kycDocuments[doc]?.status === "VERIFIED",
+    );
+    subContractor.kycStatus = allVerified ? "VERIFIED" : "PENDING_VERIFICATION";
+  } else {
+    subContractor.kycStatus = "INCOMPLETE";
+  }
+
+  subContractor.statusHistory.push({
+    status: `KYC_DOC_${documentType.toUpperCase()}_UPLOADED`,
+    changedBy: userId,
+    notes: `KYC document ${documentType} uploaded`,
+  });
+
+  await subContractor.save();
+  return {
+    success: true,
+    message: `${documentType} uploaded successfully`,
+    kycStatus: subContractor.kycStatus,
+  };
+};
+
+// Get KYC status
+const getKycStatus = async (userId) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  // Format documents for response
+  const documents = {};
+  const docTypes = [
+    "panCard",
+    "aadhaarCard",
+    "gstCertificate",
+    "cancelledCheque",
+    "incorporationCertificate",
+    "bankStatement",
+  ];
+
+  for (const docType of docTypes) {
+    const doc = subContractor.kycDocuments?.[docType];
+    documents[docType] = {
+      uploaded: doc?.uploaded || false,
+      url: doc?.url,
+      status: doc?.status || "NOT_UPLOADED",
+      rejectionReason: doc?.rejectionReason,
+    };
+  }
+
+  return {
+    kycStatus: subContractor.kycStatus || "INCOMPLETE",
+    documents,
+    bankDetails: subContractor.bankDetails,
+    bankDetailsVerified: subContractor.bankDetails?.verified || false,
+  };
+};
+
+// ==================== BANK DETAILS ====================
+
+// Update bank details
+const updateBankDetails = async (userId, bankData) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  const { accountNumber, ifscCode, bankName, branchName, accountHolderName } =
+    bankData;
+
+  if (!accountNumber || !ifscCode || !bankName || !accountHolderName) {
+    throw new Error(
+      "Account number, IFSC code, bank name, and account holder name are required",
+    );
+  }
+
+  // Validate IFSC format
+  if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode)) {
+    throw new Error("Invalid IFSC code format");
+  }
+
+  subContractor.bankDetails = {
+    accountNumber,
+    ifscCode,
+    bankName,
+    branchName,
+    accountHolderName,
+    verified: false, // Will be verified by ops team
+    verifiedAt: null,
+    verificationAttempts:
+      (subContractor.bankDetails?.verificationAttempts || 0) + 1,
+  };
+
+  subContractor.statusHistory.push({
+    status: "BANK_DETAILS_UPDATED",
+    changedBy: userId,
+    notes: `Bank details updated: ${bankName} - ${accountNumber.slice(-4)}`,
+  });
+
+  await subContractor.save();
+  return {
+    success: true,
+    message: "Bank details saved successfully",
+    bankDetails: {
+      ...subContractor.bankDetails,
+      accountNumber: `XXXX${accountNumber.slice(-4)}`, // Masked
+    },
+  };
+};
+
 module.exports = {
   completeProfile,
   uploadBill,
@@ -378,4 +582,9 @@ module.exports = {
   getCases,
   uploadWcc,
   uploadMeasurementSheet,
+  acceptDeclaration,
+  getDeclarationStatus,
+  uploadKycDocument,
+  getKycStatus,
+  updateBankDetails,
 };

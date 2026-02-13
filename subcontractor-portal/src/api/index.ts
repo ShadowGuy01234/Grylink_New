@@ -64,6 +64,68 @@ export const scApi = {
     amount?: number;
   }) => api.post("/subcontractor/cwc", data),
   getDashboard: () => api.get("/subcontractor/dashboard"),
+
+  // Seller Declaration (Workflow Step 4 - Hard Gate)
+  acceptDeclaration: () => api.post("/subcontractor/declaration/accept"),
+  getDeclarationStatus: () => api.get("/subcontractor/declaration/status"),
+
+  // KYC Documents Upload (Workflow Step 3)
+  uploadKycDocument: (documentType: string, formData: FormData) =>
+    api.post(`/subcontractor/kyc/${documentType}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  getKycStatus: () => api.get("/subcontractor/kyc/status"),
+
+  // Bank Details
+  updateBankDetails: (data: {
+    accountNumber: string;
+    ifscCode: string;
+    bankName: string;
+    branchName?: string;
+    accountType?: string;
+  }) => api.put("/subcontractor/bank-details", data),
+};
+
+// CWCRF APIs (Workflow Section 4 - Phase 2)
+export const cwcrfApi = {
+  // Submit new CWCRF
+  submit: (data: {
+    billId: string;
+    buyerDetails: {
+      buyerId?: string;
+      projectName: string;
+      projectLocation: string;
+    };
+    invoiceDetails: {
+      invoiceNumber: string;
+      invoiceDate: string;
+      invoiceAmount: number;
+      expectedPaymentDate: string;
+      workDescription?: string;
+    };
+    cwcRequest: {
+      requestedAmount: number;
+      requestedTenure: number; // 30, 45, 60, 90 days
+    };
+    interestPreference: {
+      preferenceType: "RANGE" | "MAX_ACCEPTABLE";
+      minRate?: number;
+      maxRate?: number;
+      maxAcceptableRate?: number;
+    };
+    platformFeePaid?: boolean;
+    paymentReference?: string;
+  }) => api.post("/cwcrf", data),
+
+  // Get all my CWCRFs
+  getMyCwcrfs: () => api.get("/cwcrf/my"),
+
+  // Get single CWCRF details
+  getById: (id: string) => api.get(`/cwcrf/${id}`),
+
+  // Select NBFC (Workflow Step 10)
+  selectNbfc: (cwcrfId: string, nbfcId: string) =>
+    api.post(`/cwcrf/${cwcrfId}/select-nbfc`, { nbfcId }),
 };
 
 // KYC Chat APIs - for chat-based document exchange with Ops

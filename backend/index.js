@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 5000;
 //   - partner-gryork.vercel.app    : Partner Portal (EPC/NBFC)
 //   - official-gryork.vercel.app   : Official Portal (Sales, Ops, Admin)
 //   - grylink-backend.vercel.app   : Backend API
-//   
+//
 //   Custom Domains (Future):
 //   - gryork.com          : Public Website
 //   - app.gryork.com      : Sub-Contractor Portal
@@ -44,12 +44,12 @@ app.use(
 
       // Vercel deployment URLs
       const vercelOrigins = [
-        'https://gryork-public.vercel.app',
-        'https://app-gryork.vercel.app',
-        'https://link-gryork.vercel.app',
-        'https://partner-gryork.vercel.app',
-        'https://official-gryork.vercel.app',
-        'https://grylink-backend.vercel.app',
+        "https://gryork-public.vercel.app",
+        "https://app-gryork.vercel.app",
+        "https://link-gryork.vercel.app",
+        "https://partner-gryork.vercel.app",
+        "https://official-gryork.vercel.app",
+        "https://grylink-backend.vercel.app",
       ];
 
       if (vercelOrigins.includes(origin)) return callback(null, true);
@@ -104,6 +104,7 @@ app.use("/api/cases", require("./routes/cases"));
 app.use("/api/bids", require("./routes/bids"));
 app.use("/api/grylink", require("./routes/grylink"));
 app.use("/api/admin", require("./routes/admin"));
+app.use("/api/cwcrf", require("./routes/cwcrf")); // CWCRF workflow routes
 
 // SOP Compliance Routes
 app.use("/api/nbfc", require("./routes/nbfc"));

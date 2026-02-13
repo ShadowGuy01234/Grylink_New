@@ -1,11 +1,13 @@
-
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Layout from './components/Layout';
-import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
-import NbfcDashboard from './pages/NbfcDashboard';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import Layout from "./components/Layout";
+import LoginPage from "./pages/LoginPage";
+import DashboardPage from "./pages/DashboardPage";
+import NbfcDashboard from "./pages/NbfcDashboard";
+import CwcrfVerificationPage from "./pages/CwcrfVerificationPage";
+import LpsManagementPage from "./pages/LpsManagementPage";
+import NbfcQuotationPage from "./pages/NbfcQuotationPage";
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -24,19 +26,63 @@ const AppRoutes = () => {
   }
 
   // NBFC users get NBFC dashboard, EPC users get EPC dashboard
-  const defaultRoute = user.role === 'nbfc' ? '/nbfc' : '/dashboard';
+  const defaultRoute = user.role === "nbfc" ? "/nbfc" : "/dashboard";
 
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to={defaultRoute} replace />} />
-        <Route 
-          path="dashboard" 
-          element={user.role === 'epc' ? <DashboardPage /> : <Navigate to={defaultRoute} replace />} 
+        {/* EPC Routes */}
+        <Route
+          path="dashboard"
+          element={
+            user.role === "epc" ? (
+              <DashboardPage />
+            ) : (
+              <Navigate to={defaultRoute} replace />
+            )
+          }
         />
-        <Route 
-          path="nbfc" 
-          element={user.role === 'nbfc' ? <NbfcDashboard /> : <Navigate to={defaultRoute} replace />} 
+        <Route
+          path="cwcrf-verification"
+          element={
+            user.role === "epc" ? (
+              <CwcrfVerificationPage />
+            ) : (
+              <Navigate to={defaultRoute} replace />
+            )
+          }
+        />
+        {/* NBFC Routes */}
+        <Route
+          path="nbfc"
+          element={
+            user.role === "nbfc" ? (
+              <NbfcDashboard />
+            ) : (
+              <Navigate to={defaultRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="nbfc/lps"
+          element={
+            user.role === "nbfc" ? (
+              <LpsManagementPage />
+            ) : (
+              <Navigate to={defaultRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="nbfc/quotations"
+          element={
+            user.role === "nbfc" ? (
+              <NbfcQuotationPage />
+            ) : (
+              <Navigate to={defaultRoute} replace />
+            )
+          }
         />
         <Route path="*" element={<Navigate to={defaultRoute} replace />} />
       </Route>
@@ -48,9 +94,16 @@ const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Toaster position="top-right" toastOptions={{
-          style: { background: '#1a1a2e', color: '#e0e0e0', borderRadius: '8px' },
-        }} />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: "#1a1a2e",
+              color: "#e0e0e0",
+              borderRadius: "8px",
+            },
+          }}
+        />
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>

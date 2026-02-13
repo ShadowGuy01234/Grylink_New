@@ -1,10 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { authenticate, authorize } = require('../middleware/auth');
-const nbfcService = require('../services/nbfcService');
+const { authenticate, authorize } = require("../middleware/auth");
+const nbfcService = require("../services/nbfcService");
 
 // POST /api/nbfc - Create new NBFC (admin only)
-router.post('/', authenticate, authorize('admin'), async (req, res) => {
+router.post("/", authenticate, authorize("admin"), async (req, res) => {
   try {
     const nbfc = await nbfcService.createNbfc(req.body);
     res.status(201).json(nbfc);
@@ -14,20 +14,25 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // GET /api/nbfc - Get all NBFCs
-router.get('/', authenticate, authorize('admin', 'ops', 'rmt'), async (req, res) => {
-  try {
-    const nbfcs = await nbfcService.getNbfcs(req.query);
-    res.json(nbfcs);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+router.get(
+  "/",
+  authenticate,
+  authorize("admin", "ops", "rmt"),
+  async (req, res) => {
+    try {
+      const nbfcs = await nbfcService.getNbfcs(req.query);
+      res.json(nbfcs);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
 
 // GET /api/nbfc/dashboard - Get NBFC's own dashboard
-router.get('/dashboard', authenticate, authorize('nbfc'), async (req, res) => {
+router.get("/dashboard", authenticate, authorize("nbfc"), async (req, res) => {
   try {
     if (!req.user.nbfcId) {
-      return res.status(400).json({ error: 'No NBFC linked to this account' });
+      return res.status(400).json({ error: "No NBFC linked to this account" });
     }
     const dashboard = await nbfcService.getNbfcDashboard(req.user.nbfcId);
     res.json(dashboard);
@@ -36,11 +41,99 @@ router.get('/dashboard', authenticate, authorize('nbfc'), async (req, res) => {
   }
 });
 
+// ========================================
+// LPS (Lending Preference Sheet) ROUTES
+// Workflow Section 6
+// ========================================
+
+// GET /api/nbfc/lps - Get current NBFC's LPS
+router.get("/lps", authenticate, authorize("nbfc"), async (req, res) => {
+  try {
+    if (!req.user.nbfcId) {
+      return res.status(400).json({ error: "No NBFC linked to this account" });
+    }
+    const lps = await nbfcService.getLps(req.user.nbfcId);
+    res.json(lps);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/nbfc/lps - Update current NBFC's LPS
+router.put("/lps", authenticate, authorize("nbfc"), async (req, res) => {
+  try {
+    if (!req.user.nbfcId) {
+      return res.status(400).json({ error: "No NBFC linked to this account" });
+    }
+    const nbfc = await nbfcService.updateLps(
+      req.user.nbfcId,
+      req.body,
+      req.user._id,
+    );
+    res.json({
+      message: "Lending Preference Sheet updated successfully",
+      lps: nbfc.lendingPreferenceSheet,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// GET /api/nbfc/:id/lps - Get LPS for specific NBFC (admin/ops/rmt)
+router.get(
+  "/:id/lps",
+  authenticate,
+  authorize("admin", "ops", "rmt"),
+  async (req, res) => {
+    try {
+      const lps = await nbfcService.getLps(req.params.id);
+      res.json(lps);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+// PUT /api/nbfc/:id/lps - Update LPS for specific NBFC (admin only)
+router.put("/:id/lps", authenticate, authorize("admin"), async (req, res) => {
+  try {
+    const nbfc = await nbfcService.updateLps(
+      req.params.id,
+      req.body,
+      req.user._id,
+    );
+    res.json({
+      message: "Lending Preference Sheet updated successfully",
+      lps: nbfc.lendingPreferenceSheet,
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// POST /api/nbfc/reset-monthly-capacity - Reset all NBFCs monthly capacity (admin/cron)
+router.post(
+  "/reset-monthly-capacity",
+  authenticate,
+  authorize("admin"),
+  async (req, res) => {
+    try {
+      const result = await nbfcService.resetMonthlyCapacity();
+      res.json({
+        message: "Monthly capacity reset for all NBFCs",
+        modifiedCount: result.modifiedCount,
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
+
 // GET /api/nbfc/match/:caseId - Get matching NBFCs for a case (Tech Engine)
 router.get(
-  '/match/:caseId',
+  "/match/:caseId",
   authenticate,
-  authorize('admin', 'ops', 'rmt'),
+  authorize("admin", "ops", "rmt"),
   async (req, res) => {
     try {
       const matches = await nbfcService.matchNbfcsForCase(req.params.caseId);
@@ -48,35 +141,35 @@ router.get(
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-  }
+  },
 );
 
 // POST /api/nbfc/share/:caseId - Share case with multiple NBFCs
 router.post(
-  '/share/:caseId',
+  "/share/:caseId",
   authenticate,
-  authorize('admin', 'ops', 'rmt'),
+  authorize("admin", "ops", "rmt"),
   async (req, res) => {
     try {
       const { nbfcIds } = req.body;
       if (!nbfcIds || !Array.isArray(nbfcIds) || nbfcIds.length === 0) {
-        return res.status(400).json({ error: 'nbfcIds array is required' });
+        return res.status(400).json({ error: "nbfcIds array is required" });
       }
 
       const result = await nbfcService.shareCaseWithNbfcs(
         req.params.caseId,
         nbfcIds,
-        req.user._id
+        req.user._id,
       );
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
-  }
+  },
 );
 
 // GET /api/nbfc/:id - Get NBFC by ID
-router.get('/:id', authenticate, async (req, res) => {
+router.get("/:id", authenticate, async (req, res) => {
   try {
     const nbfc = await nbfcService.getNbfcById(req.params.id);
     res.json(nbfc);
@@ -86,9 +179,13 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // PUT /api/nbfc/:id - Update NBFC
-router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
+router.put("/:id", authenticate, authorize("admin"), async (req, res) => {
   try {
-    const nbfc = await nbfcService.updateNbfc(req.params.id, req.body, req.user._id);
+    const nbfc = await nbfcService.updateNbfc(
+      req.params.id,
+      req.body,
+      req.user._id,
+    );
     res.json(nbfc);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -97,31 +194,35 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
 
 // POST /api/nbfc/:caseId/respond - NBFC responds to a case
 router.post(
-  '/:caseId/respond',
+  "/:caseId/respond",
   authenticate,
-  authorize('nbfc'),
+  authorize("nbfc"),
   async (req, res) => {
     try {
       const { decision, interestRate, fundingDays, notes } = req.body;
-      if (!decision || !['approve', 'reject'].includes(decision)) {
-        return res.status(400).json({ error: 'Decision must be approve or reject' });
+      if (!decision || !["approve", "reject"].includes(decision)) {
+        return res
+          .status(400)
+          .json({ error: "Decision must be approve or reject" });
       }
 
-      const Case = require('../models/Case');
+      const Case = require("../models/Case");
       const caseDoc = await Case.findById(req.params.caseId);
       if (!caseDoc) {
-        return res.status(404).json({ error: 'Case not found' });
+        return res.status(404).json({ error: "Case not found" });
       }
 
       // Find this NBFC's sharing record
       const sharing = caseDoc.nbfcSharing?.find(
-        (s) => s.nbfcId.toString() === req.user.nbfcId?.toString()
+        (s) => s.nbfcId.toString() === req.user.nbfcId?.toString(),
       );
       if (!sharing) {
-        return res.status(403).json({ error: 'Case not shared with your NBFC' });
+        return res
+          .status(403)
+          .json({ error: "Case not shared with your NBFC" });
       }
 
-      sharing.status = decision === 'approve' ? 'APPROVED' : 'REJECTED';
+      sharing.status = decision === "approve" ? "APPROVED" : "REJECTED";
       sharing.respondedAt = new Date();
       sharing.interestRate = interestRate;
       sharing.fundingDays = fundingDays;
@@ -131,17 +232,17 @@ router.post(
 
       // Update NBFC metrics
       await nbfcService.updateNbfcMetrics(req.user.nbfcId, {
-        approved: decision === 'approve',
+        approved: decision === "approve",
         processingDays: Math.ceil(
-          (new Date() - sharing.sharedAt) / (1000 * 60 * 60 * 24)
+          (new Date() - sharing.sharedAt) / (1000 * 60 * 60 * 24),
         ),
       });
 
-      res.json({ message: 'Response recorded', case: caseDoc });
+      res.json({ message: "Response recorded", case: caseDoc });
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
-  }
+  },
 );
 
 module.exports = router;
