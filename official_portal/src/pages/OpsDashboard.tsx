@@ -1,17 +1,78 @@
 import { useState, useEffect } from "react";
 import { opsApi, casesApi } from "../api";
 import toast from "react-hot-toast";
+import { AxiosError } from "axios";
+
+interface Company {
+  _id: string;
+  companyName: string;
+  ownerName: string;
+  email: string;
+  status: string;
+}
+
+interface Bill {
+  _id: string;
+  billNumber: string;
+  amount: number;
+  description: string;
+  status: string;
+  fileName: string;
+  fileUrl: string;
+  subContractorId?: { companyName: string };
+  linkedEpcId?: { companyName: string };
+  wcc?: { uploaded: boolean; fileUrl: string; verified: boolean };
+  measurementSheet?: { uploaded: boolean; fileUrl: string; certified: boolean };
+}
+
+interface KycItem {
+  _id: string;
+  status: string;
+  subContractorId?: { companyName: string };
+  userId?: { name: string };
+}
+
+interface CaseItem {
+  _id: string;
+  caseNumber: string;
+  subContractorId?: { companyName: string };
+  epcId?: { companyName: string };
+  billId?: { amount: number };
+  currentStage: string;
+  status: string;
+  createdAt: string;
+}
+
+interface PendingData {
+  pendingCompanies: Company[];
+  pendingBills: Bill[];
+  pendingKyc: KycItem[];
+}
+
+interface VerifyModal {
+  type: "company" | "bill";
+  id: string;
+  name: string;
+  fileUrl?: string;
+  fileName?: string;
+  amount?: number;
+  description?: string;
+  subContractor?: string;
+  epc?: string;
+  wcc?: { uploaded: boolean; fileUrl: string; verified: boolean };
+  measurementSheet?: { uploaded: boolean; fileUrl: string; certified: boolean };
+}
 
 const OpsDashboard = () => {
-  const [pending, setPending] = useState<any>({
+  const [pending, setPending] = useState<PendingData>({
     pendingCompanies: [],
     pendingBills: [],
     pendingKyc: [],
   });
-  const [cases, setCases] = useState<any[]>([]);
+  const [cases, setCases] = useState<CaseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("companies");
-  const [verifyModal, setVerifyModal] = useState<any>(null);
+  const [verifyModal, setVerifyModal] = useState<VerifyModal | null>(null);
   const [notes, setNotes] = useState("");
   const [kycMessage, setKycMessage] = useState("");
 
@@ -41,8 +102,9 @@ const OpsDashboard = () => {
       setVerifyModal(null);
       setNotes("");
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to verify");
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: string }>;
+      toast.error(axiosErr.response?.data?.error || "Failed to verify");
     }
   };
 
@@ -52,8 +114,9 @@ const OpsDashboard = () => {
       toast.success("KYC document request sent");
       setKycMessage("");
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to send request");
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: string }>;
+      toast.error(axiosErr.response?.data?.error || "Failed to send request");
     }
   };
 
@@ -62,8 +125,9 @@ const OpsDashboard = () => {
       await opsApi.completeKyc(id);
       toast.success("KYC completed — Case created");
       fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to complete KYC");
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: string }>;
+      toast.error(axiosErr.response?.data?.error || "Failed to complete KYC");
     }
   };
 
@@ -144,7 +208,7 @@ const OpsDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {pending.pendingCompanies.map((c: any) => (
+                {pending.pendingCompanies.map((c) => (
                   <tr key={c._id}>
                     <td>{c.companyName}</td>
                     <td>{c.ownerName}</td>
@@ -196,7 +260,7 @@ const OpsDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {pending.pendingBills.map((b: any) => (
+                {pending.pendingBills.map((b) => (
                   <tr key={b._id}>
                     <td>{b.billNumber || "—"}</td>
                     <td>{b.subContractorId?.companyName || "—"}</td>
@@ -211,6 +275,14 @@ const OpsDashboard = () => {
                             type: "bill",
                             id: b._id,
                             name: b.billNumber,
+                            fileUrl: b.fileUrl,
+                            fileName: b.fileName,
+                            amount: b.amount,
+                            description: b.description,
+                            subContractor: b.subContractorId?.companyName,
+                            epc: b.linkedEpcId?.companyName,
+                            wcc: b.wcc,
+                            measurementSheet: b.measurementSheet,
                           })
                         }
                       >
@@ -247,7 +319,7 @@ const OpsDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {pending.pendingKyc.map((k: any) => (
+                {pending.pendingKyc.map((k) => (
                   <tr key={k._id}>
                     <td>{k.subContractorId?.companyName || "—"}</td>
                     <td>{k.userId?.name || "—"}</td>
@@ -308,7 +380,7 @@ const OpsDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {cases.map((c: any) => (
+                {cases.map((c) => (
                   <tr key={c._id}>
                     <td>{c.caseNumber}</td>
                     <td>{c.subContractorId?.companyName || "—"}</td>
@@ -359,9 +431,10 @@ const OpsDashboard = () => {
                   await opsApi.inviteNbfc(data);
                   toast.success("NBFC invited successfully!");
                   form.reset();
-                } catch (err: any) {
+                } catch (err) {
+                  const axiosErr = err as AxiosError<{ error?: string }>;
                   toast.error(
-                    err.response?.data?.error || "Failed to invite NBFC",
+                    axiosErr.response?.data?.error || "Failed to invite NBFC",
                   );
                 }
               }}
@@ -525,6 +598,111 @@ const OpsDashboard = () => {
 
             {verifyModal.type === "bill" && (
               <>
+                {/* Bill Details */}
+                <div
+                  style={{
+                    marginBottom: 20,
+                    padding: 16,
+                    background: "var(--bg-secondary)",
+                    borderRadius: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: 12,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div>
+                      <strong>Sub-Contractor:</strong>{" "}
+                      {verifyModal.subContractor || "—"}
+                    </div>
+                    <div>
+                      <strong>EPC Company:</strong> {verifyModal.epc || "—"}
+                    </div>
+                    <div>
+                      <strong>Amount:</strong>{" "}
+                      {verifyModal.amount
+                        ? `₹${verifyModal.amount.toLocaleString()}`
+                        : "—"}
+                    </div>
+                    <div>
+                      <strong>Description:</strong>{" "}
+                      {verifyModal.description || "—"}
+                    </div>
+                  </div>
+
+                  {/* Bill Document */}
+                  <div style={{ marginBottom: 12 }}>
+                    <strong>Bill Document:</strong>{" "}
+                    {verifyModal.fileUrl ? (
+                      <a
+                        href={verifyModal.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-sm btn-primary"
+                        style={{ marginLeft: 8 }}
+                      >
+                        View Bill
+                      </a>
+                    ) : (
+                      <span style={{ color: "var(--text-muted)" }}>
+                        No document uploaded
+                      </span>
+                    )}
+                  </div>
+
+                  {/* WCC Document */}
+                  {verifyModal.wcc?.uploaded && (
+                    <div style={{ marginBottom: 12 }}>
+                      <strong>WCC (Work Completion Certificate):</strong>{" "}
+                      <a
+                        href={verifyModal.wcc.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-sm btn-primary"
+                        style={{ marginLeft: 8 }}
+                      >
+                        View WCC
+                      </a>
+                      {verifyModal.wcc.verified && (
+                        <span
+                          className="badge badge-green"
+                          style={{ marginLeft: 8 }}
+                        >
+                          Verified
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Measurement Sheet */}
+                  {verifyModal.measurementSheet?.uploaded && (
+                    <div>
+                      <strong>Measurement Sheet:</strong>{" "}
+                      <a
+                        href={verifyModal.measurementSheet.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-sm btn-primary"
+                        style={{ marginLeft: 8 }}
+                      >
+                        View Sheet
+                      </a>
+                      {verifyModal.measurementSheet.certified && (
+                        <span
+                          className="badge badge-green"
+                          style={{ marginLeft: 8 }}
+                        >
+                          Certified
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <div className="form-group">
                   <label>Notes</label>
                   <textarea
@@ -556,6 +734,14 @@ const OpsDashboard = () => {
   );
 };
 
+interface Document {
+  _id: string;
+  documentType: string;
+  fileName: string;
+  fileUrl: string;
+  status: string;
+}
+
 const CompanyReview = ({
   companyId,
   onClose,
@@ -563,7 +749,7 @@ const CompanyReview = ({
   companyId: string;
   onClose: () => void;
 }) => {
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Helper to open PDF documents properly (fetches and opens with correct MIME type)
@@ -578,7 +764,7 @@ const CompanyReview = ({
       toast.dismiss("pdf-load");
       window.open(blobUrl, "_blank");
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-    } catch (err) {
+    } catch {
       toast.dismiss("pdf-load");
       toast.error("Failed to load document. Downloading instead...");
       const a = document.createElement("a");
@@ -593,7 +779,7 @@ const CompanyReview = ({
       try {
         const res = await opsApi.getCompanyDocuments(companyId);
         setDocuments(res.data);
-      } catch (err) {
+      } catch {
         toast.error("Failed to load documents");
       } finally {
         setLoading(false);
@@ -615,7 +801,7 @@ const CompanyReview = ({
             : d,
         ),
       );
-    } catch (err) {
+    } catch {
       toast.error("Failed to update document status");
     }
   };
@@ -627,7 +813,7 @@ const CompanyReview = ({
         `Company ${decision === "approve" ? "approved" : "rejected"}`,
       );
       onClose();
-    } catch (err) {
+    } catch {
       toast.error("Failed to update company status");
     }
   };

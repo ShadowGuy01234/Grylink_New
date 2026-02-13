@@ -1,16 +1,32 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 // Transaction/Escrow model for deal execution (SOP Phase 8)
 const transactionSchema = new mongoose.Schema(
   {
     // Case reference
-    caseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Case', required: true },
-    bidId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bid', required: true },
+    caseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Case",
+      required: true,
+    },
+    bidId: { type: mongoose.Schema.Types.ObjectId, ref: "Bid", required: true },
 
     // Parties
-    sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubContractor', required: true },
-    buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
-    nbfcId: { type: mongoose.Schema.Types.ObjectId, ref: 'Nbfc', required: true },
+    sellerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubContractor",
+      required: true,
+    },
+    buyerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
+    nbfcId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Nbfc",
+      required: true,
+    },
 
     // Transaction identifiers
     transactionNumber: { type: String, unique: true },
@@ -25,8 +41,8 @@ const transactionSchema = new mongoose.Schema(
     // Partial funding support (60-70% as per SOP)
     fundingType: {
       type: String,
-      enum: ['FULL', 'PARTIAL'],
-      default: 'FULL',
+      enum: ["FULL", "PARTIAL"],
+      default: "FULL",
     },
     fundingPercentage: { type: Number, default: 100 },
 
@@ -52,8 +68,8 @@ const transactionSchema = new mongoose.Schema(
     disbursement: {
       status: {
         type: String,
-        enum: ['PENDING', 'INITIATED', 'COMPLETED', 'FAILED'],
-        default: 'PENDING',
+        enum: ["PENDING", "INITIATED", "COMPLETED", "FAILED"],
+        default: "PENDING",
       },
       initiatedAt: Date,
       completedAt: Date,
@@ -68,8 +84,8 @@ const transactionSchema = new mongoose.Schema(
       reminderSentAt: Date, // 1 month before due date per SOP
       status: {
         type: String,
-        enum: ['PENDING', 'PARTIAL', 'COMPLETED', 'OVERDUE', 'DEFAULTED'],
-        default: 'PENDING',
+        enum: ["PENDING", "PARTIAL", "COMPLETED", "OVERDUE", "DEFAULTED"],
+        default: "PENDING",
       },
       paidAmount: { type: Number, default: 0 },
       paidAt: Date,
@@ -80,17 +96,17 @@ const transactionSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
-        'PENDING_ESCROW',
-        'ESCROW_SETUP',
-        'PENDING_DISBURSEMENT',
-        'DISBURSED',
-        'AWAITING_REPAYMENT',
-        'REPAID',
-        'OVERDUE',
-        'DEFAULTED',
-        'CANCELLED',
+        "PENDING_ESCROW",
+        "ESCROW_SETUP",
+        "PENDING_DISBURSEMENT",
+        "DISBURSED",
+        "AWAITING_REPAYMENT",
+        "REPAID",
+        "OVERDUE",
+        "DEFAULTED",
+        "CANCELLED",
       ],
-      default: 'PENDING_ESCROW',
+      default: "PENDING_ESCROW",
     },
 
     // Recourse handling (SOP Section 13)
@@ -106,25 +122,24 @@ const transactionSchema = new mongoose.Schema(
       {
         status: String,
         changedAt: { type: Date, default: Date.now },
-        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         notes: String,
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Auto-generate transaction number
-transactionSchema.pre('save', async function (next) {
+transactionSchema.pre("save", async function () {
   if (!this.transactionNumber) {
-    const count = await mongoose.model('Transaction').countDocuments();
-    this.transactionNumber = `TXN-${String(count + 1).padStart(8, '0')}`;
+    const count = await mongoose.model("Transaction").countDocuments();
+    this.transactionNumber = `TXN-${String(count + 1).padStart(8, "0")}`;
   }
-  next();
 });
 
 // Index for due date tracking
-transactionSchema.index({ 'repayment.dueDate': 1, 'repayment.status': 1 });
+transactionSchema.index({ "repayment.dueDate": 1, "repayment.status": 1 });
 transactionSchema.index({ status: 1, nbfcId: 1 });
 
-module.exports = mongoose.model('Transaction', transactionSchema);
+module.exports = mongoose.model("Transaction", transactionSchema);
