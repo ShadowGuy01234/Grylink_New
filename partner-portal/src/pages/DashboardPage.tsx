@@ -184,8 +184,8 @@ const DashboardPage = () => {
         companyName: "Example Pvt Ltd",
         contactName: "John Doe",
         email: "john@example.com",
-        phone: "9876543210"
-      }
+        phone: "9876543210",
+      },
     ];
     const ws = XLSX.utils.json_to_sheet(templateData);
     // Set column widths
@@ -631,12 +631,19 @@ const DashboardPage = () => {
                           <button
                             onClick={() => {
                               if (!existingDoc.fileUrl) {
-                                alert("Document URL is missing. Please re-upload the document.");
+                                alert(
+                                  "Document URL is missing. Please re-upload the document.",
+                                );
                                 return;
                               }
-                              const isPdf = existingDoc.fileName?.toLowerCase().endsWith(".pdf");
+                              const isPdf = existingDoc.fileName
+                                ?.toLowerCase()
+                                .endsWith(".pdf");
                               if (isPdf) {
-                                openPdfDocument(existingDoc.fileUrl, existingDoc.fileName);
+                                openPdfDocument(
+                                  existingDoc.fileUrl,
+                                  existingDoc.fileName,
+                                );
                               } else {
                                 window.open(existingDoc.fileUrl, "_blank");
                               }

@@ -39,7 +39,7 @@ const uploadToCloudinary = async (fileBuffer, mimeType, options = {}) => {
     // Generate a unique ID with the file extension preserved
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 8);
-    const ext = options.filename.split('.').pop() || 'pdf';
+    const ext = options.filename.split(".").pop() || "pdf";
     uploadOptions.public_id = `${timestamp}_${randomStr}.${ext}`;
   }
 

@@ -446,7 +446,9 @@ const DashboardPage = () => {
                       <button
                         className="btn-sm btn-secondary"
                         onClick={() => {
-                          const isPdf = b.fileName?.toLowerCase().endsWith(".pdf");
+                          const isPdf = b.fileName
+                            ?.toLowerCase()
+                            .endsWith(".pdf");
                           if (isPdf) {
                             openPdfDocument(b.fileUrl, b.fileName);
                           } else {
@@ -859,7 +861,9 @@ const DashboardPage = () => {
                     {msg.fileUrl && (
                       <button
                         onClick={() => {
-                          const isPdf = msg.fileName?.toLowerCase().endsWith(".pdf");
+                          const isPdf = msg.fileName
+                            ?.toLowerCase()
+                            .endsWith(".pdf");
                           if (isPdf) {
                             openPdfDocument(msg.fileUrl, msg.fileName);
                           } else {
