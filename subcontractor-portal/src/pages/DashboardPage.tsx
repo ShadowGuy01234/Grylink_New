@@ -1,31 +1,23 @@
-<<<<<<< HEAD
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { scApi, kycApi } from '@/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Select } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import {
   User, FileText, Send, FolderOpen, Gavel, MessageSquare,
-  Upload, Building2, Phone, Hash, ArrowRight, ChevronRight,
+  Upload, Building2, Phone, Hash, ChevronRight,
   CheckCircle2, Clock, AlertCircle, XCircle, TrendingUp,
-  LayoutDashboard, ArrowLeft, Paperclip
+  LayoutDashboard, ArrowLeft, Paperclip, MapPin, CreditCard
 } from 'lucide-react';
-=======
-import React, { useState, useEffect, useRef } from "react";
-import { scApi, kycApi } from "../api";
-import toast from "react-hot-toast";
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
 
 const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
-<<<<<<< HEAD
   const [dashboard, setDashboard] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [saving, setSaving] = useState(false);
@@ -33,49 +25,25 @@ const DashboardPage = () => {
   // Profile form
   const [profileForm, setProfileForm] = useState({
     companyName: '', ownerName: '', phone: '', vendorId: '', gstin: '', address: ''
-=======
-  const [activeTab, setActiveTab] = useState("profile");
-
-  // Profile form
-  const [profileForm, setProfileForm] = useState({
-    companyName: "",
-    ownerName: "",
-    address: "",
-    phone: "",
-    vendorId: "",
-    gstin: "",
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
   });
 
   // Bill upload
   const [billFiles, setBillFiles] = useState<File[]>([]);
-<<<<<<< HEAD
-=======
-  const [billData, setBillData] = useState({
-    billNumber: "",
-    amount: "",
-    description: "",
-  });
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
   const [uploadingBill, setUploadingBill] = useState(false);
   const [billData, setBillData] = useState({ billNumber: '', amount: '', description: '' });
 
   // CWC
-  const [selectedBillForCwc, setSelectedBillForCwc] = useState("");
+  const [selectedBillForCwc, setSelectedBillForCwc] = useState('');
   const [submittingCwc, setSubmittingCwc] = useState(false);
 
   // Bids
   const [respondingBid, setRespondingBid] = useState<string | null>(null);
-  const [counterOffer, setCounterOffer] = useState({
-    amount: "",
-    duration: "",
-    message: "",
-  });
+  const [counterOffer, setCounterOffer] = useState({ amount: '', duration: '', message: '' });
 
   // KYC Chat
   const [selectedCwcRf, setSelectedCwcRf] = useState<any>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [chatMessage, setChatMessage] = useState("");
+  const [chatMessage, setChatMessage] = useState('');
   const [chatFile, setChatFile] = useState<File | null>(null);
   const [loadingChat, setLoadingChat] = useState(false);
   const [sendingChat, setSendingChat] = useState(false);
@@ -98,7 +66,6 @@ const DashboardPage = () => {
       const sc = res.data?.subContractor;
       if (sc) {
         setProfileForm({
-<<<<<<< HEAD
           companyName: sc.companyName || '',
           ownerName: sc.ownerName || '',
           phone: sc.phone || '',
@@ -107,68 +74,22 @@ const DashboardPage = () => {
           address: sc.address || '',
         });
       }
-    } catch (err) {
-      toast.error('Failed to load dashboard');
-=======
-          companyName: sc.companyName || "",
-          ownerName: sc.ownerName || "",
-          address: sc.address || "",
-          phone: sc.phone || "",
-          vendorId: sc.vendorId || "",
-          gstin: sc.gstin || "",
-        });
-      }
     } catch {
-      toast.error("Failed to load dashboard");
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
+      toast.error('Failed to load dashboard');
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< HEAD
-=======
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // Helper to open PDF documents properly (fetches and opens with correct MIME type)
-  const openPdfDocument = async (url: string, fileName: string) => {
-    try {
-      toast.loading("Loading document...", { id: "pdf-load" });
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch");
-      const arrayBuffer = await response.arrayBuffer();
-      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-      const blobUrl = URL.createObjectURL(blob);
-      toast.dismiss("pdf-load");
-      window.open(blobUrl, "_blank");
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-    } catch (err) {
-      toast.dismiss("pdf-load");
-      toast.error("Failed to load document. Downloading instead...");
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName || "document.pdf";
-      a.click();
-    }
-  };
-
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
       await scApi.updateProfile(profileForm);
-<<<<<<< HEAD
       toast.success('Profile saved!');
       fetchDashboard();
-=======
-      toast.success("Profile updated!");
-      fetchData();
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to save");
+      toast.error(err.response?.data?.error || 'Failed to save');
     } finally {
       setSaving(false);
     }
@@ -176,7 +97,6 @@ const DashboardPage = () => {
 
   const handleUploadBill = async (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< HEAD
     if (billFiles.length === 0) return;
     setUploadingBill(true);
     try {
@@ -192,23 +112,8 @@ const DashboardPage = () => {
       setBillFiles([]);
       setBillData({ billNumber: '', amount: '', description: '' });
       fetchDashboard();
-=======
-    if (billFiles.length === 0) return toast.error("Select bill files");
-    setUploadingBill(true);
-    try {
-      const formData = new FormData();
-      billFiles.forEach((f) => formData.append("bills", f));
-      formData.append("billNumber", billData.billNumber);
-      formData.append("amount", billData.amount);
-      formData.append("description", billData.description);
-      await scApi.submitBill(formData);
-      toast.success("Bill uploaded!");
-      setBillFiles([]);
-      setBillData({ billNumber: "", amount: "", description: "" });
-      fetchData();
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Upload failed");
+      toast.error(err.response?.data?.error || 'Upload failed');
     } finally {
       setUploadingBill(false);
     }
@@ -216,7 +121,6 @@ const DashboardPage = () => {
 
   const handleSubmitCwc = async (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< HEAD
     if (!selectedBillForCwc) return;
     setSubmittingCwc(true);
     try {
@@ -224,23 +128,13 @@ const DashboardPage = () => {
       toast.success('CWC RF submitted!');
       setSelectedBillForCwc('');
       fetchDashboard();
-=======
-    if (!selectedBillForCwc) return toast.error("Select a verified bill");
-    setSubmittingCwc(true);
-    try {
-      await scApi.submitCwc({ billId: selectedBillForCwc });
-      toast.success("CWC RF submitted!");
-      setSelectedBillForCwc("");
-      fetchData();
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Submission failed");
+      toast.error(err.response?.data?.error || 'Submission failed');
     } finally {
       setSubmittingCwc(false);
     }
   };
 
-<<<<<<< HEAD
   const handleBidResponse = async (bidId: string, action: 'accept' | 'reject' | 'negotiate') => {
     try {
       if (action === 'accept') {
@@ -263,38 +157,6 @@ const DashboardPage = () => {
       fetchDashboard();
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Action failed');
-=======
-  const handleBidResponse = async (
-    bidId: string,
-    decision: "accept" | "reject" | "negotiate",
-  ) => {
-    try {
-      const data: {
-        decision: "accept" | "reject" | "negotiate";
-        counterOffer?: number;
-        counterDuration?: number;
-        message?: string;
-      } = { decision };
-
-      if (decision === "negotiate" && counterOffer.amount) {
-        data.counterOffer = parseFloat(counterOffer.amount);
-        data.counterDuration = parseInt(counterOffer.duration) || undefined;
-        data.message = counterOffer.message || undefined;
-      }
-      await scApi.respondToBid(bidId, data);
-      toast.success(
-        decision === "accept"
-          ? "Bid accepted!"
-          : decision === "reject"
-            ? "Bid rejected"
-            : "Counter-offer sent!",
-      );
-      setRespondingBid(null);
-      setCounterOffer({ amount: "", duration: "", message: "" });
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to respond");
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
     }
   };
 
@@ -302,19 +164,9 @@ const DashboardPage = () => {
     setLoadingChat(true);
     try {
       const res = await kycApi.getMessages(cwcRfId);
-<<<<<<< HEAD
-      setChatMessages(res.data || []);
-    } catch (err) {
-      toast.error('Failed to load messages');
-=======
-      setChatMessages(res.data.messages || []);
-      setTimeout(
-        () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }),
-        100,
-      );
+      setChatMessages(res.data?.messages || res.data || []);
     } catch {
-      toast.error("Failed to load chat");
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
+      toast.error('Failed to load messages');
     } finally {
       setLoadingChat(false);
     }
@@ -322,7 +174,7 @@ const DashboardPage = () => {
 
   const openChat = (cwcRf: any) => {
     setSelectedCwcRf(cwcRf);
-    setActiveTab("kyc-chat");
+    setActiveTab('kyc-chat');
     fetchChatMessages(cwcRf._id);
   };
 
@@ -332,35 +184,34 @@ const DashboardPage = () => {
     setSendingChat(true);
     try {
       const formData = new FormData();
-      formData.append("content", chatMessage);
-      if (chatFile) formData.append("file", chatFile);
+      formData.append('content', chatMessage);
+      if (chatFile) formData.append('file', chatFile);
       await kycApi.sendMessage(selectedCwcRf._id, formData);
-      setChatMessage("");
+      setChatMessage('');
       setChatFile(null);
       fetchChatMessages(selectedCwcRf._id);
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to send");
+      toast.error(err.response?.data?.error || 'Failed to send');
     } finally {
       setSendingChat(false);
     }
   };
 
-<<<<<<< HEAD
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { variant: 'success' | 'warning' | 'danger' | 'info' | 'secondary'; icon: any }> = {
+    const statusConfig: Record<string, { variant: 'success' | 'warning' | 'destructive' | 'secondary'; icon: any }> = {
       LEAD_CREATED: { variant: 'warning', icon: Clock },
       PROFILE_INCOMPLETE: { variant: 'warning', icon: AlertCircle },
       PROFILE_COMPLETED: { variant: 'success', icon: CheckCircle2 },
       UPLOADED: { variant: 'warning', icon: Clock },
       VERIFIED: { variant: 'success', icon: CheckCircle2 },
-      REJECTED: { variant: 'danger', icon: XCircle },
-      SUBMITTED: { variant: 'info', icon: Send },
-      ACTION_REQUIRED: { variant: 'danger', icon: AlertCircle },
+      REJECTED: { variant: 'destructive', icon: XCircle },
+      SUBMITTED: { variant: 'secondary', icon: Send },
+      ACTION_REQUIRED: { variant: 'destructive', icon: AlertCircle },
       KYC_COMPLETED: { variant: 'success', icon: CheckCircle2 },
       KYC_REQUIRED: { variant: 'warning', icon: AlertCircle },
-      KYC_IN_PROGRESS: { variant: 'info', icon: Clock },
+      KYC_IN_PROGRESS: { variant: 'secondary', icon: Clock },
       EPC_VERIFIED: { variant: 'success', icon: CheckCircle2 },
-      BID_PLACED: { variant: 'info', icon: Gavel },
+      BID_PLACED: { variant: 'secondary', icon: Gavel },
       NEGOTIATION_IN_PROGRESS: { variant: 'warning', icon: TrendingUp },
       COMMERCIAL_LOCKED: { variant: 'success', icon: CheckCircle2 },
       ACCEPTED: { variant: 'success', icon: CheckCircle2 },
@@ -372,29 +223,6 @@ const DashboardPage = () => {
         <Icon className="h-3 w-3" />
         {status.replace(/_/g, ' ')}
       </Badge>
-=======
-  const statusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      LEAD_CREATED: "badge-yellow",
-      PROFILE_INCOMPLETE: "badge-yellow",
-      PROFILE_COMPLETED: "badge-green",
-      UPLOADED: "badge-yellow",
-      VERIFIED: "badge-green",
-      REJECTED: "badge-red",
-      SUBMITTED: "badge-blue",
-      ACTION_REQUIRED: "badge-red",
-      KYC_COMPLETED: "badge-green",
-      EPC_VERIFIED: "badge-green",
-      BID_PLACED: "badge-blue",
-      NEGOTIATION_IN_PROGRESS: "badge-yellow",
-      COMMERCIAL_LOCKED: "badge-green",
-      ACCEPTED: "badge-green",
-    };
-    return (
-      <span className={`badge ${colors[status] || "badge-gray"}`}>
-        {status.replace(/_/g, " ")}
-      </span>
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
     );
   };
 
@@ -414,17 +242,9 @@ const DashboardPage = () => {
   }
 
   const sc = dashboard?.subContractor;
-  const verifiedBills =
-    dashboard?.bills?.filter((b: any) => b.status === "VERIFIED") || [];
-  const pendingBids =
-    dashboard?.bids?.filter(
-      (b: any) =>
-        b.status === "SUBMITTED" || b.status === "NEGOTIATION_IN_PROGRESS",
-    ) || [];
-  const pendingKyc =
-    dashboard?.cwcRfs?.filter((c: any) =>
-      ["ACTION_REQUIRED", "KYC_REQUIRED", "KYC_IN_PROGRESS"].includes(c.status),
-    ) || [];
+  const verifiedBills = dashboard?.bills?.filter((b: any) => b.status === 'VERIFIED') || [];
+  const pendingBids = dashboard?.bids?.filter((b: any) => b.status === 'SUBMITTED' || b.status === 'NEGOTIATION_IN_PROGRESS') || [];
+  const pendingKyc = dashboard?.cwcRfs?.filter((c: any) => ['ACTION_REQUIRED', 'KYC_REQUIRED', 'KYC_IN_PROGRESS'].includes(c.status)) || [];
 
   // Calculate profile completion
   const profileFields = ['companyName', 'ownerName', 'phone', 'address'];
@@ -457,7 +277,6 @@ const DashboardPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-<<<<<<< HEAD
           <h1 className="text-2xl font-bold text-gray-900">{sc?.companyName || 'Sub-Contractor Dashboard'}</h1>
           <p className="text-gray-500 flex items-center gap-2 mt-1">
             Sub-Contractor Dashboard
@@ -465,7 +284,7 @@ const DashboardPage = () => {
           </p>
         </div>
         {pendingBids.length > 0 && (
-          <Badge variant="danger" className="gap-1 self-start">
+          <Badge variant="destructive" className="gap-1 self-start">
             <AlertCircle className="h-3 w-3" />
             {pendingBids.length} pending bid{pendingBids.length !== 1 ? 's' : ''}
           </Badge>
@@ -524,7 +343,7 @@ const DashboardPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card hover>
+                    <Card className="hover:shadow-lg transition-shadow">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -557,424 +376,58 @@ const DashboardPage = () => {
                         <p className="text-sm text-gray-500">Fill in all details to get verified faster</p>
                       </div>
                       <span className="text-2xl font-bold text-blue-600">{profileCompletion}%</span>
-=======
-          <h1>{sc?.companyName || "Sub-Contractor"}</h1>
-          <p className="subtitle">
-            Sub-Contractor Dashboard {sc && statusBadge(sc.status)}
-          </p>
-        </div>
-        {pendingBids.length > 0 && (
-          <div className="notification-badge">
-            <span className="badge badge-red">
-              {pendingBids.length} pending bid
-              {pendingBids.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="tabs">
-        {["profile", "bills", "cwc", "cases", "bids", "kyc"].map((t) => (
-          <button
-            key={t}
-            className={`tab ${activeTab === t || (t === "kyc" && activeTab === "kyc-chat") ? "active" : ""}`}
-            onClick={() => setActiveTab(t)}
-          >
-            {t === "kyc" ? "KYC Chat" : t.toUpperCase()}
-            {t === "bids" && pendingBids.length > 0 && (
-              <span className="tab-badge">{pendingBids.length}</span>
-            )}
-            {t === "kyc" && pendingKyc.length > 0 && (
-              <span className="tab-badge">{pendingKyc.length}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Profile Tab */}
-      {activeTab === "profile" && (
-        <div className="section">
-          <h2>Complete Your Profile</h2>
-          <form onSubmit={handleSaveProfile} className="profile-form">
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Company Name *</label>
-                <input
-                  required
-                  value={profileForm.companyName}
-                  onChange={(e) =>
-                    setProfileForm({
-                      ...profileForm,
-                      companyName: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Owner Name *</label>
-                <input
-                  required
-                  value={profileForm.ownerName}
-                  onChange={(e) =>
-                    setProfileForm({
-                      ...profileForm,
-                      ownerName: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone *</label>
-                <input
-                  required
-                  value={profileForm.phone}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, phone: e.target.value })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Vendor ID</label>
-                <input
-                  value={profileForm.vendorId}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, vendorId: e.target.value })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>GSTIN</label>
-                <input
-                  value={profileForm.gstin}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, gstin: e.target.value })
-                  }
-                />
-              </div>
-              <div className="form-group full-span">
-                <label>Address *</label>
-                <textarea
-                  required
-                  value={profileForm.address}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, address: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? "Saving..." : "Save Profile"}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Bills Tab */}
-      {activeTab === "bills" && (
-        <div className="section">
-          <h2>Upload Bills</h2>
-          <form onSubmit={handleUploadBill} className="upload-form">
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Bill Number</label>
-                <input
-                  value={billData.billNumber}
-                  onChange={(e) =>
-                    setBillData({ ...billData, billNumber: e.target.value })
-                  }
-                />
-              </div>
-              <div className="form-group">
-                <label>Amount (₹)</label>
-                <input
-                  type="number"
-                  value={billData.amount}
-                  onChange={(e) =>
-                    setBillData({ ...billData, amount: e.target.value })
-                  }
-                />
-              </div>
-              <div className="form-group full-span">
-                <label>Description</label>
-                <input
-                  value={billData.description}
-                  onChange={(e) =>
-                    setBillData({ ...billData, description: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <input
-              type="file"
-              multiple
-              onChange={(e) => setBillFiles(Array.from(e.target.files || []))}
-            />
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={uploadingBill || billFiles.length === 0}
-            >
-              {uploadingBill ? "Uploading..." : "Upload Bills"}
-            </button>
-          </form>
-
-          <h3 style={{ marginTop: 24 }}>Your Bills</h3>
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Bill #</th>
-                  <th>Amount</th>
-                  <th>File</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboard?.bills?.map((b: any) => (
-                  <tr key={b._id}>
-                    <td>{b.billNumber || "—"}</td>
-                    <td>{b.amount ? `₹${b.amount.toLocaleString()}` : "—"}</td>
-                    <td>
-                      <button
-                        className="btn-sm btn-secondary"
-                        onClick={() => {
-                          const isPdf = b.fileName
-                            ?.toLowerCase()
-                            .endsWith(".pdf");
-                          if (isPdf) {
-                            openPdfDocument(b.fileUrl, b.fileName);
-                          } else {
-                            window.open(b.fileUrl, "_blank");
-                          }
-                        }}
-                        style={{ cursor: "pointer" }}
-                      >
-                        {b.fileName}
-                      </button>
-                    </td>
-                    <td>{statusBadge(b.status)}</td>
-                  </tr>
-                ))}
-                {(!dashboard?.bills || dashboard.bills.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="empty-state">
-                      No bills uploaded
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* CWC Tab */}
-      {activeTab === "cwc" && (
-        <div className="section">
-          <h2>Submit CWC RF (Confirmation With Company Request for Funding)</h2>
-          <p className="description">
-            Select a verified bill to submit a CWC RF. A ₹1,000 platform fee
-            applies.
-          </p>
-
-          <form onSubmit={handleSubmitCwc} className="cwc-form">
-            <div className="form-group">
-              <label>Select Verified Bill</label>
-              <select
-                value={selectedBillForCwc}
-                onChange={(e) => setSelectedBillForCwc(e.target.value)}
-              >
-                <option value="">-- Select a Bill --</option>
-                {verifiedBills.map((b: any) => (
-                  <option key={b._id} value={b._id}>
-                    {b.billNumber} - ₹{b.amount?.toLocaleString()}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {verifiedBills.length === 0 && (
-              <p className="warning">
-                No verified bills available. Bills must be verified by Ops
-                before submitting CWC.
-              </p>
-            )}
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={submittingCwc || !selectedBillForCwc}
-            >
-              {submittingCwc ? "Submitting..." : "Submit CWC RF"}
-            </button>
-          </form>
-
-          <h3 style={{ marginTop: 24 }}>Your CWC Requests</h3>
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Bill</th>
-                  <th>Platform Fee</th>
-                  <th>Status</th>
-                  <th>Submitted</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboard?.cwcRfs?.map((c: any) => (
-                  <tr key={c._id}>
-                    <td>{c.billId?.billNumber || "—"}</td>
-                    <td>{c.platformFeePaid ? "✅ Paid" : "❌ Pending"}</td>
-                    <td>{statusBadge(c.status)}</td>
-                    <td>{new Date(c.createdAt).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-                {(!dashboard?.cwcRfs || dashboard.cwcRfs.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="empty-state">
-                      No CWC requests submitted
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Cases Tab */}
-      {activeTab === "cases" && (
-        <div className="section">
-          <h2>Your Cases</h2>
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Case #</th>
-                  <th>Bill</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboard?.cases?.map((c: any) => (
-                  <tr key={c._id}>
-                    <td>{c.caseNumber}</td>
-                    <td>{c.billId?.billNumber || "—"}</td>
-                    <td>
-                      {c.billId?.amount
-                        ? `₹${c.billId.amount.toLocaleString()}`
-                        : "—"}
-                    </td>
-                    <td>{statusBadge(c.status)}</td>
-                  </tr>
-                ))}
-                {(!dashboard?.cases || dashboard.cases.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="empty-state">
-                      No cases yet
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Bids Tab */}
-      {activeTab === "bids" && (
-        <div className="section">
-          <h2>Incoming Bids</h2>
-          <p className="description">
-            Review and respond to funding offers from EPC companies and NBFCs.
-          </p>
-
-          <div className="bids-list">
-            {dashboard?.bids?.map((bid: any) => (
-              <div key={bid._id} className="bid-card">
-                <div className="bid-header">
-                  <h3>Case #{bid.caseId?.caseNumber || "N/A"}</h3>
-                  {statusBadge(bid.status)}
-                </div>
-                <div className="bid-details">
-                  <div className="detail">
-                    <span className="label">From:</span>
-                    <span>
-                      {bid.epcId?.companyName ||
-                        bid.nbfcId?.companyName ||
-                        "Unknown"}
-                    </span>
-                  </div>
-                  <div className="detail">
-                    <span className="label">Bill Amount:</span>
-                    <span>
-                      ₹{bid.caseId?.billId?.amount?.toLocaleString() || "N/A"}
-                    </span>
-                  </div>
-                  <div className="detail">
-                    <span className="label">Bid Amount:</span>
-                    <span className="highlight">
-                      ₹{bid.bidAmount?.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="detail">
-                    <span className="label">Duration:</span>
-                    <span>{bid.fundingDurationDays} days</span>
-                  </div>
-                  {bid.notes && (
-                    <div className="detail full-width">
-                      <span className="label">Notes:</span>
-                      <span>{bid.notes}</span>
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
                     </div>
-                    <Progress value={profileCompletion} className="h-2 mb-4" />
-                    <Button variant="default" size="sm" onClick={() => setActiveTab('profile')}>
-                      Complete Profile <ArrowRight className="h-4 w-4 ml-2" />
+                    <Progress value={profileCompletion} className="h-2" />
+                    <Button
+                      onClick={() => setActiveTab('profile')}
+                      variant="outline"
+                      className="mt-4"
+                    >
+                      Complete Profile
+                      <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </CardContent>
                 </Card>
               </motion.div>
             )}
 
-<<<<<<< HEAD
             {/* Quick Actions */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <Card hover className="cursor-pointer" onClick={() => setActiveTab('bills')}>
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                      <Upload className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">Upload New Bill</h3>
-                      <p className="text-sm text-gray-500">Submit invoices for verification</p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </CardContent>
-                </Card>
-              </motion.div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('bills')}>
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                    <Upload className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Upload Bills</h3>
+                    <p className="text-sm text-gray-500">Submit new invoices</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <Card hover className="cursor-pointer" onClick={() => setActiveTab('cwc')}>
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white shadow-lg shadow-green-200">
-                      <Send className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">Submit CWC RF</h3>
-                      <p className="text-sm text-gray-500">{verifiedBills.length} verified bill{verifiedBills.length !== 1 ? 's' : ''} ready</p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('cwc')}>
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                    <Send className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Submit CWC RF</h3>
+                    <p className="text-sm text-gray-500">Request financing</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setActiveTab('bids')}>
+                <CardContent className="p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                    <Gavel className="h-6 w-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">View Bids</h3>
+                    <p className="text-sm text-gray-500">{pendingBids.length} pending</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </motion.div>
         )}
@@ -986,99 +439,102 @@ const DashboardPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
           >
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-blue-600" />
-                  Complete Your Profile
-                </CardTitle>
-                <CardDescription>Fill in your company details to get verified faster</CardDescription>
+                <CardTitle>Business Profile</CardTitle>
+                <CardDescription>Update your company information</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSaveProfile} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="companyName" required>Company Name</Label>
-                      <Input
-                        id="companyName"
-                        required
-                        value={profileForm.companyName}
-                        onChange={(e) => setProfileForm({ ...profileForm, companyName: e.target.value })}
-                        icon={<Building2 className="h-4 w-4" />}
-                      />
+                      <Label htmlFor="companyName">Company Name</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="companyName"
+                          value={profileForm.companyName}
+                          onChange={(e) => setProfileForm({ ...profileForm, companyName: e.target.value })}
+                          placeholder="Your Company Name"
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="ownerName" required>Owner Name</Label>
-                      <Input
-                        id="ownerName"
-                        required
-                        value={profileForm.ownerName}
-                        onChange={(e) => setProfileForm({ ...profileForm, ownerName: e.target.value })}
-                        icon={<User className="h-4 w-4" />}
-                      />
+                      <Label htmlFor="ownerName">Owner Name</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="ownerName"
+                          value={profileForm.ownerName}
+                          onChange={(e) => setProfileForm({ ...profileForm, ownerName: e.target.value })}
+                          placeholder="Owner / Contact Name"
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="phone" required>Phone</Label>
-                      <Input
-                        id="phone"
-                        required
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                        icon={<Phone className="h-4 w-4" />}
-                      />
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="phone"
+                          value={profileForm.phone}
+                          onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                          placeholder="+91 98765 43210"
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="vendorId">Vendor ID</Label>
-                      <Input
-                        id="vendorId"
-                        value={profileForm.vendorId}
-                        onChange={(e) => setProfileForm({ ...profileForm, vendorId: e.target.value })}
-                        icon={<Hash className="h-4 w-4" />}
-                      />
+                      <Label htmlFor="vendorId">Vendor ID (from EPC)</Label>
+                      <div className="relative">
+                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="vendorId"
+                          value={profileForm.vendorId}
+                          onChange={(e) => setProfileForm({ ...profileForm, vendorId: e.target.value })}
+                          placeholder="VND-12345"
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="gstin">GSTIN</Label>
-                      <Input
-                        id="gstin"
-                        value={profileForm.gstin}
-                        onChange={(e) => setProfileForm({ ...profileForm, gstin: e.target.value })}
-                        placeholder="22AAAAA0000A1Z5"
-                      />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="address" required>Address</Label>
-                      <Textarea
-                        id="address"
-                        required
-                        value={profileForm.address}
-                        onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
-                        placeholder="Enter your complete business address"
-                      />
-                    </div>
-=======
-                {/* Negotiation history */}
-                {bid.negotiations?.length > 0 && (
-                  <div className="negotiations">
-                    <h4>Negotiation History</h4>
-                    {bid.negotiations.map((n: any, i: number) => (
-                      <div
-                        key={i}
-                        className={`negotiation-item ${n.proposedByRole}`}
-                      >
-                        <span className="role">{n.proposedByRole}</span>
-                        <span>
-                          ₹{n.counterAmount?.toLocaleString()} for{" "}
-                          {n.counterDuration} days
-                        </span>
-                        {n.message && <p className="message">"{n.message}"</p>}
+                      <div className="relative">
+                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="gstin"
+                          value={profileForm.gstin}
+                          onChange={(e) => setProfileForm({ ...profileForm, gstin: e.target.value })}
+                          placeholder="22AAAAA0000A1Z5"
+                          className="pl-10"
+                        />
                       </div>
-                    ))}
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="address">Business Address</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Textarea
+                          id="address"
+                          value={profileForm.address}
+                          onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                          placeholder="Full business address"
+                          className="pl-10 min-h-[100px]"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <Button type="submit" variant="gradient" isLoading={saving}>
-                    {!saving && 'Save Profile'}
+
+                  <Button type="submit" disabled={saving} className="w-full md:w-auto">
+                    {saving ? 'Saving...' : 'Save Profile'}
                   </Button>
                 </form>
               </CardContent>
@@ -1086,7 +542,6 @@ const DashboardPage = () => {
           </motion.div>
         )}
 
-<<<<<<< HEAD
         {/* Bills Tab */}
         {activeTab === 'bills' && (
           <motion.div
@@ -1094,20 +549,17 @@ const DashboardPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
             className="space-y-6"
           >
+            {/* Upload Form */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5 text-blue-600" />
-                  Upload New Bill
-                </CardTitle>
-                <CardDescription>Submit your invoices for EPC verification</CardDescription>
+                <CardTitle>Upload New Bill</CardTitle>
+                <CardDescription>Submit invoices for verification</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleUploadBill} className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="billNumber">Bill Number</Label>
                       <Input
@@ -1127,140 +579,40 @@ const DashboardPage = () => {
                         placeholder="100000"
                       />
                     </div>
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="space-y-2">
                       <Label htmlFor="description">Description</Label>
                       <Input
                         id="description"
                         value={billData.description}
                         onChange={(e) => setBillData({ ...billData, description: e.target.value })}
-                        placeholder="Brief description of the work"
+                        placeholder="Work description"
                       />
                     </div>
                   </div>
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-blue-300 transition-colors">
+
+                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
                     <input
                       type="file"
                       multiple
+                      accept=".pdf,.jpg,.jpeg,.png"
                       onChange={(e) => setBillFiles(Array.from(e.target.files || []))}
                       className="hidden"
-                      id="bill-files"
+                      id="billFiles"
                     />
-                    <label htmlFor="bill-files" className="cursor-pointer">
-                      <Upload className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-600 font-medium">Click to upload bill documents</p>
-                      <p className="text-sm text-gray-400 mt-1">PDF, Images accepted</p>
+                    <label htmlFor="billFiles" className="cursor-pointer">
+                      <Upload className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600">{billFiles.length > 0 ? `${billFiles.length} file(s) selected` : 'Click to upload bills'}</p>
+                      <p className="text-sm text-gray-400">PDF, JPG, PNG up to 10MB</p>
                     </label>
-                    {billFiles.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                        {billFiles.map((f, i) => (
-                          <Badge key={i} variant="secondary" className="gap-1">
-                            <FileText className="h-3 w-3" />
-                            {f.name}
-                          </Badge>
-                        ))}
-=======
-                {/* Actions for pending bids */}
-                {(bid.status === "SUBMITTED" ||
-                  bid.status === "NEGOTIATION_IN_PROGRESS") && (
-                  <div className="bid-actions">
-                    {respondingBid === bid._id ? (
-                      <div className="negotiate-form">
-                        <h4>Counter-Offer</h4>
-                        <div className="form-grid">
-                          <div className="form-group">
-                            <label>Your Amount (₹)</label>
-                            <input
-                              type="number"
-                              value={counterOffer.amount}
-                              onChange={(e) =>
-                                setCounterOffer({
-                                  ...counterOffer,
-                                  amount: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Duration (days)</label>
-                            <input
-                              type="number"
-                              value={counterOffer.duration}
-                              onChange={(e) =>
-                                setCounterOffer({
-                                  ...counterOffer,
-                                  duration: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                          <div className="form-group full-span">
-                            <label>Message (optional)</label>
-                            <input
-                              value={counterOffer.message}
-                              onChange={(e) =>
-                                setCounterOffer({
-                                  ...counterOffer,
-                                  message: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                        <div className="button-group">
-                          <button
-                            className="btn-primary"
-                            onClick={() =>
-                              handleBidResponse(bid._id, "negotiate")
-                            }
-                            disabled={!counterOffer.amount}
-                          >
-                            Send Counter-Offer
-                          </button>
-                          <button
-                            className="btn-secondary"
-                            onClick={() => setRespondingBid(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="button-group">
-                        <button
-                          className="btn-success"
-                          onClick={() => handleBidResponse(bid._id, "accept")}
-                        >
-                          ✓ Accept Bid
-                        </button>
-                        <button
-                          className="btn-warning"
-                          onClick={() => setRespondingBid(bid._id)}
-                        >
-                          ↔ Negotiate
-                        </button>
-                        <button
-                          className="btn-danger"
-                          onClick={() => handleBidResponse(bid._id, "reject")}
-                        >
-                          ✗ Reject
-                        </button>
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
-                      </div>
-                    )}
                   </div>
-                  <Button type="submit" variant="gradient" isLoading={uploadingBill} disabled={billFiles.length === 0}>
-                    {!uploadingBill && (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Bills
-                      </>
-                    )}
+
+                  <Button type="submit" disabled={uploadingBill || billFiles.length === 0}>
+                    {uploadingBill ? 'Uploading...' : 'Upload Bills'}
                   </Button>
                 </form>
               </CardContent>
             </Card>
 
-<<<<<<< HEAD
             {/* Bills List */}
             <Card>
               <CardHeader>
@@ -1268,166 +620,92 @@ const DashboardPage = () => {
                 <CardDescription>{dashboard?.bills?.length || 0} total bills</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bill #</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">File</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {dashboard?.bills?.map((b: any) => (
-                        <motion.tr
-                          key={b._id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="py-3 px-4 font-medium text-gray-900">{b.billNumber || '—'}</td>
-                          <td className="py-3 px-4 text-gray-600">{b.amount ? `₹${b.amount.toLocaleString()}` : '—'}</td>
-                          <td className="py-3 px-4">
-                            <a href={b.fileUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-                              <FileText className="h-4 w-4" />
-                              {b.fileName}
-                            </a>
-                          </td>
-                          <td className="py-3 px-4">{getStatusBadge(b.status)}</td>
-                        </motion.tr>
-                      ))}
-                      {(!dashboard?.bills || dashboard.bills.length === 0) && (
-                        <tr>
-                          <td colSpan={4} className="py-12 text-center text-gray-400">
-                            <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                            No bills uploaded yet
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                {dashboard?.bills?.length > 0 ? (
+                  <div className="space-y-3">
+                    {dashboard.bills.map((bill: any) => (
+                      <div key={bill._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{bill.billNumber || 'No Number'}</p>
+                            <p className="text-sm text-gray-500">₹{bill.amount?.toLocaleString() || 0}</p>
+                          </div>
+                        </div>
+                        {getStatusBadge(bill.status)}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No bills uploaded yet</p>
+                )}
               </CardContent>
             </Card>
           </motion.div>
         )}
 
-        {/* CWC Tab */}
+        {/* CWC RF Tab */}
         {activeTab === 'cwc' && (
           <motion.div
             key="cwc"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
             className="space-y-6"
           >
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Send className="h-5 w-5 text-green-600" />
-                  Submit CWC RF
-                </CardTitle>
-                <CardDescription>
-                  Confirmation With Company Request for Funding. A ₹1,000 platform fee applies.
-                </CardDescription>
+                <CardTitle>Submit CWC Request</CardTitle>
+                <CardDescription>Select a verified bill to request financing</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmitCwc} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cwc-bill">Select Verified Bill</Label>
-                    <Select
-                      id="cwc-bill"
-                      value={selectedBillForCwc}
-                      onChange={(e) => setSelectedBillForCwc(e.target.value)}
-                    >
-                      <option value="">-- Select a Bill --</option>
-                      {verifiedBills.map((b: any) => (
-                        <option key={b._id} value={b._id}>
-                          {b.billNumber} - ₹{b.amount?.toLocaleString()}
-                        </option>
-                      ))}
-                    </Select>
-=======
-                {/* Locked bid info */}
-                {bid.status === "COMMERCIAL_LOCKED" && bid.lockedTerms && (
-                  <div className="locked-terms">
-                    <h4>🔒 Commercial Locked</h4>
-                    <p>
-                      Final Amount: ₹
-                      {bid.lockedTerms.finalAmount?.toLocaleString()}
-                    </p>
-                    <p>Duration: {bid.lockedTerms.finalDuration} days</p>
-                    <p>
-                      Locked At:{" "}
-                      {new Date(bid.lockedTerms.lockedAt).toLocaleDateString()}
-                    </p>
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
-                  </div>
-                  {verifiedBills.length === 0 && (
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
-                      <p className="text-sm text-amber-700">
-                        No verified bills available. Bills must be verified by EPC before submitting CWC RF.
-                      </p>
-                    </div>
-                  )}
-                  <Button type="submit" variant="success" isLoading={submittingCwc} disabled={!selectedBillForCwc}>
-                    {!submittingCwc && (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Submit CWC RF
-                      </>
+                    <Label>Select Verified Bill</Label>
+                    {verifiedBills.length > 0 ? (
+                      <div className="space-y-2">
+                        {verifiedBills.map((bill: any) => (
+                          <label
+                            key={bill._id}
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                              selectedBillForCwc === bill._id
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="cwcBill"
+                              value={bill._id}
+                              checked={selectedBillForCwc === bill._id}
+                              onChange={(e) => setSelectedBillForCwc(e.target.value)}
+                              className="hidden"
+                            />
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              selectedBillForCwc === bill._id ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                            }`}>
+                              {selectedBillForCwc === bill._id && (
+                                <CheckCircle2 className="h-3 w-3 text-white" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">{bill.billNumber}</p>
+                              <p className="text-sm text-gray-500">₹{bill.amount?.toLocaleString()}</p>
+                            </div>
+                            <Badge variant="success">Verified</Badge>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 py-4">No verified bills available. Upload and get bills verified first.</p>
                     )}
+                  </div>
+
+                  <Button type="submit" disabled={submittingCwc || !selectedBillForCwc}>
+                    {submittingCwc ? 'Submitting...' : 'Submit CWC Request'}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-
-            {/* CWC List */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your CWC Requests</CardTitle>
-                <CardDescription>{dashboard?.cwcRfs?.length || 0} total requests</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bill</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Platform Fee</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Submitted</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {dashboard?.cwcRfs?.map((c: any) => (
-                        <tr key={c._id} className="hover:bg-gray-50 transition-colors">
-                          <td className="py-3 px-4 font-medium text-gray-900">{c.billId?.billNumber || '—'}</td>
-                          <td className="py-3 px-4">
-                            {c.platformFeePaid ? (
-                              <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" />Paid</Badge>
-                            ) : (
-                              <Badge variant="warning"><Clock className="h-3 w-3 mr-1" />Pending</Badge>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">{getStatusBadge(c.status)}</td>
-                          <td className="py-3 px-4 text-gray-500 text-sm">{new Date(c.createdAt).toLocaleDateString()}</td>
-                        </tr>
-                      ))}
-                      {(!dashboard?.cwcRfs || dashboard.cwcRfs.length === 0) && (
-                        <tr>
-                          <td colSpan={4} className="py-12 text-center text-gray-400">
-                            <Send className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                            No CWC requests submitted
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -1440,47 +718,30 @@ const DashboardPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
           >
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FolderOpen className="h-5 w-5 text-purple-600" />
-                  Your Cases
-                </CardTitle>
-                <CardDescription>Track your funding cases</CardDescription>
+                <CardTitle>Your Cases</CardTitle>
+                <CardDescription>Track your financing cases</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Case #</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bill</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {dashboard?.cases?.map((c: any) => (
-                        <tr key={c._id} className="hover:bg-gray-50 transition-colors">
-                          <td className="py-3 px-4 font-mono font-medium text-gray-900">{c.caseNumber}</td>
-                          <td className="py-3 px-4 text-gray-600">{c.billId?.billNumber || '—'}</td>
-                          <td className="py-3 px-4 font-medium text-green-600">{c.billId?.amount ? `₹${c.billId.amount.toLocaleString()}` : '—'}</td>
-                          <td className="py-3 px-4">{getStatusBadge(c.status)}</td>
-                        </tr>
-                      ))}
-                      {(!dashboard?.cases || dashboard.cases.length === 0) && (
-                        <tr>
-                          <td colSpan={4} className="py-12 text-center text-gray-400">
-                            <FolderOpen className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                            No cases yet
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                {dashboard?.cases?.length > 0 ? (
+                  <div className="space-y-3">
+                    {dashboard.cases.map((c: any) => (
+                      <div key={c._id} className="p-4 bg-gray-50 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900">Case #{c.caseNumber || c._id.slice(-6)}</p>
+                            <p className="text-sm text-gray-500">₹{c.amount?.toLocaleString() || 0}</p>
+                          </div>
+                          {getStatusBadge(c.status)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No cases yet</p>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -1493,511 +754,242 @@ const DashboardPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-4"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Funding Bids</h2>
-                <p className="text-gray-500">Review and respond to funding offers from buyers</p>
-              </div>
-            </div>
-
-            {dashboard?.bids?.map((bid: any) => (
-              <motion.div
-                key={bid._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Card className={`${bid.status === 'COMMERCIAL_LOCKED' ? 'border-green-200 bg-green-50/50' : ''}`}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                      <div>
-                        <p className="text-sm text-gray-500">From Buyer</p>
-                        <p className="font-semibold text-gray-900">{bid.buyerId?.companyName || 'Buyer'}</p>
-                      </div>
-                      {getStatusBadge(bid.status)}
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider">Offer Amount</p>
-                        <p className="text-lg font-bold text-green-600">₹{bid.proposedAmount?.toLocaleString()}</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider">Interest</p>
-                        <p className="text-lg font-bold text-gray-900">{bid.interestRate}%</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider">Duration</p>
-                        <p className="text-lg font-bold text-gray-900">{bid.fundingDurationDays} days</p>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider">Date</p>
-                        <p className="text-lg font-bold text-gray-900">{new Date(bid.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-
-                    {bid.notes && (
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4">
-                        <p className="text-sm text-blue-800">{bid.notes}</p>
-                      </div>
-                    )}
-
-                    {/* Negotiation History */}
-                    {bid.negotiations?.length > 0 && (
-                      <div className="border-t border-gray-100 pt-4 mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-3">Negotiation History</p>
-                        <div className="space-y-2">
-                          {bid.negotiations.map((n: any, i: number) => (
-                            <div key={i} className={`flex items-center gap-3 text-sm ${n.proposedByRole === 'subcontractor' ? 'justify-end' : ''}`}>
-                              <div className={`px-3 py-2 rounded-lg ${n.proposedByRole === 'subcontractor' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                                <span className="font-medium">{n.proposedByRole === 'subcontractor' ? 'You' : 'Buyer'}:</span>
-                                {' '}₹{n.counterAmount?.toLocaleString()} for {n.counterDuration} days
-                                {n.message && <p className="text-xs opacity-75 mt-1">"{n.message}"</p>}
-                              </div>
-                            </div>
-                          ))}
+            <Card>
+              <CardHeader>
+                <CardTitle>NBFC Bids</CardTitle>
+                <CardDescription>Review and respond to financing offers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {dashboard?.bids?.length > 0 ? (
+                  <div className="space-y-4">
+                    {dashboard.bids.map((bid: any) => (
+                      <div key={bid._id} className="p-6 bg-gray-50 rounded-xl space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-gray-900">{bid.nbfc?.name || 'NBFC'}</p>
+                            <p className="text-2xl font-bold text-green-600 mt-1">
+                              {bid.interestRate}% <span className="text-sm font-normal text-gray-500">p.a.</span>
+                            </p>
+                            <p className="text-sm text-gray-500">{bid.tenure} days tenure</p>
+                          </div>
+                          {getStatusBadge(bid.status)}
                         </div>
-                      </div>
-                    )}
 
-                    {/* Actions */}
-                    {(bid.status === 'SUBMITTED' || bid.status === 'NEGOTIATION_IN_PROGRESS') && (
-                      <>
-                        {respondingBid === bid._id ? (
-                          <div className="border-t border-gray-100 pt-4">
-                            <p className="font-medium text-gray-900 mb-3">Counter-Offer</p>
-                            <div className="grid md:grid-cols-3 gap-4 mb-4">
-                              <div className="space-y-2">
-                                <Label>Your Amount (₹)</Label>
-                                <Input
-                                  type="number"
-                                  value={counterOffer.amount}
-                                  onChange={(e) => setCounterOffer({ ...counterOffer, amount: e.target.value })}
-                                  placeholder="Enter amount"
-                                />
+                        {(bid.status === 'SUBMITTED' || bid.status === 'NEGOTIATION_IN_PROGRESS') && (
+                          <>
+                            {respondingBid === bid._id ? (
+                              <div className="space-y-4 p-4 bg-white rounded-lg">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label>Counter Rate (%)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={counterOffer.amount}
+                                      onChange={(e) => setCounterOffer({ ...counterOffer, amount: e.target.value })}
+                                      placeholder="e.g., 12.5"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>Counter Tenure (days)</Label>
+                                    <Input
+                                      type="number"
+                                      value={counterOffer.duration}
+                                      onChange={(e) => setCounterOffer({ ...counterOffer, duration: e.target.value })}
+                                      placeholder="e.g., 45"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Message (Optional)</Label>
+                                  <Textarea
+                                    value={counterOffer.message}
+                                    onChange={(e) => setCounterOffer({ ...counterOffer, message: e.target.value })}
+                                    placeholder="Add a message to your counter-offer..."
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button onClick={() => handleBidResponse(bid._id, 'negotiate')}>
+                                    Send Counter-Offer
+                                  </Button>
+                                  <Button variant="outline" onClick={() => setRespondingBid(null)}>
+                                    Cancel
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="space-y-2">
-                                <Label>Duration (days)</Label>
-                                <Input
-                                  type="number"
-                                  value={counterOffer.duration}
-                                  onChange={(e) => setCounterOffer({ ...counterOffer, duration: e.target.value })}
-                                  placeholder="Enter days"
-                                />
+                            ) : (
+                              <div className="flex gap-2">
+                                <Button onClick={() => handleBidResponse(bid._id, 'accept')} className="bg-green-600 hover:bg-green-700">
+                                  Accept
+                                </Button>
+                                <Button variant="outline" onClick={() => setRespondingBid(bid._id)}>
+                                  Negotiate
+                                </Button>
+                                <Button variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleBidResponse(bid._id, 'reject')}>
+                                  Reject
+                                </Button>
                               </div>
-                              <div className="space-y-2">
-                                <Label>Message (optional)</Label>
-                                <Input
-                                  value={counterOffer.message}
-                                  onChange={(e) => setCounterOffer({ ...counterOffer, message: e.target.value })}
-                                  placeholder="Add a note"
-                                />
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => handleBidResponse(bid._id, 'negotiate')}
-                                disabled={!counterOffer.amount}
-                              >
-                                Send Counter-Offer
-                              </Button>
-                              <Button variant="outline" onClick={() => setRespondingBid(null)}>
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-4">
-                            <Button variant="success" onClick={() => handleBidResponse(bid._id, 'accept')}>
-                              <CheckCircle2 className="h-4 w-4 mr-2" />
-                              Accept Bid
-                            </Button>
-                            <Button variant="warning" onClick={() => setRespondingBid(bid._id)}>
-                              <TrendingUp className="h-4 w-4 mr-2" />
-                              Negotiate
-                            </Button>
-                            <Button variant="destructive" onClick={() => handleBidResponse(bid._id, 'reject')}>
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Reject
-                            </Button>
-                          </div>
+                            )}
+                          </>
                         )}
-                      </>
-                    )}
-
-                    {/* Locked Terms */}
-                    {bid.status === 'COMMERCIAL_LOCKED' && bid.lockedTerms && (
-                      <div className="border-t border-green-200 pt-4">
-                        <div className="flex items-center gap-2 text-green-700 mb-2">
-                          <CheckCircle2 className="h-5 w-5" />
-                          <span className="font-semibold">Commercial Locked</span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-500">Final Amount</p>
-                            <p className="font-bold text-green-600">₹{bid.lockedTerms.finalAmount?.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Duration</p>
-                            <p className="font-bold text-gray-900">{bid.lockedTerms.finalDuration} days</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">Locked On</p>
-                            <p className="font-bold text-gray-900">{new Date(bid.lockedTerms.lockedAt).toLocaleDateString()}</p>
-                          </div>
-                        </div>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-
-            {(!dashboard?.bids || dashboard.bids.length === 0) && (
-<<<<<<< HEAD
-              <Card>
-                <CardContent className="py-16 text-center">
-                  <Gavel className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="font-medium text-gray-900 mb-1">No bids received yet</h3>
-                  <p className="text-gray-500 text-sm">
-                    Once your cases are verified by the EPC company, you'll receive funding offers here.
-                  </p>
-                </CardContent>
-              </Card>
-=======
-              <div className="empty-state">
-                <p>No bids received yet.</p>
-                <p className="hint">
-                  Once your cases are verified by the EPC company, you'll
-                  receive funding offers here.
-                </p>
-              </div>
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
-            )}
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No bids received yet</p>
+                )}
+              </CardContent>
+            </Card>
           </motion.div>
         )}
 
-<<<<<<< HEAD
-        {/* KYC Tab - List */}
+        {/* KYC Tab */}
         {activeTab === 'kyc' && (
           <motion.div
             key="kyc"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
           >
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-indigo-600" />
-                  KYC Document Requests
-                </CardTitle>
-                <CardDescription>Chat with Ops team to submit required documents</CardDescription>
+                <CardTitle>KYC Chat</CardTitle>
+                <CardDescription>Document exchange with Ops team</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">CWC RF</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {pendingKyc.map((c: any) => (
-                        <tr key={c._id} className="hover:bg-gray-50 transition-colors">
-                          <td className="py-3 px-4 font-mono font-medium text-gray-900">
-                            #{c._id.slice(-8).toUpperCase()}
-                          </td>
-                          <td className="py-3 px-4">{getStatusBadge(c.status)}</td>
-                          <td className="py-3 px-4">
-                            <Button size="sm" variant="outline" onClick={() => openChat(c)}>
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Open Chat
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                      {pendingKyc.length === 0 && (
-                        <tr>
-                          <td colSpan={3} className="py-12 text-center text-gray-400">
-                            <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                            No pending KYC requests
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-=======
-      {/* KYC Tab - List of CWC RFs requiring action */}
-      {activeTab === "kyc" && (
-        <div className="section">
-          <h2>KYC Document Requests</h2>
-          <p className="section-note">
-            Chat with Ops team to submit required documents
-          </p>
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>CWC RF</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingKyc.map((c: any) => (
-                  <tr key={c._id}>
-                    <td>{c._id.slice(-8).toUpperCase()}</td>
-                    <td>{statusBadge(c.status)}</td>
-                    <td>
-                      <button
-                        className="btn-secondary btn-sm"
-                        onClick={() => openChat(c)}
+                {dashboard?.cwcRfs?.length > 0 ? (
+                  <div className="space-y-3">
+                    {dashboard.cwcRfs.map((cwcRf: any) => (
+                      <div
+                        key={cwcRf._id}
+                        onClick={() => openChat(cwcRf)}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                       >
-                        Open Chat
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {pendingKyc.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="empty-state">
-                      No pending KYC requests
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* KYC Chat Interface */}
-      {activeTab === "kyc-chat" && selectedCwcRf && (
-        <div className="section">
-          <div className="chat-header">
-            <button className="btn-back" onClick={() => setActiveTab("kyc")}>
-              ← Back
-            </button>
-            <h2>KYC Chat - #{selectedCwcRf._id.slice(-8).toUpperCase()}</h2>
-            {statusBadge(selectedCwcRf.status)}
-          </div>
-
-          <div className="chat-container">
-            {loadingChat ? (
-              <div className="chat-loading">Loading messages...</div>
-            ) : (
-              <div className="chat-messages">
-                {chatMessages.length === 0 && (
-                  <div className="empty-state">
-                    No messages yet. Ops will request documents here.
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <MessageSquare className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">CWC RF #{cwcRf._id.slice(-6)}</p>
+                            <p className="text-sm text-gray-500">Click to open chat</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(cwcRf.status)}
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No CWC RFs to chat about</p>
                 )}
-                {chatMessages.map((msg: any) => (
-                  <div
-                    key={msg._id}
-                    className={`chat-message ${msg.senderRole === "subcontractor" ? "sent" : "received"}`}
-                  >
-                    <div className="message-header">
-                      <span className="sender">
-                        {msg.senderRole === "subcontractor" ? "You" : "Ops"}
-                      </span>
-                      <span className="time">
-                        {new Date(msg.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    {msg.content && (
-                      <div className="message-content">{msg.content}</div>
-                    )}
-                    {msg.fileUrl && (
-                      <button
-                        onClick={() => {
-                          const isPdf = msg.fileName
-                            ?.toLowerCase()
-                            .endsWith(".pdf");
-                          if (isPdf) {
-                            openPdfDocument(msg.fileUrl, msg.fileName);
-                          } else {
-                            window.open(msg.fileUrl, "_blank");
-                          }
-                        }}
-                        className="message-file"
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          color: "var(--accent)",
-                        }}
-                      >
-                        📎 {msg.fileName || "Attachment"}
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <div ref={chatEndRef} />
-              </div>
-            )}
-
-            <form onSubmit={handleSendChat} className="chat-input-form">
-              <div className="chat-input-row">
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  disabled={sendingChat}
-                />
-                <label className="file-attach-btn">
-                  📎
-                  <input
-                    type="file"
-                    style={{ display: "none" }}
-                    onChange={(e) => setChatFile(e.target.files?.[0] || null)}
-                  />
-                </label>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={sendingChat || (!chatMessage.trim() && !chatFile)}
-                >
-                  {sendingChat ? "..." : "Send"}
-                </button>
-              </div>
-              {chatFile && (
-                <div className="file-preview">
-                  📎 {chatFile.name}
-                  <button type="button" onClick={() => setChatFile(null)}>
-                    ✕
-                  </button>
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
-                </div>
               </CardContent>
             </Card>
           </motion.div>
         )}
 
-        {/* KYC Chat Interface */}
+        {/* KYC Chat View */}
         {activeTab === 'kyc-chat' && selectedCwcRf && (
           <motion.div
             key="kyc-chat"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
           >
-            <Card className="h-[600px] flex flex-col">
+            <Card>
               <CardHeader className="border-b">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="sm" onClick={() => setActiveTab('kyc')}>
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back
-                    </Button>
-                    <div>
-                      <CardTitle className="text-lg">KYC Chat</CardTitle>
-                      <CardDescription>#{selectedCwcRf._id.slice(-8).toUpperCase()}</CardDescription>
-                    </div>
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="sm" onClick={() => setActiveTab('kyc')}>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <CardTitle>KYC Chat - #{selectedCwcRf._id.slice(-6)}</CardTitle>
+                    <CardDescription>Exchange documents with Ops team</CardDescription>
                   </div>
-                  {getStatusBadge(selectedCwcRf.status)}
                 </div>
               </CardHeader>
-              
-              <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-                {loadingChat ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-                  </div>
-                ) : chatMessages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-gray-400">
-                    <div className="text-center">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>No messages yet</p>
-                      <p className="text-sm">Ops will request documents here</p>
+              <CardContent className="p-0">
+                {/* Messages */}
+                <div className="h-[400px] overflow-y-auto p-4 space-y-4">
+                  {loadingChat ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
                     </div>
-                  </div>
-                ) : (
-                  chatMessages.map((msg: any) => (
-                    <div
-                      key={msg._id}
-                      className={`flex ${msg.senderRole === 'subcontractor' ? 'justify-end' : 'justify-start'}`}
-                    >
+                  ) : chatMessages.length > 0 ? (
+                    chatMessages.map((msg: any, idx: number) => (
                       <div
-                        className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                          msg.senderRole === 'subcontractor'
-                            ? 'bg-blue-600 text-white rounded-br-md'
-                            : 'bg-gray-100 text-gray-900 rounded-bl-md'
-                        }`}
+                        key={idx}
+                        className={`flex ${msg.sender === 'subcontractor' ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-medium opacity-75">
-                            {msg.senderRole === 'subcontractor' ? 'You' : 'Ops'}
-                          </span>
-                          <span className="text-xs opacity-50">
-                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                        <div
+                          className={`max-w-[70%] p-3 rounded-xl ${
+                            msg.sender === 'subcontractor'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-900'
+                          }`}
+                        >
+                          {msg.content && <p>{msg.content}</p>}
+                          {msg.file && (
+                            <a
+                              href={msg.file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`flex items-center gap-2 mt-2 text-sm ${
+                                msg.sender === 'subcontractor' ? 'text-blue-100' : 'text-blue-600'
+                              }`}
+                            >
+                              <Paperclip className="h-4 w-4" />
+                              {msg.file.name}
+                            </a>
+                          )}
+                          <p className={`text-xs mt-1 ${msg.sender === 'subcontractor' ? 'text-blue-200' : 'text-gray-400'}`}>
+                            {new Date(msg.createdAt).toLocaleString()}
+                          </p>
                         </div>
-                        {msg.content && <p className="text-sm">{msg.content}</p>}
-                        {msg.fileUrl && (
-                          <a
-                            href={msg.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={`flex items-center gap-1 text-sm mt-1 ${
-                              msg.senderRole === 'subcontractor' ? 'text-blue-100 hover:text-white' : 'text-blue-600 hover:underline'
-                            }`}
-                          >
-                            <Paperclip className="h-3 w-3" />
-                            {msg.fileName || 'Attachment'}
-                          </a>
-                        )}
                       </div>
-                    </div>
-                  ))
-                )}
-                <div ref={chatEndRef} />
-              </CardContent>
-
-              <CardFooter className="border-t p-4">
-                <form onSubmit={handleSendChat} className="w-full space-y-2">
-                  {chatFile && (
-                    <div className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg">
-                      <Paperclip className="h-4 w-4" />
-                      <span className="flex-1 truncate">{chatFile.name}</span>
-                      <button type="button" onClick={() => setChatFile(null)} className="text-blue-500 hover:text-blue-700">
-                        <XCircle className="h-4 w-4" />
-                      </button>
-                    </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500">No messages yet. Start the conversation!</p>
                   )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                {/* Input */}
+                <form onSubmit={handleSendChat} className="border-t p-4">
                   <div className="flex gap-2">
-                    <Input
-                      value={chatMessage}
-                      onChange={(e) => setChatMessage(e.target.value)}
-                      placeholder="Type a message..."
-                      disabled={sendingChat}
-                      className="flex-1"
-                    />
-                    <label className="cursor-pointer">
+                    <div className="flex-1 flex gap-2">
+                      <Input
+                        value={chatMessage}
+                        onChange={(e) => setChatMessage(e.target.value)}
+                        placeholder="Type a message..."
+                        className="flex-1"
+                      />
                       <input
                         type="file"
-                        className="hidden"
                         onChange={(e) => setChatFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        id="chatFileInput"
                       />
-                      <Button type="button" variant="outline" size="icon" asChild>
-                        <span><Paperclip className="h-4 w-4" /></span>
+                      <Button type="button" variant="outline" onClick={() => document.getElementById('chatFileInput')?.click()}>
+                        <Paperclip className="h-4 w-4" />
                       </Button>
-                    </label>
-                    <Button type="submit" disabled={sendingChat || (!chatMessage.trim() && !chatFile)} isLoading={sendingChat}>
-                      {!sendingChat && <Send className="h-4 w-4" />}
+                    </div>
+                    <Button type="submit" disabled={sendingChat || (!chatMessage.trim() && !chatFile)}>
+                      {sendingChat ? '...' : <Send className="h-4 w-4" />}
                     </Button>
                   </div>
+                  {chatFile && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      📎 {chatFile.name}
+                      <button type="button" onClick={() => setChatFile(null)} className="ml-2 text-red-500">
+                        Remove
+                      </button>
+                    </p>
+                  )}
                 </form>
-              </CardFooter>
+              </CardContent>
             </Card>
           </motion.div>
         )}

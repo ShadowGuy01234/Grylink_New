@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 @import "tailwindcss";
 @config "../tailwind.config.js";
-=======
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -38,7 +34,6 @@
   }
 }
 
-<<<<<<< HEAD
 @layer base {
   * {
     @apply border-border;
@@ -49,21 +44,6 @@
     font-family: 'Inter', system-ui, sans-serif;
     min-height: 100vh;
   }
-=======
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-body {
-  font-family:
-    "Inter",
-    -apple-system,
-    sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  line-height: 1.6;
->>>>>>> 2cd7748054c43e2dbe839104130dee03efab5e3a
 }
 
 /* Layout */
