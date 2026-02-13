@@ -98,9 +98,10 @@ const App = () => {
           position="top-right"
           toastOptions={{
             style: {
-              background: "#1a1a2e",
-              color: "#e0e0e0",
+              background: "var(--bg-card)",
+              color: "var(--text-primary)",
               borderRadius: "8px",
+              border: "1px solid var(--border)",
             },
           }}
         />
