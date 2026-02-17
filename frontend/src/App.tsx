@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import EpcDashboardNew from './pages/EpcDashboardNew';
 import SubContractorDashboardNew from './pages/SubContractorDashboardNew';
+import NBFCDashboard from './pages/NBFCDashboard';
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -30,7 +31,7 @@ const AppRoutes = () => {
   }
 
   // Logged in — role-based dashboard routes
-  const homeRoute = user.role === 'epc' ? '/epc' : '/subcontractor';
+  const homeRoute = user.role === 'epc' ? '/epc' : user.role === 'nbfc' ? '/nbfc' : '/subcontractor';
 
   return (
     <Routes>
@@ -42,6 +43,9 @@ const AppRoutes = () => {
         } />
         <Route path="subcontractor" element={
           user.role === 'subcontractor' ? <SubContractorDashboardNew /> : <Navigate to={homeRoute} replace />
+        } />
+        <Route path="nbfc" element={
+          user.role === 'nbfc' ? <NBFCDashboard /> : <Navigate to={homeRoute} replace />
         } />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

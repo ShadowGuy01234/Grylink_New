@@ -94,10 +94,121 @@ router.get('/pending', authenticate, authorize('ops', 'admin'), async (req, res)
   }
 });
 
-// GET /api/ops/kyc/:id/chat - Get KYC chat messages
+// GET /api/ops/bills/pending - Get pending bills for verification
+router.get('/bills/pending', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const bills = await opsService.getPendingBills();
+    res.json({ bills });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/ops/bills/:id - Get bill details
+router.get('/bills/:id', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const bill = await opsService.getBillDetails(req.params.id);
+    res.json({ bill });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/ops/bills/:id/notes - Add note to bill
+router.post('/bills/:id/notes', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const { text } = req.body;
+    const bill = await opsService.addBillNote(req.params.id, text, req.user._id);
+    res.json({ bill });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// GET /api/ops/kyc/pending - Get pending KYC items
+router.get('/kyc/pending', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const sellers = await opsService.getPendingKyc();
+    res.json({ sellers });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/ops/kyc/:id - Get seller KYC details (must be before /kyc/:id/chat)
+router.get('/kyc/:id', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const seller = await opsService.getSellerKyc(req.params.id);
+    res.json({ seller });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/ops/kyc/:id/verify - Verify seller KYC
+router.post('/kyc/:id/verify', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const { decision, notes } = req.body;
+    if (!decision || !['approve', 'reject'].includes(decision)) {
+      return res.status(400).json({ error: 'Decision must be approve or reject' });
+    }
+    const seller = await opsService.verifyKyc(req.params.id, decision, notes, req.user._id);
+    res.json({ seller });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// POST /api/ops/kyc/documents/:id/verify - Verify individual KYC document
+router.post('/kyc/documents/:id/verify', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const { decision, notes } = req.body;
+    if (!decision || !['approve', 'reject'].includes(decision)) {
+      return res.status(400).json({ error: 'Decision must be approve or reject' });
+    }
+    const result = await opsService.verifyKycDocument(req.params.id, decision, notes, req.user._id);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// GET /api/ops/sla - Get SLA tracking items
+router.get('/sla', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const { type, status, priority } = req.query;
+    const items = await opsService.getSlaItems({ type, status, priority });
+    res.json({ items });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/ops/sla/stats - Get SLA statistics
+router.get('/sla/stats', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const stats = await opsService.getSlaStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/ops/team/workload - Get team workload distribution
+router.get('/team/workload', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const workload = await opsService.getTeamWorkload();
+    res.json({ workload });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/ops/kyc/:id/chat - Get KYC chat messages with full details
 router.get('/kyc/:id/chat', authenticate, authorize('ops', 'admin', 'subcontractor'), async (req, res) => {
   try {
-    const messages = await opsService.getChatMessages(req.params.id);
+    const { since, limit = 50 } = req.query;
+    const messages = await opsService.getChatMessages(req.params.id, { since, limit: parseInt(limit) });
     res.json(messages);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -117,11 +228,139 @@ router.post(
         req.user._id,
         req.user.role,
         req.body.content,
-        req.file
+        req.file,
+        {
+          replyTo: req.body.replyTo,
+          actionType: req.body.actionType,
+        }
       );
       res.status(201).json(message);
     } catch (error) {
       res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// POST /api/ops/kyc/:id/chat/read - Mark messages as read
+router.post(
+  '/kyc/:id/chat/read',
+  authenticate,
+  authorize('ops', 'admin', 'subcontractor'),
+  async (req, res) => {
+    try {
+      const result = await opsService.markMessagesAsRead(req.params.id, req.user._id);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// POST /api/ops/chat/:messageId/reaction - Add reaction to message
+router.post(
+  '/chat/:messageId/reaction',
+  authenticate,
+  authorize('ops', 'admin', 'subcontractor'),
+  async (req, res) => {
+    try {
+      const { emoji } = req.body;
+      const message = await opsService.addReaction(req.params.messageId, req.user._id, emoji);
+      res.json(message);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// DELETE /api/ops/chat/:messageId/reaction - Remove reaction from message
+router.delete(
+  '/chat/:messageId/reaction',
+  authenticate,
+  authorize('ops', 'admin', 'subcontractor'),
+  async (req, res) => {
+    try {
+      const { emoji } = req.body;
+      const message = await opsService.removeReaction(req.params.messageId, req.user._id, emoji);
+      res.json(message);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// PUT /api/ops/chat/:messageId - Edit message
+router.put(
+  '/chat/:messageId',
+  authenticate,
+  authorize('ops', 'admin', 'subcontractor'),
+  async (req, res) => {
+    try {
+      const { content } = req.body;
+      const message = await opsService.editMessage(req.params.messageId, req.user._id, content);
+      res.json(message);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// DELETE /api/ops/chat/:messageId - Soft delete message
+router.delete(
+  '/chat/:messageId',
+  authenticate,
+  authorize('ops', 'admin', 'subcontractor'),
+  async (req, res) => {
+    try {
+      const message = await opsService.deleteMessage(req.params.messageId, req.user._id);
+      res.json(message);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// POST /api/ops/chat/:messageId/resolve - Resolve action required message
+router.post(
+  '/chat/:messageId/resolve',
+  authenticate,
+  authorize('ops', 'admin', 'subcontractor'),
+  async (req, res) => {
+    try {
+      const message = await opsService.resolveAction(req.params.messageId, req.user._id);
+      res.json(message);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// GET /api/ops/kyc/:id/chat/unread - Get unread count
+router.get(
+  '/kyc/:id/chat/unread',
+  authenticate,
+  authorize('ops', 'admin', 'subcontractor'),
+  async (req, res) => {
+    try {
+      const count = await opsService.getUnreadCount(req.params.id, req.user._id, req.user.role);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// GET /api/ops/kyc/:id/chat/search - Search messages
+router.get(
+  '/kyc/:id/chat/search',
+  authenticate,
+  authorize('ops', 'admin', 'subcontractor'),
+  async (req, res) => {
+    try {
+      const { q } = req.query;
+      const messages = await opsService.searchMessages(req.params.id, q);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   }
 );

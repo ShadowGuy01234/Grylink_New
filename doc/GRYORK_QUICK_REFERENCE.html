@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gryork - Quick Reference Card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 32px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        /* Section */
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            color: #3b82f6;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+
+        /* Quick Info Grid */
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .quick-item {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .quick-item h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-item p {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .quick-item .url {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        /* Steps */
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        .step-content strong {
+            color: #1e293b;
+        }
+
+        .step-content span {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Flow */
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 20px 0;
+            overflow-x: auto;
+        }
+
+        .flow-box {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .flow-box strong {
+            display: block;
+            font-size: 12px;
+            color: #1e293b;
+        }
+
+        .flow-box small {
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        .flow-arrow {
+            color: #94a3b8;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #64748b;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-blue { background: #dbeafe; color: #1d4ed8; }
+        .badge-green { background: #d1fae5; color: #059669; }
+        .badge-purple { background: #ede9fe; color: #7c3aed; }
+
+        /* Roles Grid */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .role {
+            text-align: center;
+            padding: 16px 8px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .role-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .role h5 {
+            font-size: 12px;
+            color: #1e293b;
+        }
+
+        .role p {
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        /* Checklist */
+        .checklist {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            list-style: none;
+        }
+
+        .checklist li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .checklist li::before {
+            content: '✓';
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* Print */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                padding: 0;
+            }
+            
+            .section {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .quick-grid, .roles-grid, .checklist {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+        <h1>GRYORK Quick Reference</h1>
+        <p>Bill Discounting Platform - Essential Guide</p>
+    </div>
+
+    <!-- What is Gryork -->
+    <div class="section">
+        <h2>What is Gryork?</h2>
+        <p style="margin-bottom: 16px;">A bill discounting platform connecting <strong>Sub-Contractors</strong> with <strong>NBFCs</strong> for working capital against verified <strong>EPC invoices</strong>.</p>
+        
+        <div class="flow">
+            <div class="flow-box">
+                <strong>Sub-Contractor</strong>
+                <small>Submits Bill</small>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box">
+                <strong>EPC</strong>
+                <small>Verifies</small>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box">
+                <strong>RMT</strong>
+                <small>Assesses Risk</small>
+            </div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box">
+                <strong>NBFC</strong>
+                <small>Funds</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portals -->
+    <div class="section">
+        <h2>Portal Access</h2>
+        <div class="quick-grid">
+            <div class="quick-item">
+                <h4>Sub-Contractor</h4>
+                <p class="url">app.gryork.com</p>
+            </div>
+            <div class="quick-item">
+                <h4>EPC / NBFC</h4>
+                <p class="url">partner.gryork.com</p>
+            </div>
+            <div class="quick-item">
+                <h4>Admin Team</h4>
+                <p class="url">admin.gryork.com</p>
+            </div>
+            <div class="quick-item">
+                <h4>Referral Agent</h4>
+                <p class="url">agent.gryork.com</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Roles -->
+    <div class="section">
+        <h2>User Roles</h2>
+        <div class="roles-grid">
+            <div class="role">
+                <div class="role-icon">🏗️</div>
+                <h5>Sub-Contractor</h5>
+                <p>Apply for CWC</p>
+            </div>
+            <div class="role">
+                <div class="role-icon">🏢</div>
+                <h5>EPC</h5>
+                <p>Verify Bills</p>
+            </div>
+            <div class="role">
+                <div class="role-icon">🏦</div>
+                <h5>NBFC</h5>
+                <p>Provide Funding</p>
+            </div>
+            <div class="role">
+                <div class="role-icon">👤</div>
+                <h5>Sales</h5>
+                <p>Lead Generation</p>
+            </div>
+            <div class="role">
+                <div class="role-icon">⚙️</div>
+                <h5>Ops</h5>
+                <p>KYC Verification</p>
+            </div>
+            <div class="role">
+                <div class="role-icon">📊</div>
+                <h5>RMT</h5>
+                <p>Risk Assessment</p>
+            </div>
+            <div class="role">
+                <div class="role-icon">👑</div>
+                <h5>Founder</h5>
+                <p>Approvals</p>
+            </div>
+            <div class="role">
+                <div class="role-icon">🤝</div>
+                <h5>Agent</h5>
+                <p>Referrals</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Documents -->
+    <div class="section">
+        <h2>Key Documents</h2>
+        <table>
+            <tr>
+                <th>Document</th>
+                <th>Full Name</th>
+                <th>Who Creates</th>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">CWCRF</span></td>
+                <td>CWC Request Form</td>
+                <td>Sub-Contractor</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-purple">CWCAF</span></td>
+                <td>CWC Analysis Form</td>
+                <td>RMT</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-green">LPS</span></td>
+                <td>Lending Preference Sheet</td>
+                <td>NBFC</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Sub-Contractor Journey -->
+    <div class="section">
+        <h2>Sub-Contractor Journey</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content"><strong>Register</strong> <span>→ Sign up at app.gryork.com</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-content"><strong>Complete KYC</strong> <span>→ Profile + Documents</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content"><strong>Upload Bill</strong> <span>→ RA Bill with supporting docs</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-content"><strong>Submit CWCRF</strong> <span>→ Request working capital</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-content"><strong>EPC Verifies</strong> <span>→ Approves amount & tenure</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">6</div>
+                <div class="step-content"><strong>Select NBFC</strong> <span>→ Compare quotes, choose best rate</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">7</div>
+                <div class="step-content"><strong>Get Funded</strong> <span>→ Receive funds in 3-7 days</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EPC Journey -->
+    <div class="section">
+        <h2>EPC Partner Journey</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content"><strong>Receive GryLink</strong> <span>→ Email invitation from Sales</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-content"><strong>Set Password</strong> <span>→ Secure your account</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content"><strong>Submit KYC</strong> <span>→ Company documents</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-content"><strong>Login to Partner Portal</strong> <span>→ After Ops verification</span></div>
+            </div>
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-content"><strong>Verify Bills</strong> <span>→ Approve Sub-Contractor CWCRFs</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction States -->
+    <div class="section">
+        <h2>Transaction Lifecycle</h2>
+        <div class="flow" style="justify-content: flex-start;">
+            <div class="flow-box"><strong>CREATED</strong></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box"><strong>ESCROW</strong></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box"><strong>DISBURSED</strong></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box"><strong>ACTIVE</strong></div>
+            <span class="flow-arrow">→</span>
+            <div class="flow-box"><strong>REPAID</strong></div>
+        </div>
+    </div>
+
+    <!-- Required KYC Documents -->
+    <div class="section">
+        <h2>Required KYC Documents</h2>
+        <ul class="checklist">
+            <li>PAN Card</li>
+            <li>GST Certificate</li>
+            <li>Certificate of Incorporation</li>
+            <li>MOA / AOA</li>
+            <li>Bank Statement (6 months)</li>
+            <li>Address Proof</li>
+        </ul>
+    </div>
+
+    <!-- Key Features -->
+    <div class="section">
+        <h2>Platform Features</h2>
+        <div class="quick-grid">
+            <div class="quick-item">
+                <h4>Re-KYC</h4>
+                <p>Annual document renewal</p>
+            </div>
+            <div class="quick-item">
+                <h4>KYC Chat</h4>
+                <p>Real-time doc clarification</p>
+            </div>
+            <div class="quick-item">
+                <h4>Referral Program</h4>
+                <p>Earn by introducing EPCs</p>
+            </div>
+            <div class="quick-item">
+                <h4>Approval Workflow</h4>
+                <p>Multi-level for high-value</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support -->
+    <div class="section">
+        <h2>Support</h2>
+        <div class="quick-grid">
+            <div class="quick-item">
+                <h4>Email</h4>
+                <p>support@gryork.com</p>
+            </div>
+            <div class="quick-item">
+                <h4>Turnaround</h4>
+                <p>3-7 business days</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>GRYORK Quick Reference Card | Version 2.0 | February 2026</p>
+    </div>
+
+</div>
+
+</body>
+</html>

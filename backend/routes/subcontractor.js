@@ -339,7 +339,14 @@ router.post(
   "/kyc/upload",
   authenticate,
   authorize("subcontractor"),
-  uploadBills.single("document"),
+  (req, res, next) => {
+    uploadBills.single("document")(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: err.message || "File upload failed" });
+      }
+      next();
+    });
+  },
   async (req, res) => {
     try {
       if (!req.file) {
@@ -381,7 +388,14 @@ router.post(
   "/kyc/:documentType",
   authenticate,
   authorize("subcontractor"),
-  uploadBills.single("document"),
+  (req, res, next) => {
+    uploadBills.single("document")(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: err.message || "File upload failed" });
+      }
+      next();
+    });
+  },
   async (req, res) => {
     try {
       if (!req.file) {

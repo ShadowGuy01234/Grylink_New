@@ -117,6 +117,7 @@ app.use("/api/risk-assessment", require("./routes/riskAssessment"));
 app.use("/api/agents", require("./routes/agent"));
 app.use("/api/rekyc", require("./routes/rekyc"));
 app.use("/api/cron", require("./routes/cron"));
+app.use("/api/audit", require("./routes/audit"));
 
 // 404 handler
 app.use((req, res) => {

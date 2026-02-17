@@ -24,6 +24,9 @@ const Layout = () => {
             {user?.role === 'subcontractor' && (
               <NavLink to="/subcontractor" className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink>
             )}
+            {user?.role === 'nbfc' && (
+              <NavLink to="/nbfc" className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink>
+            )}
           </nav>
         </div>
         <div className="topbar-right">

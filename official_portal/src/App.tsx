@@ -5,11 +5,17 @@ import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SalesDashboard from "./pages/SalesDashboard";
-import OpsDashboard from "./pages/OpsDashboard";
+import OpsDashboard from "./pages/OpsDashboardNew";
 import CasesPage from "./pages/CasesPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import RmtDashboard from "./pages/RmtDashboard";
 import FounderDashboard from "./pages/FounderDashboard";
+import AuditLogPage from "./pages/AuditLogPage";
+// Ops dedicated pages
+import EpcVerificationPage from "./pages/ops/EpcVerificationPage";
+import BillVerificationPage from "./pages/ops/BillVerificationPage";
+import KycVerificationPage from "./pages/ops/KycVerificationPage";
+import SlaTrackerPage from "./pages/ops/SlaTrackerPage";
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -70,9 +76,49 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="ops/epc"
+          element={
+            ["ops", "admin", "founder"].includes(user.role) ? (
+              <EpcVerificationPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="ops/bills"
+          element={
+            ["ops", "admin", "founder"].includes(user.role) ? (
+              <BillVerificationPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="ops/kyc"
+          element={
+            ["ops", "admin", "founder"].includes(user.role) ? (
+              <KycVerificationPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="ops/sla"
+          element={
+            ["ops", "admin", "founder"].includes(user.role) ? (
+              <SlaTrackerPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
           path="rmt"
           element={
-            ["rmt", "ops", "admin", "founder"].includes(user.role) ? (
+            ["rmt", "admin", "founder"].includes(user.role) ? (
               <RmtDashboard />
             ) : (
               <Navigate to={homeRoute} replace />
@@ -84,6 +130,16 @@ const AppRoutes = () => {
           element={
             ["admin", "founder"].includes(user.role) ? (
               <AdminDashboard />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="audit"
+          element={
+            ["admin", "founder", "ops"].includes(user.role) ? (
+              <AuditLogPage />
             ) : (
               <Navigate to={homeRoute} replace />
             )

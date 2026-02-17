@@ -61,7 +61,7 @@ const roleConfigs: Record<string, RoleConfig> = {
     gradient: 'from-amber-500 to-orange-500',
     glowColor: 'bg-amber-500/20',
     features: ['Risk scoring', 'Seller evaluation', 'Reports'],
-    allowedRoles: ['rmt', 'ops', 'admin', 'founder']
+    allowedRoles: ['rmt', 'admin', 'founder']
   },
   admin: {
     title: 'Admin Portal',

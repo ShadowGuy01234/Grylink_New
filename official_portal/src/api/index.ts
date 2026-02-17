@@ -56,11 +56,59 @@ export const opsApi = {
   requestKyc: (id: string, message: string) =>
     api.post(`/ops/kyc/${id}/request`, { message }),
   completeKyc: (id: string) => api.post(`/ops/kyc/${id}/complete`),
-  getChatMessages: (id: string) => api.get(`/ops/kyc/${id}/chat`),
+  
+  // Bill Verification APIs
+  getPendingBills: () => api.get("/ops/bills/pending"),
+  getBillDetails: (id: string) => api.get(`/ops/bills/${id}`),
+  addBillNote: (id: string, data: { text: string }) => 
+    api.post(`/ops/bills/${id}/notes`, data),
+  
+  // KYC Verification APIs
+  getPendingKyc: () => api.get("/ops/kyc/pending"),
+  getSellerKyc: (id: string) => api.get(`/ops/kyc/${id}`),
+  verifyKyc: (id: string, data: { decision: string; notes?: string }) =>
+    api.post(`/ops/kyc/${id}/verify`, data),
+  verifyKycDocument: (id: string, data: { decision: string; notes?: string }) =>
+    api.post(`/ops/kyc/documents/${id}/verify`, data),
+  getKycChat: (id: string) => api.get(`/ops/kyc/${id}/chat`),
+  sendKycMessage: (id: string, data: { message: string; replyTo?: string }) =>
+    api.post(`/ops/kyc/${id}/chat`, data),
+  editKycMessage: (messageId: string, data: { message: string }) =>
+    api.put(`/ops/chat/${messageId}`, data),
+  deleteKycMessage: (messageId: string) =>
+    api.delete(`/ops/chat/${messageId}`),
+  addKycReaction: (messageId: string, emoji: string) =>
+    api.post(`/ops/chat/${messageId}/reaction`, { emoji }),
+  
+  // Enhanced Chat API
+  getChatMessages: (id: string, params?: { since?: string; limit?: number }) => 
+    api.get(`/ops/kyc/${id}/chat`, { params }),
   sendChatMessage: (id: string, data: FormData) =>
     api.post(`/ops/kyc/${id}/chat`, data, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+  markMessagesAsRead: (id: string) => 
+    api.post(`/ops/kyc/${id}/chat/read`),
+  getUnreadCount: (id: string) => 
+    api.get(`/ops/kyc/${id}/chat/unread`),
+  searchMessages: (id: string, query: string) => 
+    api.get(`/ops/kyc/${id}/chat/search`, { params: { q: query } }),
+  addReaction: (messageId: string, emoji: string) => 
+    api.post(`/ops/chat/${messageId}/reaction`, { emoji }),
+  removeReaction: (messageId: string, emoji: string) => 
+    api.delete(`/ops/chat/${messageId}/reaction`, { data: { emoji } }),
+  editMessage: (messageId: string, content: string) => 
+    api.put(`/ops/chat/${messageId}`, { content }),
+  deleteMessage: (messageId: string) => 
+    api.delete(`/ops/chat/${messageId}`),
+  resolveAction: (messageId: string) => 
+    api.post(`/ops/chat/${messageId}/resolve`),
+
+  // SLA Tracking APIs
+  getSlaItems: (params?: { type?: string; status?: string; priority?: string }) =>
+    api.get("/ops/sla", { params }),
+  getSlaStats: () => api.get("/ops/sla/stats"),
+  getTeamWorkload: () => api.get("/ops/team/workload"),
 
   // Documents
   getCompanyDocuments: (id: string) =>
@@ -69,7 +117,7 @@ export const opsApi = {
     api.post(`/ops/documents/${id}/verify`, data),
 
   // NBFC
-  inviteNbfc: (data: any) => api.post("/ops/nbfc/invite", data),
+  inviteNbfc: (data: Record<string, unknown>) => api.post("/ops/nbfc/invite", data),
 };
 
 // Cases
@@ -302,6 +350,30 @@ export const rekycApi = {
     api.post("/rekyc/nbfc-request", { entityType, entityId, reason }),
   complete: (entityType: string, entityId: string, documents?: string[]) =>
     api.post(`/rekyc/complete/${entityType}/${entityId}`, { documents }),
+};
+
+// Audit Logs
+export const auditApi = {
+  getLogs: (params?: {
+    page?: number;
+    limit?: number;
+    userId?: string;
+    action?: string;
+    category?: string;
+    entityType?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+    success?: boolean;
+  }) => api.get("/audit", { params }),
+  getStats: (days?: number) => api.get("/audit/stats", { params: { days } }),
+  getById: (id: string) => api.get(`/audit/${id}`),
+  getEntityLogs: (entityType: string, entityId: string, params?: { page?: number; limit?: number }) =>
+    api.get(`/audit/entity/${entityType}/${entityId}`, { params }),
+  getUserTimeline: (userId: string, params?: { page?: number; limit?: number }) =>
+    api.get(`/audit/user/${userId}/timeline`, { params }),
+  exportLogs: (params?: { startDate?: string; endDate?: string; category?: string; format?: string }) =>
+    api.get("/audit/export", { params }),
 };
 
 // Cron Jobs (Admin)

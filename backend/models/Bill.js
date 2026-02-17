@@ -89,6 +89,15 @@ const billSchema = new mongoose.Schema(
       acknowledgementRef: String,
     },
 
+    // Ops notes for internal tracking
+    notes: [
+      {
+        text: { type: String, required: true },
+        addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        addedAt: { type: Date, default: Date.now },
+      },
+    ],
+
     statusHistory: [
       {
         status: String,

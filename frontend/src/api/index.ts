@@ -90,6 +90,18 @@ export const kycApi = {
     api.post(`/ops/kyc/${cwcRfId}/chat`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
+// ============= NBFC APIs =============
+export const nbfcApi = {
+  getDashboard: () => api.get('/nbfc/dashboard'),
+  getLps: () => api.get('/nbfc/lps'),
+  updateLps: (data: any) => api.put('/nbfc/lps', data),
+  getAvailableCwcafs: () => api.get('/cwcrf/nbfc/available'),
+  submitQuote: (cwcrfId: string, data: any) => api.post(`/cwcrf/${cwcrfId}/submit-quote`, data),
+  respondToCase: (caseId: string, data: any) => api.post(`/nbfc/${caseId}/respond`, data),
+  getMyBids: () => api.get('/bids/my'),
+  getTransactions: () => api.get('/transaction/my'),
+};
+
 // ============= Health Check =============
 export const healthApi = {
   check: () => api.get('/health'),

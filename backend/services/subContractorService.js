@@ -443,16 +443,16 @@ const uploadKycDocument = async (userId, documentType, file) => {
     subContractor.kycDocuments = {};
   }
 
-  // Update the specific document
+  // Update the specific document (matching model schema)
   subContractor.kycDocuments[documentType] = {
-    uploaded: true,
-    url: result.secure_url,
+    fileName: file.originalname,
+    fileUrl: result.secure_url,
     cloudinaryPublicId: result.public_id,
     uploadedAt: new Date(),
-    status: "PENDING",
+    verified: false,
   };
 
-  // Recalculate KYC status
+  // Recalculate KYC status (using model enum values)
   const requiredDocs = [
     "panCard",
     "aadhaarCard",
@@ -460,17 +460,19 @@ const uploadKycDocument = async (userId, documentType, file) => {
     "cancelledCheque",
   ];
   const uploadedRequired = requiredDocs.filter(
-    (doc) => subContractor.kycDocuments[doc]?.uploaded,
+    (doc) => subContractor.kycDocuments[doc]?.fileUrl,
   ).length;
 
   if (uploadedRequired === requiredDocs.length) {
     // All required docs uploaded - check if all verified
     const allVerified = requiredDocs.every(
-      (doc) => subContractor.kycDocuments[doc]?.status === "VERIFIED",
+      (doc) => subContractor.kycDocuments[doc]?.verified === true,
     );
-    subContractor.kycStatus = allVerified ? "VERIFIED" : "PENDING_VERIFICATION";
+    subContractor.kycStatus = allVerified ? "COMPLETED" : "UNDER_REVIEW";
+    subContractor.status = allVerified ? "KYC_COMPLETED" : "KYC_IN_PROGRESS";
   } else {
-    subContractor.kycStatus = "INCOMPLETE";
+    subContractor.kycStatus = "DOCUMENTS_PENDING";
+    subContractor.status = "KYC_PENDING";
   }
 
   subContractor.statusHistory.push({
@@ -506,15 +508,16 @@ const getKycStatus = async (userId) => {
   for (const docType of docTypes) {
     const doc = subContractor.kycDocuments?.[docType];
     documents[docType] = {
-      uploaded: doc?.uploaded || false,
-      url: doc?.url,
-      status: doc?.status || "NOT_UPLOADED",
-      rejectionReason: doc?.rejectionReason,
+      uploaded: !!doc?.fileUrl,
+      url: doc?.fileUrl,
+      fileName: doc?.fileName,
+      status: doc?.verified ? "VERIFIED" : (doc?.fileUrl ? "PENDING" : "NOT_UPLOADED"),
+      uploadedAt: doc?.uploadedAt,
     };
   }
 
   return {
-    kycStatus: subContractor.kycStatus || "INCOMPLETE",
+    kycStatus: subContractor.kycStatus || "NOT_STARTED",
     documents,
     bankDetails: subContractor.bankDetails,
     bankDetailsVerified: subContractor.bankDetails?.verified || false,

@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gryork - User Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --secondary: #6366f1;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            color: var(--gray-700);
+            background: var(--gray-50);
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--gray-200);
+            z-index: 1000;
+            padding: 0 24px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            padding: 160px 24px 100px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-white {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-white:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            gap: 40px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 104px;
+            height: calc(100vh - 144px);
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-500);
+            margin-bottom: 12px;
+            padding-left: 12px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 10px 12px;
+            color: var(--gray-600);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-nav a:hover {
+            background: var(--gray-100);
+            color: var(--gray-900);
+        }
+
+        .sidebar-nav a.active {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .sidebar-nav a i {
+            width: 20px;
+            margin-right: 8px;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--gray-100);
+        }
+
+        .content-section h2 {
+            font-size: 28px;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content-section h2 i {
+            color: var(--primary);
+        }
+
+        .content-section h3 {
+            font-size: 20px;
+            color: var(--gray-800);
+            margin: 32px 0 16px;
+        }
+
+        .content-section p {
+            margin-bottom: 16px;
+            color: var(--gray-600);
+        }
+
+        .lead {
+            font-size: 18px;
+            color: var(--gray-500);
+            margin-bottom: 24px;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .feature-card {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 16px;
+        }
+
+        .feature-icon.blue { background: #dbeafe; color: #2563eb; }
+        .feature-icon.purple { background: #ede9fe; color: #7c3aed; }
+        .feature-icon.green { background: #d1fae5; color: #059669; }
+        .feature-icon.orange { background: #ffedd5; color: #ea580c; }
+        .feature-icon.pink { background: #fce7f3; color: #db2777; }
+        .feature-icon.cyan { background: #cffafe; color: #0891b2; }
+        .feature-icon.red { background: #fee2e2; color: #dc2626; }
+        .feature-icon.indigo { background: #e0e7ff; color: #4f46e5; }
+
+        .feature-card h4 {
+            font-size: 16px;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin: 0;
+        }
+
+        /* Step Journey */
+        .journey {
+            margin: 32px 0;
+        }
+
+        .journey-step {
+            display: flex;
+            gap: 24px;
+            padding: 24px 0;
+            position: relative;
+        }
+
+        .journey-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 23px;
+            top: 72px;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary), var(--gray-200));
+        }
+
+        .journey-number {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+
+        .journey-content h4 {
+            font-size: 18px;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+        }
+
+        .journey-content p {
+            color: var(--gray-500);
+            margin: 0;
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 24px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: var(--gray-50);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        tr:hover td {
+            background: var(--gray-50);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-blue { background: #dbeafe; color: #1d4ed8; }
+        .badge-green { background: #d1fae5; color: #059669; }
+        .badge-yellow { background: #fef3c7; color: #d97706; }
+        .badge-red { background: #fee2e2; color: #dc2626; }
+        .badge-purple { background: #ede9fe; color: #7c3aed; }
+        .badge-gray { background: #f3f4f6; color: #4b5563; }
+
+        /* Info Boxes */
+        .info-box {
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin: 24px 0;
+            display: flex;
+            gap: 16px;
+        }
+
+        .info-box i {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .info-box.info {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+        }
+
+        .info-box.info i { color: var(--primary); }
+
+        .info-box.success {
+            background: #ecfdf5;
+            border-left: 4px solid var(--success);
+        }
+
+        .info-box.success i { color: var(--success); }
+
+        .info-box.warning {
+            background: #fffbeb;
+            border-left: 4px solid var(--warning);
+        }
+
+        .info-box.warning i { color: var(--warning); }
+
+        .info-box-content h5 {
+            font-size: 15px;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .info-box-content p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* Flow Diagram */
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 32px 16px;
+            overflow-x: auto;
+            margin: 24px 0;
+        }
+
+        .flow-node {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.2s;
+        }
+
+        .flow-node:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .flow-node.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .flow-node strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .flow-node small {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .flow-arrow {
+            color: var(--gray-400);
+            font-size: 20px;
+        }
+
+        /* Checklist */
+        .checklist {
+            list-style: none;
+            margin: 16px 0;
+        }
+
+        .checklist li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+
+        .checklist i {
+            color: var(--success);
+            margin-top: 4px;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin: 24px 0;
+            padding-left: 24px;
+            border-left: 2px solid var(--gray-200);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 16px 0 16px 24px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 20px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .timeline-item.completed::before {
+            background: var(--success);
+            box-shadow: 0 0 0 2px var(--success);
+        }
+
+        .timeline-item.pending::before {
+            background: var(--warning);
+            box-shadow: 0 0 0 2px var(--warning);
+        }
+
+        .timeline-item h5 {
+            font-size: 15px;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .timeline-item p {
+            font-size: 13px;
+            color: var(--gray-500);
+            margin: 0;
+        }
+
+        /* Accordion */
+        .accordion {
+            margin: 24px 0;
+        }
+
+        .accordion-item {
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 16px 20px;
+            background: var(--gray-50);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .accordion-header:hover {
+            background: var(--gray-100);
+        }
+
+        .accordion-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .accordion-item.active .accordion-content {
+            display: block;
+        }
+
+        .accordion-item.active .accordion-header i {
+            transform: rotate(180deg);
+        }
+
+        /* Role Cards */
+        .role-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .role-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .role-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .role-card .icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .role-card h4 {
+            font-size: 15px;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .role-card p {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin: 0;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--gray-900);
+            color: white;
+            padding: 60px 24px;
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+        }
+
+        .footer-brand h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .footer-brand p {
+            color: var(--gray-400);
+            font-size: 14px;
+        }
+
+        .footer-links h4 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            color: var(--gray-400);
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .footer-links a {
+            color: var(--gray-300);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding-top: 24px;
+            border-top: 1px solid var(--gray-800);
+            text-align: center;
+            color: var(--gray-500);
+            font-size: 13px;
+        }
+
+        /* Print Styles */
+        @media print {
+            .navbar, .sidebar {
+                display: none;
+            }
+            
+            .main-content {
+                display: block;
+            }
+            
+            .content-section {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            
+            .hero {
+                padding: 60px 24px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .main-content {
+                padding: 24px 16px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 16px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .content-section {
+                padding: 24px;
+            }
+            
+            .flow-diagram {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="#" class="nav-logo">GRYORK</a>
+        <ul class="nav-links">
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#roles">User Roles</a></li>
+            <li><a href="#epc-guide">EPC Guide</a></li>
+            <li><a href="#sc-guide">Sub-Contractor Guide</a></li>
+            <li><a href="#nbfc-guide">NBFC Guide</a></li>
+            <li><a href="#admin-guide">Admin Guide</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <span class="hero-badge">📘 Complete User Guide</span>
+        <h1>Gryork Platform</h1>
+        <p>Your comprehensive guide to bill discounting and working capital financing for the construction industry</p>
+        <div class="hero-buttons">
+            <a href="#overview" class="btn btn-white">
+                <i class="fas fa-book"></i> Read Guide
+            </a>
+            <a href="#quick-start" class="btn btn-outline">
+                <i class="fas fa-rocket"></i> Quick Start
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<div class="main-content">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-title">Getting Started</div>
+            <ul class="sidebar-nav">
+                <li><a href="#overview" class="active"><i class="fas fa-home"></i> Overview</a></li>
+                <li><a href="#roles"><i class="fas fa-users"></i> User Roles</a></li>
+                <li><a href="#quick-start"><i class="fas fa-rocket"></i> Quick Start</a></li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">User Guides</div>
+            <ul class="sidebar-nav">
+                <li><a href="#epc-guide"><i class="fas fa-building"></i> EPC Partner</a></li>
+                <li><a href="#sc-guide"><i class="fas fa-hard-hat"></i> Sub-Contractor</a></li>
+                <li><a href="#nbfc-guide"><i class="fas fa-university"></i> NBFC Partner</a></li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">Administration</div>
+            <ul class="sidebar-nav">
+                <li><a href="#admin-guide"><i class="fas fa-cog"></i> Admin Guide</a></li>
+                <li><a href="#transactions"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+                <li><a href="#features"><i class="fas fa-star"></i> Features</a></li>
+            </ul>
+        </div>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <main class="content">
+        
+        <!-- Overview Section -->
+        <section id="overview" class="content-section">
+            <h2><i class="fas fa-info-circle"></i> Platform Overview</h2>
+            <p class="lead">Gryork is a bill discounting platform connecting Sub-Contractors with NBFCs for working capital financing against verified invoices.</p>
+            
+            <div class="info-box info">
+                <i class="fas fa-lightbulb"></i>
+                <div class="info-box-content">
+                    <h5>What is Bill Discounting?</h5>
+                    <p>Sub-Contractors often face cash flow issues due to delayed payments. Gryork enables them to get immediate working capital against verified bills, while the EPC company continues its normal payment cycle.</p>
+                </div>
+            </div>
+            
+            <h3>How It Works</h3>
+            <div class="flow-diagram">
+                <div class="flow-node active">
+                    <strong>Sub-Contractor</strong>
+                    <small>Submits Bill</small>
+                </div>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <div class="flow-node">
+                    <strong>EPC Verifies</strong>
+                    <small>Approves Amount</small>
+                </div>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <div class="flow-node">
+                    <strong>RMT Reviews</strong>
+                    <small>Risk Assessment</small>
+                </div>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <div class="flow-node">
+                    <strong>NBFC Funds</strong>
+                    <small>Disburses Capital</small>
+                </div>
+            </div>
+            
+            <h3>Key Documents</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Acronym</th>
+                            <th>Full Name</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-blue">CWCRF</span></td>
+                            <td>CWC Request Form</td>
+                            <td>Application submitted by Sub-Contractor requesting working capital</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">CWCAF</span></td>
+                            <td>CWC Analysis Form</td>
+                            <td>Risk assessment document generated by RMT for NBFCs</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-green">LPS</span></td>
+                            <td>Lending Preference Sheet</td>
+                            <td>NBFC's configured lending criteria and risk appetite</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- User Roles Section -->
+        <section id="roles" class="content-section">
+            <h2><i class="fas fa-users"></i> User Roles & Portals</h2>
+            <p class="lead">Different users access different portals based on their role in the ecosystem.</p>
+            
+            <div class="role-cards">
+                <div class="role-card">
+                    <div class="icon">🏗️</div>
+                    <h4>Sub-Contractor</h4>
+                    <p>app.gryork.com</p>
+                </div>
+                <div class="role-card">
+                    <div class="icon">🏢</div>
+                    <h4>EPC Company</h4>
+                    <p>partner.gryork.com</p>
+                </div>
+                <div class="role-card">
+                    <div class="icon">🏦</div>
+                    <h4>NBFC</h4>
+                    <p>partner.gryork.com</p>
+                </div>
+                <div class="role-card">
+                    <div class="icon">👤</div>
+                    <h4>Sales Team</h4>
+                    <p>admin.gryork.com</p>
+                </div>
+                <div class="role-card">
+                    <div class="icon">⚙️</div>
+                    <h4>Operations</h4>
+                    <p>admin.gryork.com</p>
+                </div>
+                <div class="role-card">
+                    <div class="icon">📊</div>
+                    <h4>RMT</h4>
+                    <p>admin.gryork.com</p>
+                </div>
+                <div class="role-card">
+                    <div class="icon">👑</div>
+                    <h4>Founder</h4>
+                    <p>admin.gryork.com</p>
+                </div>
+                <div class="role-card">
+                    <div class="icon">🤝</div>
+                    <h4>Referral Agent</h4>
+                    <p>agent.gryork.com</p>
+                </div>
+            </div>
+            
+            <h3>Portal URLs</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Portal</th>
+                            <th>URL</th>
+                            <th>Users</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sub-Contractor Portal</td>
+                            <td><span class="badge badge-blue">app.gryork.com</span></td>
+                            <td>Sub-Contractors</td>
+                        </tr>
+                        <tr>
+                            <td>Partner Portal</td>
+                            <td><span class="badge badge-purple">partner.gryork.com</span></td>
+                            <td>EPC Companies, NBFCs</td>
+                        </tr>
+                        <tr>
+                            <td>Admin Portal</td>
+                            <td><span class="badge badge-green">admin.gryork.com</span></td>
+                            <td>Sales, Ops, RMT, Founder</td>
+                        </tr>
+                        <tr>
+                            <td>Agent Portal</td>
+                            <td><span class="badge badge-yellow">agent.gryork.com</span></td>
+                            <td>Referral Agents</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- Quick Start Section -->
+        <section id="quick-start" class="content-section">
+            <h2><i class="fas fa-rocket"></i> Quick Start</h2>
+            <p class="lead">Get started with Gryork based on your role.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon blue"><i class="fas fa-hard-hat"></i></div>
+                    <h4>Sub-Contractor</h4>
+                    <p>Register → Complete KYC → Upload Bills → Apply for CWC</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon purple"><i class="fas fa-building"></i></div>
+                    <h4>EPC Partner</h4>
+                    <p>Accept GryLink → Set Password → Submit KYC → Verify Bills</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon green"><i class="fas fa-university"></i></div>
+                    <h4>NBFC Partner</h4>
+                    <p>Onboard → Configure LPS → Review CWCAFs → Submit Quotes</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- EPC Guide Section -->
+        <section id="epc-guide" class="content-section">
+            <h2><i class="fas fa-building"></i> EPC Partner Guide</h2>
+            <p class="lead">EPC companies verify bills and approve CWC requests from their Sub-Contractors.</p>
+            
+            <h3>Onboarding Journey</h3>
+            <div class="journey">
+                <div class="journey-step">
+                    <div class="journey-number">1</div>
+                    <div class="journey-content">
+                        <h4>Receive GryLink Invitation</h4>
+                        <p>Sales team sends you a unique onboarding link via email</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">2</div>
+                    <div class="journey-content">
+                        <h4>Set Your Password</h4>
+                        <p>Create a secure password for your account</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">3</div>
+                    <div class="journey-content">
+                        <h4>Upload Company Documents</h4>
+                        <p>Submit required KYC documents: PAN Card, GST Certificate, COI, MOA/AOA, Bank Statement</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">4</div>
+                    <div class="journey-content">
+                        <h4>Document Verification</h4>
+                        <p>Gryork Operations team verifies your documents (24-48 hours)</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">5</div>
+                    <div class="journey-content">
+                        <h4>Access Partner Portal</h4>
+                        <p>Login to partner.gryork.com to manage CWCRF verifications</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>Verifying a CWCRF</h3>
+            <p>When verifying a Sub-Contractor's CWC request, provide:</p>
+            <ul class="checklist">
+                <li><i class="fas fa-check-circle"></i> <strong>Approved CWC Amount</strong> - Amount you're willing to back (can be less than requested)</li>
+                <li><i class="fas fa-check-circle"></i> <strong>Repayment Timeline</strong> - Confirm or modify the requested tenure (30/45/60/90 days)</li>
+                <li><i class="fas fa-check-circle"></i> <strong>Repayment Source</strong> - Certified RA bill / Client release / Internal treasury / Retention release</li>
+            </ul>
+        </section>
+        
+        <!-- Sub-Contractor Guide Section -->
+        <section id="sc-guide" class="content-section">
+            <h2><i class="fas fa-hard-hat"></i> Sub-Contractor Guide</h2>
+            <p class="lead">Sub-Contractors apply for working capital against their pending bills.</p>
+            
+            <h3>Complete Journey</h3>
+            <div class="journey">
+                <div class="journey-step">
+                    <div class="journey-number">1</div>
+                    <div class="journey-content">
+                        <h4>Registration</h4>
+                        <p>Sign up at app.gryork.com with your phone/email</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">2</div>
+                    <div class="journey-content">
+                        <h4>Complete Profile</h4>
+                        <p>Fill business details: Company Name, Registration Type, GSTIN, PAN, Bank Details</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">3</div>
+                    <div class="journey-content">
+                        <h4>Upload KYC Documents</h4>
+                        <p>Submit PAN Card, GST Certificate, COI, Bank Statement, Address Proof</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">4</div>
+                    <div class="journey-content">
+                        <h4>Upload Bill (RA Bill)</h4>
+                        <p>Submit Running Account Bill with work order, completion certificate, invoice</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">5</div>
+                    <div class="journey-content">
+                        <h4>Submit CWCRF</h4>
+                        <p>Apply for working capital financing with required amount & tenure</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">6</div>
+                    <div class="journey-content">
+                        <h4>Track Application</h4>
+                        <p>Monitor progress: EPC Verification → RMT Review → NBFC Quotes</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">7</div>
+                    <div class="journey-content">
+                        <h4>Select NBFC Quote</h4>
+                        <p>Compare offers and choose the best rate</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">8</div>
+                    <div class="journey-content">
+                        <h4>Receive Funding</h4>
+                        <p>NBFC disburses funds to your bank account</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-box success">
+                <i class="fas fa-check-circle"></i>
+                <div class="info-box-content">
+                    <h5>Typical Turnaround Time</h5>
+                    <p>From application to disbursement: 3-7 business days depending on document completeness</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- NBFC Guide Section -->
+        <section id="nbfc-guide" class="content-section">
+            <h2><i class="fas fa-university"></i> NBFC Partner Guide</h2>
+            <p class="lead">NBFCs provide working capital financing based on verified CWCAF reports.</p>
+            
+            <h3>Getting Started</h3>
+            <div class="journey">
+                <div class="journey-step">
+                    <div class="journey-number">1</div>
+                    <div class="journey-content">
+                        <h4>Invitation from Gryork</h4>
+                        <p>Receive onboarding invitation from Gryork Operations team</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">2</div>
+                    <div class="journey-content">
+                        <h4>Complete KYC & Agreement</h4>
+                        <p>Submit company documents and sign partnership agreement</p>
+                    </div>
+                </div>
+                <div class="journey-step">
+                    <div class="journey-number">3</div>
+                    <div class="journey-content">
+                        <h4>Configure LPS</h4>
+                        <p>Set lending criteria: Min/Max amount, ROI, Risk appetite, Tenure limits</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>Lending Preference Sheet (LPS)</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Minimum Amount</td>
+                            <td>Minimum deal size willing to fund</td>
+                            <td>₹10,00,000</td>
+                        </tr>
+                        <tr>
+                            <td>Maximum Amount</td>
+                            <td>Maximum deal size willing to fund</td>
+                            <td>₹5,00,00,000</td>
+                        </tr>
+                        <tr>
+                            <td>Base ROI</td>
+                            <td>Minimum interest rate offered</td>
+                            <td>12% p.a.</td>
+                        </tr>
+                        <tr>
+                            <td>Risk Appetite</td>
+                            <td>Accepted risk categories</td>
+                            <td>Low, Medium</td>
+                        </tr>
+                        <tr>
+                            <td>Tenure Range</td>
+                            <td>Acceptable loan tenure</td>
+                            <td>30-90 days</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3>Deal Flow</h3>
+            <p>Deals matching your LPS criteria appear automatically. Review the CWCAF report containing:</p>
+            <ul class="checklist">
+                <li><i class="fas fa-check-circle"></i> Company profile & financial summary</li>
+                <li><i class="fas fa-check-circle"></i> EPC verification details</li>
+                <li><i class="fas fa-check-circle"></i> Bill authenticity confirmation</li>
+                <li><i class="fas fa-check-circle"></i> Risk score & assessment</li>
+                <li><i class="fas fa-check-circle"></i> Repayment arrangement logic</li>
+            </ul>
+        </section>
+        
+        <!-- Admin Guide Section -->
+        <section id="admin-guide" class="content-section">
+            <h2><i class="fas fa-cog"></i> Admin Team Guide</h2>
+            <p class="lead">Internal team workflows for Sales, Operations, RMT, and Founder.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon blue"><i class="fas fa-phone"></i></div>
+                    <h4>Sales Team</h4>
+                    <p>Lead generation, GryLinks, EPC outreach, contact tracking</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon green"><i class="fas fa-clipboard-check"></i></div>
+                    <h4>Operations</h4>
+                    <p>Document verification, KYC review, Bill verification, KYC Chat</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon purple"><i class="fas fa-chart-line"></i></div>
+                    <h4>RMT</h4>
+                    <p>Risk assessment, CWCAF generation, NBFC distribution</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon orange"><i class="fas fa-crown"></i></div>
+                    <h4>Founder</h4>
+                    <p>Approval queue, Agent management, System oversight</p>
+                </div>
+            </div>
+            
+            <h3>RMT Risk Parameters</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Weight</th>
+                            <th>Assessment Criteria</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Financial Health</td>
+                            <td>25%</td>
+                            <td>Revenue, profitability, cash flow</td>
+                        </tr>
+                        <tr>
+                            <td>EPC Relationship</td>
+                            <td>20%</td>
+                            <td>Payment history, work duration</td>
+                        </tr>
+                        <tr>
+                            <td>Bill Authenticity</td>
+                            <td>20%</td>
+                            <td>Document verification, matching</td>
+                        </tr>
+                        <tr>
+                            <td>Past Performance</td>
+                            <td>20%</td>
+                            <td>Previous CWC repayments on platform</td>
+                        </tr>
+                        <tr>
+                            <td>External Factors</td>
+                            <td>15%</td>
+                            <td>Industry conditions, credit reports</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- Transactions Section -->
+        <section id="transactions" class="content-section">
+            <h2><i class="fas fa-exchange-alt"></i> Transaction Lifecycle</h2>
+            <p class="lead">Understanding the stages of a CWC transaction from creation to completion.</p>
+            
+            <div class="flow-diagram">
+                <div class="flow-node active">
+                    <strong>CREATED</strong>
+                    <small>NBFC Selected</small>
+                </div>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <div class="flow-node">
+                    <strong>ESCROW</strong>
+                    <small>Account Setup</small>
+                </div>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <div class="flow-node">
+                    <strong>DISBURSED</strong>
+                    <small>Funds Released</small>
+                </div>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <div class="flow-node">
+                    <strong>ACTIVE</strong>
+                    <small>Awaiting Repayment</small>
+                </div>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <div class="flow-node">
+                    <strong>REPAID</strong>
+                    <small>Completed</small>
+                </div>
+            </div>
+            
+            <h3>Transaction States</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th>Next Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-blue">CREATED</span></td>
+                            <td>Transaction created after Sub-Contractor selects NBFC</td>
+                            <td>NBFC initiates escrow setup</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-purple">ESCROW_SETUP</span></td>
+                            <td>Escrow account created for repayment</td>
+                            <td>NBFC disburses funds</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-green">DISBURSED</span></td>
+                            <td>Funds transferred to Sub-Contractor</td>
+                            <td>Await repayment on due date</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-yellow">OVERDUE</span></td>
+                            <td>Payment not received by due date</td>
+                            <td>Follow-up & collection actions</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-green">REPAID</span></td>
+                            <td>Full repayment received</td>
+                            <td>Transaction complete</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="info-box warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div class="info-box-content">
+                    <h5>Overdue Handling</h5>
+                    <p>System automatically marks transactions as overdue if repayment is not received within 3 days of due date. Notifications are sent to all parties.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Features Section -->
+        <section id="features" class="content-section">
+            <h2><i class="fas fa-star"></i> Additional Features</h2>
+            <p class="lead">Explore the advanced features of the Gryork platform.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon blue"><i class="fas fa-user-plus"></i></div>
+                    <h4>Referral Program</h4>
+                    <p>Earn commissions by introducing EPC partners</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon green"><i class="fas fa-sync-alt"></i></div>
+                    <h4>Re-KYC</h4>
+                    <p>Annual renewal and on-demand document updates</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon red"><i class="fas fa-ban"></i></div>
+                    <h4>Blacklist</h4>
+                    <p>Fraud prevention and misconduct management</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon purple"><i class="fas fa-check-double"></i></div>
+                    <h4>Approval Workflow</h4>
+                    <p>Multi-level approval for high-value transactions</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon cyan"><i class="fas fa-comments"></i></div>
+                    <h4>KYC Chat</h4>
+                    <p>Real-time communication for document clarifications</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon orange"><i class="fas fa-robot"></i></div>
+                    <h4>Automation</h4>
+                    <p>Cron jobs for reminders, SLA tracking, due dates</p>
+                </div>
+            </div>
+            
+            <h3>Approval Workflow</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Threshold</th>
+                            <th>Approver</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>High-value CWCRF</td>
+                            <td>> ₹2 Crore</td>
+                            <td>Founder</td>
+                        </tr>
+                        <tr>
+                            <td>Blacklist Removal</td>
+                            <td>Any</td>
+                            <td>Founder</td>
+                        </tr>
+                        <tr>
+                            <td>NBFC Onboarding</td>
+                            <td>New Partner</td>
+                            <td>Operations Head</td>
+                        </tr>
+                        <tr>
+                            <td>Disputed Transaction</td>
+                            <td>Any</td>
+                            <td>RMT + Founder</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+    </main>
+</div>
+
+<!-- Footer -->
+<footer>
+    <div class="footer-content">
+        <div class="footer-brand">
+            <h3>GRYORK</h3>
+            <p>Bill Discounting Platform for the Construction Industry</p>
+        </div>
+        <div class="footer-links">
+            <h4>Portals</h4>
+            <ul>
+                <li><a href="#">app.gryork.com</a></li>
+                <li><a href="#">partner.gryork.com</a></li>
+                <li><a href="#">admin.gryork.com</a></li>
+            </ul>
+        </div>
+        <div class="footer-links">
+            <h4>Resources</h4>
+            <ul>
+                <li><a href="#">User Guide</a></li>
+                <li><a href="#">FAQs</a></li>
+                <li><a href="#">Support</a></li>
+            </ul>
+        </div>
+        <div class="footer-links">
+            <h4>Contact</h4>
+            <ul>
+                <li><a href="#">support@gryork.com</a></li>
+                <li><a href="#">+91-7068564903</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2026 Gryork. All rights reserved. | Version 2.0</p>
+    </div>
+</footer>
+
+<script>
+    // Smooth scroll for navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                const offset = 80;
+                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Active sidebar link on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 150) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // Accordion functionality
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const item = header.parentElement;
+            item.classList.toggle('active');
+        });
+    });
+</script>
+
+</body>
+</html>
