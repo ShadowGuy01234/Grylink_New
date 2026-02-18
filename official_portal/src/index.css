@@ -467,6 +467,808 @@
   }
 }
 
+/* ============================================
+   SLA COMPONENTS - ENHANCED UI
+   ============================================ */
+
+/* SLA Progress Ring */
+.sla-progress-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sla-progress-ring .progress-ring-svg {
+  transform: rotate(-90deg);
+}
+
+.sla-progress-ring .progress-ring-content {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.sla-progress-ring .progress-percentage {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.sla-progress-ring .progress-label {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.sla-progress-ring .progress-sublabel {
+  font-size: 0.625rem;
+  color: var(--gray-400);
+}
+
+/* SLA Timeline */
+.sla-timeline {
+  display: flex;
+  gap: 0;
+  padding: 1rem 0;
+}
+
+.sla-timeline.horizontal {
+  flex-direction: row;
+  overflow-x: auto;
+  padding-bottom: 1.5rem;
+}
+
+.sla-timeline.vertical {
+  flex-direction: column;
+}
+
+.sla-timeline.compact .timeline-step {
+  padding: 0.5rem;
+}
+
+.sla-timeline .timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  min-width: 120px;
+  padding: 1rem;
+}
+
+.sla-timeline.vertical .timeline-step {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.sla-timeline .timeline-connector {
+  position: absolute;
+  background: var(--gray-200);
+  z-index: 0;
+}
+
+.sla-timeline.horizontal .timeline-connector {
+  height: 3px;
+  top: 2.25rem;
+  left: 50%;
+  width: 100%;
+}
+
+.sla-timeline.vertical .timeline-connector {
+  width: 3px;
+  left: 1.125rem;
+  top: 3rem;
+  height: calc(100% - 1rem);
+}
+
+.sla-timeline .timeline-connector.filled {
+  background: linear-gradient(90deg, var(--accent-500), var(--primary-500));
+}
+
+.sla-timeline .timeline-marker {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 3px solid var(--gray-300);
+  z-index: 1;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  transition: all 0.2s;
+}
+
+.sla-timeline .timeline-marker.completed {
+  background: var(--accent-500);
+  border-color: var(--accent-500);
+  color: white;
+}
+
+.sla-timeline .timeline-marker.in-progress,
+.sla-timeline .timeline-marker.current {
+  background: white;
+  border-color: var(--primary-500);
+  color: var(--primary-500);
+  box-shadow: 0 0 0 4px rgba(30, 90, 175, 0.2);
+  animation: pulse-ring 2s infinite;
+}
+
+.sla-timeline .timeline-marker.overdue {
+  background: #EF4444;
+  border-color: #EF4444;
+  color: white;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 4px rgba(30, 90, 175, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(30, 90, 175, 0.1); }
+  100% { box-shadow: 0 0 0 4px rgba(30, 90, 175, 0.3); }
+}
+
+.sla-timeline .timeline-content {
+  text-align: center;
+  margin-top: 0.75rem;
+}
+
+.sla-timeline.vertical .timeline-content {
+  text-align: left;
+  margin-top: 0;
+}
+
+.sla-timeline .step-label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gray-900);
+  display: block;
+}
+
+.sla-timeline .step-description {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.sla-timeline .step-dates {
+  margin-top: 0.5rem;
+}
+
+.sla-timeline .completed-date,
+.sla-timeline .target-date {
+  font-size: 0.625rem;
+  color: var(--gray-400);
+  display: block;
+}
+
+.sla-timeline .target-date.overdue {
+  color: #EF4444;
+  font-weight: 600;
+}
+
+/* SLA Milestone Tracker */
+.sla-milestone-tracker {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.sla-milestone-tracker .milestone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.sla-milestone-tracker .milestone-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sla-milestone-tracker .case-number {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--primary-900);
+}
+
+.sla-milestone-tracker .created-date {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.sla-milestone-tracker .milestone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.sla-milestone-tracker .milestone-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.sla-milestone-tracker .milestone-card:hover {
+  border-color: var(--primary-300);
+  box-shadow: 0 4px 12px rgba(30, 90, 175, 0.1);
+}
+
+.sla-milestone-tracker .milestone-card.completed {
+  border-left: 4px solid var(--accent-500);
+}
+
+.sla-milestone-tracker .milestone-card.completed_late {
+  border-left: 4px solid #F59E0B;
+}
+
+.sla-milestone-tracker .milestone-card.overdue {
+  border-left: 4px solid #EF4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.sla-milestone-tracker .milestone-card.pending {
+  border-left: 4px solid var(--gray-300);
+}
+
+.sla-milestone-tracker .milestone-day {
+  margin-bottom: 0.75rem;
+}
+
+.sla-milestone-tracker .day-number {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--primary-600);
+  display: block;
+}
+
+.sla-milestone-tracker .day-label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gray-900);
+}
+
+.sla-milestone-tracker .milestone-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.sla-milestone-tracker .status-indicator {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+.sla-milestone-tracker .status-indicator.completed {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.sla-milestone-tracker .status-indicator.completed_late {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.sla-milestone-tracker .status-indicator.overdue {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.sla-milestone-tracker .status-indicator.pending {
+  background: var(--gray-200);
+}
+
+.sla-milestone-tracker .status-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.sla-milestone-tracker .milestone-dates {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.sla-milestone-tracker .date-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.sla-milestone-tracker .date-label {
+  color: var(--gray-400);
+}
+
+.sla-milestone-tracker .milestone-assignee {
+  font-size: 0.625rem;
+  color: var(--gray-400);
+  margin-top: 0.5rem;
+}
+
+.sla-milestone-tracker .milestone-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gray-200);
+}
+
+.sla-milestone-tracker .progress-fill {
+  height: 100%;
+  transition: width 0.5s ease-out;
+}
+
+.sla-milestone-tracker .progress-fill.completed { background: var(--accent-500); }
+.sla-milestone-tracker .progress-fill.completed_late { background: #F59E0B; }
+.sla-milestone-tracker .progress-fill.overdue { background: #EF4444; }
+
+.sla-milestone-tracker .milestone-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-100);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.sla-milestone-tracker .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.sla-milestone-tracker .legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.sla-milestone-tracker .legend-dot.completed { background: var(--accent-500); }
+.sla-milestone-tracker .legend-dot.completed_late { background: #F59E0B; }
+.sla-milestone-tracker .legend-dot.pending { background: var(--gray-300); }
+.sla-milestone-tracker .legend-dot.overdue { background: #EF4444; }
+
+/* SLA Countdown */
+.sla-countdown {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.sla-countdown.critical {
+  border-color: #EF4444;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), white);
+}
+
+.sla-countdown.expired {
+  border-color: #DC2626;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(239, 68, 68, 0.05));
+}
+
+.sla-countdown .countdown-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.sla-countdown .countdown-alert {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.sla-countdown .countdown-alert .alert-icon.pulse {
+  animation: bell-pulse 1s infinite;
+}
+
+@keyframes bell-pulse {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-15deg); }
+}
+
+.sla-countdown .countdown-expired-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: #DC2626;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.sla-countdown .countdown-grid {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.sla-countdown .countdown-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+  min-width: 60px;
+}
+
+.sla-countdown .unit-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-900);
+  line-height: 1;
+}
+
+.sla-countdown.critical .unit-value,
+.sla-countdown.expired .unit-value {
+  color: #DC2626;
+}
+
+.sla-countdown .unit-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-500);
+  margin-top: 0.25rem;
+}
+
+.sla-countdown .overdue-time {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: #DC2626;
+  font-weight: 500;
+}
+
+/* SLA Countdown Compact */
+.sla-countdown-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+}
+
+.sla-countdown-compact.critical {
+  border-color: #EF4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.sla-countdown-compact.expired {
+  border-color: #DC2626;
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.sla-countdown-compact .countdown-label {
+  font-size: 0.625rem;
+  color: var(--gray-500);
+  margin-bottom: 0.25rem;
+}
+
+.sla-countdown-compact .countdown-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sla-countdown-compact .overdue-badge {
+  font-size: 0.5rem;
+  font-weight: 700;
+  background: #DC2626;
+  color: white;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+.sla-countdown-compact .time-value {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--gray-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.sla-countdown-compact.critical .time-value,
+.sla-countdown-compact.expired .time-value {
+  color: #DC2626;
+}
+
+/* SLA Countdown Inline */
+.sla-countdown-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.sla-countdown-inline.sm { font-size: 0.625rem; }
+.sla-countdown-inline.lg { font-size: 0.875rem; }
+
+.sla-countdown-inline.critical { color: #EF4444; }
+.sla-countdown-inline.expired { color: #DC2626; }
+
+.sla-countdown-inline .inline-icon {
+  font-size: 0.875em;
+}
+
+/* SLA Pipeline Kanban */
+.sla-pipeline-kanban {
+  padding: 1rem 0;
+}
+
+.sla-pipeline-kanban .kanban-columns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  min-height: 500px;
+}
+
+@media (max-width: 1200px) {
+  .sla-pipeline-kanban .kanban-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sla-pipeline-kanban .kanban-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sla-pipeline-kanban .kanban-column {
+  background: var(--gray-50);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+.sla-pipeline-kanban .kanban-column.hovered {
+  background: var(--gray-100);
+}
+
+.sla-pipeline-kanban .column-header {
+  padding: 1rem;
+  border-left: 4px solid;
+  border-radius: 12px 12px 0 0;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sla-pipeline-kanban .column-header .header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gray-900);
+}
+
+.sla-pipeline-kanban .column-header .header-title svg {
+  font-size: 1.125rem;
+}
+
+.sla-pipeline-kanban .column-header .item-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+}
+
+.sla-pipeline-kanban .column-content {
+  flex: 1;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+}
+
+.sla-pipeline-kanban .kanban-card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sla-pipeline-kanban .kanban-card:hover {
+  border-color: var(--primary-300);
+}
+
+.sla-pipeline-kanban .kanban-card.priority-critical {
+  border-left: 3px solid #EF4444;
+}
+
+.sla-pipeline-kanban .kanban-card.priority-high {
+  border-left: 3px solid #F59E0B;
+}
+
+.sla-pipeline-kanban .kanban-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.sla-pipeline-kanban .kanban-card .entity-type {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sla-pipeline-kanban .kanban-card .priority-badge {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.sla-pipeline-kanban .kanban-card .priority-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #DC2626;
+}
+
+.sla-pipeline-kanban .kanban-card .priority-badge.high {
+  background: rgba(245, 158, 11, 0.15);
+  color: #D97706;
+}
+
+.sla-pipeline-kanban .kanban-card .card-body {
+  margin-bottom: 0.75rem;
+}
+
+.sla-pipeline-kanban .kanban-card .entity-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gray-900);
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+}
+
+.sla-pipeline-kanban .kanban-card .company-name {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  display: block;
+}
+
+.sla-pipeline-kanban .kanban-card .amount-badge {
+  display: inline-block;
+  background: var(--primary-50);
+  color: var(--primary-700);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.375rem;
+}
+
+.sla-pipeline-kanban .kanban-card .card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sla-pipeline-kanban .kanban-card .time-remaining {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.sla-pipeline-kanban .kanban-card .time-remaining.critical,
+.sla-pipeline-kanban .kanban-card .time-remaining.breached {
+  color: #EF4444;
+}
+
+.sla-pipeline-kanban .kanban-card .time-remaining.attention {
+  color: #F59E0B;
+}
+
+.sla-pipeline-kanban .kanban-card .assignee {
+  display: flex;
+  align-items: center;
+}
+
+.sla-pipeline-kanban .kanban-card .assignee-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: white;
+}
+
+.sla-pipeline-kanban .kanban-card .milestone-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.625rem;
+  color: var(--gray-400);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gray-100);
+}
+
+.sla-pipeline-kanban .empty-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--gray-400);
+  font-size: 0.75rem;
+}
+
+.sla-pipeline-kanban .empty-column svg {
+  font-size: 2rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar { width: 64px; }

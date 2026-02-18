@@ -60,13 +60,6 @@ export default function Header() {
                     <span className="font-medium">Sub-Contractor</span>
                     <span className="block text-xs text-gray-500">Upload bills & get funded</span>
                   </a>
-                  <a
-                    href={PORTALS.partner}
-                    className="block px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
-                  >
-                    <span className="font-medium">EPC / NBFC Partner</span>
-                    <span className="block text-xs text-gray-500">Partner dashboard</span>
-                  </a>
                   <hr className="my-2 border-gray-100" />
                   <a
                     href={PORTALS.admin}
@@ -115,13 +108,6 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sub-Contractor
-              </a>
-              <a
-                href={PORTALS.partner}
-                className="btn-secondary text-center"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                EPC / NBFC Partner
               </a>
             </div>
           </nav>

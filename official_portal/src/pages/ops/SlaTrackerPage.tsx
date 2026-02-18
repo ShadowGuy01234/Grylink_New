@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { opsApi } from "../../api";
 import toast from "react-hot-toast";
 import {
@@ -13,7 +14,12 @@ import {
   HiOutlineDocumentText,
   HiOutlineExternalLink,
   HiOutlineBell,
+  HiOutlineViewBoards,
+  HiOutlineViewList,
 } from "react-icons/hi";
+import { SlaProgressRing } from "../../components/sla/SlaProgressRing";
+import { SlaPipelineKanban, type PipelineItem } from "../../components/sla/SlaPipelineKanban";
+import { SlaCountdown } from "../../components/sla/SlaCountdown";
 
 interface SlaItem {
   _id: string;
@@ -59,7 +65,8 @@ const SlaTrackerPage = () => {
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [priorityFilter, setPriorityFilter] = useState<string>("");
-  const [viewMode, setViewMode] = useState<'list' | 'timeline'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'kanban'>('list');
+  const [selectedItem, setSelectedItem] = useState<SlaItem | null>(null);
 
   const fetchSlaData = useCallback(async () => {
     try {
@@ -129,37 +136,97 @@ const SlaTrackerPage = () => {
     return time.status === 'critical' || time.status === 'breached';
   });
 
+  // Convert SlaItem to PipelineItem for Kanban view
+  const pipelineItems: PipelineItem[] = slaItems.map(item => ({
+    _id: item._id,
+    entityName: item.entityName,
+    entityType: item.type.includes('epc') ? 'epc' : item.type.includes('kyc') ? 'subcontractor' : 'case',
+    companyName: item.companyName,
+    assignee: item.assignedTo,
+    deadline: item.deadline,
+    createdAt: item.createdAt,
+    priority: item.priority,
+    currentMilestone: getTypeLabel(item.type),
+  }));
+
+  const handleKanbanItemClick = (item: PipelineItem) => {
+    const fullItem = slaItems.find(s => s._id === item._id);
+    if (fullItem) setSelectedItem(fullItem);
+  };
+
   return (
     <div className="sla-tracker-page">
-      <div className="page-header">
+      <motion.div 
+        className="page-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         <div className="header-content">
           <h1><HiOutlineClock /> SLA Tracker</h1>
           <p>Monitor and manage service level agreements across all operations</p>
         </div>
         <div className="header-actions">
-          <div className="view-toggle">
+          <div className="view-toggle enhanced">
             <button 
               className={viewMode === 'list' ? 'active' : ''} 
               onClick={() => setViewMode('list')}
+              title="List View"
             >
-              List
+              <HiOutlineViewList /> List
             </button>
             <button 
               className={viewMode === 'timeline' ? 'active' : ''} 
               onClick={() => setViewMode('timeline')}
+              title="Timeline View"
             >
-              Timeline
+              <HiOutlineClock /> Timeline
+            </button>
+            <button 
+              className={viewMode === 'kanban' ? 'active' : ''} 
+              onClick={() => setViewMode('kanban')}
+              title="Kanban Board"
+            >
+              <HiOutlineViewBoards /> Kanban
             </button>
           </div>
-          <button className="btn-refresh" onClick={fetchSlaData}>
-            <HiOutlineRefresh /> Refresh
-          </button>
+          <motion.button 
+            className="btn-refresh" 
+            onClick={fetchSlaData}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <HiOutlineRefresh className={loading ? 'spin' : ''} /> Refresh
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Stats Overview */}
-      <div className="stats-grid">
-        <div className="stat-card">
+      {/* Enhanced Stats Overview with Progress Rings */}
+      <motion.div 
+        className="stats-grid enhanced"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
+        <motion.div 
+          className="stat-card with-ring"
+          whileHover={{ scale: 1.02, boxShadow: '0 8px 25px rgba(0,0,0,0.1)' }}
+        >
+          <SlaProgressRing
+            progress={stats?.onTimeRate || 0}
+            size={70}
+            strokeWidth={6}
+            status={stats?.onTimeRate && stats.onTimeRate >= 90 ? 'completed' : stats?.onTimeRate && stats.onTimeRate >= 70 ? 'warning' : 'critical'}
+            showPercentage={true}
+          />
+          <div className="stat-info">
+            <span className="stat-value">{stats?.onTimeRate?.toFixed(0) || 0}%</span>
+            <span className="stat-label">On-Time Rate</span>
+          </div>
+        </motion.div>
+        <motion.div 
+          className="stat-card"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="stat-icon total">
             <HiOutlineChartBar />
           </div>
@@ -167,8 +234,11 @@ const SlaTrackerPage = () => {
             <span className="stat-value">{stats?.total || 0}</span>
             <span className="stat-label">Total Items</span>
           </div>
-        </div>
-        <div className="stat-card">
+        </motion.div>
+        <motion.div 
+          className="stat-card"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="stat-icon pending">
             <HiOutlineClock />
           </div>
@@ -176,17 +246,23 @@ const SlaTrackerPage = () => {
             <span className="stat-value">{stats?.pending || 0}</span>
             <span className="stat-label">Pending</span>
           </div>
-        </div>
-        <div className="stat-card">
+        </motion.div>
+        <motion.div 
+          className="stat-card"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="stat-icon completed">
             <HiOutlineCheckCircle />
           </div>
           <div className="stat-info">
-            <span className="stat-value">{stats?.onTimeRate?.toFixed(0) || 0}%</span>
-            <span className="stat-label">On-Time Rate</span>
+            <span className="stat-value">{stats?.completed || 0}</span>
+            <span className="stat-label">Completed</span>
           </div>
-        </div>
-        <div className="stat-card alert">
+        </motion.div>
+        <motion.div 
+          className="stat-card alert"
+          whileHover={{ scale: 1.02 }}
+        >
           <div className="stat-icon breached">
             <HiOutlineExclamation />
           </div>
@@ -194,38 +270,105 @@ const SlaTrackerPage = () => {
             <span className="stat-value">{stats?.breached || 0}</span>
             <span className="stat-label">Breached</span>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Critical Alerts */}
+      {/* Critical Alerts with Enhanced Countdown */}
       {criticalItems.length > 0 && (
-        <div className="alerts-section">
+        <motion.div 
+          className="alerts-section"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
           <div className="alerts-header">
-            <HiOutlineBell />
+            <HiOutlineBell className="animate-pulse" />
             <h2>Critical Alerts</h2>
             <span className="alert-count">{criticalItems.length}</span>
           </div>
           <div className="alerts-list">
-            {criticalItems.slice(0, 5).map(item => {
-              const time = getTimeRemaining(item.deadline);
-              const Icon = getTypeIcon(item.type);
-              return (
-                <div key={item._id} className={`alert-card ${time.status}`}>
-                  <Icon className="alert-icon" />
-                  <div className="alert-info">
-                    <span className="alert-title">{item.entityName}</span>
-                    <span className="alert-type">{getTypeLabel(item.type)}</span>
-                  </div>
-                  <div className="alert-time">
-                    <HiOutlineClock />
-                    {time.text}
-                  </div>
-                </div>
-              );
-            })}
+            <AnimatePresence>
+              {criticalItems.slice(0, 5).map((item, index) => {
+                const time = getTimeRemaining(item.deadline);
+                const Icon = getTypeIcon(item.type);
+                return (
+                  <motion.div 
+                    key={item._id} 
+                    className={`alert-card ${time.status}`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => setSelectedItem(item)}
+                  >
+                    <Icon className="alert-icon" />
+                    <div className="alert-info">
+                      <span className="alert-title">{item.entityName}</span>
+                      <span className="alert-type">{getTypeLabel(item.type)}</span>
+                    </div>
+                    <SlaCountdown
+                      targetDate={item.deadline}
+                      size="sm"
+                      variant="inline"
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
       )}
+
+      {/* Selected Item Detail Panel */}
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div 
+            className="detail-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedItem(null)}
+          >
+            <motion.div 
+              className="detail-modal"
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="detail-modal-header">
+                <h3>{selectedItem.entityName}</h3>
+                <button onClick={() => setSelectedItem(null)}>×</button>
+              </div>
+              <div className="detail-modal-content">
+                <SlaCountdown
+                  targetDate={selectedItem.deadline}
+                  label="Time Remaining"
+                  size="md"
+                />
+                <div className="detail-info-grid">
+                  <div className="detail-info-item">
+                    <span className="label">Type</span>
+                    <span className="value">{getTypeLabel(selectedItem.type)}</span>
+                  </div>
+                  <div className="detail-info-item">
+                    <span className="label">Priority</span>
+                    <span className={`priority-badge ${selectedItem.priority}`}>{selectedItem.priority}</span>
+                  </div>
+                  <div className="detail-info-item">
+                    <span className="label">Status</span>
+                    <span className={`status-badge ${selectedItem.status}`}>{selectedItem.status.replace(/_/g, ' ')}</span>
+                  </div>
+                  {selectedItem.assignedTo && (
+                    <div className="detail-info-item">
+                      <span className="label">Assigned To</span>
+                      <span className="value">{selectedItem.assignedTo.name}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="main-content">
         {/* Filters */}
@@ -339,7 +482,7 @@ const SlaTrackerPage = () => {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : viewMode === 'timeline' ? (
               <div className="timeline-view">
                 {slaItems.map(item => {
                   const time = getTimeRemaining(item.deadline);
@@ -378,6 +521,15 @@ const SlaTrackerPage = () => {
                     </div>
                   );
                 })}
+              </div>
+            ) : (
+              /* Kanban View */
+              <div className="kanban-view-wrapper">
+                <SlaPipelineKanban 
+                  items={pipelineItems}
+                  onItemClick={handleKanbanItemClick}
+                  showCounts={true}
+                />
               </div>
             )}
           </div>
@@ -461,6 +613,12 @@ const SlaTrackerPage = () => {
           overflow: hidden;
         }
 
+        .view-toggle.enhanced button {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
         .view-toggle button {
           padding: 8px 16px;
           border: none;
@@ -468,10 +626,15 @@ const SlaTrackerPage = () => {
           cursor: pointer;
           font-size: 13px;
           font-weight: 500;
+          transition: all 0.2s;
+        }
+
+        .view-toggle button:hover {
+          background: var(--gray-100, #f3f4f6);
         }
 
         .view-toggle button.active {
-          background: var(--primary);
+          background: linear-gradient(135deg, var(--primary-600, #1E5AAF), var(--primary-500, #3B82F6));
           color: white;
         }
 
@@ -485,6 +648,21 @@ const SlaTrackerPage = () => {
           border-radius: 8px;
           cursor: pointer;
           font-weight: 500;
+          transition: all 0.2s;
+        }
+
+        .btn-refresh:hover {
+          border-color: var(--primary-500);
+          color: var(--primary-600);
+        }
+
+        .btn-refresh .spin {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .stats-grid {
@@ -492,6 +670,10 @@ const SlaTrackerPage = () => {
           grid-template-columns: repeat(4, 1fr);
           gap: 16px;
           margin-bottom: 24px;
+        }
+
+        .stats-grid.enhanced {
+          grid-template-columns: repeat(5, 1fr);
         }
 
         .stat-card {
@@ -502,6 +684,17 @@ const SlaTrackerPage = () => {
           background: white;
           border-radius: 12px;
           border: 1px solid var(--border);
+          transition: all 0.2s;
+        }
+
+        .stat-card.with-ring {
+          flex-direction: column;
+          text-align: center;
+          gap: 8px;
+        }
+
+        .stat-card.with-ring .stat-info {
+          display: none;
         }
 
         .stat-card.alert {
@@ -1264,6 +1457,120 @@ const SlaTrackerPage = () => {
           .timeline-meta {
             flex-wrap: wrap;
           }
+        }
+
+        /* Kanban View Wrapper */
+        .kanban-view-wrapper {
+          padding: 20px;
+          background: var(--gray-50, #f9fafb);
+        }
+
+        /* Detail Overlay and Modal */
+        .detail-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 100;
+          padding: 20px;
+        }
+
+        .detail-modal {
+          background: white;
+          border-radius: 16px;
+          width: 100%;
+          max-width: 500px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .detail-modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px;
+          border-bottom: 1px solid var(--gray-200, #e5e7eb);
+        }
+
+        .detail-modal-header h3 {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--primary-900, #0A2463);
+          margin: 0;
+        }
+
+        .detail-modal-header button {
+          width: 32px;
+          height: 32px;
+          border: none;
+          background: var(--gray-100, #f3f4f6);
+          border-radius: 8px;
+          font-size: 20px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--gray-500);
+        }
+
+        .detail-modal-header button:hover {
+          background: var(--gray-200, #e5e7eb);
+        }
+
+        .detail-modal-content {
+          padding: 24px;
+        }
+
+        .detail-info-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+          margin-top: 20px;
+        }
+
+        .detail-info-item {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .detail-info-item .label {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--gray-500, #6b7280);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .detail-info-item .value {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--gray-900, #111827);
+        }
+
+        /* Alert Card Enhanced */
+        .alert-card {
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .alert-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animate pulse for bell icon */
+        .animate-pulse {
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
         }
       `}</style>
     </div>
