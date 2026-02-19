@@ -47,6 +47,10 @@ export const companyApi = {
   getSubContractors: () => api.get("/company/subcontractors"),
   deleteSubContractor: (id: string) =>
     api.delete(`/company/subcontractors/${id}`),
+  // Bill review (EPC verifies OPS_APPROVED bills)
+  getBillsForReview: () => api.get("/company/bills/pending-review"),
+  verifyBill: (id: string, data: { decision: string; notes?: string }) =>
+    api.post(`/company/bills/${id}/verify`, data),
 };
 
 // ============= Cases APIs =============

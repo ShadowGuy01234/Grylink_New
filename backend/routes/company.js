@@ -123,6 +123,54 @@ router.get(
   },
 );
 
+// GET /api/company/bills/pending-review - Bills awaiting EPC verification (OPS_APPROVED status)
+router.get(
+  "/bills/pending-review",
+  authenticate,
+  authorize("epc"),
+  async (req, res) => {
+    try {
+      const Bill = require("../models/Bill");
+      const bills = await Bill.find({
+        linkedEpcId: req.user.companyId,
+        status: "OPS_APPROVED",
+      })
+        .sort({ createdAt: -1 })
+        .populate("subContractorId", "companyName contactName")
+        .populate("linkedEpcId", "companyName");
+      res.json({ bills });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+// POST /api/company/bills/:id/verify - EPC approves or rejects an OPS_APPROVED bill
+router.post(
+  "/bills/:id/verify",
+  authenticate,
+  authorize("epc"),
+  async (req, res) => {
+    try {
+      const { decision, notes } = req.body;
+      if (!decision || !["approve", "reject"].includes(decision)) {
+        return res.status(400).json({ error: "Decision must be approve or reject" });
+      }
+      const verificationService = require("../services/verificationService");
+      const bill = await verificationService.epcVerifyBill(
+        req.params.id,
+        decision,
+        notes,
+        req.user._id,
+        req.user.companyId,
+      );
+      res.json({ bill });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
 // GET /api/company/active - Get all active EPC companies (for SC profile completion)
 router.get("/active", authenticate, async (req, res) => {
   try {

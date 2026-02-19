@@ -16,6 +16,7 @@ const verificationService = require("./verificationService");
 // Delegate Verification methods
 const verifyCompanyDocs = verificationService.verifyCompanyDocs;
 const verifyBill = verificationService.verifyBill;
+const epcVerifyBill = verificationService.epcVerifyBill;
 const verifyDocument = verificationService.verifyDocument;
 const verifyKycDocument = verificationService.verifyKycDocument;
 

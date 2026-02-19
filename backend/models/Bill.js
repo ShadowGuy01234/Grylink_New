@@ -71,7 +71,7 @@ const billSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['UPLOADED', 'PENDING_WCC', 'PENDING_MEASUREMENT', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED', 'SUBMITTED_TO_NBFC'],
+      enum: ['UPLOADED', 'PENDING_WCC', 'PENDING_MEASUREMENT', 'UNDER_REVIEW', 'OPS_APPROVED', 'EPC_VERIFIED', 'EPC_REJECTED', 'VERIFIED', 'REJECTED', 'SUBMITTED_TO_NBFC'],
       default: 'UPLOADED',
     },
 

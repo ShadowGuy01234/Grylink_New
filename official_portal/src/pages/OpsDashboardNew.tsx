@@ -224,7 +224,9 @@ const OpsDashboardNew = () => {
       REJECTED: "badge-red",
       KYC_COMPLETED: "badge-green",
       READY_FOR_COMPANY_REVIEW: "badge-purple",
+      OPS_APPROVED: "badge-blue",
       EPC_VERIFIED: "badge-green",
+      EPC_REJECTED: "badge-red",
       BID_PLACED: "badge-blue",
       COMMERCIAL_LOCKED: "badge-green",
       ACTIVE: "badge-green",
@@ -487,45 +489,6 @@ const OpsDashboardNew = () => {
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="overview-section full-width">
-            <h2>
-              <HiOutlineDocumentText /> Verification Workflow
-            </h2>
-            <div className="workflow-summary">
-              <div className="workflow-step">
-                <div className="step-number">1</div>
-                <div className="step-content">
-                  <h4>EPC Verification</h4>
-                  <p>{pending.pendingCompanies.length} pending (Buyer docs)</p>
-                </div>
-              </div>
-              <div className="workflow-arrow">→</div>
-              <div className="workflow-step">
-                <div className="step-number">2</div>
-                <div className="step-content">
-                  <h4>Bill Verification</h4>
-                  <p>{pending.pendingBills.length} pending (Invoice/WCC)</p>
-                </div>
-              </div>
-              <div className="workflow-arrow">→</div>
-              <div className="workflow-step">
-                <div className="step-number">3</div>
-                <div className="step-content">
-                  <h4>Seller KYC</h4>
-                  <p>{pending.pendingKyc.length} pending (SubContractor)</p>
-                </div>
-              </div>
-              <div className="workflow-arrow">→</div>
-              <div className="workflow-step completed">
-                <div className="step-number">4</div>
-                <div className="step-content">
-                  <h4>Case Created</h4>
-                  <p>{cases.length} total</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -815,54 +778,6 @@ const OpsDashboardNew = () => {
           color: var(--text-muted, #64748b);
         }
 
-        /* Workflow Summary */
-        .workflow-summary {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 20px 0;
-        }
-
-        .workflow-step {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          flex: 1;
-        }
-
-        .workflow-step .step-number {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: var(--primary, #2563eb);
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-        }
-
-        .workflow-step.completed .step-number {
-          background: #10b981;
-        }
-
-        .workflow-step .step-content h4 {
-          font-size: 14px;
-          font-weight: 600;
-          color: var(--text-primary, #1e293b);
-        }
-
-        .workflow-step .step-content p {
-          font-size: 12px;
-          color: var(--text-muted, #64748b);
-        }
-
-        .workflow-arrow {
-          font-size: 24px;
-          color: var(--border, #e2e8f0);
-          padding: 0 8px;
-        }
-
         .empty-state {
           display: flex;
           flex-direction: column;
@@ -970,15 +885,6 @@ const OpsDashboardNew = () => {
         @media (max-width: 768px) {
           .overview-grid {
             grid-template-columns: 1fr;
-          }
-
-          .workflow-summary {
-            flex-direction: column;
-            gap: 16px;
-          }
-
-          .workflow-arrow {
-            transform: rotate(90deg);
           }
 
           .escalation-banner {
@@ -2312,61 +2218,78 @@ const BillsTab = ({
 
       {/* Bill Review Modal */}
       {selectedBill && (
-        <div className="modal-overlay" onClick={() => setSelectedBill(null)}>
+        <div className="bill-modal-overlay" onClick={() => setSelectedBill(null)}>
           <div
-            className="modal-content large"
+            className="bill-modal-container"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-header">
-              <h2>Review Bill: {selectedBill.billNumber || "N/A"}</h2>
+            <div className="bill-modal-header">
+              <div className="bill-modal-title-group">
+                <span className="bill-modal-icon"><HiOutlineDocumentText /></span>
+                <div>
+                  <p className="bill-modal-label">Invoice Review</p>
+                  <h2 className="bill-modal-title">Bill #{selectedBill.billNumber || "N/A"}</h2>
+                </div>
+              </div>
               <button
-                className="modal-close"
+                className="bill-modal-close"
                 onClick={() => setSelectedBill(null)}
               >
                 ×
               </button>
             </div>
 
-            <div className="modal-body">
-              <div className="bill-details-grid">
-                <div className="detail-item">
-                  <label>Sub-Contractor</label>
-                  <span>
-                    {selectedBill.subContractorId?.companyName || "—"}
-                  </span>
+            <div className="bill-modal-body">
+              {/* Info Banner */}
+              <div className="bill-info-banner">
+                <div className="bill-info-party">
+                  <HiOutlineUser />
+                  <div>
+                    <p className="party-label">Sub-Contractor</p>
+                    <p className="party-name">{selectedBill.subContractorId?.companyName || "—"}</p>
+                  </div>
                 </div>
-                <div className="detail-item">
-                  <label>EPC Company</label>
-                  <span>{selectedBill.linkedEpcId?.companyName || "—"}</span>
+                <div className="bill-info-divider" />
+                <div className="bill-info-party">
+                  <HiOutlineOfficeBuilding />
+                  <div>
+                    <p className="party-label">EPC Company</p>
+                    <p className="party-name">{selectedBill.linkedEpcId?.companyName || "—"}</p>
+                  </div>
                 </div>
-                <div className="detail-item">
-                  <label>Amount</label>
-                  <span className="amount-large">
-                    {selectedBill.amount
-                      ? `₹${selectedBill.amount.toLocaleString()}`
-                      : "—"}
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <label>Description</label>
-                  <span>{selectedBill.description || "—"}</span>
+                <div className="bill-info-divider" />
+                <div className="bill-info-amount">
+                  <p className="party-label">Invoice Amount</p>
+                  <p className="amount-hero">
+                    {selectedBill.amount ? `₹${selectedBill.amount.toLocaleString()}` : "—"}
+                  </p>
                 </div>
               </div>
 
+              {/* Description */}
+              {selectedBill.description && (
+                <div className="bill-description-row">
+                  <span className="desc-label">Description</span>
+                  <span className="desc-value">{selectedBill.description}</span>
+                </div>
+              )}
+
               {/* Documents */}
-              <div className="documents-section">
-                <h3>
-                  <HiOutlineDocumentText /> Documents
-                </h3>
-                <div className="docs-row">
+              <div className="bill-docs-section">
+                <p className="bill-docs-heading">Attached Documents</p>
+                <div className="bill-docs-grid">
                   {selectedBill.fileUrl && (
                     <a
                       href={selectedBill.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="doc-link"
+                      className="bill-doc-card primary"
                     >
-                      <HiOutlineDocumentText /> Bill Document
+                      <span className="bill-doc-icon"><HiOutlineDocumentText /></span>
+                      <div className="bill-doc-info">
+                        <span className="bill-doc-name">Bill Document</span>
+                        <span className="bill-doc-action">Click to open →</span>
+                      </div>
                     </a>
                   )}
                   {selectedBill.wcc?.uploaded && (
@@ -2374,12 +2297,16 @@ const BillsTab = ({
                       href={selectedBill.wcc.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="doc-link"
+                      className="bill-doc-card"
                     >
-                      <HiOutlineDocumentText /> WCC
-                      {selectedBill.wcc.verified && (
-                        <span className="verified-badge">✓ Verified</span>
-                      )}
+                      <span className="bill-doc-icon"><HiOutlinePaperClip /></span>
+                      <div className="bill-doc-info">
+                        <span className="bill-doc-name">WCC</span>
+                        <span className="bill-doc-action">
+                          {selectedBill.wcc.verified ? "✓ Verified" : "Click to open →"}
+                        </span>
+                      </div>
+                      {selectedBill.wcc.verified && <span className="doc-verified-chip">Verified</span>}
                     </a>
                   )}
                   {selectedBill.measurementSheet?.uploaded && (
@@ -2387,48 +2314,56 @@ const BillsTab = ({
                       href={selectedBill.measurementSheet.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="doc-link"
+                      className="bill-doc-card"
                     >
-                      <HiOutlineDocumentText /> Measurement Sheet
-                      {selectedBill.measurementSheet.certified && (
-                        <span className="verified-badge">✓ Certified</span>
-                      )}
+                      <span className="bill-doc-icon"><HiOutlinePaperClip /></span>
+                      <div className="bill-doc-info">
+                        <span className="bill-doc-name">Measurement Sheet</span>
+                        <span className="bill-doc-action">
+                          {selectedBill.measurementSheet.certified ? "✓ Certified" : "Click to open →"}
+                        </span>
+                      </div>
+                      {selectedBill.measurementSheet.certified && <span className="doc-verified-chip">Certified</span>}
                     </a>
+                  )}
+                  {!selectedBill.fileUrl && !selectedBill.wcc?.uploaded && !selectedBill.measurementSheet?.uploaded && (
+                    <p className="no-docs-note">No documents attached</p>
                   )}
                 </div>
               </div>
 
-              <div className="notes-section">
-                <label>Verification Notes</label>
+              {/* Notes */}
+              <div className="bill-notes-section">
+                <label className="bill-notes-label">Verification Notes <span>(optional)</span></label>
                 <textarea
+                  className="bill-notes-textarea"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add notes..."
+                  placeholder="Add internal notes about this verification..."
                   rows={3}
                 />
               </div>
             </div>
 
-            <div className="modal-footer">
-              <div />
-              <div className="footer-actions">
+            <div className="bill-modal-footer">
+              <button
+                className="bill-btn-cancel"
+                onClick={() => setSelectedBill(null)}
+              >
+                Cancel
+              </button>
+              <div className="bill-footer-actions">
                 <button
-                  className="btn-outline"
-                  onClick={() => setSelectedBill(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn-danger"
+                  className="bill-btn-reject"
                   onClick={() => handleVerify("reject")}
                 >
-                  Reject
+                  <HiOutlineXCircle /> Reject
                 </button>
                 <button
-                  className="btn-success"
+                  className="bill-btn-approve"
                   onClick={() => handleVerify("approve")}
                 >
-                  Approve
+                  <HiOutlineCheckCircle /> Approve
                 </button>
               </div>
             </div>
@@ -2442,57 +2377,380 @@ const BillsTab = ({
           color: var(--text-primary, #1e293b);
         }
 
-        .bill-details-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-          padding: 16px;
-          background: var(--bg-secondary, #f8fafc);
-          border-radius: 8px;
-          margin-bottom: 24px;
-        }
-
-        .detail-item label {
-          display: block;
-          font-size: 12px;
-          color: var(--text-muted, #64748b);
-          margin-bottom: 4px;
-        }
-
-        .detail-item span {
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .amount-large {
-          font-size: 20px !important;
-          font-weight: 700 !important;
-          color: var(--primary, #2563eb) !important;
-        }
-
-        .docs-row {
+        /* ── Bill Review Modal ── */
+        .bill-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.55);
+          backdrop-filter: blur(2px);
           display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
         }
 
-        .doc-link {
-          display: inline-flex;
+        .bill-modal-container {
+          background: white;
+          border-radius: 16px;
+          max-height: 90vh;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          width: 720px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+          animation: billModalIn 0.2s ease;
+        }
+
+        @keyframes billModalIn {
+          from { opacity: 0; transform: translateY(16px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .bill-modal-header {
+          display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 8px;
-          padding: 12px 16px;
-          background: var(--bg-secondary, #f8fafc);
+          padding: 20px 24px;
+          border-bottom: 1px solid var(--border, #e2e8f0);
+          background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+          border-radius: 16px 16px 0 0;
+        }
+
+        .bill-modal-title-group {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .bill-modal-icon {
+          width: 44px;
+          height: 44px;
+          background: #dbeafe;
+          color: #2563eb;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 22px;
+        }
+
+        .bill-modal-label {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.6px;
+          color: var(--text-muted, #64748b);
+          margin-bottom: 2px;
+        }
+
+        .bill-modal-title {
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--text-primary, #1e293b);
+          margin: 0;
+        }
+
+        .bill-modal-close {
+          width: 34px;
+          height: 34px;
+          border: none;
+          background: #f1f5f9;
           border-radius: 8px;
-          color: var(--primary, #2563eb);
+          font-size: 22px;
+          line-height: 1;
+          cursor: pointer;
+          color: var(--text-muted, #64748b);
+          transition: background 0.2s;
+        }
+        .bill-modal-close:hover { background: #e2e8f0; }
+
+        .bill-modal-body {
+          padding: 24px;
+          overflow-y: auto;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        /* Info Banner */
+        .bill-info-banner {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          overflow: hidden;
+        }
+
+        .bill-info-party {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 20px;
+          flex: 1;
+          font-size: 22px;
+          color: #94a3b8;
+        }
+
+        .bill-info-divider {
+          width: 1px;
+          height: 48px;
+          background: #e2e8f0;
+          flex-shrink: 0;
+        }
+
+        .bill-info-amount {
+          padding: 16px 20px;
+          flex-shrink: 0;
+        }
+
+        .party-label {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: var(--text-muted, #64748b);
+          margin: 0 0 3px;
+        }
+
+        .party-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text-primary, #1e293b);
+          margin: 0;
+        }
+
+        .amount-hero {
+          font-size: 22px;
+          font-weight: 800;
+          color: #2563eb;
+          margin: 0;
+          font-variant-numeric: tabular-nums;
+        }
+
+        /* Description row */
+        .bill-description-row {
+          display: flex;
+          align-items: baseline;
+          gap: 12px;
+          padding: 12px 16px;
+          background: #fffbeb;
+          border: 1px solid #fde68a;
+          border-radius: 8px;
+        }
+
+        .desc-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: #92400e;
+          white-space: nowrap;
+        }
+
+        .desc-value {
+          font-size: 14px;
+          color: #78350f;
+        }
+
+        /* Documents section */
+        .bill-docs-section {}
+
+        .bill-docs-heading {
+          font-size: 13px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: var(--text-muted, #64748b);
+          margin: 0 0 12px;
+        }
+
+        .bill-docs-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 12px;
+        }
+
+        .bill-doc-card {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 16px;
+          background: white;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 10px;
           text-decoration: none;
+          color: inherit;
+          transition: all 0.2s;
+          position: relative;
+          cursor: pointer;
+        }
+
+        .bill-doc-card:hover {
+          border-color: #2563eb;
+          box-shadow: 0 2px 8px rgba(37,99,235,0.12);
+          transform: translateY(-1px);
+        }
+
+        .bill-doc-card.primary {
+          border-color: #93c5fd;
+          background: #f0f7ff;
+        }
+
+        .bill-doc-card.primary:hover {
+          background: #dbeafe;
+          border-color: #2563eb;
+        }
+
+        .bill-doc-icon {
+          width: 38px;
+          height: 38px;
+          background: #dbeafe;
+          color: #2563eb;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+          flex-shrink: 0;
+        }
+
+        .bill-doc-info {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+
+        .bill-doc-name {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-primary, #1e293b);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .bill-doc-action {
+          font-size: 11px;
+          color: var(--text-muted, #64748b);
+        }
+
+        .doc-verified-chip {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          font-size: 10px;
+          font-weight: 700;
+          background: #d1fae5;
+          color: #059669;
+          padding: 2px 7px;
+          border-radius: 20px;
+        }
+
+        .no-docs-note {
+          font-size: 14px;
+          color: var(--text-muted, #64748b);
+          font-style: italic;
+        }
+
+        /* Notes section */
+        .bill-notes-section {}
+
+        .bill-notes-label {
+          display: block;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-primary, #1e293b);
+          margin-bottom: 8px;
+        }
+
+        .bill-notes-label span {
+          font-weight: 400;
+          color: var(--text-muted, #64748b);
+        }
+
+        .bill-notes-textarea {
+          width: 100%;
+          padding: 12px 14px;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 14px;
+          resize: vertical;
+          font-family: inherit;
+          color: var(--text-primary, #1e293b);
+          transition: border-color 0.2s;
+          box-sizing: border-box;
+        }
+
+        .bill-notes-textarea:focus {
+          outline: none;
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+        /* Footer */
+        .bill-modal-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 24px;
+          border-top: 1px solid #e2e8f0;
+          background: #f8fafc;
+          border-radius: 0 0 16px 16px;
+        }
+
+        .bill-footer-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .bill-btn-cancel {
+          padding: 10px 18px;
+          border: 1.5px solid #e2e8f0;
+          background: white;
+          border-radius: 8px;
+          cursor: pointer;
           font-size: 14px;
           font-weight: 500;
+          color: var(--text-muted, #64748b);
           transition: all 0.2s;
         }
+        .bill-btn-cancel:hover { background: #f1f5f9; border-color: #cbd5e1; }
 
-        .doc-link:hover {
-          background: #dbeafe;
+        .bill-btn-reject {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 10px 20px;
+          background: white;
+          border: 1.5px solid #ef4444;
+          color: #ef4444;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.2s;
         }
+        .bill-btn-reject:hover { background: #fef2f2; }
+
+        .bill-btn-approve {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 10px 24px;
+          background: #10b981;
+          border: none;
+          color: white;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          box-shadow: 0 2px 6px rgba(16,185,129,0.3);
+          transition: all 0.2s;
+        }
+        .bill-btn-approve:hover { background: #059669; box-shadow: 0 4px 10px rgba(16,185,129,0.35); }
 
         .verified-badge {
           background: #d1fae5;
@@ -2502,6 +2760,114 @@ const BillsTab = ({
           font-size: 11px;
           margin-left: 8px;
         }
+
+        /* ── Shared tab layout styles (self-contained) ── */
+        .tab-content {
+          background: white;
+          border-radius: 12px;
+          border: 1px solid var(--border, #e2e8f0);
+          overflow: hidden;
+        }
+
+        .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px;
+          border-bottom: 1px solid var(--border, #e2e8f0);
+        }
+
+        .section-header h2 {
+          font-size: 18px;
+          font-weight: 600;
+        }
+
+        .section-header .count {
+          font-size: 14px;
+          color: var(--text-muted, #64748b);
+        }
+
+        .empty-card {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          padding: 60px 20px;
+          color: var(--text-muted, #64748b);
+        }
+
+        .empty-card svg {
+          font-size: 48px;
+          color: #10b981;
+        }
+
+        .table-wrapper {
+          overflow-x: auto;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        th, td {
+          padding: 14px 20px;
+          text-align: left;
+          border-bottom: 1px solid var(--border, #e2e8f0);
+        }
+
+        th {
+          background: var(--bg-secondary, #f8fafc);
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: var(--text-muted, #64748b);
+        }
+
+        td .amount {
+          font-weight: 600;
+          color: var(--text-primary, #1e293b);
+        }
+
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 14px;
+          background: var(--primary, #2563eb);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 500;
+          transition: all 0.2s;
+        }
+
+        .btn-primary:hover { background: #1d4ed8; }
+
+        .btn-sm {
+          padding: 6px 12px;
+          font-size: 12px;
+        }
+
+        .badge {
+          display: inline-block;
+          padding: 3px 10px;
+          border-radius: 9999px;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+        }
+
+        .badge-green  { background: #d1fae5; color: #059669; }
+        .badge-yellow { background: #fef3c7; color: #d97706; }
+        .badge-red    { background: #fee2e2; color: #dc2626; }
+        .badge-blue   { background: #dbeafe; color: #2563eb; }
+        .badge-purple { background: #ede9fe; color: #7c3aed; }
+        .badge-gray   { background: #f1f5f9; color: #64748b; }
       `}</style>
     </div>
   );

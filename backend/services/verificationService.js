@@ -47,14 +47,41 @@ const verifyBill = async (billId, decision, notes, opsUserId) => {
     throw new Error("Bill is not in UPLOADED status");
 
   if (decision === "approve") {
-    bill.status = "VERIFIED";
-    bill.verifiedBy = opsUserId;
-    bill.verifiedAt = new Date();
+    // Ops approves → awaiting EPC confirmation
+    bill.status = "OPS_APPROVED";
+    bill.opsVerifiedBy = opsUserId;
+    bill.opsVerifiedAt = new Date();
   } else {
     bill.status = "REJECTED";
   }
   bill.verificationNotes = notes;
   bill.statusHistory.push({ status: bill.status, changedBy: opsUserId, notes });
+  await bill.save();
+
+  return bill;
+};
+
+// EPC partner verifies a bill that Ops has already approved
+const epcVerifyBill = async (billId, decision, notes, epcUserId, companyId) => {
+  const bill = await Bill.findById(billId).populate("linkedEpcId");
+  if (!bill) throw new Error("Bill not found");
+  if (bill.status !== "OPS_APPROVED")
+    throw new Error("Bill is not awaiting EPC verification");
+
+  // Ensure this EPC owns the bill
+  if (bill.linkedEpcId?._id?.toString() !== companyId?.toString()) {
+    throw new Error("You do not have permission to verify this bill");
+  }
+
+  if (decision === "approve") {
+    bill.status = "EPC_VERIFIED";
+    bill.verifiedBy = epcUserId;
+    bill.verifiedAt = new Date();
+  } else {
+    bill.status = "EPC_REJECTED";
+  }
+  bill.verificationNotes = notes;
+  bill.statusHistory.push({ status: bill.status, changedBy: epcUserId, notes });
   await bill.save();
 
   return bill;
@@ -121,6 +148,7 @@ const verifyKycDocument = async (docId, decision, notes, opsUserId) => {
 module.exports = {
   verifyCompanyDocs,
   verifyBill,
+  epcVerifyBill,
   verifyDocument,
   verifyKycDocument,
 };
