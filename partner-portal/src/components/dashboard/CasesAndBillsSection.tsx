@@ -1,17 +1,17 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Case, Bill } from "../../types";
+import { Case } from "../../types";
 
 interface CasesAndBillsSectionProps {
   cases: Case[];
-  bills: Bill[]; // Assuming bills are sometimes passed or derived
+  // bills: Bill[]; // Removed unused prop
   onReviewCase: (caseId: string, decision: string) => Promise<void>;
   isEpc: boolean;
 }
 
 export const CasesAndBillsSection: React.FC<CasesAndBillsSectionProps> = ({
   cases,
-  bills,
+  // bills,
   onReviewCase,
   isEpc,
 }) => {

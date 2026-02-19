@@ -420,7 +420,6 @@ const DashboardPage = () => {
           {activeTab === "cases" && (areDocsVerified || isNbfc) && (
             <CasesAndBillsSection
               cases={cases}
-              bills={[]} // If needed
               onReviewCase={handleReviewCase}
               isEpc={isEpc}
             />

@@ -231,9 +231,9 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                       <div className="upload-wrapper">
                         <input
                           type="file"
-                          ref={(el) =>
-                            (fileInputRefs.current[docType.key] = el)
-                          }
+                          ref={(el) => {
+                            fileInputRefs.current[docType.key] = el;
+                          }}
                           onChange={(e) => handleFileChange(docType.key, e)}
                           style={{ display: "none" }}
                           accept=".pdf,.jpg,.jpeg,.png"
@@ -252,7 +252,9 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                   <div className="upload-wrapper">
                     <input
                       type="file"
-                      ref={(el) => (fileInputRefs.current[docType.key] = el)}
+                      ref={(el) => {
+                        fileInputRefs.current[docType.key] = el;
+                      }}
                       onChange={(e) => handleFileChange(docType.key, e)}
                       style={{ display: "none" }}
                       accept=".pdf,.jpg,.jpeg,.png"
