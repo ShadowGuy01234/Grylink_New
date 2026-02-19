@@ -3,6 +3,7 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const { uploadChat } = require('../middleware/upload');
 const opsService = require('../services/opsService');
+const SubContractor = require('../models/SubContractor');
 
 // POST /api/ops/companies/:id/verify - Verify company docs (Step 6)
 router.post(
@@ -49,26 +50,6 @@ router.post(
   }
 );
 
-// POST /api/ops/kyc/:id/request - Request KYC docs (Step 14)
-router.post(
-  '/kyc/:id/request',
-  authenticate,
-  authorize('ops', 'admin'),
-  async (req, res) => {
-    try {
-      const { message } = req.body;
-      if (!message) {
-        return res.status(400).json({ error: 'Message is required' });
-      }
-
-      const result = await opsService.requestKycDocs(req.params.id, message, req.user._id);
-      res.json(result);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  }
-);
-
 // POST /api/ops/kyc/:id/complete - Complete KYC (Step 14)
 router.post(
   '/kyc/:id/complete',
@@ -77,6 +58,73 @@ router.post(
   async (req, res) => {
     try {
       const result = await opsService.completeKyc(req.params.id, req.user._id);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// POST /api/ops/kyc/:id/request-additional - Request an additional document from the SC
+router.post(
+  '/kyc/:id/request-additional',
+  authenticate,
+  authorize('ops', 'admin'),
+  async (req, res) => {
+    try {
+      const { label, description } = req.body;
+      if (!label) {
+        return res.status(400).json({ error: 'Document label is required' });
+      }
+      const sc = await SubContractor.findById(req.params.id);
+      if (!sc) {
+        return res.status(404).json({ error: 'Sub-contractor not found' });
+      }
+      sc.additionalDocuments.push({
+        label,
+        description: description || '',
+        requestedBy: req.user._id,
+        requestedAt: new Date(),
+      });
+      await sc.save();
+      res.json({ success: true, message: 'Additional document requested', additionalDocuments: sc.additionalDocuments });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// POST /api/ops/kyc/:id/verify-bank-details - Verify seller bank details
+router.post(
+  '/kyc/:id/verify-bank-details',
+  authenticate,
+  authorize('ops', 'admin'),
+  async (req, res) => {
+    try {
+      const { decision, notes } = req.body;
+      if (!decision || !['approve', 'reject'].includes(decision)) {
+        return res.status(400).json({ error: 'Decision must be approve or reject' });
+      }
+      const result = await opsService.verifyBankDetails(req.params.id, decision, notes, req.user._id);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);
+
+// POST /api/ops/kyc/:id/verify-additional/:docId - Verify an additional document
+router.post(
+  '/kyc/:id/verify-additional/:docId',
+  authenticate,
+  authorize('ops', 'admin'),
+  async (req, res) => {
+    try {
+      const { decision } = req.body;
+      if (!decision || !['approve', 'reject'].includes(decision)) {
+        return res.status(400).json({ error: 'Decision must be approve or reject' });
+      }
+      const result = await opsService.verifyAdditionalDocument(req.params.id, req.params.docId, decision, req.user._id);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: error.message });

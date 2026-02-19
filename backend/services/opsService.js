@@ -286,7 +286,7 @@ const getPendingKyc = async () => {
           type: docType,
           fileName: doc.fileName || docType,
           fileUrl: doc.fileUrl,
-          status: doc.verified ? "verified" : "pending",
+          status: doc.verified ? "verified" : (doc.verifiedAt ? "rejected" : "pending"),
           uploadedAt: doc.uploadedAt,
         });
       }
@@ -342,7 +342,7 @@ const getSellerKyc = async (sellerId) => {
         type: docType,
         fileName: doc.fileName || docType,
         fileUrl: doc.fileUrl,
-        status: doc.verified ? "verified" : "pending",
+        status: doc.verified ? "verified" : (doc.verifiedAt ? "rejected" : "pending"),
         uploadedAt: doc.uploadedAt,
       });
     }
@@ -365,12 +365,64 @@ const getSellerKyc = async (sellerId) => {
         }
       : null,
     kycStatus: s.kycStatus,
+    status: s.status,
     kycDocuments: kycDocArray,
+    bankDetails: s.bankDetails
+      ? {
+          accountHolderName: s.bankDetails.accountHolderName,
+          accountNumber: s.bankDetails.accountNumber,
+          ifscCode: s.bankDetails.ifscCode,
+          bankName: s.bankDetails.bankName,
+          branchName: s.bankDetails.branchName,
+          accountType: s.bankDetails.accountType,
+          verificationStatus: s.bankDetails.verificationStatus,
+          verifiedAt: s.bankDetails.verifiedAt,
+        }
+      : null,
+    additionalDocuments: (s.additionalDocuments || []).map((doc) => ({
+      _id: doc._id,
+      label: doc.label,
+      description: doc.description,
+      requestedAt: doc.requestedAt,
+      fileName: doc.fileName,
+      fileUrl: doc.fileUrl,
+      status: doc.status,
+      uploadedAt: doc.uploadedAt,
+    })),
     createdAt: s.createdAt,
     kycCompletedAt: s.kycCompletedAt,
     kycCompletedBy: s.kycCompletedBy,
     kycNotes: s.kycNotes,
   };
+};
+
+// Verify bank details for a seller
+const verifyBankDetails = async (sellerId, decision, notes, opsUserId) => {
+  const seller = await SubContractor.findById(sellerId);
+  if (!seller) throw new Error("Seller not found");
+  if (!seller.bankDetails || !seller.bankDetails.accountNumber) {
+    throw new Error("No bank details found for this seller");
+  }
+
+  seller.bankDetails.verificationStatus = decision === "approve" ? "VERIFIED" : "FAILED";
+  seller.bankDetails.verifiedAt = new Date();
+  if (notes) seller.bankDetails.rejectionReason = notes;
+
+  await seller.save();
+  return { success: true, bankDetails: seller.bankDetails };
+};
+
+// Verify individual additional document
+const verifyAdditionalDocument = async (sellerId, docId, decision, opsUserId) => {
+  const seller = await SubContractor.findById(sellerId);
+  if (!seller) throw new Error("Seller not found");
+
+  const doc = seller.additionalDocuments.id(docId);
+  if (!doc) throw new Error("Additional document not found");
+
+  doc.status = decision === "approve" ? "VERIFIED" : "REJECTED";
+  await seller.save();
+  return { success: true, document: doc };
 };
 
 // Verify seller KYC
@@ -452,6 +504,8 @@ module.exports = {
   getSellerKyc,
   verifyKyc,
   verifyKycDocument,
+  verifyBankDetails,
+  verifyAdditionalDocument,
   getSlaStats,
   getTeamWorkload,
 };

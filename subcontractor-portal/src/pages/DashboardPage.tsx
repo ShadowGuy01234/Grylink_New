@@ -1,14 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { scApi, kycApi } from "@/api";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { scApi } from "@/api";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,30 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  User,
-  FileText,
-  Send,
-  FolderOpen,
-  Gavel,
-  MessageSquare,
-  Upload,
-  Building2,
-  Phone,
-  Hash,
-  ChevronRight,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  XCircle,
-  TrendingUp,
-  LayoutDashboard,
-  ArrowLeft,
-  Paperclip,
-  MapPin,
-  CreditCard,
+  User, FileText, Send, FolderOpen, Gavel, Upload, Building2, Phone,
+  Hash, ChevronRight, CheckCircle2, Clock, AlertCircle, XCircle,
+  TrendingUp, LayoutDashboard, MapPin, CreditCard, IndianRupee,
+  ArrowUpRight, CalendarDays,
 } from "lucide-react";
 
 const DashboardPage = () => {
+  const { logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -64,9 +43,10 @@ const DashboardPage = () => {
     description: "",
   });
 
-  // CWC
-  const [selectedBillForCwc, setSelectedBillForCwc] = useState("");
-  const [submittingCwc, setSubmittingCwc] = useState(false);
+  // Declaration dialog
+  const [showDeclarationDialog, setShowDeclarationDialog] = useState(false);
+  const [declarationAccepted, setDeclarationAccepted] = useState(false);
+  const [pendingBillForm, setPendingBillForm] = useState<FormData | null>(null);
 
   // Bids
   const [respondingBid, setRespondingBid] = useState<string | null>(null);
@@ -76,24 +56,9 @@ const DashboardPage = () => {
     message: "",
   });
 
-  // KYC Chat
-  const [selectedCwcRf, setSelectedCwcRf] = useState<any>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatFile, setChatFile] = useState<File | null>(null);
-  const [loadingChat, setLoadingChat] = useState(false);
-  const [sendingChat, setSendingChat] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     fetchDashboard();
   }, []);
-
-  useEffect(() => {
-    if (chatMessages.length > 0) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatMessages]);
 
   const fetchDashboard = async () => {
     try {
@@ -131,52 +96,41 @@ const DashboardPage = () => {
     }
   };
 
-  const handleUploadBill = async (e: React.FormEvent) => {
+  const handleBillFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (billFiles.length === 0) {
-      toast.error("Please upload at least one bill file");
+    if (!billFiles[0]) {
+      toast.error("Please select a bill file");
       return;
     }
     if (!billData.billNumber || !billData.amount) {
       toast.error("Please fill in Bill Number and Amount");
       return;
     }
-    setUploadingBill(true);
-    try {
-      for (const file of billFiles) {
-        const formData = new FormData();
-        formData.append("bills", file);
-        if (billData.billNumber)
-          formData.append("billNumber", billData.billNumber);
-        if (billData.amount) formData.append("amount", billData.amount);
-        if (billData.description)
-          formData.append("description", billData.description);
-        await scApi.submitBill(formData);
-      }
-      toast.success("Bills uploaded!");
-      setBillFiles([]);
-      setBillData({ billNumber: "", amount: "", description: "" });
-      fetchDashboard();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Upload failed");
-    } finally {
-      setUploadingBill(false);
-    }
+    const formData = new FormData();
+    formData.append("bill", billFiles[0]);
+    formData.append("billNumber", billData.billNumber);
+    formData.append("amount", billData.amount);
+    if (billData.description) formData.append("description", billData.description);
+    setPendingBillForm(formData);
+    setDeclarationAccepted(false);
+    setShowDeclarationDialog(true);
   };
 
-  const handleSubmitCwc = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedBillForCwc) return;
-    setSubmittingCwc(true);
+  const handleConfirmBillSubmit = async () => {
+    if (!pendingBillForm || !declarationAccepted) return;
+    setUploadingBill(true);
+    setShowDeclarationDialog(false);
     try {
-      await scApi.submitCwc({ billId: selectedBillForCwc });
-      toast.success("CWC RF submitted!");
-      setSelectedBillForCwc("");
+      await scApi.submitBillWithCwcrf(pendingBillForm);
+      toast.success("Bill & CWC RF submitted for verification!");
+      setBillFiles([]);
+      setBillData({ billNumber: "", amount: "", description: "" });
+      setPendingBillForm(null);
       fetchDashboard();
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Submission failed");
     } finally {
-      setSubmittingCwc(false);
+      setUploadingBill(false);
     }
   };
 
@@ -208,644 +162,268 @@ const DashboardPage = () => {
     }
   };
 
-  const fetchChatMessages = async (cwcRfId: string) => {
-    setLoadingChat(true);
-    try {
-      const res = await kycApi.getMessages(cwcRfId);
-      setChatMessages(res.data?.messages || res.data || []);
-    } catch {
-      toast.error("Failed to load messages");
-    } finally {
-      setLoadingChat(false);
-    }
-  };
-
-  const openChat = (cwcRf: any) => {
-    setSelectedCwcRf(cwcRf);
-    setActiveTab("kyc-chat");
-    fetchChatMessages(cwcRf._id);
-  };
-
-  const handleSendChat = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatMessage.trim() && !chatFile) return;
-    setSendingChat(true);
-    try {
-      const formData = new FormData();
-      formData.append("content", chatMessage);
-      if (chatFile) formData.append("file", chatFile);
-      await kycApi.sendMessage(selectedCwcRf._id, formData);
-      setChatMessage("");
-      setChatFile(null);
-      fetchChatMessages(selectedCwcRf._id);
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to send");
-    } finally {
-      setSendingChat(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<
-      string,
-      {
-        variant: "success" | "warning" | "destructive" | "secondary";
-        icon: any;
-      }
-    > = {
-      LEAD_CREATED: { variant: "warning", icon: Clock },
-      PROFILE_INCOMPLETE: { variant: "warning", icon: AlertCircle },
-      PROFILE_COMPLETED: { variant: "success", icon: CheckCircle2 },
-      UPLOADED: { variant: "warning", icon: Clock },
-      VERIFIED: { variant: "success", icon: CheckCircle2 },
-      REJECTED: { variant: "destructive", icon: XCircle },
-      SUBMITTED: { variant: "secondary", icon: Send },
-      ACTION_REQUIRED: { variant: "destructive", icon: AlertCircle },
-      KYC_COMPLETED: { variant: "success", icon: CheckCircle2 },
-      KYC_REQUIRED: { variant: "warning", icon: AlertCircle },
-      KYC_IN_PROGRESS: { variant: "secondary", icon: Clock },
-      EPC_VERIFIED: { variant: "success", icon: CheckCircle2 },
-      BID_PLACED: { variant: "secondary", icon: Gavel },
-      NEGOTIATION_IN_PROGRESS: { variant: "warning", icon: TrendingUp },
-      COMMERCIAL_LOCKED: { variant: "success", icon: CheckCircle2 },
-      ACCEPTED: { variant: "success", icon: CheckCircle2 },
-    };
-    const config = statusConfig[status] || {
-      variant: "secondary" as const,
-      icon: Clock,
-    };
-    const Icon = config.icon;
-    return (
-      <Badge variant={config.variant} className="gap-1">
-        <Icon className="h-3 w-3" />
-        {status.replace(/_/g, " ")}
-      </Badge>
-    );
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-          <p className="text-gray-500 font-medium">Loading dashboard...</p>
-        </motion.div>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+          <p className="text-sm text-gray-500">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   const sc = dashboard?.subContractor;
-  const verifiedBills =
-    dashboard?.bills?.filter((b: any) => b.status === "VERIFIED") || [];
-  const pendingBids =
-    dashboard?.bids?.filter(
-      (b: any) =>
-        b.status === "SUBMITTED" || b.status === "NEGOTIATION_IN_PROGRESS",
-    ) || [];
-  const pendingKyc =
-    dashboard?.cwcRfs?.filter((c: any) =>
-      ["ACTION_REQUIRED", "KYC_REQUIRED", "KYC_IN_PROGRESS"].includes(c.status),
-    ) || [];
-
-  // Calculate profile completion
+  const verifiedBills = dashboard?.bills?.filter((b: any) => b.status === "VERIFIED") || [];
+  const pendingBids = dashboard?.bids?.filter(
+    (b: any) => b.status === "SUBMITTED" || b.status === "NEGOTIATION_IN_PROGRESS"
+  ) || [];
   const profileFields = ["companyName", "ownerName", "phone", "address"];
   const filledFields = profileFields.filter((f) => sc?.[f]).length;
-  const profileCompletion = Math.round(
-    (filledFields / profileFields.length) * 100,
-  );
+  const profileCompletion = Math.round((filledFields / profileFields.length) * 100);
 
   const stats = [
-    {
-      label: "Total Bills",
-      value: dashboard?.bills?.length || 0,
-      icon: FileText,
-      color: "blue",
-    },
-    {
-      label: "Verified Bills",
-      value: verifiedBills.length,
-      icon: CheckCircle2,
-      color: "green",
-    },
-    {
-      label: "Active Cases",
-      value: dashboard?.cases?.length || 0,
-      icon: FolderOpen,
-      color: "purple",
-    },
-    {
-      label: "Pending Bids",
-      value: pendingBids.length,
-      icon: Gavel,
-      color: "amber",
-    },
+    { label: "Total Bills", value: dashboard?.bills?.length || 0, icon: FileText, color: "blue", sub: "submitted" },
+    { label: "Verified Bills", value: verifiedBills.length, icon: CheckCircle2, color: "emerald", sub: "approved" },
+    { label: "Active Cases", value: dashboard?.cases?.length || 0, icon: FolderOpen, color: "violet", sub: "in progress" },
+    { label: "Pending Bids", value: pendingBids.length, icon: Gavel, color: "amber", sub: "awaiting action" },
   ];
+
+  const colorMap: Record<string, { bg: string; text: string; light: string }> = {
+    blue:    { bg: "bg-blue-600",    text: "text-blue-600",    light: "bg-blue-50" },
+    emerald: { bg: "bg-emerald-600", text: "text-emerald-600", light: "bg-emerald-50" },
+    violet:  { bg: "bg-violet-600",  text: "text-violet-600",  light: "bg-violet-50" },
+    amber:   { bg: "bg-amber-500",   text: "text-amber-600",   light: "bg-amber-50" },
+  };
 
   const tabs = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
-    { id: "profile", label: "Profile", icon: User },
-    { id: "bills", label: "Bills", icon: FileText },
-    { id: "cwc", label: "CWC RF", icon: Send },
-    { id: "cases", label: "Cases", icon: FolderOpen },
-    {
-      id: "bids",
-      label: "Bids",
-      icon: Gavel,
-      badge: pendingBids.length > 0 ? pendingBids.length : undefined,
-    },
-    {
-      id: "kyc",
-      label: "KYC Chat",
-      icon: MessageSquare,
-      badge: pendingKyc.length > 0 ? pendingKyc.length : undefined,
-    },
+    { id: "profile",  label: "Profile",  icon: User },
+    { id: "bills",    label: "Bills",    icon: FileText },
+    { id: "cases",    label: "Cases",    icon: FolderOpen },
+    { id: "bids",     label: "Bids",     icon: Gavel, badge: pendingBids.length > 0 ? pendingBids.length : undefined },
   ];
 
+  const statusConfig: Record<string, { variant: "success" | "warning" | "destructive" | "secondary"; label: string }> = {
+    LEAD_CREATED:             { variant: "secondary",   label: "Lead Created" },
+    PROFILE_INCOMPLETE:       { variant: "warning",     label: "Profile Incomplete" },
+    PROFILE_COMPLETED:        { variant: "success",     label: "Profile Completed" },
+    UPLOADED:                 { variant: "warning",     label: "Uploaded" },
+    VERIFIED:                 { variant: "success",     label: "Verified" },
+    REJECTED:                 { variant: "destructive", label: "Rejected" },
+    SUBMITTED:                { variant: "secondary",   label: "Submitted" },
+    ACTION_REQUIRED:          { variant: "destructive", label: "Action Required" },
+    KYC_COMPLETED:            { variant: "success",     label: "KYC Completed" },
+    KYC_REQUIRED:             { variant: "warning",     label: "KYC Required" },
+    KYC_IN_PROGRESS:          { variant: "secondary",   label: "KYC In Progress" },
+    EPC_VERIFIED:             { variant: "success",     label: "EPC Verified" },
+    BID_PLACED:               { variant: "secondary",   label: "Bid Placed" },
+    NEGOTIATION_IN_PROGRESS:  { variant: "warning",     label: "Negotiating" },
+    COMMERCIAL_LOCKED:        { variant: "success",     label: "Commercial Locked" },
+    ACCEPTED:                 { variant: "success",     label: "Accepted" },
+  };
+
+  const getStatusBadge = (status: string) => {
+    const cfg = statusConfig[status] || { variant: "secondary" as const, label: status.replace(/_/g, " ") };
+    return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
+  };
+
+  const tabTitles: Record<string, string> = {
+    overview: "Dashboard",
+    profile:  "My Profile",
+    bills:    "Bills & CWC RF",
+    cases:    "Cases",
+    bids:     "My Bids",
+  };
+
+  const tabDescriptions: Record<string, string> = {
+    overview: "Manage your bills, cases, and bids",
+    profile:  "Update your business information",
+    bills:    "Upload invoices — each submission automatically creates a CWC RF request",
+    cases:    "Track your financing cases",
+    bids:     "View and respond to bid offers",
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-6"
-    >
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {sc?.companyName || "Sub-Contractor Dashboard"}
-          </h1>
-          <div className="text-gray-500 flex items-center gap-2 mt-1">
-            Sub-Contractor Dashboard
-            {sc && getStatusBadge(sc.status)}
+    <div className="app-container">
+      {/* ── Sidebar ── */}
+      <aside className="sidebar">
+        <div className="mb-8 px-2 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+            {sc?.companyName?.[0]?.toUpperCase() || "S"}
+          </div>
+          <div>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-sky-600">
+              Gryork
+            </h1>
+            <p className="text-xs text-slate-400 font-medium">Sub-Contractor Portal</p>
           </div>
         </div>
-        {pendingBids.length > 0 && (
-          <Badge variant="destructive" className="gap-1 self-start">
-            <AlertCircle className="h-3 w-3" />
-            {pendingBids.length} pending bid
-            {pendingBids.length !== 1 ? "s" : ""}
-          </Badge>
-        )}
-      </div>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive =
-            activeTab === tab.id ||
-            (tab.id === "kyc" && activeTab === "kyc-chat");
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                isActive
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-              {tab.badge && (
-                <span
-                  className={`px-1.5 py-0.5 text-xs rounded-full ${
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "bg-red-100 text-red-600"
-                  }`}
-                >
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+        <nav className="flex-1 space-y-1">
+          <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
+            Menu
+          </p>
+
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`nav-item ${activeTab === tab.id ? "active" : ""}`}
+              >
+                <Icon className="w-5 h-5" />
+                {tab.label}
+                {tab.badge && (
+                  <span className="ml-auto bg-indigo-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="mt-auto pt-8 border-t border-slate-100">
+          <div className="flex items-center gap-3 px-2 mb-3">
+            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">
+              {sc?.companyName?.[0]?.toUpperCase() || "S"}
+            </div>
+            <div className="overflow-hidden flex-1">
+              <p className="text-sm font-semibold text-slate-700 truncate">
+                {sc?.companyName || "Sub-Contractor"}
+              </p>
+              <p className="text-xs text-slate-500 truncate">{sc?.email || ""}</p>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main Content ── */}
+      <main className="main-content-area">
+        <header className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">
+              {tabTitles[activeTab] || "Dashboard"}
+            </h2>
+            <p className="text-slate-500 text-sm mt-1">
+              {tabDescriptions[activeTab]}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {sc && getStatusBadge(sc.status)}
+          </div>
+        </header>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
-        {/* Overview Tab */}
+
+        {/* ── Overview ── */}
         {activeTab === "overview" && (
-          <motion.div
-            key="overview"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Stats Grid */}
+          <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-6">
+
+            {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {stats.map((stat, index) => {
+              {stats.map((stat) => {
                 const Icon = stat.icon;
+                const c = colorMap[stat.color];
                 return (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Card className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-500">
-                              {stat.label}
-                            </p>
-                            <p className="text-3xl font-bold text-gray-900 mt-1">
-                              {stat.value}
-                            </p>
-                          </div>
-                          <div
-                            className={`w-12 h-12 rounded-xl bg-${stat.color}-100 flex items-center justify-center`}
-                          >
-                            <Icon
-                              className={`h-6 w-6 text-${stat.color}-600`}
-                            />
-                          </div>
+                  <Card key={stat.label} className="border border-gray-200 shadow-none hover:shadow-sm transition-shadow">
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{stat.label}</p>
+                          <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                          <p className="text-xs text-gray-400 mt-1">{stat.sub}</p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                        <div className={`${c.light} p-2.5 rounded-lg`}>
+                          <Icon className={`h-5 w-5 ${c.text}`} />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
 
-            {/* Profile Completion */}
+            {/* Profile Completion Banner */}
             {profileCompletion < 100 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          Complete Your Profile
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          Fill in all details to get verified faster
-                        </p>
-                      </div>
-                      <span className="text-2xl font-bold text-blue-600">
-                        {profileCompletion}%
-                      </span>
-                    </div>
-                    <Progress value={profileCompletion} className="h-2" />
-                    <Button
-                      onClick={() => setActiveTab("profile")}
-                      variant="outline"
-                      className="mt-4"
-                    >
-                      Complete Profile
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <div className="flex items-center justify-between gap-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-sm font-medium text-blue-900">Complete your profile</p>
+                    <span className="text-sm font-semibold text-blue-700">{profileCompletion}%</span>
+                  </div>
+                  <Progress value={profileCompletion} className="h-1.5" />
+                </div>
+                <Button size="sm" variant="outline" onClick={() => setActiveTab("profile")} className="shrink-0 border-blue-300 text-blue-700 hover:bg-blue-100">
+                  Complete <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              </div>
             )}
 
             {/* Quick Actions */}
-            <div className="grid md:grid-cols-3 gap-4">
-              <Card
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setActiveTab("bills")}
-              >
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <Upload className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      Upload Bills
-                    </h3>
-                    <p className="text-sm text-gray-500">Submit new invoices</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setActiveTab("cwc")}
-              >
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                    <Send className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      Submit CWC RF
-                    </h3>
-                    <p className="text-sm text-gray-500">Request financing</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setActiveTab("bids")}
-              >
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
-                    <Gavel className="h-6 w-6 text-amber-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">View Bids</h3>
-                    <p className="text-sm text-gray-500">
-                      {pendingBids.length} pending
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-3">Quick Actions</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { id: "bills", label: "Upload a Bill", desc: "Submit invoice & CWC RF together", icon: Upload, color: "blue" },
+                  { id: "bids",  label: "View Bids",    desc: `${pendingBids.length} pending`, icon: Gavel, color: "amber" },
+                ].map((action) => {
+                  const Icon = action.icon;
+                  const c = colorMap[action.color];
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={() => setActiveTab(action.id)}
+                      className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all text-left group"
+                    >
+                      <div className={`${c.light} p-2.5 rounded-lg`}>
+                        <Icon className={`h-5 w-5 ${c.text}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">{action.label}</p>
+                        <p className="text-xs text-gray-500">{action.desc}</p>
+                      </div>
+                      <ArrowUpRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </motion.div>
-        )}
 
-        {/* Profile Tab */}
-        {activeTab === "profile" && (
-          <motion.div
-            key="profile"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Business Profile</CardTitle>
-                <CardDescription>
-                  Update your company information
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSaveProfile} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="companyName">Company Name</Label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="companyName"
-                          value={profileForm.companyName}
-                          onChange={(e) =>
-                            setProfileForm({
-                              ...profileForm,
-                              companyName: e.target.value,
-                            })
-                          }
-                          placeholder="Your Company Name"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="ownerName">Owner Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="ownerName"
-                          value={profileForm.ownerName}
-                          onChange={(e) =>
-                            setProfileForm({
-                              ...profileForm,
-                              ownerName: e.target.value,
-                            })
-                          }
-                          placeholder="Owner / Contact Name"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="phone"
-                          value={profileForm.phone}
-                          onChange={(e) =>
-                            setProfileForm({
-                              ...profileForm,
-                              phone: e.target.value,
-                            })
-                          }
-                          placeholder="+91 98765 43210"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="vendorId">Vendor ID (from EPC)</Label>
-                      <div className="relative">
-                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="vendorId"
-                          value={profileForm.vendorId}
-                          onChange={(e) =>
-                            setProfileForm({
-                              ...profileForm,
-                              vendorId: e.target.value,
-                            })
-                          }
-                          placeholder="VND-12345"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="gstin">GSTIN</Label>
-                      <div className="relative">
-                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="gstin"
-                          value={profileForm.gstin}
-                          onChange={(e) =>
-                            setProfileForm({
-                              ...profileForm,
-                              gstin: e.target.value,
-                            })
-                          }
-                          placeholder="22AAAAA0000A1Z5"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="address">Business Address</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Textarea
-                          id="address"
-                          value={profileForm.address}
-                          onChange={(e) =>
-                            setProfileForm({
-                              ...profileForm,
-                              address: e.target.value,
-                            })
-                          }
-                          placeholder="Full business address"
-                          className="pl-10 min-h-[100px]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={saving}
-                    className="w-full md:w-auto"
-                  >
-                    {saving ? "Saving..." : "Save Profile"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Bills Tab */}
-        {activeTab === "bills" && (
-          <motion.div
-            key="bills"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
-          >
-            {/* Upload Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Upload New Bill</CardTitle>
-                <CardDescription>
-                  Submit invoices for verification
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleUploadBill} className="space-y-4">
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="billNumber">
-                        Bill Number <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="billNumber"
-                        value={billData.billNumber}
-                        onChange={(e) =>
-                          setBillData({
-                            ...billData,
-                            billNumber: e.target.value,
-                          })
-                        }
-                        placeholder="INV-001"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">
-                        Amount (₹) <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        value={billData.amount}
-                        onChange={(e) =>
-                          setBillData({ ...billData, amount: e.target.value })
-                        }
-                        placeholder="100000"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Input
-                        id="description"
-                        value={billData.description}
-                        onChange={(e) =>
-                          setBillData({
-                            ...billData,
-                            description: e.target.value,
-                          })
-                        }
-                        placeholder="Work description"
-                      />
-                    </div>
-                  </div>
-
-                  <div
-                    className={`border-2 border-dashed rounded-xl p-6 text-center ${billFiles.length > 0 ? "border-blue-300 bg-blue-50" : "border-gray-200"}`}
-                  >
-                    <input
-                      type="file"
-                      multiple
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) =>
-                        setBillFiles(Array.from(e.target.files || []))
-                      }
-                      className="hidden"
-                      id="billFiles"
-                      required={billFiles.length === 0}
-                    />
-                    <label htmlFor="billFiles" className="cursor-pointer block">
-                      <Upload
-                        className={`h-10 w-10 mx-auto mb-2 ${billFiles.length > 0 ? "text-blue-500" : "text-gray-400"}`}
-                      />
-                      <p
-                        className={`font-medium ${billFiles.length > 0 ? "text-blue-700" : "text-gray-600"}`}
-                      >
-                        {billFiles.length > 0
-                          ? `${billFiles.length} file(s) selected`
-                          : "Click to upload bills"}
-                      </p>
-                      <p className="text-sm text-gray-400 mt-1">
-                        PDF, JPG, PNG up to 10MB{" "}
-                        <span className="text-red-500">*</span>
-                      </p>
-                    </label>
-                  </div>
-
-                  <Button type="submit" disabled={uploadingBill}>
-                    {uploadingBill ? "Uploading..." : "Upload Bills"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Bills List */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Bills</CardTitle>
-                <CardDescription>
-                  {dashboard?.bills?.length || 0} total bills
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {dashboard?.bills?.length > 0 ? (
-                  <div className="space-y-3">
-                    {dashboard.bills.map((bill: any) => (
-                      <div
-                        key={bill._id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <FileText className="h-5 w-5 text-blue-600" />
+            {/* Recent Bills */}
+            {dashboard?.bills?.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-gray-500">Recent Bills</p>
+                  <button onClick={() => setActiveTab("bills")} className="text-xs text-blue-600 hover:underline flex items-center gap-0.5">
+                    View all <ChevronRight className="h-3 w-3" />
+                  </button>
+                </div>
+                <Card className="border border-gray-200 shadow-none">
+                  <div className="divide-y divide-gray-100">
+                    {dashboard.bills.slice(0, 4).map((bill: any) => (
+                      <div key={bill._id} className="flex items-center justify-between px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <FileText className="h-4 w-4 text-blue-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {bill.billNumber || "No Number"}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              ₹{bill.amount?.toLocaleString() || 0}
+                            <p className="text-sm font-medium text-gray-900">{bill.billNumber || "—"}</p>
+                            <p className="text-xs text-gray-500 flex items-center gap-0.5">
+                              <IndianRupee className="h-3 w-3" />{bill.amount?.toLocaleString() || 0}
                             </p>
                           </div>
                         </div>
@@ -853,476 +431,362 @@ const DashboardPage = () => {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    No bills uploaded yet
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                </Card>
+              </div>
+            )}
           </motion.div>
         )}
 
-        {/* CWC RF Tab */}
-        {activeTab === "cwc" && (
-          <motion.div
-            key="cwc"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
-          >
-            <Card>
+        {/* ── Profile ── */}
+        {activeTab === "profile" && (
+          <motion.div key="profile" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            <Card className="border border-gray-200 shadow-none">
               <CardHeader>
-                <CardTitle>Submit CWC Request</CardTitle>
-                <CardDescription>
-                  Select a verified bill to request financing
-                </CardDescription>
+                <CardTitle className="text-base">Business Profile</CardTitle>
+                <CardDescription>Update your company information</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmitCwc} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Select Verified Bill</Label>
-                    {verifiedBills.length > 0 ? (
-                      <div className="space-y-2">
-                        {verifiedBills.map((bill: any) => (
-                          <label
-                            key={bill._id}
-                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                              selectedBillForCwc === bill._id
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 hover:border-gray-300"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="cwcBill"
-                              value={bill._id}
-                              checked={selectedBillForCwc === bill._id}
-                              onChange={(e) =>
-                                setSelectedBillForCwc(e.target.value)
-                              }
-                              className="hidden"
-                            />
-                            <div
-                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                selectedBillForCwc === bill._id
-                                  ? "border-blue-500 bg-blue-500"
-                                  : "border-gray-300"
-                              }`}
-                            >
-                              {selectedBillForCwc === bill._id && (
-                                <CheckCircle2 className="h-3 w-3 text-white" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium">{bill.billNumber}</p>
-                              <p className="text-sm text-gray-500">
-                                ₹{bill.amount?.toLocaleString()}
-                              </p>
-                            </div>
-                            <Badge variant="success">Verified</Badge>
-                          </label>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 py-4">
-                        No verified bills available. Upload and get bills
-                        verified first.
-                      </p>
-                    )}
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={submittingCwc || !selectedBillForCwc}
-                  >
-                    {submittingCwc ? "Submitting..." : "Submit CWC Request"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Cases Tab */}
-        {activeTab === "cases" && (
-          <motion.div
-            key="cases"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Cases</CardTitle>
-                <CardDescription>Track your financing cases</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {dashboard?.cases?.length > 0 ? (
-                  <div className="space-y-3">
-                    {dashboard.cases.map((c: any) => (
-                      <div key={c._id} className="p-4 bg-gray-50 rounded-xl">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              Case #{c.caseNumber || c._id.slice(-6)}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              ₹{c.amount?.toLocaleString() || 0}
-                            </p>
-                          </div>
-                          {getStatusBadge(c.status)}
+                <form onSubmit={handleSaveProfile} className="space-y-5">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {[
+                      { id: "companyName", label: "Company Name", icon: Building2, placeholder: "Your Company Name", field: "companyName" },
+                      { id: "ownerName",   label: "Owner / Contact Name", icon: User, placeholder: "Owner Name", field: "ownerName" },
+                      { id: "phone",       label: "Phone Number", icon: Phone, placeholder: "+91 98765 43210", field: "phone" },
+                      { id: "vendorId",    label: "Vendor ID (from EPC)", icon: Hash, placeholder: "VND-12345", field: "vendorId" },
+                      { id: "gstin",       label: "GSTIN", icon: CreditCard, placeholder: "22AAAAA0000A1Z5", field: "gstin" },
+                    ].map(({ id, label, icon: Icon, placeholder, field }) => (
+                      <div key={id} className="space-y-1.5">
+                        <Label htmlFor={id}>{label}</Label>
+                        <div className="relative">
+                          <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id={id}
+                            value={(profileForm as any)[field]}
+                            onChange={(e) => setProfileForm({ ...profileForm, [field]: e.target.value })}
+                            placeholder={placeholder}
+                            className="pl-9"
+                          />
                         </div>
                       </div>
                     ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">No cases yet</p>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Bids Tab */}
-        {activeTab === "bids" && (
-          <motion.div
-            key="bids"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>NBFC Bids</CardTitle>
-                <CardDescription>
-                  Review and respond to financing offers
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {dashboard?.bids?.length > 0 ? (
-                  <div className="space-y-4">
-                    {dashboard.bids.map((bid: any) => (
-                      <div
-                        key={bid._id}
-                        className="p-6 bg-gray-50 rounded-xl space-y-4"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {bid.nbfc?.name || "NBFC"}
-                            </p>
-                            <p className="text-2xl font-bold text-green-600 mt-1">
-                              {bid.interestRate}%{" "}
-                              <span className="text-sm font-normal text-gray-500">
-                                p.a.
-                              </span>
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {bid.tenure} days tenure
-                            </p>
-                          </div>
-                          {getStatusBadge(bid.status)}
-                        </div>
-
-                        {(bid.status === "SUBMITTED" ||
-                          bid.status === "NEGOTIATION_IN_PROGRESS") && (
-                          <>
-                            {respondingBid === bid._id ? (
-                              <div className="space-y-4 p-4 bg-white rounded-lg">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div className="space-y-2">
-                                    <Label>Counter Rate (%)</Label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      value={counterOffer.amount}
-                                      onChange={(e) =>
-                                        setCounterOffer({
-                                          ...counterOffer,
-                                          amount: e.target.value,
-                                        })
-                                      }
-                                      placeholder="e.g., 12.5"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label>Counter Tenure (days)</Label>
-                                    <Input
-                                      type="number"
-                                      value={counterOffer.duration}
-                                      onChange={(e) =>
-                                        setCounterOffer({
-                                          ...counterOffer,
-                                          duration: e.target.value,
-                                        })
-                                      }
-                                      placeholder="e.g., 45"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Message (Optional)</Label>
-                                  <Textarea
-                                    value={counterOffer.message}
-                                    onChange={(e) =>
-                                      setCounterOffer({
-                                        ...counterOffer,
-                                        message: e.target.value,
-                                      })
-                                    }
-                                    placeholder="Add a message to your counter-offer..."
-                                  />
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button
-                                    onClick={() =>
-                                      handleBidResponse(bid._id, "negotiate")
-                                    }
-                                  >
-                                    Send Counter-Offer
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => setRespondingBid(null)}
-                                  >
-                                    Cancel
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex gap-2">
-                                <Button
-                                  onClick={() =>
-                                    handleBidResponse(bid._id, "accept")
-                                  }
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  Accept
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setRespondingBid(bid._id)}
-                                >
-                                  Negotiate
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  className="text-red-600 hover:text-red-700"
-                                  onClick={() =>
-                                    handleBidResponse(bid._id, "reject")
-                                  }
-                                >
-                                  Reject
-                                </Button>
-                              </div>
-                            )}
-                          </>
-                        )}
+                    <div className="space-y-1.5 md:col-span-2">
+                      <Label htmlFor="address">Business Address</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Textarea
+                          id="address"
+                          value={profileForm.address}
+                          onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                          placeholder="Full business address"
+                          className="pl-9 min-h-[80px] resize-none"
+                        />
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    No bids received yet
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* KYC Tab */}
-        {activeTab === "kyc" && (
-          <motion.div
-            key="kyc"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>KYC Chat</CardTitle>
-                <CardDescription>
-                  Document exchange with Ops team
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {dashboard?.cwcRfs?.length > 0 ? (
-                  <div className="space-y-3">
-                    {dashboard.cwcRfs.map((cwcRf: any) => (
-                      <div
-                        key={cwcRf._id}
-                        onClick={() => openChat(cwcRf)}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                            <MessageSquare className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              CWC RF #{cwcRf._id.slice(-6)}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Click to open chat
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(cwcRf.status)}
-                          <ChevronRight className="h-5 w-5 text-gray-400" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    No CWC RFs to chat about
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* KYC Chat View */}
-        {activeTab === "kyc-chat" && selectedCwcRf && (
-          <motion.div
-            key="kyc-chat"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Card>
-              <CardHeader className="border-b">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveTab("kyc")}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <div>
-                    <CardTitle>
-                      KYC Chat - #{selectedCwcRf._id.slice(-6)}
-                    </CardTitle>
-                    <CardDescription>
-                      Exchange documents with Ops team
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {/* Messages */}
-                <div className="h-[400px] overflow-y-auto p-4 space-y-4">
-                  {loadingChat ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
                     </div>
-                  ) : chatMessages.length > 0 ? (
-                    chatMessages.map((msg: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className={`flex ${msg.sender === "subcontractor" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[70%] p-3 rounded-xl ${
-                            msg.sender === "subcontractor"
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-900"
-                          }`}
-                        >
-                          {msg.content && <p>{msg.content}</p>}
-                          {msg.file && (
-                            <a
-                              href={msg.file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`flex items-center gap-2 mt-2 text-sm ${
-                                msg.sender === "subcontractor"
-                                  ? "text-blue-100"
-                                  : "text-blue-600"
-                              }`}
-                            >
-                              <Paperclip className="h-4 w-4" />
-                              {msg.file.name}
-                            </a>
-                          )}
-                          <p
-                            className={`text-xs mt-1 ${msg.sender === "subcontractor" ? "text-blue-200" : "text-gray-400"}`}
-                          >
-                            {new Date(msg.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-gray-500">
-                      No messages yet. Start the conversation!
-                    </p>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* Input */}
-                <form onSubmit={handleSendChat} className="border-t p-4">
-                  <div className="flex gap-2">
-                    <div className="flex-1 flex gap-2">
-                      <Input
-                        value={chatMessage}
-                        onChange={(e) => setChatMessage(e.target.value)}
-                        placeholder="Type a message..."
-                        className="flex-1"
-                      />
-                      <input
-                        type="file"
-                        onChange={(e) =>
-                          setChatFile(e.target.files?.[0] || null)
-                        }
-                        className="hidden"
-                        id="chatFileInput"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          document.getElementById("chatFileInput")?.click()
-                        }
-                      >
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={
-                        sendingChat || (!chatMessage.trim() && !chatFile)
-                      }
-                    >
-                      {sendingChat ? "..." : <Send className="h-4 w-4" />}
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <Button type="submit" disabled={saving}>
+                      {saving ? "Saving..." : "Save Changes"}
                     </Button>
                   </div>
-                  {chatFile && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      📎 {chatFile.name}
-                      <button
-                        type="button"
-                        onClick={() => setChatFile(null)}
-                        className="ml-2 text-red-500"
-                      >
-                        Remove
-                      </button>
-                    </p>
-                  )}
                 </form>
               </CardContent>
             </Card>
           </motion.div>
         )}
+
+        {/* ── Bills & CWC RF ── */}
+        {activeTab === "bills" && (
+          <motion.div key="bills" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
+
+            {/* Info Banner */}
+            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <Send className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Bill + CWC RF in one step</p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  Each bill submission automatically creates a linked CWC RF request. Both are sent to the operations team for verification.
+                </p>
+              </div>
+            </div>
+
+            <Card className="border border-gray-200 shadow-none">
+              <CardHeader>
+                <CardTitle className="text-base">Submit New Bill</CardTitle>
+                <CardDescription>Fill in the invoice details and upload the bill document</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleBillFormSubmit} className="space-y-4">
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="billNumber">Bill Number <span className="text-red-500">*</span></Label>
+                      <Input id="billNumber" value={billData.billNumber} onChange={(e) => setBillData({ ...billData, billNumber: e.target.value })} placeholder="INV-001" required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="amount">Amount (₹) <span className="text-red-500">*</span></Label>
+                      <Input id="amount" type="number" value={billData.amount} onChange={(e) => setBillData({ ...billData, amount: e.target.value })} placeholder="100000" required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="description">Description</Label>
+                      <Input id="description" value={billData.description} onChange={(e) => setBillData({ ...billData, description: e.target.value })} placeholder="Work description" />
+                    </div>
+                  </div>
+                  <label
+                    htmlFor="billFile"
+                    className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-8 cursor-pointer transition-colors ${
+                      billFiles[0] ? "border-blue-300 bg-blue-50" : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                    }`}
+                  >
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setBillFiles(e.target.files ? [e.target.files[0]] : [])} className="hidden" id="billFile" />
+                    <Upload className={`h-8 w-8 ${billFiles[0] ? "text-blue-500" : "text-gray-300"}`} />
+                    <div className="text-center">
+                      <p className={`text-sm font-medium ${billFiles[0] ? "text-blue-700" : "text-gray-600"}`}>
+                        {billFiles[0] ? billFiles[0].name : "Click to upload bill document"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">PDF, JPG, PNG up to 10MB</p>
+                    </div>
+                  </label>
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={uploadingBill}>
+                      {uploadingBill ? "Submitting..." : "Review & Submit"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-gray-200 shadow-none">
+              <CardHeader>
+                <CardTitle className="text-base">Bill History</CardTitle>
+                <CardDescription>{dashboard?.bills?.length || 0} total bills</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {dashboard?.bills?.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {dashboard.bills.map((bill: any) => (
+                      <div key={bill._id} className="flex items-center justify-between px-6 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
+                            <FileText className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{bill.billNumber || "No Number"}</p>
+                            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                              <IndianRupee className="h-3 w-3" />{bill.amount?.toLocaleString() || 0}
+                              {bill.description && <span className="text-gray-400">· {bill.description}</span>}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {getStatusBadge(bill.status)}
+                          {bill.status === "VERIFIED" && (
+                            <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-0.5">
+                              <Send className="h-2.5 w-2.5" />CWC RF Active
+                            </span>
+                          )}
+                          {bill.status === "REJECTED" && bill.rejectionReason && (
+                            <span className="text-[10px] text-red-500">{bill.rejectionReason}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center px-6">
+                    <FileText className="h-8 w-8 text-gray-200 mb-2" />
+                    <p className="text-sm text-gray-500">No bills submitted yet</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── Seller Declaration Dialog ── */}
+            {showDeclarationDialog && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Seller Declaration</h3>
+                      <p className="text-xs text-gray-500">Required before bill submission</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-4 mb-5 text-sm text-gray-700 leading-relaxed border border-gray-200">
+                    I hereby declare that the bill submitted is genuine, all work described has been completed as per the contract, and I authorize Gryork to process this invoice for working capital financing. I confirm that this bill has not been submitted elsewhere for financing and I am liable for any misrepresentation.
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer mb-6">
+                    <input
+                      type="checkbox"
+                      checked={declarationAccepted}
+                      onChange={(e) => setDeclarationAccepted(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-blue-600"
+                    />
+                    <span className="text-sm text-gray-700">
+                      I have read and accept the terms of the <span className="font-medium text-blue-700">Seller Declaration</span>
+                    </span>
+                  </label>
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => { setShowDeclarationDialog(false); setPendingBillForm(null); }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      disabled={!declarationAccepted || uploadingBill}
+                      onClick={handleConfirmBillSubmit}
+                    >
+                      {uploadingBill ? "Submitting..." : "Accept & Submit"}
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ── Cases ── */}
+        {activeTab === "cases" && (
+          <motion.div key="cases" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            <Card className="border border-gray-200 shadow-none">
+              <CardHeader>
+                <CardTitle className="text-base">My Cases</CardTitle>
+                <CardDescription>Track your financing case progress</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {dashboard?.cases?.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {dashboard.cases.map((c: any) => (
+                      <div key={c._id} className="flex items-center justify-between px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-violet-50 rounded-lg flex items-center justify-center shrink-0">
+                            <FolderOpen className="h-4 w-4 text-violet-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Case #{c.caseNumber || c._id.slice(-6)}</p>
+                            <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
+                              <IndianRupee className="h-3 w-3" />{c.amount?.toLocaleString() || 0}
+                            </p>
+                          </div>
+                        </div>
+                        {getStatusBadge(c.status)}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center px-6">
+                    <FolderOpen className="h-8 w-8 text-gray-200 mb-2" />
+                    <p className="text-sm text-gray-500">No cases yet</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* ── Bids ── */}
+        {activeTab === "bids" && (
+          <motion.div key="bids" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
+            {dashboard?.bids?.length > 0 ? (
+              dashboard.bids.map((bid: any) => (
+                <Card key={bid._id} className="border border-gray-200 shadow-none">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div>
+                        <p className="font-semibold text-gray-900">{bid.epcId?.companyName || "Company"}</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="flex items-center gap-1.5">
+                            <div className="p-1.5 bg-blue-50 rounded-lg">
+                              <IndianRupee className="h-3.5 w-3.5 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-400">Bid Amount</p>
+                              <p className="text-sm font-semibold text-gray-900">₹{bid.bidAmount?.toLocaleString()}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="p-1.5 bg-emerald-50 rounded-lg">
+                              <CalendarDays className="h-3.5 w-3.5 text-emerald-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-400">Duration</p>
+                              <p className="text-sm font-semibold text-gray-900">{bid.fundingDurationDays} days</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {getStatusBadge(bid.status)}
+                    </div>
+
+                    {(bid.status === "SUBMITTED" || bid.status === "NEGOTIATION_IN_PROGRESS") && (
+                      <>
+                        {respondingBid === bid._id ? (
+                          <div className="space-y-3 pt-4 border-t border-gray-100">
+                            <p className="text-sm font-medium text-gray-700">Counter Offer</p>
+                            <div className="grid sm:grid-cols-2 gap-3">
+                              <div className="space-y-1.5">
+                                <Label>Counter Amount (₹)</Label>
+                                <Input type="number" value={counterOffer.amount} onChange={(e) => setCounterOffer({ ...counterOffer, amount: e.target.value })} placeholder="e.g., 500000" />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label>Counter Duration (days)</Label>
+                                <Input type="number" value={counterOffer.duration} onChange={(e) => setCounterOffer({ ...counterOffer, duration: e.target.value })} placeholder="e.g., 45" />
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label>Message (Optional)</Label>
+                              <Textarea value={counterOffer.message} onChange={(e) => setCounterOffer({ ...counterOffer, message: e.target.value })} placeholder="Add a note to your counter-offer..." className="min-h-[72px] resize-none" />
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                              <Button variant="outline" size="sm" onClick={() => setRespondingBid(null)}>Cancel</Button>
+                              <Button size="sm" onClick={() => handleBidResponse(bid._id, "negotiate")}>
+                                <TrendingUp className="h-3.5 w-3.5 mr-1.5" />Send Counter-Offer
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2 pt-4 border-t border-gray-100">
+                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleBidResponse(bid._id, "accept")}>
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />Accept
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => setRespondingBid(bid._id)}>
+                              <TrendingUp className="h-3.5 w-3.5 mr-1.5" />Negotiate
+                            </Button>
+                            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 ml-auto" onClick={() => handleBidResponse(bid._id, "reject")}>
+                              <XCircle className="h-3.5 w-3.5 mr-1.5" />Reject
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card className="border border-gray-200 shadow-none">
+                <div className="flex flex-col items-center justify-center py-14 text-center px-6">
+                  <Gavel className="h-8 w-8 text-gray-200 mb-2" />
+                  <p className="text-sm text-gray-500">No bids received yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Bids from companies will appear here</p>
+                </div>
+              </Card>
+            )}
+          </motion.div>
+        )}
+
       </AnimatePresence>
-    </motion.div>
+      </main>
+    </div>
   );
 };
 

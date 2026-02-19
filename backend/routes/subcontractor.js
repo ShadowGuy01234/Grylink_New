@@ -104,6 +104,29 @@ router.post(
   },
 );
 
+// POST /api/subcontractor/bill-with-cwcrf - Submit bill + CWCRF together (new flow)
+router.post(
+  "/bill-with-cwcrf",
+  authenticate,
+  authorize("subcontractor"),
+  uploadBills.single("bill"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Bill file is required" });
+      }
+      const result = await subContractorService.uploadBillWithCwcrf(
+        req.user._id,
+        [req.file],
+        req.body,
+      );
+      res.status(201).json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
 // GET /api/subcontractor/cases - Get all cases for subcontractor
 router.get(
   "/cases",
@@ -368,6 +391,21 @@ router.post(
   },
 );
 
+// POST /api/subcontractor/kyc/submit - Explicitly submit KYC documents for ops review
+router.post(
+  "/kyc/submit",
+  authenticate,
+  authorize("subcontractor"),
+  async (req, res) => {
+    try {
+      const result = await subContractorService.submitKycForReview(req.user._id);
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
 // GET /api/subcontractor/kyc/status - Get KYC status
 router.get(
   "/kyc/status",
@@ -379,6 +417,36 @@ router.get(
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+// POST /api/subcontractor/kyc/additional/:docId - Upload file for an ops-requested additional document
+router.post(
+  "/kyc/additional/:docId",
+  authenticate,
+  authorize("subcontractor"),
+  (req, res, next) => {
+    uploadBills.single("document")(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: err.message || "File upload failed" });
+      }
+      next();
+    });
+  },
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Document file is required" });
+      }
+      const result = await subContractorService.uploadAdditionalDocument(
+        req.user._id,
+        req.params.docId,
+        req.file,
+      );
+      res.json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
   },
 );

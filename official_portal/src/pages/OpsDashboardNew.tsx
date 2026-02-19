@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { opsApi, casesApi, approvalApi, slaApi } from "../api";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import {
   HiOutlineDocumentText,
-  HiOutlineChat,
   HiOutlineCheckCircle,
   HiOutlineXCircle,
   HiOutlineEye,
@@ -79,42 +79,6 @@ interface Document {
   status: string;
   verificationNotes?: string;
   uploadedAt?: string;
-}
-
-interface ChatMessage {
-  _id: string;
-  senderId: { _id: string; name: string; email?: string };
-  senderRole: "ops" | "subcontractor" | "admin" | "nbfc";
-  messageType: "text" | "file" | "system" | "action_required";
-  content: string;
-  fileUrl?: string;
-  fileName?: string;
-  fileSize?: number;
-  fileType?: string;
-  thumbnailUrl?: string;
-  replyTo?: {
-    _id: string;
-    content: string;
-    senderId: { _id: string; name: string };
-    senderRole: string;
-    createdAt: string;
-  };
-  status: "sending" | "sent" | "delivered" | "read" | "failed";
-  createdAt: string;
-  isRead: boolean;
-  readAt?: string;
-  readBy?: Array<{ _id: string; name: string }>;
-  reactions?: Array<{
-    emoji: string;
-    userId: { _id: string; name: string };
-    createdAt: string;
-  }>;
-  actionType?: "REQUEST_DOCUMENT" | "CLARIFICATION" | "APPROVAL_NEEDED" | "URGENT";
-  actionResolved?: boolean;
-  actionResolvedAt?: string;
-  isEdited?: boolean;
-  editedAt?: string;
-  isDeleted?: boolean;
 }
 
 interface PendingData {
@@ -3099,7 +3063,7 @@ const KycVerificationTab = ({
   );
 };
 
-// KYC Detail Panel with Enhanced Chat
+// KYC Detail Panel - Shows KYC info and links to full review page
 const KycDetailPanel = ({
   kyc,
   onClose,
@@ -3109,127 +3073,11 @@ const KycDetailPanel = ({
   onClose: () => void;
   onRefresh: () => void;
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [newMessage, setNewMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<ChatMessage[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
-  const [actionType, setActionType] = useState<string>("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
-  const [editingMessage, setEditingMessage] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState("");
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const REACTION_EMOJIS = ['👍', '✅', '❌', '⏳', '📄', '❓'];
-
-  const loadMessages = useCallback(async () => {
-    try {
-      const res = await opsApi.getChatMessages(kyc._id);
-      setMessages(res.data);
-      // Mark as read when loaded
-      opsApi.markMessagesAsRead(kyc._id).catch(() => {});
-    } catch {
-      console.error("Failed to load messages");
-    } finally {
-      setLoading(false);
-    }
-  }, [kyc._id]);
-
-  const loadUnreadCount = useCallback(async () => {
-    try {
-      const res = await opsApi.getUnreadCount(kyc._id);
-      setUnreadCount(res.data.count);
-    } catch {
-      // Ignore
-    }
-  }, [kyc._id]);
-
-  useEffect(() => {
-    loadMessages();
-    loadUnreadCount();
-    // Poll for new messages every 5 seconds (faster for real-time feel)
-    const interval = setInterval(() => {
-      loadMessages();
-      loadUnreadCount();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [loadMessages, loadUnreadCount]);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Search messages
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    setIsSearching(true);
-    try {
-      const res = await opsApi.searchMessages(kyc._id, searchQuery);
-      setSearchResults(res.data);
-    } catch {
-      toast.error("Search failed");
-    } finally {
-      setIsSearching(false);
-    }
-  }, [kyc._id, searchQuery]);
-
-  useEffect(() => {
-    const debounce = setTimeout(handleSearch, 300);
-    return () => clearTimeout(debounce);
-  }, [handleSearch]);
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() && !file) return;
-
-    setSending(true);
-    try {
-      const formData = new FormData();
-      formData.append("content", newMessage);
-      if (file) formData.append("file", file);
-      if (replyingTo) formData.append("replyTo", replyingTo._id);
-      if (actionType) formData.append("actionType", actionType);
-
-      await opsApi.sendChatMessage(kyc._id, formData);
-      setNewMessage("");
-      setFile(null);
-      setReplyingTo(null);
-      setActionType("");
-      loadMessages();
-    } catch {
-      toast.error("Failed to send message");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleRequestDocs = async () => {
-    if (!newMessage.trim()) {
-      toast.error("Please enter a message describing what documents are needed");
-      return;
-    }
-
-    try {
-      await opsApi.requestKyc(kyc._id, newMessage);
-      toast.success("Document request sent");
-      setNewMessage("");
-      loadMessages();
-      onRefresh();
-    } catch {
-      toast.error("Failed to send request");
-    }
-  };
+  const navigate = useNavigate();
+  const [completingKyc, setCompletingKyc] = useState(false);
 
   const handleCompleteKyc = async () => {
+    setCompletingKyc(true);
     try {
       await opsApi.completeKyc(kyc._id);
       toast.success("KYC completed — Case created");
@@ -3237,1009 +3085,105 @@ const KycDetailPanel = ({
       onRefresh();
     } catch {
       toast.error("Failed to complete KYC");
+    } finally {
+      setCompletingKyc(false);
     }
   };
 
-  const handleAddReaction = async (messageId: string, emoji: string) => {
-    try {
-      await opsApi.addReaction(messageId, emoji);
-      loadMessages();
-      setShowEmojiPicker(null);
-    } catch {
-      toast.error("Failed to add reaction");
-    }
+  const statusColors: Record<string, string> = {
+    KYC_PENDING: "#f59e0b",
+    KYC_IN_PROGRESS: "#3b82f6",
+    KYC_COMPLETED: "#10b981",
+    UNDER_REVIEW: "#3b82f6",
+    DOCUMENTS_PENDING: "#f59e0b",
+    COMPLETED: "#10b981",
+    REJECTED: "#ef4444",
   };
 
-  const handleRemoveReaction = async (messageId: string, emoji: string) => {
-    try {
-      await opsApi.removeReaction(messageId, emoji);
-      loadMessages();
-    } catch {
-      toast.error("Failed to remove reaction");
-    }
-  };
-
-  const handleEditMessage = async (messageId: string) => {
-    if (!editContent.trim()) return;
-    try {
-      await opsApi.editMessage(messageId, editContent);
-      setEditingMessage(null);
-      setEditContent("");
-      loadMessages();
-      toast.success("Message edited");
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: string } } };
-      toast.error(error.response?.data?.error || "Failed to edit message");
-    }
-  };
-
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!confirm("Delete this message?")) return;
-    try {
-      await opsApi.deleteMessage(messageId);
-      loadMessages();
-      toast.success("Message deleted");
-    } catch {
-      toast.error("Failed to delete message");
-    }
-  };
-
-  const handleResolveAction = async (messageId: string) => {
-    try {
-      await opsApi.resolveAction(messageId);
-      loadMessages();
-      toast.success("Action resolved");
-    } catch {
-      toast.error("Failed to resolve action");
-    }
-  };
-
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return "";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const getMessageStatusIcon = (status: string) => {
-    switch (status) {
-      case 'sent': return '✓';
-      case 'delivered': return '✓✓';
-      case 'read': return '✓✓';
-      default: return '';
-    }
-  };
+  const color = statusColors[kyc.status] || "#64748b";
 
   return (
-    <div className="kyc-detail">
+    <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20, height: "100%", overflowY: "auto" }}>
       {/* Header */}
-      <div className="detail-header">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <h2>{kyc.subContractorId?.companyName || "Unknown"}</h2>
-          <span className="user-info">
-            {kyc.userId?.name} • {kyc.userId?.email}
-          </span>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
+            {kyc.subContractorId?.companyName || "Unknown Company"}
+          </h2>
+          <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0" }}>
+            {kyc.userId?.name || ""}
+          </p>
         </div>
-        <div className="header-actions">
-          {kyc.status !== "KYC_COMPLETED" && (
-            <button className="btn-success" onClick={handleCompleteKyc}>
-              <HiOutlineCheckCircle /> Complete KYC
-            </button>
-          )}
-        </div>
+        <button
+          onClick={onClose}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: "#64748b", lineHeight: 1, padding: 0 }}
+        >
+          ×
+        </button>
       </div>
 
-      {/* Info Cards */}
-      <div className="info-cards">
-        <div className="info-card">
-          <label>Requested Amount</label>
-          <span className="value">
-            {kyc.requestedAmount
-              ? `₹${kyc.requestedAmount.toLocaleString()}`
-              : "—"}
+      {/* Status & Date */}
+      <div style={{ padding: 16, background: "#f8fafc", borderRadius: 8, fontSize: 13, display: "flex", flexDirection: "column", gap: 8, border: "1px solid #e2e8f0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 600, color: "#374151" }}>Status:</span>
+          <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 20, background: color + "20", color: color, fontWeight: 600, fontSize: 12 }}>
+            {kyc.status}
           </span>
         </div>
-        <div className="info-card">
-          <label>Tenure</label>
-          <span className="value">{kyc.tenure ? `${kyc.tenure} days` : "—"}</span>
+        <div>
+          <span style={{ fontWeight: 600, color: "#374151" }}>Submitted:</span>{" "}
+          <span style={{ color: "#64748b" }}>{new Date(kyc.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
         </div>
-        <div className="info-card">
-          <label>Bill Amount</label>
-          <span className="value">
-            {kyc.billId?.amount
-              ? `₹${kyc.billId.amount.toLocaleString()}`
-              : "—"}
-          </span>
-        </div>
-        <div className="info-card">
-          <label>Status</label>
-          <span
-            className={`status-badge ${kyc.status === "ACTION_REQUIRED" ? "danger" : kyc.status === "KYC_COMPLETED" ? "success" : ""}`}
-          >
-            {kyc.status.replace(/_/g, " ")}
-          </span>
-        </div>
-      </div>
-
-      {/* Chat Section */}
-      <div className="chat-section">
-        <div className="chat-header">
-          <h3>
-            <HiOutlineChat /> KYC Chat
-            {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
-          </h3>
-          <div className="chat-header-actions">
-            <button 
-              className={`icon-btn ${showSearch ? 'active' : ''}`}
-              onClick={() => setShowSearch(!showSearch)}
-              title="Search messages"
-            >
-              <HiOutlineSearch />
-            </button>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        {showSearch && (
-          <div className="chat-search">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search messages..."
-              autoFocus
-            />
-            {isSearching && <span className="searching">Searching...</span>}
-            {searchResults.length > 0 && (
-              <div className="search-results">
-                {searchResults.map((msg) => (
-                  <div key={msg._id} className="search-result-item">
-                    <span className="result-sender">{msg.senderId?.name}</span>
-                    <span className="result-content">{msg.content}</span>
-                    <span className="result-time">
-                      {new Date(msg.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="chat-messages">
-          {loading ? (
-            <div className="loading">Loading messages...</div>
-          ) : messages.length === 0 ? (
-            <div className="no-messages">
-              <HiOutlineChat />
-              <p>No messages yet. Start the conversation to request documents.</p>
-            </div>
-          ) : (
-            messages.map((msg) => (
-              <div
-                key={msg._id}
-                className={`message ${msg.senderRole === "ops" || msg.senderRole === "admin" ? "sent" : "received"} ${msg.messageType === 'action_required' ? 'action-message' : ''} ${msg.actionResolved ? 'resolved' : ''}`}
-              >
-                {/* Reply Reference */}
-                {msg.replyTo && (
-                  <div className="reply-reference">
-                    <span className="reply-sender">{msg.replyTo.senderId?.name}</span>
-                    <span className="reply-content">{msg.replyTo.content?.substring(0, 50)}...</span>
-                  </div>
-                )}
-
-                {/* Action Badge */}
-                {msg.messageType === 'action_required' && (
-                  <div className={`action-badge ${msg.actionType?.toLowerCase()}`}>
-                    {msg.actionType?.replace(/_/g, ' ')}
-                    {msg.actionResolved && <span className="resolved-tag">✓ Resolved</span>}
-                  </div>
-                )}
-
-                <div className="message-header">
-                  <span className="sender">
-                    {msg.senderRole === "ops" || msg.senderRole === "admin" ? "Ops Team" : msg.senderId?.name}
-                  </span>
-                  <span className="time">
-                    {new Date(msg.createdAt).toLocaleTimeString("en-IN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                    {msg.isEdited && <span className="edited-tag">(edited)</span>}
-                    {(msg.senderRole === "ops" || msg.senderRole === "admin") && (
-                      <span className={`status-indicator ${msg.status}`}>
-                        {getMessageStatusIcon(msg.status)}
-                      </span>
-                    )}
-                  </span>
-                </div>
-
-                {/* Message Content or Edit Form */}
-                {editingMessage === msg._id ? (
-                  <div className="edit-form">
-                    <input
-                      type="text"
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleEditMessage(msg._id)}
-                    />
-                    <button onClick={() => handleEditMessage(msg._id)}>Save</button>
-                    <button onClick={() => setEditingMessage(null)}>Cancel</button>
-                  </div>
-                ) : (
-                  <>
-                    {msg.content && <div className="message-content">{msg.content}</div>}
-                  </>
-                )}
-
-                {/* File Attachment */}
-                {msg.fileUrl && (
-                  <div className="message-file-container">
-                    {msg.thumbnailUrl || msg.fileType?.startsWith('image/') ? (
-                      <img src={msg.thumbnailUrl || msg.fileUrl} alt={msg.fileName} className="file-thumbnail" />
-                    ) : null}
-                    <a
-                      href={msg.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="message-file"
-                    >
-                      <HiOutlinePaperClip /> {msg.fileName || "Attachment"}
-                      {msg.fileSize && <span className="file-size">{formatFileSize(msg.fileSize)}</span>}
-                    </a>
-                  </div>
-                )}
-
-                {/* Reactions */}
-                {msg.reactions && msg.reactions.length > 0 && (
-                  <div className="reactions">
-                    {msg.reactions.map((reaction, idx) => (
-                      <span 
-                        key={idx} 
-                        className="reaction"
-                        onClick={() => handleRemoveReaction(msg._id, reaction.emoji)}
-                        title={reaction.userId?.name}
-                      >
-                        {reaction.emoji}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Message Actions */}
-                <div className="message-actions">
-                  <button 
-                    className="action-btn"
-                    onClick={() => setShowEmojiPicker(showEmojiPicker === msg._id ? null : msg._id)}
-                    title="React"
-                  >
-                    😀
-                  </button>
-                  <button 
-                    className="action-btn"
-                    onClick={() => setReplyingTo(msg)}
-                    title="Reply"
-                  >
-                    ↩
-                  </button>
-                  {(msg.senderRole === "ops" || msg.senderRole === "admin") && (
-                    <>
-                      <button 
-                        className="action-btn"
-                        onClick={() => {
-                          setEditingMessage(msg._id);
-                          setEditContent(msg.content || "");
-                        }}
-                        title="Edit"
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        className="action-btn delete"
-                        onClick={() => handleDeleteMessage(msg._id)}
-                        title="Delete"
-                      >
-                        🗑️
-                      </button>
-                    </>
-                  )}
-                  {msg.messageType === 'action_required' && !msg.actionResolved && (
-                    <button 
-                      className="action-btn resolve"
-                      onClick={() => handleResolveAction(msg._id)}
-                      title="Mark as Resolved"
-                    >
-                      ✓
-                    </button>
-                  )}
-                </div>
-
-                {/* Emoji Picker */}
-                {showEmojiPicker === msg._id && (
-                  <div className="emoji-picker">
-                    {REACTION_EMOJIS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        onClick={() => handleAddReaction(msg._id, emoji)}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-          <div ref={chatEndRef} />
-        </div>
-
-        {/* Chat Input */}
-        {kyc.status !== "KYC_COMPLETED" && (
-          <div className="chat-input-area">
-            {/* Reply Indicator */}
-            {replyingTo && (
-              <div className="reply-indicator">
-                <span>Replying to {replyingTo.senderId?.name}</span>
-                <span className="reply-preview">{replyingTo.content?.substring(0, 40)}...</span>
-                <button onClick={() => setReplyingTo(null)}>×</button>
-              </div>
-            )}
-
-            {file && (
-              <div className="file-preview">
-                <HiOutlinePaperClip /> {file.name}
-                <button onClick={() => setFile(null)}>×</button>
-              </div>
-            )}
-
-            {/* Action Type Selector */}
-            <div className="action-type-selector">
-              <label>Message Type:</label>
-              <select value={actionType} onChange={(e) => setActionType(e.target.value)}>
-                <option value="">Regular Message</option>
-                <option value="REQUEST_DOCUMENT">📄 Request Document</option>
-                <option value="CLARIFICATION">❓ Request Clarification</option>
-                <option value="APPROVAL_NEEDED">☑️ Approval Needed</option>
-                <option value="URGENT">🚨 Urgent</option>
-              </select>
-            </div>
-
-            <div className="chat-input">
-              <button
-                className="attach-btn"
-                onClick={() => fileInputRef.current?.click()}
-                title="Attach file"
-              >
-                <HiOutlinePaperClip />
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                hidden
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-              />
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message or document request..."
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-              />
-              <button
-                className="send-btn"
-                onClick={handleSendMessage}
-                disabled={sending || (!newMessage.trim() && !file)}
-              >
-                Send
-              </button>
-              <button
-                className="request-btn"
-                onClick={handleRequestDocs}
-                disabled={!newMessage.trim()}
-                title="Send as document request (updates status to ACTION_REQUIRED)"
-              >
-                Request Docs
-              </button>
-            </div>
+        {kyc.requestedAmount && (
+          <div>
+            <span style={{ fontWeight: 600, color: "#374151" }}>Requested Amount:</span>{" "}
+            <span style={{ color: "#64748b" }}>₹{kyc.requestedAmount.toLocaleString()}</span>
           </div>
         )}
       </div>
 
-      <style>{`
-        .kyc-detail {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-        }
-
-        .detail-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          padding: 20px 24px;
-          border-bottom: 1px solid var(--border, #e2e8f0);
-        }
-
-        .detail-header h2 {
-          font-size: 20px;
-          font-weight: 600;
-          margin-bottom: 4px;
-        }
-
-        .user-info {
-          font-size: 14px;
-          color: var(--text-muted, #64748b);
-        }
-
-        .info-cards {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
-          padding: 16px 24px;
-          background: var(--bg-secondary, #f8fafc);
-        }
-
-        .info-card {
-          padding: 12px;
-          background: white;
-          border-radius: 8px;
-        }
-
-        .info-card label {
-          display: block;
-          font-size: 11px;
-          text-transform: uppercase;
-          color: var(--text-muted, #64748b);
-          margin-bottom: 4px;
-        }
-
-        .info-card .value {
-          font-size: 16px;
-          font-weight: 600;
-          color: var(--text-primary, #1e293b);
-        }
-
-        .status-badge {
-          display: inline-block;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 600;
-          background: var(--bg-secondary, #f8fafc);
-        }
-
-        .status-badge.danger {
-          background: #fee2e2;
-          color: #dc2626;
-        }
-
-        .status-badge.success {
-          background: #d1fae5;
-          color: #059669;
-        }
-
-        .chat-section {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-
-        .chat-header {
-          padding: 12px 24px;
-          border-bottom: 1px solid var(--border, #e2e8f0);
-        }
-
-        .chat-header h3 {
-          font-size: 14px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .chat-messages {
-          flex: 1;
-          overflow-y: auto;
-          padding: 16px 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .no-messages {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          color: var(--text-muted, #64748b);
-          gap: 8px;
-        }
-
-        .no-messages svg {
-          font-size: 48px;
-          opacity: 0.3;
-        }
-
-        .message {
-          max-width: 80%;
-          padding: 12px 16px;
-          border-radius: 12px;
-        }
-
-        .message.sent {
-          align-self: flex-end;
-          background: var(--primary, #2563eb);
-          color: white;
-        }
-
-        .message.received {
-          align-self: flex-start;
-          background: var(--bg-secondary, #f8fafc);
-        }
-
-        .message-header {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          font-size: 11px;
-          margin-bottom: 4px;
-          opacity: 0.8;
-        }
-
-        .message-content {
-          font-size: 14px;
-          line-height: 1.5;
-        }
-
-        .message-file {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          margin-top: 8px;
-          padding: 6px 10px;
-          background: rgba(255,255,255,0.2);
-          border-radius: 6px;
-          font-size: 12px;
-          color: inherit;
-          text-decoration: none;
-        }
-
-        .chat-input-area {
-          border-top: 1px solid var(--border, #e2e8f0);
-          padding: 16px 24px;
-        }
-
-        .file-preview {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background: var(--bg-secondary, #f8fafc);
-          border-radius: 6px;
-          margin-bottom: 8px;
-          font-size: 13px;
-        }
-
-        .file-preview button {
-          margin-left: auto;
-          background: none;
-          border: none;
-          font-size: 18px;
-          cursor: pointer;
-          color: var(--text-muted, #64748b);
-        }
-
-        .chat-input {
-          display: flex;
-          gap: 8px;
-        }
-
-        .attach-btn {
-          width: 40px;
-          height: 40px;
-          border: 1px solid var(--border, #e2e8f0);
-          background: white;
-          border-radius: 8px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          color: var(--text-muted, #64748b);
-        }
-
-        .chat-input input[type="text"] {
-          flex: 1;
-          padding: 10px 14px;
-          border: 1px solid var(--border, #e2e8f0);
-          border-radius: 8px;
-          font-size: 14px;
-        }
-
-        .send-btn {
-          padding: 10px 20px;
-          background: var(--primary, #2563eb);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 500;
-        }
-
-        .send-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .request-btn {
-          padding: 10px 14px;
-          background: #f59e0b;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: 500;
-          font-size: 13px;
-        }
-
-        .request-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        /* Enhanced Chat Styles */
-        .chat-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .chat-header-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .icon-btn {
-          width: 32px;
-          height: 32px;
-          border: none;
-          background: transparent;
-          border-radius: 6px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-muted, #64748b);
-        }
-
-        .icon-btn:hover, .icon-btn.active {
-          background: var(--bg-secondary, #f1f5f9);
-          color: var(--primary, #2563eb);
-        }
-
-        .unread-badge {
-          background: #ef4444;
-          color: white;
-          font-size: 10px;
-          padding: 2px 6px;
-          border-radius: 10px;
-          margin-left: 8px;
-        }
-
-        .chat-search {
-          padding: 12px 24px;
-          border-bottom: 1px solid var(--border, #e2e8f0);
-          background: var(--bg-secondary, #f8fafc);
-        }
-
-        .chat-search input {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid var(--border, #e2e8f0);
-          border-radius: 6px;
-          font-size: 13px;
-        }
-
-        .search-results {
-          margin-top: 8px;
-          max-height: 200px;
-          overflow-y: auto;
-        }
-
-        .search-result-item {
-          padding: 8px;
-          background: white;
-          border-radius: 4px;
-          margin-bottom: 4px;
-          font-size: 12px;
-          display: flex;
-          gap: 8px;
-          align-items: center;
-        }
-
-        .result-sender {
-          font-weight: 600;
-          color: var(--text-primary);
-        }
-
-        .result-content {
-          flex: 1;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          color: var(--text-muted);
-        }
-
-        .result-time {
-          font-size: 10px;
-          color: var(--text-muted);
-        }
-
-        .reply-indicator {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background: #dbeafe;
-          border-radius: 6px;
-          margin-bottom: 8px;
-          font-size: 12px;
-        }
-
-        .reply-indicator .reply-preview {
-          flex: 1;
-          color: var(--text-muted);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .reply-indicator button {
-          background: none;
-          border: none;
-          font-size: 16px;
-          cursor: pointer;
-          padding: 0 4px;
-        }
-
-        .action-type-selector {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 8px;
-          font-size: 12px;
-        }
-
-        .action-type-selector label {
-          color: var(--text-muted);
-        }
-
-        .action-type-selector select {
-          padding: 4px 8px;
-          border: 1px solid var(--border, #e2e8f0);
-          border-radius: 4px;
-          font-size: 12px;
-          background: white;
-        }
-
-        /* Action Messages */
-        .message.action-message {
-          border-left: 3px solid #f59e0b;
-        }
-
-        .message.action-message.resolved {
-          border-left-color: #10b981;
-          opacity: 0.8;
-        }
-
-        .action-badge {
-          display: inline-block;
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-size: 10px;
-          font-weight: 600;
-          margin-bottom: 8px;
-          background: #fef3c7;
-          color: #92400e;
-        }
-
-        .action-badge.urgent {
-          background: #fee2e2;
-          color: #dc2626;
-        }
-
-        .action-badge.request_document {
-          background: #dbeafe;
-          color: #1d4ed8;
-        }
-
-        .resolved-tag {
-          margin-left: 8px;
-          color: #059669;
-        }
-
-        /* Reply Reference */
-        .reply-reference {
-          background: rgba(255,255,255,0.15);
-          padding: 6px 10px;
-          border-radius: 6px;
-          margin-bottom: 8px;
-          font-size: 11px;
-          border-left: 2px solid rgba(255,255,255,0.3);
-        }
-
-        .message.received .reply-reference {
-          background: rgba(0,0,0,0.05);
-          border-left-color: var(--text-muted);
-        }
-
-        .reply-sender {
-          font-weight: 600;
-          margin-right: 6px;
-        }
-
-        .reply-content {
-          opacity: 0.8;
-        }
-
-        /* Status Indicator */
-        .status-indicator {
-          margin-left: 4px;
-          font-size: 10px;
-        }
-
-        .status-indicator.read {
-          color: #10b981;
-        }
-
-        .edited-tag {
-          font-style: italic;
-          margin-left: 4px;
-          opacity: 0.7;
-        }
-
-        /* Edit Form */
-        .edit-form {
-          display: flex;
-          gap: 6px;
-          margin-top: 8px;
-        }
-
-        .edit-form input {
-          flex: 1;
-          padding: 6px 10px;
-          border: 1px solid rgba(255,255,255,0.3);
-          border-radius: 4px;
-          font-size: 13px;
-          background: rgba(255,255,255,0.2);
-          color: inherit;
-        }
-
-        .edit-form button {
-          padding: 6px 10px;
-          border: none;
-          border-radius: 4px;
-          font-size: 12px;
-          cursor: pointer;
-          background: rgba(255,255,255,0.2);
-          color: inherit;
-        }
-
-        /* File Preview */
-        .message-file-container {
-          margin-top: 8px;
-        }
-
-        .file-thumbnail {
-          max-width: 200px;
-          max-height: 150px;
-          border-radius: 8px;
-          margin-bottom: 6px;
-          display: block;
-        }
-
-        .file-size {
-          margin-left: 6px;
-          opacity: 0.7;
-          font-size: 10px;
-        }
-
-        /* Reactions */
-        .reactions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 4px;
-          margin-top: 8px;
-        }
-
-        .reaction {
-          display: inline-flex;
-          padding: 2px 6px;
-          background: rgba(255,255,255,0.2);
-          border-radius: 10px;
-          font-size: 12px;
-          cursor: pointer;
-        }
-
-        .message.received .reaction {
-          background: rgba(0,0,0,0.08);
-        }
-
-        /* Message Actions */
-        .message-actions {
-          display: none;
-          gap: 4px;
-          margin-top: 8px;
-        }
-
-        .message:hover .message-actions {
-          display: flex;
-        }
-
-        .action-btn {
-          width: 24px;
-          height: 24px;
-          border: none;
-          background: rgba(255,255,255,0.2);
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .message.received .action-btn {
-          background: rgba(0,0,0,0.08);
-        }
-
-        .action-btn:hover {
-          background: rgba(255,255,255,0.3);
-        }
-
-        .action-btn.delete:hover {
-          background: #fee2e2;
-          color: #dc2626;
-        }
-
-        .action-btn.resolve {
-          background: #d1fae5;
-          color: #059669;
-        }
-
-        /* Emoji Picker */
-        .emoji-picker {
-          display: flex;
-          gap: 4px;
-          margin-top: 6px;
-          padding: 6px;
-          background: white;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-
-        .emoji-picker button {
-          width: 28px;
-          height: 28px;
-          border: none;
-          background: transparent;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 16px;
-        }
-
-        .emoji-picker button:hover {
-          background: var(--bg-secondary, #f1f5f9);
-        }
-
-        @media (max-width: 768px) {
-          .info-cards {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-      `}</style>
+      {/* Open Full KYC Review Button */}
+      <button
+        onClick={() => navigate("/ops/kyc")}
+        style={{
+          padding: "14px 24px",
+          background: "#2563eb",
+          color: "white",
+          border: "none",
+          borderRadius: 8,
+          cursor: "pointer",
+          fontWeight: 600,
+          fontSize: 14,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+        }}
+      >
+        <span>🔍</span>
+        <span>Open Full KYC Review</span>
+        <span style={{ marginLeft: 4 }}>→</span>
+      </button>
+
+      {/* Complete KYC (only when in progress) */}
+      {kyc.status === "KYC_IN_PROGRESS" && (
+        <button
+          onClick={handleCompleteKyc}
+          disabled={completingKyc}
+          style={{
+            padding: "12px 24px",
+            background: "#10b981",
+            color: "white",
+            border: "none",
+            borderRadius: 8,
+            cursor: completingKyc ? "not-allowed" : "pointer",
+            fontWeight: 600,
+            opacity: completingKyc ? 0.7 : 1,
+          }}
+        >
+          {completingKyc ? "Processing..." : "✓ Complete KYC"}
+        </button>
+      )}
     </div>
   );
 };

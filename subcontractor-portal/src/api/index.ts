@@ -46,6 +46,10 @@ export const scApi = {
     api.post("/subcontractor/bill", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+  submitBillWithCwcrf: (formData: FormData) =>
+    api.post("/subcontractor/bill-with-cwcrf", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
   // WCC and Measurement Sheet uploads (SOP Phase 6)
   uploadWcc: (billId: string, formData: FormData) =>
     api.post(`/subcontractor/bills/${billId}/wcc`, formData, {
@@ -84,6 +88,11 @@ export const scApi = {
       headers: { "Content-Type": "multipart/form-data" },
     }),
   getKycStatus: () => api.get("/subcontractor/kyc/status"),
+  submitKycForReview: () => api.post("/subcontractor/kyc/submit"),
+  uploadAdditionalDocument: (docId: string, formData: FormData) =>
+    api.post(`/subcontractor/kyc/additional/${docId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
 
   // Bank Details
   updateBankDetails: (data: {
