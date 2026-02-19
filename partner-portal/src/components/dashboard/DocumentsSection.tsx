@@ -12,11 +12,7 @@ const DOCUMENT_TYPES = [
   { key: "CIN", label: "CIN Certificate", required: true },
   { key: "GST", label: "GST Certificate", required: true },
   { key: "PAN", label: "PAN Card", required: true },
-  {
-    key: "BOARD_RESOLUTION",
-    label: "Board Resolution",
-    required: true,
-  },
+  { key: "BOARD_RESOLUTION", label: "Board Resolution", required: true },
   {
     key: "BANK_STATEMENTS",
     label: "Bank Statements (12 months)",
@@ -27,16 +23,8 @@ const DOCUMENT_TYPES = [
     label: "Audited Financials (2 years)",
     required: true,
   },
-  {
-    key: "PROJECT_DETAILS",
-    label: "Project Details",
-    required: false,
-  },
-  {
-    key: "CASHFLOW_DETAILS",
-    label: "Cash-flow Details",
-    required: false,
-  },
+  { key: "PROJECT_DETAILS", label: "Project Details", required: false },
+  { key: "CASHFLOW_DETAILS", label: "Cash-flow Details", required: false },
 ];
 
 export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
@@ -73,221 +61,152 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   return (
     <motion.div
       key="documents"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-      className="section"
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.3 }}
+      className="max-w-5xl"
     >
-      <div className="section-header">
-        <div>
-          <h2>Company Documents</h2>
-          <p className="section-subtitle">
-            Upload all required documents to proceed with verification
-          </p>
-        </div>
-        <div className="docs-progress-badge">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-          {/* @ts-ignore */}
-          {profile?.documents?.length || 0}/
-          {DOCUMENT_TYPES.filter((d) => d.required).length} Required
-        </div>
-      </div>
-
-      <div className="documents-grid">
-        {DOCUMENT_TYPES.map((docType, index) => {
-          const existingDoc = getDocumentStatus(docType.key);
-          const isUploading = uploadingDoc === docType.key;
+      <div className="grid gap-4">
+        {DOCUMENT_TYPES.map((docType) => {
+          const doc = getDocumentStatus(docType.key);
+          const isUploaded = !!doc;
+          const isVerified = doc?.status === "verified";
+          const isRejected = doc?.status === "rejected";
+          const isPending = isUploaded && !isVerified && !isRejected;
 
           return (
             <motion.div
               key={docType.key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`document-card ${existingDoc ? "uploaded" : ""} ${existingDoc?.status === "verified" ? "verified" : ""} ${existingDoc?.status === "rejected" ? "rejected" : ""}`}
+              layout
+              className={`doc-card ${
+                isVerified ? "border-emerald-200 bg-emerald-50/30" : ""
+              }`}
             >
-              <div className="document-card-icon">
-                {existingDoc?.status === "verified" ? (
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--success)"
-                    strokeWidth="2.5"
-                  >
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                ) : existingDoc?.status === "rejected" ? (
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--danger)"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="15" y1="9" x2="9" y2="15" />
-                    <line x1="9" y1="9" x2="15" y2="15" />
-                  </svg>
-                ) : existingDoc ? (
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--warning)"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                ) : (
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--text-muted)"
-                    strokeWidth="1.5"
-                  >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                )}
+              {/* Icon */}
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
+                  isVerified
+                    ? "bg-emerald-100 text-emerald-600"
+                    : isRejected
+                      ? "bg-red-100 text-red-600"
+                      : isUploaded
+                        ? "bg-indigo-100 text-indigo-600"
+                        : "bg-slate-100 text-slate-400"
+                }`}
+              >
+                {isVerified ? "✓" : isRejected ? "!" : isUploaded ? "📄" : "☁️"}
               </div>
-              <div className="document-card-content">
-                <div className="document-card-header">
-                  <h3 className="document-title">{docType.label}</h3>
-                  <div className="document-badges">
-                    {docType.required && !existingDoc && (
-                      <span className="badge badge-red">Required</span>
-                    )}
-                    {existingDoc && (
-                      <span
-                        className={`badge ${existingDoc.status === "verified" ? "badge-green" : existingDoc.status === "rejected" ? "badge-red" : "badge-yellow"}`}
-                      >
-                        {existingDoc.status === "verified" && "Verified"}
-                        {existingDoc.status === "rejected" && "Rejected"}
-                        {existingDoc.status === "pending" && "Pending"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {existingDoc && existingDoc.fileName && (
-                  <p className="document-filename">{existingDoc.fileName}</p>
-                )}
-                {/* Rejection notes */}
-                {existingDoc?.status === "rejected" &&
-                  existingDoc.verificationNotes && (
-                    <div className="rejection-note">
-                      <strong>Reason:</strong> {existingDoc.verificationNotes}
-                    </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="font-semibold text-slate-800">
+                    {docType.label}
+                  </h3>
+                  {docType.required && (
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                      REQUIRED
+                    </span>
                   )}
-              </div>
-              <div className="document-card-actions">
-                {existingDoc ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        if (!existingDoc.fileUrl) {
-                          alert(
-                            "Document URL is missing. Please re-upload the document.",
-                          );
-                          return;
-                        }
-                        window.open(existingDoc.fileUrl, "_blank");
-                      }}
-                      className="btn-icon"
-                      title="View Document"
-                    >
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </button>
-                    {existingDoc.status === "rejected" && (
-                      <div className="upload-wrapper">
-                        <input
-                          type="file"
-                          ref={(el) => {
-                            fileInputRefs.current[docType.key] = el;
-                          }}
-                          onChange={(e) => handleFileChange(docType.key, e)}
-                          style={{ display: "none" }}
-                          accept=".pdf,.jpg,.jpeg,.png"
-                        />
-                        <button
-                          onClick={() => handleFileClick(docType.key)}
-                          className="btn-text"
-                          disabled={isUploading}
-                        >
-                          {isUploading ? "Uploading..." : "Re-upload"}
-                        </button>
-                      </div>
+
+                  {isVerified && (
+                    <span className="doc-status-badge doc-status-verified">
+                      Verified
+                    </span>
+                  )}
+                  {isRejected && (
+                    <span className="doc-status-badge doc-status-rejected">
+                      Rejected
+                    </span>
+                  )}
+                  {isPending && (
+                    <span className="doc-status-badge doc-status-pending">
+                      Pending Review
+                    </span>
+                  )}
+                </div>
+
+                {isUploaded ? (
+                  <div className="text-sm text-slate-500">
+                    <p className="flex items-center gap-2">
+                      <span className="truncate max-w-xs">{doc?.fileName}</span>
+                      <span className="text-slate-300">•</span>
+                      <span>
+                        Uploaded on{" "}
+                        {doc?.uploadedAt
+                          ? new Date(doc.uploadedAt).toLocaleDateString()
+                          : "Unknown date"}
+                      </span>
+                    </p>
+                    {isRejected && doc?.verificationNotes && (
+                      <p className="text-red-500 text-xs mt-1 font-medium">
+                        Reason: {doc.verificationNotes}
+                      </p>
                     )}
-                  </>
-                ) : (
-                  <div className="upload-wrapper">
-                    <input
-                      type="file"
-                      ref={(el) => {
-                        fileInputRefs.current[docType.key] = el;
-                      }}
-                      onChange={(e) => handleFileChange(docType.key, e)}
-                      style={{ display: "none" }}
-                      accept=".pdf,.jpg,.jpeg,.png"
-                    />
-                    <button
-                      onClick={() => handleFileClick(docType.key)}
-                      className="btn-primary-sm"
-                      disabled={isUploading}
-                    >
-                      {isUploading ? (
-                        <>
-                          <span className="spinner-sm"></span>
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="17 8 12 3 7 8" />
-                            <line x1="12" y1="3" x2="12" y2="15" />
-                          </svg>
-                          Upload
-                        </>
-                      )}
-                    </button>
                   </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">
+                    Please upload this document to proceed
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                {isUploaded && doc?.fileUrl && (
+                  <a
+                    href={doc.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    title="View Document"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      ></path>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      ></path>
+                    </svg>
+                  </a>
+                )}
+
+                <input
+                  type="file"
+                  ref={(el) => {
+                    fileInputRefs.current[docType.key] = el;
+                  }}
+                  className="hidden"
+                  onChange={(e) => handleFileChange(docType.key, e)}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  style={{ display: "none" }}
+                />
+
+                {!isVerified && (
+                  <button
+                    onClick={() => handleFileClick(docType.key)}
+                    disabled={uploadingDoc === docType.key}
+                    className="btn-secondary text-sm py-2 px-4 shadow-sm min-w-[100px]"
+                  >
+                    {uploadingDoc === docType.key
+                      ? "Uploading..."
+                      : isUploaded
+                        ? "Re-upload"
+                        : "Upload"}
+                  </button>
                 )}
               </div>
             </motion.div>

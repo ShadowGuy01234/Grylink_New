@@ -48,6 +48,21 @@ export interface Bill {
   amount: number;
   status: string;
   uploadedAt: string;
+  fileName?: string;
+  fileUrl?: string;
+  mimeType?: string;
+  billType?: string;
+  description?: string;
+  wcc?: {
+    uploaded: boolean;
+    fileUrl?: string;
+    fileName?: string;
+  };
+  measurementSheet?: {
+    uploaded: boolean;
+    fileUrl?: string;
+    fileName?: string;
+  };
 }
 
 export interface Case {

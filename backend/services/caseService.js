@@ -9,7 +9,10 @@ const getCases = async (filters = {}) => {
 
   return Case.find(query)
     .sort({ createdAt: -1 })
-    .populate("billId", "billNumber amount fileName")
+    .populate(
+      "billId",
+      "billNumber amount fileName fileUrl mimeType uploadedAt wcc measurementSheet",
+    )
     .populate("subContractorId", "companyName contactName")
     .populate("epcId", "companyName");
 };

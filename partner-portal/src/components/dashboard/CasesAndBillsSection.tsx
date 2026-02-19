@@ -1,20 +1,20 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Case } from "../../types";
 
 interface CasesAndBillsSectionProps {
   cases: Case[];
-  // bills: Bill[]; // Removed unused prop
   onReviewCase: (caseId: string, decision: string) => Promise<void>;
   isEpc: boolean;
 }
 
 export const CasesAndBillsSection: React.FC<CasesAndBillsSectionProps> = ({
   cases,
-  // bills,
   onReviewCase,
   isEpc,
 }) => {
+  const [selectedCase, setSelectedCase] = React.useState<Case | null>(null);
+
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
       READY_FOR_COMPANY_REVIEW: "badge-purple",
@@ -61,13 +61,15 @@ export const CasesAndBillsSection: React.FC<CasesAndBillsSectionProps> = ({
               transition={{ delay: index * 0.05 }}
               className="case-card"
             >
+              {/* ── Case Header ── */}
               <div className="case-header">
                 <div className="case-id">
-                  <span className="label">Case ID</span>
-                  <span className="value">{c.caseNumber}</span>
+                  <span className="case-number">{c.caseNumber}</span>
+                  {statusBadge(c.status)}
                 </div>
-                <div>{statusBadge(c.status)}</div>
               </div>
+
+              {/* ── Case Body Grid ── */}
               <div className="case-body">
                 <div className="case-row">
                   <div className="case-col">
@@ -84,11 +86,9 @@ export const CasesAndBillsSection: React.FC<CasesAndBillsSectionProps> = ({
                   </div>
                   <div className="case-col">
                     <span className="label">Bill Number</span>
-                    <span className="value">{c.billId?.billNumber}</span>
+                    <span className="value">{c.billId?.billNumber || "—"}</span>
                   </div>
-                </div>
-                {c.cwcaf && (
-                  <div className="case-row risk-row">
+                  {c.cwcaf?.riskCategory && (
                     <div className="case-col">
                       <span className="label">Risk Category</span>
                       <span
@@ -97,17 +97,11 @@ export const CasesAndBillsSection: React.FC<CasesAndBillsSectionProps> = ({
                         {c.cwcaf.riskCategory}
                       </span>
                     </div>
-                    {c.cwcaf.riskAssessmentDetails && (
-                      <div className="case-col">
-                        <span className="label">Risk Score</span>
-                        <span className="value">
-                          {c.cwcaf.riskAssessmentDetails.totalScore}/100
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
+
+              {/* ── Case Actions ── */}
               <div className="case-actions">
                 {isEpc && c.status === "READY_FOR_COMPANY_REVIEW" && (
                   <>
@@ -116,28 +110,28 @@ export const CasesAndBillsSection: React.FC<CasesAndBillsSectionProps> = ({
                       className="btn-success"
                     >
                       <svg
-                        width="16"
-                        height="16"
+                        width="14"
+                        height="14"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
                       >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
-                      Approve Case
+                      Approve
                     </button>
                     <button
                       onClick={() => onReviewCase(c._id, "reject")}
                       className="btn-danger-outline"
                     >
                       <svg
-                        width="16"
-                        height="16"
+                        width="14"
+                        height="14"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
                       >
                         <line x1="18" y1="6" x2="6" y2="18" />
                         <line x1="6" y1="6" x2="18" y2="18" />
@@ -146,12 +140,340 @@ export const CasesAndBillsSection: React.FC<CasesAndBillsSectionProps> = ({
                     </button>
                   </>
                 )}
-                <button className="btn-secondary">View Details</button>
+                <button
+                  className="btn-outline"
+                  onClick={() => setSelectedCase(c)}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  View Details
+                </button>
               </div>
             </motion.div>
           ))
         )}
       </div>
+
+      {/* ── Case Details Modal ── */}
+      <AnimatePresence>
+        {selectedCase && (
+          <div className="modal-overlay" onClick={() => setSelectedCase(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="modal-content"
+              style={{ maxWidth: 560 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 20,
+                }}
+              >
+                <div>
+                  <h2 style={{ margin: 0 }}>Case Details</h2>
+                  <p
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: "0.8rem",
+                      color: "#64748b",
+                    }}
+                  >
+                    {selectedCase.caseNumber}
+                  </p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {statusBadge(selectedCase.status)}
+                  <button
+                    onClick={() => setSelectedCase(null)}
+                    style={{
+                      background: "#f1f5f9",
+                      border: "none",
+                      borderRadius: 8,
+                      width: 32,
+                      height: 32,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="#475569"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Detail Grid */}
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <span className="label">Sub-Contractor</span>
+                  <span className="value">
+                    {selectedCase.subContractorId?.companyName || "Unknown"}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Bill Amount</span>
+                  <span className="value amount">
+                    ₹{selectedCase.billId?.amount?.toLocaleString()}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Bill Number</span>
+                  <span className="value">
+                    {selectedCase.billId?.billNumber || "—"}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Bill Date</span>
+                  <span className="value">
+                    {selectedCase.billId?.uploadedAt
+                      ? new Date(
+                          selectedCase.billId.uploadedAt,
+                        ).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "—"}
+                  </span>
+                </div>
+                {selectedCase.cwcaf?.riskCategory && (
+                  <div className="detail-item">
+                    <span className="label">Risk Category</span>
+                    <span
+                      className={`risk-badge ${selectedCase.cwcaf.riskCategory?.toLowerCase()}`}
+                    >
+                      {selectedCase.cwcaf.riskCategory}
+                    </span>
+                  </div>
+                )}
+                {selectedCase.cwcaf?.riskAssessmentDetails?.totalScore !==
+                  undefined && (
+                  <div className="detail-item">
+                    <span className="label">Risk Score</span>
+                    <span className="value">
+                      {selectedCase.cwcaf.riskAssessmentDetails.totalScore}/100
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Bill Document ── */}
+              {selectedCase.billId?.fileUrl && (
+                <div className="bill-document-section">
+                  <p className="bill-doc-label">Uploaded Bill</p>
+
+                  {selectedCase.billId.mimeType?.startsWith("image/") ? (
+                    <div className="bill-image-preview">
+                      <img
+                        src={selectedCase.billId.fileUrl}
+                        alt="Bill document"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: 260,
+                          objectFit: "contain",
+                          borderRadius: 8,
+                        }}
+                      />
+                      <a
+                        href={selectedCase.billId.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bill-open-link"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                        Open Full Size
+                      </a>
+                    </div>
+                  ) : (
+                    <a
+                      href={selectedCase.billId.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bill-file-card"
+                    >
+                      <div className="bill-file-icon">
+                        {selectedCase.billId.mimeType === "application/pdf" ? (
+                          <svg
+                            width="24"
+                            height="24"
+                            fill="none"
+                            stroke="#dc2626"
+                            strokeWidth="1.5"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="24"
+                            height="24"
+                            fill="none"
+                            stroke="#16a34a"
+                            strokeWidth="1.5"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="bill-file-info">
+                        <span className="bill-file-name">
+                          {selectedCase.billId.fileName || "Bill Document"}
+                        </span>
+                        <span className="bill-file-type">
+                          {selectedCase.billId.mimeType === "application/pdf"
+                            ? "PDF Document"
+                            : "Document"}{" "}
+                          · Click to open
+                        </span>
+                      </div>
+                      <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="#94a3b8"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                    </a>
+                  )}
+
+                  {/* WCC & Measurement Sheet */}
+                  {(selectedCase.billId?.wcc?.uploaded ||
+                    selectedCase.billId?.measurementSheet?.uploaded) && (
+                    <div className="bill-attachments">
+                      {selectedCase.billId?.wcc?.uploaded &&
+                        selectedCase.billId?.wcc?.fileUrl && (
+                          <a
+                            href={selectedCase.billId.wcc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bill-attachment-link"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 17.2a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                            Work Completion Certificate
+                          </a>
+                        )}
+                      {selectedCase.billId?.measurementSheet?.uploaded &&
+                        selectedCase.billId?.measurementSheet?.fileUrl && (
+                          <a
+                            href={selectedCase.billId.measurementSheet.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bill-attachment-link"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 17.2a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                            Measurement Sheet
+                          </a>
+                        )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* EPC Actions inside modal too */}
+
+              {isEpc && selectedCase.status === "READY_FOR_COMPANY_REVIEW" && (
+                <div className="modal-actions">
+                  <button
+                    onClick={async () => {
+                      await onReviewCase(selectedCase._id, "reject");
+                      setSelectedCase(null);
+                    }}
+                    className="btn-danger-outline"
+                  >
+                    Reject Case
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await onReviewCase(selectedCase._id, "approve");
+                      setSelectedCase(null);
+                    }}
+                    className="btn-success"
+                  >
+                    Approve Case
+                  </button>
+                </div>
+              )}
+
+              {(!isEpc ||
+                selectedCase.status !== "READY_FOR_COMPANY_REVIEW") && (
+                <div className="modal-actions">
+                  <button
+                    onClick={() => setSelectedCase(null)}
+                    className="btn-ghost"
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

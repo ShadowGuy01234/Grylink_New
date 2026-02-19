@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
-@import "tailwindcss";
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 /* ============================================
    GRYORK BRAND COLORS - LIGHT THEME
    Primary Blue: #1E5AAF (600), #0A2463 (900), #3B82F6 (500)
