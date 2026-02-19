@@ -132,6 +132,18 @@ router.post(
   }
 );
 
+// GET /api/ops/subcontractors - List all sub-contractors (for additional docs management)
+router.get('/subcontractors', authenticate, authorize('ops', 'admin'), async (req, res) => {
+  try {
+    const sellers = await SubContractor.find({})
+      .select('companyName contactName email status additionalDocuments')
+      .sort({ createdAt: -1 });
+    res.json({ sellers });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /api/ops/pending - Get all pending verifications
 router.get('/pending', authenticate, authorize('ops', 'admin'), async (req, res) => {
   try {

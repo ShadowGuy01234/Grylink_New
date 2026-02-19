@@ -14,7 +14,7 @@ import {
   User, FileText, Send, FolderOpen, Gavel, Upload, Building2, Phone,
   Hash, ChevronRight, CheckCircle2, Clock, AlertCircle, XCircle,
   TrendingUp, LayoutDashboard, MapPin, CreditCard, IndianRupee,
-  ArrowUpRight, CalendarDays,
+  ArrowUpRight, CalendarDays, ClipboardList, FilePlus2, FolderUp, Paperclip,
 } from "lucide-react";
 
 const DashboardPage = () => {
@@ -47,6 +47,10 @@ const DashboardPage = () => {
   const [showDeclarationDialog, setShowDeclarationDialog] = useState(false);
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [pendingBillForm, setPendingBillForm] = useState<FormData | null>(null);
+
+  // Additional Documents
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
+  const [additionalDocFile, setAdditionalDocFile] = useState<File | null>(null);
 
   // Bids
   const [respondingBid, setRespondingBid] = useState<string | null>(null);
@@ -114,6 +118,24 @@ const DashboardPage = () => {
     setPendingBillForm(formData);
     setDeclarationAccepted(false);
     setShowDeclarationDialog(true);
+  };
+
+  const handleUploadAdditionalDoc = async (docId: string) => {
+    if (!additionalDocFile) { toast.error("Please select a file"); return; }
+    setUploadingDocId(docId);
+    try {
+      const formData = new FormData();
+      formData.append("document", additionalDocFile);
+      await scApi.uploadAdditionalDocument(docId, formData);
+      toast.success("Document uploaded successfully!");
+      setAdditionalDocFile(null);
+      setUploadingDocId(null);
+      fetchDashboard();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Upload failed");
+    } finally {
+      setUploadingDocId(null);
+    }
   };
 
   const handleConfirmBillSubmit = async () => {
@@ -194,14 +216,18 @@ const DashboardPage = () => {
     emerald: { bg: "bg-emerald-600", text: "text-emerald-600", light: "bg-emerald-50" },
     violet:  { bg: "bg-violet-600",  text: "text-violet-600",  light: "bg-violet-50" },
     amber:   { bg: "bg-amber-500",   text: "text-amber-600",   light: "bg-amber-50" },
+    teal:    { bg: "bg-teal-600",    text: "text-teal-600",    light: "bg-teal-50" },
   };
 
   const tabs = [
-    { id: "overview", label: "Overview", icon: LayoutDashboard },
-    { id: "profile",  label: "Profile",  icon: User },
-    { id: "bills",    label: "Bills",    icon: FileText },
-    { id: "cases",    label: "Cases",    icon: FolderOpen },
-    { id: "bids",     label: "Bids",     icon: Gavel, badge: pendingBids.length > 0 ? pendingBids.length : undefined },
+    { id: "overview",       label: "Overview",      icon: LayoutDashboard },
+    { id: "profile",        label: "Profile",       icon: User },
+    { id: "bills",          label: "CWC RF",        icon: FileText },
+    { id: "cwcaf",          label: "CWC AF",        icon: ClipboardList },
+    { id: "additional-docs",label: "Extra Docs",    icon: FolderUp,
+      badge: (() => { const n = sc?.additionalDocuments?.filter((d: any) => d.status === "REQUESTED").length; return n > 0 ? n : undefined; })() },
+    { id: "cases",          label: "Cases",         icon: FolderOpen },
+    { id: "bids",           label: "Bids",          icon: Gavel, badge: pendingBids.length > 0 ? pendingBids.length : undefined },
   ];
 
   const statusConfig: Record<string, { variant: "success" | "warning" | "destructive" | "secondary"; label: string }> = {
@@ -229,19 +255,23 @@ const DashboardPage = () => {
   };
 
   const tabTitles: Record<string, string> = {
-    overview: "Dashboard",
-    profile:  "My Profile",
-    bills:    "Bills & CWC RF",
-    cases:    "Cases",
-    bids:     "My Bids",
+    overview:         "Dashboard",
+    profile:          "My Profile",
+    bills:            "CWC RF Form",
+    cwcaf:            "CWC AF Form",
+    "additional-docs":"Additional Documents",
+    cases:            "Cases",
+    bids:             "My Bids",
   };
 
   const tabDescriptions: Record<string, string> = {
-    overview: "Manage your bills, cases, and bids",
-    profile:  "Update your business information",
-    bills:    "Upload invoices — each submission automatically creates a CWC RF request",
-    cases:    "Track your financing cases",
-    bids:     "View and respond to bid offers",
+    overview:         "Manage your bills, cases, and bids",
+    profile:          "Update your business information",
+    bills:            "Submit invoice — each submission automatically creates a CWC RF request for ops review",
+    cwcaf:            "Submit your CWC Agreement Form for working capital financing",
+    "additional-docs":"Upload documents requested by the operations team",
+    cases:            "Track your financing cases",
+    bids:             "View and respond to bid offers",
   };
 
   return (
@@ -376,10 +406,11 @@ const DashboardPage = () => {
             {/* Quick Actions */}
             <div>
               <p className="text-sm font-medium text-gray-500 mb-3">Quick Actions</p>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid sm:grid-cols-3 gap-3">
                 {[
-                  { id: "bills", label: "Upload a Bill", desc: "Submit invoice & CWC RF together", icon: Upload, color: "blue" },
-                  { id: "bids",  label: "View Bids",    desc: `${pendingBids.length} pending`, icon: Gavel, color: "amber" },
+                  { id: "bills",  label: "Start CWC RF Form", desc: "Submit invoice & CWC RF",       icon: FilePlus2,     color: "blue" },
+                  { id: "cwcaf", label: "Start CWC AF Form", desc: "Working capital agreement",     icon: ClipboardList, color: "teal" },
+                  { id: "bids",  label: "View Bids",         desc: `${pendingBids.length} pending`,  icon: Gavel,         color: "amber" },
                 ].map((action) => {
                   const Icon = action.icon;
                   const c = colorMap[action.color];
@@ -781,6 +812,198 @@ const DashboardPage = () => {
                 </div>
               </Card>
             )}
+          </motion.div>
+        )}
+
+        {/* ── Additional Documents ── */}
+        {activeTab === "additional-docs" && (
+          <motion.div key="additional-docs" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
+
+            {/* Info Banner */}
+            <div className="flex items-start gap-3 bg-violet-50 border border-violet-200 rounded-xl p-4">
+              <Paperclip className="h-5 w-5 text-violet-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-violet-900">Additional Documents Requested</p>
+                <p className="text-xs text-violet-700 mt-0.5">
+                  The operations team may request additional supporting documents during verification. Upload each requested document below.
+                </p>
+              </div>
+            </div>
+
+            {sc?.additionalDocuments?.length > 0 ? (
+              <div className="space-y-3">
+                {sc.additionalDocuments.map((doc: any) => {
+                  const isRequested = doc.status === "REQUESTED";
+                  const isUploaded  = doc.status === "UPLOADED";
+                  const isVerified  = doc.status === "VERIFIED";
+                  const isRejected  = doc.status === "REJECTED";
+                  const isActive    = uploadingDocId === doc._id;
+
+                  return (
+                    <Card key={doc._id} className={`border shadow-none ${
+                      isRequested ? "border-amber-200 bg-amber-50/50" :
+                      isRejected  ? "border-red-200 bg-red-50/50" :
+                      isVerified  ? "border-emerald-200 bg-emerald-50/50" :
+                      "border-gray-200"
+                    }`}>
+                      <CardContent className="p-5">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                              isRequested ? "bg-amber-100" :
+                              isRejected  ? "bg-red-100" :
+                              isVerified  ? "bg-emerald-100" :
+                              "bg-blue-100"
+                            }`}>
+                              <Paperclip className={`h-4 w-4 ${
+                                isRequested ? "text-amber-600" :
+                                isRejected  ? "text-red-600" :
+                                isVerified  ? "text-emerald-600" :
+                                "text-blue-600"
+                              }`} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{doc.label}</p>
+                              {doc.description && <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>}
+                              <p className="text-xs text-gray-400 mt-0.5">
+                                Requested {new Date(doc.requestedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div>
+                            {isRequested && <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full"><AlertCircle className="h-3 w-3" />Action Required</span>}
+                            {isUploaded  && <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full"><Clock className="h-3 w-3" />Under Review</span>}
+                            {isVerified  && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full"><CheckCircle2 className="h-3 w-3" />Verified</span>}
+                            {isRejected  && <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-100 px-2.5 py-1 rounded-full"><XCircle className="h-3 w-3" />Rejected</span>}
+                          </div>
+                        </div>
+
+                        {/* Show uploaded file name */}
+                        {doc.fileName && (
+                          <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            Uploaded: <span className="font-medium">{doc.fileName}</span>
+                            {doc.fileUrl && (
+                              <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">View</a>
+                            )}
+                          </p>
+                        )}
+
+                        {/* Upload area for REQUESTED or REJECTED */}
+                        {(isRequested || isRejected) && (
+                          <div className="mt-3 space-y-2">
+                            <label
+                              htmlFor={`addoc-${doc._id}`}
+                              className={`flex items-center gap-2 border-2 border-dashed rounded-lg px-4 py-3 cursor-pointer transition-colors ${
+                                isActive && additionalDocFile ? "border-violet-300 bg-violet-50" : "border-gray-200 hover:border-violet-300 hover:bg-violet-50/50"
+                              }`}
+                            >
+                              <input
+                                type="file"
+                                id={`addoc-${doc._id}`}
+                                className="hidden"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onChange={(e) => {
+                                  setAdditionalDocFile(e.target.files?.[0] || null);
+                                  setUploadingDocId(doc._id);
+                                }}
+                              />
+                              <Upload className="h-4 w-4 text-gray-400 shrink-0" />
+                              <span className="text-sm text-gray-600">
+                                {isActive && additionalDocFile ? additionalDocFile.name : (isRejected ? "Re-upload document" : "Select document to upload")}
+                              </span>
+                            </label>
+                            {isActive && additionalDocFile && (
+                              <div className="flex justify-end">
+                                <Button
+                                  size="sm"
+                                  className="bg-violet-600 hover:bg-violet-700 text-white"
+                                  disabled={uploadingDocId === doc._id && !additionalDocFile}
+                                  onClick={() => handleUploadAdditionalDoc(doc._id)}
+                                >
+                                  {uploadingDocId === doc._id ? "Uploading..." : "Submit Document"}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <Card className="border border-gray-200 shadow-none">
+                <div className="flex flex-col items-center justify-center py-14 text-center px-6">
+                  <FolderUp className="h-10 w-10 text-gray-200 mb-3" />
+                  <p className="text-sm font-medium text-gray-600">No additional documents requested</p>
+                  <p className="text-xs text-gray-400 mt-1">The operations team will notify you here if they need more documents</p>
+                </div>
+              </Card>
+            )}
+          </motion.div>
+        )}
+
+        {/* ── CWC AF ── */}
+        {activeTab === "cwcaf" && (
+          <motion.div key="cwcaf" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
+
+            {/* Info Banner */}
+            <div className="flex items-start gap-3 bg-teal-50 border border-teal-200 rounded-xl p-4">
+              <ClipboardList className="h-5 w-5 text-teal-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-teal-900">CWC Agreement Form</p>
+                <p className="text-xs text-teal-700 mt-0.5">
+                  Complete the CWC AF to finalise your working capital financing agreement. This is required after your CWC RF has been approved by the operations team.
+                </p>
+              </div>
+            </div>
+
+            <Card className="border border-gray-200 shadow-none">
+              <CardHeader>
+                <CardTitle className="text-base">CWC Agreement Form</CardTitle>
+                <CardDescription>Fill in the agreement details for working capital financing</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cwcaf-ref">CWC RF Reference Number <span className="text-red-500">*</span></Label>
+                      <Input id="cwcaf-ref" placeholder="RF-00001" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cwcaf-amount">Agreed Amount (₹) <span className="text-red-500">*</span></Label>
+                      <Input id="cwcaf-amount" type="number" placeholder="100000" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cwcaf-duration">Financing Duration (days) <span className="text-red-500">*</span></Label>
+                      <Input id="cwcaf-duration" type="number" placeholder="45" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cwcaf-bank">Bank Account Number <span className="text-red-500">*</span></Label>
+                      <Input id="cwcaf-bank" placeholder="XXXX XXXX XXXX" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cwcaf-ifsc">IFSC Code <span className="text-red-500">*</span></Label>
+                      <Input id="cwcaf-ifsc" placeholder="SBIN0001234" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cwcaf-pan">PAN Number <span className="text-red-500">*</span></Label>
+                      <Input id="cwcaf-pan" placeholder="ABCDE1234F" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cwcaf-remarks">Additional Remarks</Label>
+                    <Textarea id="cwcaf-remarks" placeholder="Any additional information for the agreement..." className="min-h-[80px] resize-none" />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white">
+                      Submit CWC AF
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
 

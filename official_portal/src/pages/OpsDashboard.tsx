@@ -77,6 +77,62 @@ const OpsDashboard = () => {
   const [notes, setNotes] = useState("");
   const navigate = useNavigate();
 
+  // Additional Documents tab
+  const [additionalDocSellers, setAdditionalDocSellers] = useState<any[]>([]);
+  const [selectedDocSeller, setSelectedDocSeller] = useState<any | null>(null);
+  const [requestDocForm, setRequestDocForm] = useState({ label: "", description: "" });
+  const [requestingDoc, setRequestingDoc] = useState(false);
+  const [loadingDocSellers, setLoadingDocSellers] = useState(false);
+  const [verifyingDocId, setVerifyingDocId] = useState<string | null>(null);
+
+  const fetchAdditionalDocSellers = async (selectId?: string) => {
+    setLoadingDocSellers(true);
+    try {
+      const res = await opsApi.getSubContractors();
+      const sellers = res.data.sellers || [];
+      setAdditionalDocSellers(sellers);
+      if (selectId) {
+        const fresh = sellers.find((s: any) => s._id === selectId);
+        if (fresh) setSelectedDocSeller(fresh);
+      } else if (selectedDocSeller) {
+        const fresh = sellers.find((s: any) => s._id === selectedDocSeller._id);
+        if (fresh) setSelectedDocSeller(fresh);
+      }
+    } catch {
+      toast.error("Failed to load sellers");
+    } finally {
+      setLoadingDocSellers(false);
+    }
+  };
+
+  const handleRequestDoc = async (sellerId: string) => {
+    if (!requestDocForm.label.trim()) { toast.error("Label is required"); return; }
+    setRequestingDoc(true);
+    try {
+      await opsApi.requestAdditionalDoc(sellerId, requestDocForm);
+      toast.success("Document requested successfully!");
+      setRequestDocForm({ label: "", description: "" });
+      fetchAdditionalDocSellers(sellerId);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Failed to request document");
+    } finally {
+      setRequestingDoc(false);
+    }
+  };
+
+  const handleVerifyAdditionalDoc = async (sellerId: string, docId: string, decision: string) => {
+    setVerifyingDocId(docId);
+    try {
+      await opsApi.verifyAdditionalDoc(sellerId, docId, { decision });
+      toast.success(`Document ${decision === "approve" ? "verified" : "rejected"}`);
+      fetchAdditionalDocSellers(sellerId);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Action failed");
+    } finally {
+      setVerifyingDocId(null);
+    }
+  };
+
   const fetchData = async () => {
     try {
       const [pendingRes, casesRes] = await Promise.all([
@@ -170,13 +226,16 @@ const OpsDashboard = () => {
 
       {/* Tabs */}
       <div className="tabs">
-        {["companies", "bills", "kyc", "cases", "nbfc"].map((tab) => (
+        {["companies", "bills", "kyc", "cases", "nbfc", "additional-docs"].map((tab) => (
           <button
             key={tab}
             className={`tab ${activeTab === tab ? "active" : ""}`}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab);
+              if (tab === "additional-docs") fetchAdditionalDocSellers();
+            }}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === "additional-docs" ? "Additional Docs" : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -549,6 +608,179 @@ const OpsDashboard = () => {
                 Send Invitation
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Additional Docs Tab */}
+      {activeTab === "additional-docs" && (
+        <div className="section" style={{ padding: "20px" }}>
+          <h2>Additional Documents</h2>
+          <p style={{ color: "var(--text-muted)", marginBottom: "20px", fontSize: "0.9em" }}>
+            Request additional documents from sub-contractors and verify uploaded files.
+          </p>
+
+          <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: "20px", alignItems: "start" }}>
+
+            {/* Left: Seller List */}
+            <div style={{ border: "1px solid #e5e7eb", borderRadius: "10px", overflow: "hidden", background: "#fff" }}>
+              <div style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", background: "#f9fafb" }}>
+                <strong style={{ fontSize: "0.9em" }}>Sub-Contractors</strong>
+              </div>
+              {loadingDocSellers && <div style={{ padding: "20px", textAlign: "center", color: "#9ca3af" }}>Loading...</div>}
+              {!loadingDocSellers && additionalDocSellers.length === 0 && (
+                <div style={{ padding: "20px", textAlign: "center", color: "#9ca3af" }}>No sub-contractors found</div>
+              )}
+              {additionalDocSellers.map((seller) => {
+                const pendingCount = seller.additionalDocuments?.filter((d: any) => d.status === "REQUESTED").length || 0;
+                const uploadedCount = seller.additionalDocuments?.filter((d: any) => d.status === "UPLOADED").length || 0;
+                const isSelected = selectedDocSeller?._id === seller._id;
+                return (
+                  <button
+                    key={seller._id}
+                    onClick={() => setSelectedDocSeller(seller)}
+                    style={{
+                      display: "block", width: "100%", textAlign: "left", padding: "12px 16px",
+                      borderBottom: "1px solid #f3f4f6", background: isSelected ? "#eff6ff" : "transparent",
+                      cursor: "pointer", border: "none", borderLeft: isSelected ? "3px solid #2563eb" : "3px solid transparent",
+                    }}
+                  >
+                    <div style={{ fontWeight: 500, fontSize: "0.9em", color: "#111827" }}>{seller.companyName}</div>
+                    <div style={{ fontSize: "0.78em", color: "#6b7280", marginTop: "2px" }}>{seller.email}</div>
+                    <div style={{ marginTop: "6px", display: "flex", gap: "6px" }}>
+                      {uploadedCount > 0 && <span className="badge badge-yellow">{uploadedCount} to review</span>}
+                      {pendingCount > 0 && <span className="badge badge-red">{pendingCount} awaiting</span>}
+                      {!uploadedCount && !pendingCount && <span className="badge badge-gray">No requests</span>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right: Selected Seller Panel */}
+            {selectedDocSeller ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "10px", padding: "20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1em" }}>{selectedDocSeller.companyName}</h3>
+                      <p style={{ margin: "2px 0 0", fontSize: "0.82em", color: "#6b7280" }}>{selectedDocSeller.email}</p>
+                    </div>
+                    <span className={`badge ${
+                      selectedDocSeller.status === "KYC_COMPLETED" ? "badge-green" :
+                      selectedDocSeller.status === "VERIFIED" ? "badge-green" : "badge-yellow"
+                    }`}>{selectedDocSeller.status?.replace(/_/g, " ")}</span>
+                  </div>
+
+                  {/* Existing Additional Docs */}
+                  {selectedDocSeller.additionalDocuments?.length > 0 ? (
+                    <div style={{ marginBottom: "16px" }}>
+                      <p style={{ fontWeight: 600, fontSize: "0.85em", marginBottom: "10px", color: "#374151" }}>Requested Documents</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {selectedDocSeller.additionalDocuments.map((doc: any) => (
+                          <div key={doc._id} style={{
+                            border: "1px solid #e5e7eb", borderRadius: "8px", padding: "12px 14px",
+                            background: doc.status === "UPLOADED" ? "#fffbeb" : doc.status === "VERIFIED" ? "#f0fdf4" : doc.status === "REJECTED" ? "#fef2f2" : "#f9fafb"
+                          }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                              <div style={{ flex: 1 }}>
+                                <p style={{ margin: 0, fontWeight: 600, fontSize: "0.88em" }}>{doc.label}</p>
+                                {doc.description && <p style={{ margin: "2px 0 0", fontSize: "0.78em", color: "#6b7280" }}>{doc.description}</p>}
+                                <p style={{ margin: "4px 0 0", fontSize: "0.75em", color: "#9ca3af" }}>
+                                  Requested {new Date(doc.requestedAt).toLocaleDateString()}
+                                </p>
+                                {doc.fileName && (
+                                  <p style={{ margin: "4px 0 0", fontSize: "0.78em", color: "#6b7280" }}>
+                                    File: <strong>{doc.fileName}</strong>
+                                    {doc.fileUrl && (
+                                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer"
+                                        style={{ marginLeft: "8px", color: "#2563eb", fontSize: "0.9em" }}>View</a>
+                                    )}
+                                  </p>
+                                )}
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", minWidth: "120px" }}>
+                                <span className={`badge ${
+                                  doc.status === "UPLOADED" ? "badge-yellow" :
+                                  doc.status === "VERIFIED" ? "badge-green" :
+                                  doc.status === "REJECTED" ? "badge-red" : "badge-gray"
+                                }`}>{doc.status}</span>
+                                {doc.status === "UPLOADED" && (
+                                  <div style={{ display: "flex", gap: "6px" }}>
+                                    <button
+                                      className="btn-sm btn-success"
+                                      disabled={verifyingDocId === doc._id}
+                                      onClick={() => handleVerifyAdditionalDoc(selectedDocSeller._id, doc._id, "approve")}
+                                    >
+                                      {verifyingDocId === doc._id ? "..." : "✓ Verify"}
+                                    </button>
+                                    <button
+                                      className="btn-sm btn-danger"
+                                      disabled={verifyingDocId === doc._id}
+                                      onClick={() => handleVerifyAdditionalDoc(selectedDocSeller._id, doc._id, "reject")}
+                                    >
+                                      ✗ Reject
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p style={{ color: "#9ca3af", fontSize: "0.85em", marginBottom: "16px" }}>No additional documents requested yet.</p>
+                  )}
+
+                  {/* Request New Doc Form */}
+                  <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: "16px" }}>
+                    <p style={{ fontWeight: 600, fontSize: "0.85em", marginBottom: "10px", color: "#374151" }}>Request New Document</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label style={{ display: "block", fontSize: "0.82em", fontWeight: 500, marginBottom: "4px" }}>Document Label *</label>
+                        <input
+                          className="form-control"
+                          placeholder="e.g. Bank Statement, GST Certificate"
+                          value={requestDocForm.label}
+                          onChange={(e) => setRequestDocForm(p => ({ ...p, label: e.target.value }))}
+                          style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.88em" }}
+                        />
+                      </div>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label style={{ display: "block", fontSize: "0.82em", fontWeight: 500, marginBottom: "4px" }}>Description (optional)</label>
+                        <textarea
+                          placeholder="Additional instructions for the sub-contractor..."
+                          value={requestDocForm.description}
+                          onChange={(e) => setRequestDocForm(p => ({ ...p, description: e.target.value }))}
+                          rows={2}
+                          style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.88em", resize: "vertical" }}
+                        />
+                      </div>
+                      <button
+                        className="btn-primary"
+                        disabled={requestingDoc || !requestDocForm.label.trim()}
+                        onClick={() => handleRequestDoc(selectedDocSeller._id)}
+                        style={{ alignSelf: "flex-start", padding: "8px 18px", fontSize: "0.88em" }}
+                      >
+                        {requestingDoc ? "Sending..." : "Send Request"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                border: "2px dashed #e5e7eb", borderRadius: "10px", display: "flex",
+                flexDirection: "column", alignItems: "center", justifyContent: "center",
+                padding: "48px 24px", color: "#9ca3af", textAlign: "center"
+              }}>
+                <div style={{ fontSize: "2.5em", marginBottom: "12px" }}>📂</div>
+                <p style={{ margin: 0, fontWeight: 500 }}>Select a sub-contractor</p>
+                <p style={{ margin: "6px 0 0", fontSize: "0.85em" }}>Choose from the list on the left to manage their documents</p>
+              </div>
+            )}
           </div>
         </div>
       )}

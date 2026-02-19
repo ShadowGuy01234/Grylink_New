@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { opsApi } from "../../api";
 import toast from "react-hot-toast";
 import {
@@ -93,6 +94,9 @@ const KYC_STATUS_OPTIONS = [
 ];
 
 const KycVerificationPage = () => {
+  const location = useLocation();
+  const routeState = (location.state || {}) as { sellerId?: string; sellerName?: string };
+
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
@@ -132,9 +136,34 @@ const KycVerificationPage = () => {
     }
   }, [statusFilter]);
 
+  // Re-fetch when status filter changes
   useEffect(() => {
     fetchSellers();
   }, [fetchSellers]);
+
+  // Auto-load & pre-select seller from route state (navigating from KYC queue)
+  useEffect(() => {
+    if (!routeState.sellerId) return;
+    const loadFromRoute = async () => {
+      try {
+        setLoadingDetail(true);
+        const res = await opsApi.getSellerKyc(routeState.sellerId!);
+        const seller = res.data.seller as Seller;
+        // Inject into list if not already there (completed KYC sellers aren't in pending list)
+        setSellers(prev => {
+          const exists = prev.some(s => s._id === seller._id);
+          return exists ? prev : [seller, ...prev];
+        });
+        setSelectedSeller(seller);
+      } catch {
+        toast.error("Could not load seller details");
+      } finally {
+        setLoadingDetail(false);
+      }
+    };
+    loadFromRoute();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelectSeller = async (seller: Seller) => {
     setSelectedSeller(seller);
@@ -143,7 +172,7 @@ const KycVerificationPage = () => {
       const res = await opsApi.getSellerKyc(seller._id);
       setSelectedSeller(res.data.seller);
     } catch {
-      console.error("Failed to load seller details");
+      toast.error("Failed to load seller details");
     } finally {
       setLoadingDetail(false);
     }

@@ -3144,7 +3144,7 @@ const KycDetailPanel = ({
 
       {/* Open Full KYC Review Button */}
       <button
-        onClick={() => navigate("/ops/kyc")}
+        onClick={() => navigate("/ops/kyc", { state: { sellerId: kyc.subContractorId?._id, sellerName: kyc.subContractorId?.companyName } })}
         style={{
           padding: "14px 24px",
           background: "#2563eb",

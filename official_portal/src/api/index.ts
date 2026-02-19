@@ -65,6 +65,7 @@ export const salesApi = {
 
 // Ops
 export const opsApi = {
+  getSubContractors: () => api.get("/ops/subcontractors"),
   getPending: () => api.get("/ops/pending"),
   verifyCompany: (id: string, data: { decision: string; notes?: string }) =>
     api.post(`/ops/companies/${id}/verify`, data),
