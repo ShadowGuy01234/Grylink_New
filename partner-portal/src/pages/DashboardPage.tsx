@@ -16,12 +16,6 @@ import { BidsSection } from "../components/dashboard/BidsSection";
 // Types
 import { CompanyProfile, SubContractor, Case, Bid } from "../types";
 
-// Animation variants
-const fadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-};
-
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
@@ -36,7 +30,7 @@ const cardVariant = {
 };
 
 const DashboardPage = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   // Data State
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
@@ -169,24 +163,6 @@ const DashboardPage = () => {
     }
   };
 
-  const statusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      LEAD_CREATED: "badge-yellow",
-      CREDENTIALS_CREATED: "badge-blue",
-      DOCS_SUBMITTED: "badge-purple",
-      ACTION_REQUIRED: "badge-red",
-      ACTIVE: "badge-green",
-      pending: "badge-yellow",
-      verified: "badge-green",
-      rejected: "badge-red",
-    };
-    return (
-      <span className={`badge ${colors[status] || "badge-gray"}`}>
-        {status.replace(/_/g, " ")}
-      </span>
-    );
-  };
-
   const isEpc = user?.role === "epc";
   const isNbfc = user?.role === "nbfc";
 
@@ -222,183 +198,347 @@ const DashboardPage = () => {
     );
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={fadeIn}
-      className="dashboard-page"
-      style={{ minHeight: "100vh", padding: "2rem" }}
-    >
-      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-        {/* Header */}
-        <div className="dashboard-header">
-          <h1>{profile?.company?.companyName || "Partner Dashboard"}</h1>
-          <div className="subtitle">
-            {isEpc ? "EPC" : "NBFC"} Portal{" "}
-            {profile?.company?.status && statusBadge(profile.company.status)}
+    <div className="app-container">
+      {/* Sidebar Navigation */}
+      <aside className="sidebar">
+        <div className="mb-8 px-2 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+            G
+          </div>
+          <div>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-sky-600">
+              Gryork
+            </h1>
+            <p className="text-xs text-slate-400 font-medium">Partner Portal</p>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        <nav className="flex-1 space-y-1">
+          <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
+            Menu
+          </p>
+
+          {isEpc && (
+            <button
+              onClick={() => setActiveTab("documents")}
+              className={`nav-item ${activeTab === "documents" ? "active" : ""}`}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+              Documents
+              {uploadedDocsCount > 0 && !areDocsVerified && (
+                <span className="ml-auto w-2 h-2 rounded-full bg-amber-400"></span>
+              )}
+            </button>
+          )}
+
+          {isEpc && (
+            <button
+              onClick={() => areDocsVerified && setActiveTab("subcontractors")}
+              disabled={!areDocsVerified}
+              className={`nav-item ${activeTab === "subcontractors" ? "active" : ""}`}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                ></path>
+              </svg>
+              Sub-Contractors
+              {!areDocsVerified && <span className="nav-lock-icon">🔒</span>}
+            </button>
+          )}
+
+          <button
+            onClick={() => (areDocsVerified || isNbfc) && setActiveTab("cases")}
+            disabled={isEpc && !areDocsVerified}
+            className={`nav-item ${activeTab === "cases" ? "active" : ""}`}
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              ></path>
+            </svg>
+            Cases & Bills
+            {isEpc && !areDocsVerified && (
+              <span className="nav-lock-icon">🔒</span>
+            )}
+          </button>
+
+          <button
+            onClick={() => (areDocsVerified || isNbfc) && setActiveTab("bids")}
+            disabled={isEpc && !areDocsVerified}
+            className={`nav-item ${activeTab === "bids" ? "active" : ""}`}
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            My Bids
+            {isEpc && !areDocsVerified && (
+              <span className="nav-lock-icon">🔒</span>
+            )}
+            {activeBids.length > 0 && (
+              <span className="ml-auto bg-indigo-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                {activeBids.length}
+              </span>
+            )}
+          </button>
+        </nav>
+
+        <div className="mt-auto pt-8 border-t border-slate-100">
+          <div className="flex items-center gap-3 px-2 mb-3">
+            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">
+              {profile?.company?.companyName?.[0] || "U"}
+            </div>
+            <div className="overflow-hidden flex-1">
+              <p className="text-sm font-semibold text-slate-700 truncate">
+                {profile?.company?.companyName || "User"}
+              </p>
+              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="main-content-area">
+        <header className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">
+              {activeTab === "documents"
+                ? "Company Documents"
+                : activeTab === "subcontractors"
+                  ? "Sub-Contractors"
+                  : activeTab === "cases"
+                    ? "Cases & Bills"
+                    : "My Bids"}
+            </h2>
+            <p className="text-slate-500">Manage your partnership details</p>
+          </div>
+          {profile?.company?.status && (
+            <div
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${
+                profile.company.status === "ACTIVE"
+                  ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                  : "bg-amber-50 text-amber-600 border-amber-200"
+              }`}
+            >
+              {profile.company.status.replace(/_/g, " ")}
+            </div>
+          )}
+        </header>
+
         {isEpc && (
           <motion.div
-            className="stats-grid"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
           >
-            {/* Stats Components - Simplified for brevity in refactor, keeping structure */}
-            <motion.div variants={cardVariant} className="stat-card">
-              <div className="stat-icon blue">
-                {/* SVG Icon */}
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
+            <motion.div variants={cardVariant} className="stat-card-premium">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium mb-1">
+                    Documents
+                  </p>
+                  <h3 className="text-3xl font-bold text-slate-800">
+                    {uploadedDocsCount}
+                  </h3>
+                </div>
+                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    ></path>
+                  </svg>
+                </div>
               </div>
-              <div className="stat-label">Documents Uploaded</div>
-              <div className="stat-value">{uploadedDocsCount}</div>
             </motion.div>
 
-            <motion.div variants={cardVariant} className="stat-card">
-              <div className="stat-icon green">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
+            <motion.div variants={cardVariant} className="stat-card-premium">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium mb-1">
+                    Verified
+                  </p>
+                  <h3 className="text-3xl font-bold text-slate-800">
+                    {verifiedDocsCount}
+                  </h3>
+                </div>
+                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                </div>
               </div>
-              <div className="stat-label">Verified</div>
-              <div className="stat-value">{verifiedDocsCount}</div>
             </motion.div>
 
-            <motion.div variants={cardVariant} className="stat-card">
-              <div className="stat-icon purple">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
+            <motion.div variants={cardVariant} className="stat-card-premium">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium mb-1">
+                    Sub-Contractors
+                  </p>
+                  <h3 className="text-3xl font-bold text-slate-800">
+                    {subContractors.length}
+                  </h3>
+                </div>
+                <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    ></path>
+                  </svg>
+                </div>
               </div>
-              <div className="stat-label">Sub-Contractors</div>
-              <div className="stat-value">{subContractors.length}</div>
             </motion.div>
 
-            <motion.div variants={cardVariant} className="stat-card">
-              <div className="stat-icon orange">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M9 11l3 3L22 4" />
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                </svg>
+            <motion.div variants={cardVariant} className="stat-card-premium">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-slate-500 text-sm font-medium mb-1">
+                    Pending Cases
+                  </p>
+                  <h3 className="text-3xl font-bold text-slate-800">
+                    {pendingCasesCount}
+                  </h3>
+                </div>
+                <div className="p-3 bg-amber-50 text-amber-600 rounded-lg">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                </div>
               </div>
-              <div className="stat-label">Pending Cases</div>
-              <div className="stat-value">{pendingCasesCount}</div>
             </motion.div>
           </motion.div>
         )}
 
-        {/* Pending Verification Notice */}
+        {/* Locked Content Warning */}
         {pendingVerification && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="alert-banner"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 rounded-xl border border-amber-200 bg-amber-50/50 flex items-start gap-4 shadow-sm"
           >
-            {/* Alert content */}
-            <span className="alert-icon">
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
               <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
+                className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                viewBox="0 0 24 24"
               >
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                ></path>
               </svg>
-            </span>
-            <div className="alert-content">
-              <h3>Documents Pending Verification</h3>
-              <p>
-                Your documents are being reviewed by our Ops team. Other
-                sections will be unlocked once verification is complete.
+            </div>
+            <div>
+              <h4 className="font-bold text-amber-800">
+                Action Required: Verify Documents
+              </h4>
+              <p className="text-sm text-amber-700 mt-1">
+                Please upload and verify all required company documents to
+                unlock Sub-Contractor Management, Cases, and Bidding features.
+                Your profile is currently under limited access.
               </p>
             </div>
           </motion.div>
         )}
 
-        {/* Tab Navigation */}
-        <div className="tabs-container">
-          {isEpc && (
-            <button
-              onClick={() => setActiveTab("documents")}
-              className={`tab ${activeTab === "documents" ? "active" : ""}`}
-            >
-              Documents
-            </button>
-          )}
-          {isEpc && (
-            <button
-              onClick={() => areDocsVerified && setActiveTab("subcontractors")}
-              disabled={!areDocsVerified}
-              className={`tab ${activeTab === "subcontractors" ? "active" : ""}`}
-            >
-              Sub-Contractors
-              {!areDocsVerified && <span className="lock-icon">🔒</span>}
-            </button>
-          )}
-          <button
-            onClick={() => (areDocsVerified || isNbfc) && setActiveTab("cases")}
-            disabled={isEpc && !areDocsVerified}
-            className={`tab ${activeTab === "cases" ? "active" : ""}`}
-          >
-            Cases & Bills
-            {isEpc && !areDocsVerified && <span className="lock-icon">🔒</span>}
-          </button>
-          <button
-            onClick={() => (areDocsVerified || isNbfc) && setActiveTab("bids")}
-            disabled={isEpc && !areDocsVerified}
-            className={`tab ${activeTab === "bids" ? "active" : ""}`}
-          >
-            My Bids
-            {isEpc && !areDocsVerified && <span className="lock-icon">🔒</span>}
-            {activeBids.length > 0 && (
-              <span className="tab-badge">{activeBids.length}</span>
-            )}
-          </button>
-        </div>
-
-        {/* Tab Content */}
         <AnimatePresence mode="wait">
           {activeTab === "documents" && isEpc && (
             <DocumentsSection
@@ -436,8 +576,8 @@ const DashboardPage = () => {
             />
           )}
         </AnimatePresence>
-      </div>
-    </motion.div>
+      </main>
+    </div>
   );
 };
 

@@ -133,7 +133,14 @@ const DashboardPage = () => {
 
   const handleUploadBill = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (billFiles.length === 0) return;
+    if (billFiles.length === 0) {
+      toast.error("Please upload at least one bill file");
+      return;
+    }
+    if (!billData.billNumber || !billData.amount) {
+      toast.error("Please fill in Bill Number and Amount");
+      return;
+    }
     setUploadingBill(true);
     try {
       for (const file of billFiles) {
@@ -727,7 +734,9 @@ const DashboardPage = () => {
                 <form onSubmit={handleUploadBill} className="space-y-4">
                   <div className="grid md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="billNumber">Bill Number</Label>
+                      <Label htmlFor="billNumber">
+                        Bill Number <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="billNumber"
                         value={billData.billNumber}
@@ -738,10 +747,13 @@ const DashboardPage = () => {
                           })
                         }
                         placeholder="INV-001"
+                        required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="amount">Amount (₹)</Label>
+                      <Label htmlFor="amount">
+                        Amount (₹) <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="amount"
                         type="number"
@@ -750,6 +762,7 @@ const DashboardPage = () => {
                           setBillData({ ...billData, amount: e.target.value })
                         }
                         placeholder="100000"
+                        required
                       />
                     </div>
                     <div className="space-y-2">
@@ -768,7 +781,9 @@ const DashboardPage = () => {
                     </div>
                   </div>
 
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-6 text-center ${billFiles.length > 0 ? "border-blue-300 bg-blue-50" : "border-gray-200"}`}
+                  >
                     <input
                       type="file"
                       multiple
@@ -778,24 +793,27 @@ const DashboardPage = () => {
                       }
                       className="hidden"
                       id="billFiles"
+                      required={billFiles.length === 0}
                     />
-                    <label htmlFor="billFiles" className="cursor-pointer">
-                      <Upload className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600">
+                    <label htmlFor="billFiles" className="cursor-pointer block">
+                      <Upload
+                        className={`h-10 w-10 mx-auto mb-2 ${billFiles.length > 0 ? "text-blue-500" : "text-gray-400"}`}
+                      />
+                      <p
+                        className={`font-medium ${billFiles.length > 0 ? "text-blue-700" : "text-gray-600"}`}
+                      >
                         {billFiles.length > 0
                           ? `${billFiles.length} file(s) selected`
                           : "Click to upload bills"}
                       </p>
-                      <p className="text-sm text-gray-400">
-                        PDF, JPG, PNG up to 10MB
+                      <p className="text-sm text-gray-400 mt-1">
+                        PDF, JPG, PNG up to 10MB{" "}
+                        <span className="text-red-500">*</span>
                       </p>
                     </label>
                   </div>
 
-                  <Button
-                    type="submit"
-                    disabled={uploadingBill || billFiles.length === 0}
-                  >
+                  <Button type="submit" disabled={uploadingBill}>
                     {uploadingBill ? "Uploading..." : "Upload Bills"}
                   </Button>
                 </form>

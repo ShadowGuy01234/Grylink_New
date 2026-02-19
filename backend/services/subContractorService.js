@@ -88,6 +88,10 @@ const uploadBill = async (userId, files, data) => {
   if (subContractor.status !== "PROFILE_COMPLETED")
     throw new Error("Profile must be completed before uploading bills");
 
+  if (!data.billNumber || !data.amount) {
+    throw new Error("Bill number and amount are required");
+  }
+
   const bills = [];
   for (const file of files) {
     // Upload to Cloudinary
@@ -511,7 +515,11 @@ const getKycStatus = async (userId) => {
       uploaded: !!doc?.fileUrl,
       url: doc?.fileUrl,
       fileName: doc?.fileName,
-      status: doc?.verified ? "VERIFIED" : (doc?.fileUrl ? "PENDING" : "NOT_UPLOADED"),
+      status: doc?.verified
+        ? "VERIFIED"
+        : doc?.fileUrl
+          ? "PENDING"
+          : "NOT_UPLOADED",
       uploadedAt: doc?.uploadedAt,
     };
   }
