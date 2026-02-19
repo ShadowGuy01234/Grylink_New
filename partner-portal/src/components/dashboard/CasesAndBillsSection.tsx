@@ -283,7 +283,159 @@ export const CasesAndBillsSection: React.FC<CasesAndBillsSectionProps> = ({
                 )}
               </div>
 
+              {/* ── Bill Document ── */}
+              {selectedCase.billId?.fileUrl && (
+                <div className="bill-document-section">
+                  <p className="bill-doc-label">Uploaded Bill</p>
+
+                  {selectedCase.billId.mimeType?.startsWith("image/") ? (
+                    <div className="bill-image-preview">
+                      <img
+                        src={selectedCase.billId.fileUrl}
+                        alt="Bill document"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: 260,
+                          objectFit: "contain",
+                          borderRadius: 8,
+                        }}
+                      />
+                      <a
+                        href={selectedCase.billId.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bill-open-link"
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                        Open Full Size
+                      </a>
+                    </div>
+                  ) : (
+                    <a
+                      href={selectedCase.billId.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bill-file-card"
+                    >
+                      <div className="bill-file-icon">
+                        {selectedCase.billId.mimeType === "application/pdf" ? (
+                          <svg
+                            width="24"
+                            height="24"
+                            fill="none"
+                            stroke="#dc2626"
+                            strokeWidth="1.5"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="24"
+                            height="24"
+                            fill="none"
+                            stroke="#16a34a"
+                            strokeWidth="1.5"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="bill-file-info">
+                        <span className="bill-file-name">
+                          {selectedCase.billId.fileName || "Bill Document"}
+                        </span>
+                        <span className="bill-file-type">
+                          {selectedCase.billId.mimeType === "application/pdf"
+                            ? "PDF Document"
+                            : "Document"}{" "}
+                          · Click to open
+                        </span>
+                      </div>
+                      <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="#94a3b8"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                    </a>
+                  )}
+
+                  {/* WCC & Measurement Sheet */}
+                  {(selectedCase.billId?.wcc?.uploaded ||
+                    selectedCase.billId?.measurementSheet?.uploaded) && (
+                    <div className="bill-attachments">
+                      {selectedCase.billId?.wcc?.uploaded &&
+                        selectedCase.billId?.wcc?.fileUrl && (
+                          <a
+                            href={selectedCase.billId.wcc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bill-attachment-link"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 17.2a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                            Work Completion Certificate
+                          </a>
+                        )}
+                      {selectedCase.billId?.measurementSheet?.uploaded &&
+                        selectedCase.billId?.measurementSheet?.fileUrl && (
+                          <a
+                            href={selectedCase.billId.measurementSheet.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bill-attachment-link"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 17.2a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                            </svg>
+                            Measurement Sheet
+                          </a>
+                        )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* EPC Actions inside modal too */}
+
               {isEpc && selectedCase.status === "READY_FOR_COMPANY_REVIEW" && (
                 <div className="modal-actions">
                   <button

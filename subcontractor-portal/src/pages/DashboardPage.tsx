@@ -377,10 +377,10 @@ const DashboardPage = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             {sc?.companyName || "Sub-Contractor Dashboard"}
           </h1>
-          <p className="text-gray-500 flex items-center gap-2 mt-1">
+          <div className="text-gray-500 flex items-center gap-2 mt-1">
             Sub-Contractor Dashboard
             {sc && getStatusBadge(sc.status)}
-          </p>
+          </div>
         </div>
         {pendingBids.length > 0 && (
           <Badge variant="destructive" className="gap-1 self-start">
