@@ -78,15 +78,80 @@ const completeProfile = async (userId, data) => {
   return subContractor;
 };
 
-// Step 11: Upload bill
+// Step 11: Upload bill with CWC RF (combined submission)
+const uploadBillWithCwcrf = async (userId, files, data) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  const allowedStatuses = [
+    "PROFILE_COMPLETED", "KYC_PENDING", "KYC_IN_PROGRESS", "KYC_COMPLETED",
+    "UNDER_REVIEW", "EPC_VERIFIED", "ACTIVE",
+  ];
+  if (!allowedStatuses.includes(subContractor.status)) {
+    throw new Error("Profile must be completed before uploading bills");
+  }
+
+  if (!data.billNumber || !data.amount) {
+    throw new Error("Bill number and amount are required");
+  }
+
+  if (files.length === 0) throw new Error("At least one bill file is required");
+
+  // Upload the first file to Cloudinary
+  const file = files[0];
+  const cloudResult = await uploadToCloudinary(file.buffer, file.mimetype, {
+    folder: "gryork/bills",
+  });
+
+  const bill = new Bill({
+    subContractorId: subContractor._id,
+    uploadedBy: userId,
+    linkedEpcId: subContractor.linkedEpcId,
+    billNumber: data.billNumber,
+    amount: Number(data.amount),
+    description: data.description || "",
+    fileName: file.originalname,
+    fileUrl: cloudResult.secure_url,
+    cloudinaryPublicId: cloudResult.public_id,
+    fileSize: file.size,
+    mimeType: file.mimetype,
+    uploadMode: "image",
+    status: "UPLOADED",
+    statusHistory: [{ status: "UPLOADED", changedBy: userId }],
+  });
+  await bill.save();
+
+  // Auto-create a CWCRF tied to this bill (pending ops approval)
+  const cwcRf = new CwcRf({
+    subContractorId: subContractor._id,
+    userId,
+    billId: bill._id,
+    status: "SUBMITTED",
+    statusHistory: [{ status: "SUBMITTED", changedBy: userId }],
+  });
+  await cwcRf.save();
+
+  return { bill, cwcRf };
+};
+
+// Step 11: Upload bill (legacy — kept for backward compat)
 const uploadBill = async (userId, files, data) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
   const subContractor = await SubContractor.findOne({ userId });
   if (!subContractor) throw new Error("Sub-contractor not found");
-  if (subContractor.status !== "PROFILE_COMPLETED")
+
+  const allowedStatuses = [
+    "PROFILE_COMPLETED", "KYC_PENDING", "KYC_IN_PROGRESS", "KYC_COMPLETED",
+    "UNDER_REVIEW", "EPC_VERIFIED", "ACTIVE",
+  ];
+  if (!allowedStatuses.includes(subContractor.status)) {
     throw new Error("Profile must be completed before uploading bills");
+  }
 
   if (!data.billNumber || !data.amount) {
     throw new Error("Bill number and amount are required");
@@ -656,6 +721,7 @@ const updateBankDetails = async (userId, bankData) => {
 module.exports = {
   completeProfile,
   uploadBill,
+  uploadBillWithCwcrf,
   submitCwcRf,
   respondToBid,
   getDashboard,

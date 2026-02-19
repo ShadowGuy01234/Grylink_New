@@ -104,6 +104,29 @@ router.post(
   },
 );
 
+// POST /api/subcontractor/bill-with-cwcrf - Submit bill + CWCRF together (new flow)
+router.post(
+  "/bill-with-cwcrf",
+  authenticate,
+  authorize("subcontractor"),
+  uploadBills.single("bill"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Bill file is required" });
+      }
+      const result = await subContractorService.uploadBillWithCwcrf(
+        req.user._id,
+        [req.file],
+        req.body,
+      );
+      res.status(201).json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
 // GET /api/subcontractor/cases - Get all cases for subcontractor
 router.get(
   "/cases",

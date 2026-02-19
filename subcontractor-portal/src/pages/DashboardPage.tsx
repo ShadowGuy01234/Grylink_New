@@ -14,7 +14,7 @@ import {
   User, FileText, Send, FolderOpen, Gavel, Upload, Building2, Phone,
   Hash, ChevronRight, CheckCircle2, Clock, AlertCircle, XCircle,
   TrendingUp, LayoutDashboard, MapPin, CreditCard, IndianRupee,
-  ArrowUpRight, Percent, CalendarDays,
+  ArrowUpRight, CalendarDays,
 } from "lucide-react";
 
 const DashboardPage = () => {
@@ -43,9 +43,10 @@ const DashboardPage = () => {
     description: "",
   });
 
-  // CWC
-  const [selectedBillForCwc, setSelectedBillForCwc] = useState("");
-  const [submittingCwc, setSubmittingCwc] = useState(false);
+  // Declaration dialog
+  const [showDeclarationDialog, setShowDeclarationDialog] = useState(false);
+  const [declarationAccepted, setDeclarationAccepted] = useState(false);
+  const [pendingBillForm, setPendingBillForm] = useState<FormData | null>(null);
 
   // Bids
   const [respondingBid, setRespondingBid] = useState<string | null>(null);
@@ -95,52 +96,41 @@ const DashboardPage = () => {
     }
   };
 
-  const handleUploadBill = async (e: React.FormEvent) => {
+  const handleBillFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (billFiles.length === 0) {
-      toast.error("Please upload at least one bill file");
+    if (!billFiles[0]) {
+      toast.error("Please select a bill file");
       return;
     }
     if (!billData.billNumber || !billData.amount) {
       toast.error("Please fill in Bill Number and Amount");
       return;
     }
-    setUploadingBill(true);
-    try {
-      for (const file of billFiles) {
-        const formData = new FormData();
-        formData.append("bills", file);
-        if (billData.billNumber)
-          formData.append("billNumber", billData.billNumber);
-        if (billData.amount) formData.append("amount", billData.amount);
-        if (billData.description)
-          formData.append("description", billData.description);
-        await scApi.submitBill(formData);
-      }
-      toast.success("Bills uploaded!");
-      setBillFiles([]);
-      setBillData({ billNumber: "", amount: "", description: "" });
-      fetchDashboard();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Upload failed");
-    } finally {
-      setUploadingBill(false);
-    }
+    const formData = new FormData();
+    formData.append("bill", billFiles[0]);
+    formData.append("billNumber", billData.billNumber);
+    formData.append("amount", billData.amount);
+    if (billData.description) formData.append("description", billData.description);
+    setPendingBillForm(formData);
+    setDeclarationAccepted(false);
+    setShowDeclarationDialog(true);
   };
 
-  const handleSubmitCwc = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedBillForCwc) return;
-    setSubmittingCwc(true);
+  const handleConfirmBillSubmit = async () => {
+    if (!pendingBillForm || !declarationAccepted) return;
+    setUploadingBill(true);
+    setShowDeclarationDialog(false);
     try {
-      await scApi.submitCwc({ billId: selectedBillForCwc });
-      toast.success("CWC RF submitted!");
-      setSelectedBillForCwc("");
+      await scApi.submitBillWithCwcrf(pendingBillForm);
+      toast.success("Bill & CWC RF submitted for verification!");
+      setBillFiles([]);
+      setBillData({ billNumber: "", amount: "", description: "" });
+      setPendingBillForm(null);
       fetchDashboard();
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Submission failed");
     } finally {
-      setSubmittingCwc(false);
+      setUploadingBill(false);
     }
   };
 
@@ -210,7 +200,6 @@ const DashboardPage = () => {
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "profile",  label: "Profile",  icon: User },
     { id: "bills",    label: "Bills",    icon: FileText },
-    { id: "cwc",      label: "CWC RF",   icon: Send },
     { id: "cases",    label: "Cases",    icon: FolderOpen },
     { id: "bids",     label: "Bids",     icon: Gavel, badge: pendingBids.length > 0 ? pendingBids.length : undefined },
   ];
@@ -242,8 +231,7 @@ const DashboardPage = () => {
   const tabTitles: Record<string, string> = {
     overview: "Dashboard",
     profile:  "My Profile",
-    bills:    "Bills",
-    cwc:      "CWC RF",
+    bills:    "Bills & CWC RF",
     cases:    "Cases",
     bids:     "My Bids",
   };
@@ -251,8 +239,7 @@ const DashboardPage = () => {
   const tabDescriptions: Record<string, string> = {
     overview: "Manage your bills, cases, and bids",
     profile:  "Update your business information",
-    bills:    "Upload and track your invoices",
-    cwc:      "Submit working capital requests",
+    bills:    "Upload invoices — each submission automatically creates a CWC RF request",
     cases:    "Track your financing cases",
     bids:     "View and respond to bid offers",
   };
@@ -389,10 +376,9 @@ const DashboardPage = () => {
             {/* Quick Actions */}
             <div>
               <p className="text-sm font-medium text-gray-500 mb-3">Quick Actions</p>
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid sm:grid-cols-2 gap-3">
                 {[
-                  { id: "bills", label: "Upload a Bill", desc: "Submit new invoices", icon: Upload, color: "blue" },
-                  { id: "cwc",   label: "Submit CWC RF", desc: "Request financing",   icon: Send,   color: "emerald" },
+                  { id: "bills", label: "Upload a Bill", desc: "Submit invoice & CWC RF together", icon: Upload, color: "blue" },
                   { id: "bids",  label: "View Bids",    desc: `${pendingBids.length} pending`, icon: Gavel, color: "amber" },
                 ].map((action) => {
                   const Icon = action.icon;
@@ -508,16 +494,28 @@ const DashboardPage = () => {
           </motion.div>
         )}
 
-        {/* ── Bills ── */}
+        {/* ── Bills & CWC RF ── */}
         {activeTab === "bills" && (
           <motion.div key="bills" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
+
+            {/* Info Banner */}
+            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <Send className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Bill + CWC RF in one step</p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  Each bill submission automatically creates a linked CWC RF request. Both are sent to the operations team for verification.
+                </p>
+              </div>
+            </div>
+
             <Card className="border border-gray-200 shadow-none">
               <CardHeader>
-                <CardTitle className="text-base">Upload New Bill</CardTitle>
-                <CardDescription>Submit invoices for EPC verification</CardDescription>
+                <CardTitle className="text-base">Submit New Bill</CardTitle>
+                <CardDescription>Fill in the invoice details and upload the bill document</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleUploadBill} className="space-y-4">
+                <form onSubmit={handleBillFormSubmit} className="space-y-4">
                   <div className="grid sm:grid-cols-3 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="billNumber">Bill Number <span className="text-red-500">*</span></Label>
@@ -533,23 +531,23 @@ const DashboardPage = () => {
                     </div>
                   </div>
                   <label
-                    htmlFor="billFiles"
+                    htmlFor="billFile"
                     className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-8 cursor-pointer transition-colors ${
-                      billFiles.length > 0 ? "border-blue-300 bg-blue-50" : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                      billFiles[0] ? "border-blue-300 bg-blue-50" : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
                     }`}
                   >
-                    <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setBillFiles(Array.from(e.target.files || []))} className="hidden" id="billFiles" />
-                    <Upload className={`h-8 w-8 ${billFiles.length > 0 ? "text-blue-500" : "text-gray-300"}`} />
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setBillFiles(e.target.files ? [e.target.files[0]] : [])} className="hidden" id="billFile" />
+                    <Upload className={`h-8 w-8 ${billFiles[0] ? "text-blue-500" : "text-gray-300"}`} />
                     <div className="text-center">
-                      <p className={`text-sm font-medium ${billFiles.length > 0 ? "text-blue-700" : "text-gray-600"}`}>
-                        {billFiles.length > 0 ? `${billFiles.length} file(s) selected` : "Click to upload bill files"}
+                      <p className={`text-sm font-medium ${billFiles[0] ? "text-blue-700" : "text-gray-600"}`}>
+                        {billFiles[0] ? billFiles[0].name : "Click to upload bill document"}
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">PDF, JPG, PNG up to 10MB</p>
                     </div>
                   </label>
                   <div className="flex justify-end">
                     <Button type="submit" disabled={uploadingBill}>
-                      {uploadingBill ? "Uploading..." : "Upload Bill"}
+                      {uploadingBill ? "Submitting..." : "Review & Submit"}
                     </Button>
                   </div>
                 </form>
@@ -572,76 +570,88 @@ const DashboardPage = () => {
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-900">{bill.billNumber || "No Number"}</p>
-                            <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
+                            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                               <IndianRupee className="h-3 w-3" />{bill.amount?.toLocaleString() || 0}
+                              {bill.description && <span className="text-gray-400">· {bill.description}</span>}
                             </p>
                           </div>
                         </div>
-                        {getStatusBadge(bill.status)}
+                        <div className="flex flex-col items-end gap-1">
+                          {getStatusBadge(bill.status)}
+                          {bill.status === "VERIFIED" && (
+                            <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-0.5">
+                              <Send className="h-2.5 w-2.5" />CWC RF Active
+                            </span>
+                          )}
+                          {bill.status === "REJECTED" && bill.rejectionReason && (
+                            <span className="text-[10px] text-red-500">{bill.rejectionReason}</span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center px-6">
                     <FileText className="h-8 w-8 text-gray-200 mb-2" />
-                    <p className="text-sm text-gray-500">No bills uploaded yet</p>
+                    <p className="text-sm text-gray-500">No bills submitted yet</p>
                   </div>
                 )}
               </CardContent>
             </Card>
-          </motion.div>
-        )}
 
-        {/* ── CWC RF ── */}
-        {activeTab === "cwc" && (
-          <motion.div key="cwc" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-            <Card className="border border-gray-200 shadow-none">
-              <CardHeader>
-                <CardTitle className="text-base">Submit CWC Request</CardTitle>
-                <CardDescription>Select a verified bill to request working capital financing</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmitCwc} className="space-y-4">
-                  {verifiedBills.length > 0 ? (
-                    <div className="space-y-2">
-                      {verifiedBills.map((bill: any) => (
-                        <label
-                          key={bill._id}
-                          className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                            selectedBillForCwc === bill._id
-                              ? "border-blue-500 bg-blue-50"
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                        >
-                          <input type="radio" name="cwcBill" value={bill._id} checked={selectedBillForCwc === bill._id} onChange={(e) => setSelectedBillForCwc(e.target.value)} className="hidden" />
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selectedBillForCwc === bill._id ? "border-blue-500" : "border-gray-300"}`}>
-                            {selectedBillForCwc === bill._id && <div className="w-2 h-2 rounded-full bg-blue-500" />}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{bill.billNumber}</p>
-                            <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5">
-                              <IndianRupee className="h-3 w-3" />{bill.amount?.toLocaleString()}
-                            </p>
-                          </div>
-                          <Badge variant="success">Verified</Badge>
-                        </label>
-                      ))}
+            {/* ── Seller Declaration Dialog ── */}
+            {showDeclarationDialog && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                      <FileText className="h-5 w-5 text-blue-600" />
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-gray-200 rounded-xl">
-                      <CheckCircle2 className="h-8 w-8 text-gray-200 mb-2" />
-                      <p className="text-sm font-medium text-gray-600">No verified bills yet</p>
-                      <p className="text-xs text-gray-400 mt-1">Upload bills and wait for EPC verification first</p>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Seller Declaration</h3>
+                      <p className="text-xs text-gray-500">Required before bill submission</p>
                     </div>
-                  )}
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={submittingCwc || !selectedBillForCwc}>
-                      {submittingCwc ? "Submitting..." : "Submit CWC Request"}
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-4 mb-5 text-sm text-gray-700 leading-relaxed border border-gray-200">
+                    I hereby declare that the bill submitted is genuine, all work described has been completed as per the contract, and I authorize Gryork to process this invoice for working capital financing. I confirm that this bill has not been submitted elsewhere for financing and I am liable for any misrepresentation.
+                  </div>
+
+                  <label className="flex items-start gap-3 cursor-pointer mb-6">
+                    <input
+                      type="checkbox"
+                      checked={declarationAccepted}
+                      onChange={(e) => setDeclarationAccepted(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-blue-600"
+                    />
+                    <span className="text-sm text-gray-700">
+                      I have read and accept the terms of the <span className="font-medium text-blue-700">Seller Declaration</span>
+                    </span>
+                  </label>
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => { setShowDeclarationDialog(false); setPendingBillForm(null); }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      disabled={!declarationAccepted || uploadingBill}
+                      onClick={handleConfirmBillSubmit}
+                    >
+                      {uploadingBill ? "Submitting..." : "Accept & Submit"}
                     </Button>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
+                </motion.div>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -693,24 +703,24 @@ const DashboardPage = () => {
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div>
-                        <p className="font-semibold text-gray-900">{bid.nbfc?.name || "NBFC"}</p>
+                        <p className="font-semibold text-gray-900">{bid.epcId?.companyName || "Company"}</p>
                         <div className="flex items-center gap-4 mt-2">
                           <div className="flex items-center gap-1.5">
-                            <div className="p-1.5 bg-emerald-50 rounded-lg">
-                              <Percent className="h-3.5 w-3.5 text-emerald-600" />
+                            <div className="p-1.5 bg-blue-50 rounded-lg">
+                              <IndianRupee className="h-3.5 w-3.5 text-blue-600" />
                             </div>
                             <div>
-                              <p className="text-xs text-gray-400">Interest Rate</p>
-                              <p className="text-sm font-semibold text-gray-900">{bid.interestRate}% p.a.</p>
+                              <p className="text-xs text-gray-400">Bid Amount</p>
+                              <p className="text-sm font-semibold text-gray-900">₹{bid.bidAmount?.toLocaleString()}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <div className="p-1.5 bg-blue-50 rounded-lg">
-                              <CalendarDays className="h-3.5 w-3.5 text-blue-600" />
+                            <div className="p-1.5 bg-emerald-50 rounded-lg">
+                              <CalendarDays className="h-3.5 w-3.5 text-emerald-600" />
                             </div>
                             <div>
-                              <p className="text-xs text-gray-400">Tenure</p>
-                              <p className="text-sm font-semibold text-gray-900">{bid.tenure} days</p>
+                              <p className="text-xs text-gray-400">Duration</p>
+                              <p className="text-sm font-semibold text-gray-900">{bid.fundingDurationDays} days</p>
                             </div>
                           </div>
                         </div>
@@ -725,11 +735,11 @@ const DashboardPage = () => {
                             <p className="text-sm font-medium text-gray-700">Counter Offer</p>
                             <div className="grid sm:grid-cols-2 gap-3">
                               <div className="space-y-1.5">
-                                <Label>Counter Rate (%)</Label>
-                                <Input type="number" step="0.01" value={counterOffer.amount} onChange={(e) => setCounterOffer({ ...counterOffer, amount: e.target.value })} placeholder="e.g., 12.5" />
+                                <Label>Counter Amount (₹)</Label>
+                                <Input type="number" value={counterOffer.amount} onChange={(e) => setCounterOffer({ ...counterOffer, amount: e.target.value })} placeholder="e.g., 500000" />
                               </div>
                               <div className="space-y-1.5">
-                                <Label>Counter Tenure (days)</Label>
+                                <Label>Counter Duration (days)</Label>
                                 <Input type="number" value={counterOffer.duration} onChange={(e) => setCounterOffer({ ...counterOffer, duration: e.target.value })} placeholder="e.g., 45" />
                               </div>
                             </div>
@@ -767,7 +777,7 @@ const DashboardPage = () => {
                 <div className="flex flex-col items-center justify-center py-14 text-center px-6">
                   <Gavel className="h-8 w-8 text-gray-200 mb-2" />
                   <p className="text-sm text-gray-500">No bids received yet</p>
-                  <p className="text-xs text-gray-400 mt-1">Bids from NBFCs will appear here</p>
+                  <p className="text-xs text-gray-400 mt-1">Bids from companies will appear here</p>
                 </div>
               </Card>
             )}

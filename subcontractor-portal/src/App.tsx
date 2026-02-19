@@ -74,7 +74,8 @@ const AppRoutes = () => {
   if (
     profileStatus === "PROFILE_COMPLETED" ||
     profileStatus === "KYC_PENDING" ||
-    profileStatus === "KYC_IN_PROGRESS"
+    profileStatus === "KYC_IN_PROGRESS" ||
+    profileStatus === "UNDER_REVIEW"
   ) {
     return (
       <Routes>
