@@ -74,7 +74,8 @@ const ProfileCompletionPage = () => {
     try {
       await api.put('/subcontractor/profile', { ...form, gstin: form.gstin.toUpperCase() });
       toast.success('Profile completed successfully!');
-      navigate('/');
+      // Hard redirect so AppRoutes re-fetches the updated profile status
+      window.location.href = '/kyc';
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to save profile');
     } finally {
