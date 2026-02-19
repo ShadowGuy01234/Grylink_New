@@ -38,12 +38,29 @@ export const authApi = {
 
 // Sales
 export const salesApi = {
-  createLead: (data: any) => api.post("/sales/leads", data),
-  getLeads: () => api.get("/sales/leads"),
-  getSubContractors: () => api.get("/sales/subcontractors"),
+  // Dashboard
   getDashboard: () => api.get("/sales/dashboard"),
+
+  // Company Leads
+  createLead: (data: any) => api.post("/sales/leads", data),
+  getLeads: (params?: { search?: string; status?: string }) => api.get("/sales/leads", { params }),
+  getLeadDetail: (id: string) => api.get(`/sales/leads/${id}`),
+  getLeadSubContractors: (id: string) => api.get(`/sales/leads/${id}/subcontractors`),
+  addCompanyNote: (id: string, note: string) => api.post(`/sales/leads/${id}/notes`, { note }),
+  resendCompanyLink: (id: string) => api.post(`/sales/leads/${id}/resend-link`),
+
+  // Sub-Contractors
+  getSubContractors: (params?: { search?: string; status?: string; kycStatus?: string }) =>
+    api.get("/sales/subcontractors", { params }),
+  getSubContractorDetail: (id: string) => api.get(`/sales/subcontractors/${id}`),
   markContacted: (id: string, notes?: string) =>
     api.patch(`/sales/subcontractors/${id}/contacted`, { notes }),
+  addContactLog: (id: string, data: { method: string; outcome?: string; notes?: string }) =>
+    api.post(`/sales/subcontractors/${id}/contact-log`, data),
+
+  // GryLinks
+  getGryLinks: (params?: { status?: string; linkType?: string }) => api.get("/sales/grylinks", { params }),
+  resendGryLink: (id: string) => api.post(`/sales/grylinks/${id}/resend`),
 };
 
 // Ops

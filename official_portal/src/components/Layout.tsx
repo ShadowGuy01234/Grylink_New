@@ -13,6 +13,10 @@ import {
   HiOutlineDocumentText,
   HiOutlineIdentification,
   HiOutlineClock,
+  HiOutlineUserGroup,
+  HiOutlineLink,
+  HiOutlineViewGrid,
+  HiOutlineOfficeBuilding as HiBuilding,
 } from "react-icons/hi";
 
 const Layout = () => {
@@ -28,7 +32,9 @@ const Layout = () => {
   const isAdmin = user?.role === "admin" || user?.role === "founder";
   const isFounder = user?.role === "founder";
   const isOps = user?.role === "ops";
+  const isSales = user?.role === "sales";
   const showOpsSubnav = (isOps || isAdmin) && location.pathname.startsWith("/ops");
+  const showSalesSubnav = (isSales || isAdmin) && location.pathname.startsWith("/sales");
 
   const navItems = [
     ...(isFounder
@@ -82,6 +88,31 @@ const Layout = () => {
             </NavLink>
           ))}
         </nav>
+
+        {/* Sales Sub-navigation */}
+        {showSalesSubnav && (
+          <div className="subnav-section">
+            <div className="subnav-header">Sales Tools</div>
+            <nav className="subnav">
+              {[
+                { to: "/sales", icon: <HiOutlineViewGrid />, label: "Overview", exact: true },
+                { to: "/sales/companies", icon: <HiBuilding />, label: "Companies" },
+                { to: "/sales/subcontractors", icon: <HiOutlineUserGroup />, label: "Sub-Contractors" },
+                { to: "/sales/grylinks", icon: <HiOutlineLink />, label: "GryLinks" },
+              ].map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.exact}
+                  className={({ isActive }) => `subnav-item ${isActive ? "active" : ""}`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        )}
 
         {/* Ops Sub-navigation */}
         {showOpsSubnav && (

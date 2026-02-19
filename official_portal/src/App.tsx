@@ -4,7 +4,12 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePageNew";
 import LoginPage from "./pages/LoginPage";
-import SalesDashboard from "./pages/SalesDashboard";
+import SalesOverview from "./pages/sales/SalesOverview";
+import CompaniesListPage from "./pages/sales/CompaniesListPage";
+import CompanyDetailPage from "./pages/sales/CompanyDetailPage";
+import SubContractorsListPage from "./pages/sales/SubContractorsListPage";
+import SubContractorDetailPage from "./pages/sales/SubContractorDetailPage";
+import GryLinksPage from "./pages/sales/GryLinksPage";
 import OpsDashboard from "./pages/OpsDashboardNew";
 import CasesPage from "./pages/CasesPage";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -59,7 +64,57 @@ const AppRoutes = () => {
           path="sales"
           element={
             ["sales", "admin", "founder"].includes(user.role) ? (
-              <SalesDashboard />
+              <SalesOverview />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="sales/companies"
+          element={
+            ["sales", "admin", "founder"].includes(user.role) ? (
+              <CompaniesListPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="sales/companies/:id"
+          element={
+            ["sales", "admin", "founder"].includes(user.role) ? (
+              <CompanyDetailPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="sales/subcontractors"
+          element={
+            ["sales", "admin", "founder"].includes(user.role) ? (
+              <SubContractorsListPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="sales/subcontractors/:id"
+          element={
+            ["sales", "admin", "founder"].includes(user.role) ? (
+              <SubContractorDetailPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="sales/grylinks"
+          element={
+            ["sales", "admin", "founder"].includes(user.role) ? (
+              <GryLinksPage />
             ) : (
               <Navigate to={homeRoute} replace />
             )
