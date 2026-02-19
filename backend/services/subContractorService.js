@@ -468,15 +468,26 @@ const uploadKycDocument = async (userId, documentType, file) => {
   ).length;
 
   if (uploadedRequired === requiredDocs.length) {
-    // All required docs uploaded - check if all verified
+    // All required docs uploaded — check if all verified
     const allVerified = requiredDocs.every(
       (doc) => subContractor.kycDocuments[doc]?.verified === true,
     );
-    subContractor.kycStatus = allVerified ? "COMPLETED" : "UNDER_REVIEW";
-    subContractor.status = allVerified ? "KYC_COMPLETED" : "KYC_IN_PROGRESS";
+    if (allVerified) {
+      subContractor.kycStatus = "COMPLETED";
+      subContractor.status = "KYC_COMPLETED";
+    } else if (subContractor.kycStatus === "UNDER_REVIEW") {
+      // Already submitted for review (user re-uploaded a rejected doc) — keep UNDER_REVIEW
+      // status field stays KYC_IN_PROGRESS
+    } else {
+      // Docs uploaded but user hasn't explicitly submitted yet
+      subContractor.kycStatus = "DOCUMENTS_PENDING";
+      subContractor.status = "KYC_PENDING";
+    }
   } else {
-    subContractor.kycStatus = "DOCUMENTS_PENDING";
-    subContractor.status = "KYC_PENDING";
+    if (subContractor.kycStatus !== "UNDER_REVIEW") {
+      subContractor.kycStatus = "DOCUMENTS_PENDING";
+      subContractor.status = "KYC_PENDING";
+    }
   }
 
   subContractor.statusHistory.push({
@@ -517,19 +528,81 @@ const getKycStatus = async (userId) => {
       fileName: doc?.fileName,
       status: doc?.verified
         ? "VERIFIED"
-        : doc?.fileUrl
-          ? "PENDING"
-          : "NOT_UPLOADED",
+        : (doc?.verifiedAt && doc?.fileUrl)
+          ? "REJECTED"
+          : doc?.fileUrl
+            ? "PENDING"
+            : "NOT_UPLOADED",
+      rejectionReason: (!doc?.verified && doc?.verifiedAt) ? (doc?.verificationNotes || 'Document was rejected') : undefined,
       uploadedAt: doc?.uploadedAt,
     };
   }
 
   return {
-    kycStatus: subContractor.kycStatus || "NOT_STARTED",
+    overall: subContractor.kycStatus || "NOT_STARTED",
     documents,
     bankDetails: subContractor.bankDetails,
-    bankDetailsVerified: subContractor.bankDetails?.verified || false,
+    bankDetailsVerified: subContractor.bankDetails?.verificationStatus === "VERIFIED",
+    additionalDocuments: subContractor.additionalDocuments || [],
   };
+};
+
+// Explicitly submit KYC for ops review
+const submitKycForReview = async (userId) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  const requiredDocs = ["panCard", "aadhaarCard", "gstCertificate", "cancelledCheque"];
+  const allUploaded = requiredDocs.every(
+    (doc) => subContractor.kycDocuments?.[doc]?.fileUrl,
+  );
+  if (!allUploaded) {
+    throw new Error("Please upload all required documents before submitting");
+  }
+  if (!subContractor.bankDetails?.accountNumber) {
+    throw new Error("Please save your bank details before submitting");
+  }
+  if (subContractor.kycStatus === "UNDER_REVIEW") {
+    throw new Error("KYC is already submitted and under review");
+  }
+
+  subContractor.kycStatus = "UNDER_REVIEW";
+  subContractor.status = "KYC_IN_PROGRESS";
+  subContractor.statusHistory.push({
+    status: "KYC_SUBMITTED_FOR_REVIEW",
+    changedBy: userId,
+    notes: "KYC documents explicitly submitted for ops review",
+  });
+
+  await subContractor.save();
+  return { success: true, message: "KYC submitted for review. Our team will contact you soon." };
+};
+
+// Upload a file for an ops-requested additional document
+const uploadAdditionalDocument = async (userId, docId, file) => {
+  const subContractor = await SubContractor.findOne({ userId });
+  if (!subContractor) throw new Error("Sub-contractor not found");
+
+  const additionalDoc = subContractor.additionalDocuments.id(docId);
+  if (!additionalDoc) throw new Error("Additional document request not found");
+
+  // Upload to Cloudinary
+  const { uploadToCloudinary } = require("./cloudinaryService");
+  const result = await uploadToCloudinary(
+    file.buffer,
+    "kyc/additional",
+    "auto",
+    file.mimetype,
+  );
+
+  additionalDoc.fileUrl = result.secure_url;
+  additionalDoc.cloudinaryPublicId = result.public_id;
+  additionalDoc.fileName = file.originalname;
+  additionalDoc.uploadedAt = new Date();
+  additionalDoc.status = "UPLOADED";
+
+  await subContractor.save();
+  return { success: true, message: "Document uploaded successfully" };
 };
 
 // ==================== BANK DETAILS ====================
@@ -554,15 +627,13 @@ const updateBankDetails = async (userId, bankData) => {
   }
 
   subContractor.bankDetails = {
+    accountHolderName,
     accountNumber,
     ifscCode,
     bankName,
     branchName,
-    accountHolderName,
-    verified: false, // Will be verified by ops team
+    verificationStatus: "PENDING", // Will be verified by ops team
     verifiedAt: null,
-    verificationAttempts:
-      (subContractor.bankDetails?.verificationAttempts || 0) + 1,
   };
 
   subContractor.statusHistory.push({
@@ -597,5 +668,7 @@ module.exports = {
   getDeclarationStatus,
   uploadKycDocument,
   getKycStatus,
+  submitKycForReview,
   updateBankDetails,
+  uploadAdditionalDocument,
 };

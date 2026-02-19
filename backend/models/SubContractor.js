@@ -36,6 +36,7 @@ const subContractorSchema = new mongoose.Schema(
     // BANK ACCOUNT DETAILS (Workflow Section 4 - Step 2)
     // ========================================
     bankDetails: {
+      accountHolderName: { type: String, trim: true },
       accountNumber: { type: String, trim: true },
       ifscCode: { type: String, uppercase: true, trim: true },
       bankName: { type: String, trim: true },
@@ -95,6 +96,25 @@ const subContractorSchema = new mongoose.Schema(
         verifiedAt: Date,
       },
     },
+
+    // Additional documents requested by ops team
+    additionalDocuments: [
+      {
+        label: { type: String, required: true },
+        description: { type: String },
+        requestedAt: { type: Date, default: Date.now },
+        requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        fileName: { type: String },
+        fileUrl: { type: String },
+        cloudinaryPublicId: { type: String },
+        uploadedAt: { type: Date },
+        status: {
+          type: String,
+          enum: ["REQUESTED", "UPLOADED", "VERIFIED", "REJECTED"],
+          default: "REQUESTED",
+        },
+      },
+    ],
 
     // KYC overall status
     kycStatus: {

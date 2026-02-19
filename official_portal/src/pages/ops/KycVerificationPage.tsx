@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { opsApi } from "../../api";
 import toast from "react-hot-toast";
 import {
@@ -6,16 +6,13 @@ import {
   HiOutlineCheckCircle,
   HiOutlineXCircle,
   HiOutlineRefresh,
-  HiOutlineChat,
-  HiOutlinePaperAirplane,
-  HiOutlineReply,
   HiOutlineDocumentText,
   HiOutlinePhone,
   HiOutlineMail,
-  HiOutlinePencil,
-  HiOutlineTrash,
+  HiOutlineCreditCard,
+  HiOutlinePlus,
+  HiOutlineExternalLink,
 } from "react-icons/hi";
-import { useAuth } from "../../context/AuthContext";
 // Import shared verification components
 import {
   EntityCard,
@@ -35,14 +32,37 @@ interface Seller {
   company: {
     _id: string;
     companyName: string;
-  };
+  } | null;
   kycStatus: string;
+  status?: string;
   kycDocuments?: KycDocument[];
+  bankDetails?: {
+    accountHolderName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    bankName?: string;
+    branchName?: string;
+    accountType?: string;
+    verificationStatus?: string;
+    verifiedAt?: string;
+  };
+  additionalDocuments?: AdditionalDocument[];
   createdAt: string;
   case?: {
     _id: string;
     caseId: string;
   };
+}
+
+interface AdditionalDocument {
+  _id: string;
+  label: string;
+  description?: string;
+  requestedAt: string;
+  fileName?: string;
+  fileUrl?: string;
+  status: string;
+  uploadedAt?: string;
 }
 
 interface KycDocument {
@@ -52,33 +72,6 @@ interface KycDocument {
   fileUrl: string;
   status: string;
   uploadedAt: string;
-}
-
-interface ChatMessage {
-  _id: string;
-  sender: {
-    _id: string;
-    name: string;
-    role: string;
-  };
-  message: string;
-  type: 'text' | 'system' | 'action_required' | 'document';
-  attachments?: {
-    fileName: string;
-    fileUrl: string;
-    fileType: string;
-  }[];
-  replyTo?: {
-    _id: string;
-    message: string;
-    sender: { name: string };
-  };
-  reactions?: {
-    emoji: string;
-    users: string[];
-  }[];
-  isEdited?: boolean;
-  createdAt: string;
 }
 
 // KYC Document type definitions for this page
@@ -93,37 +86,36 @@ const KYC_DOCUMENT_TYPES: Record<string, { key: string; label: string; required:
 
 // KYC Status options for filtering
 const KYC_STATUS_OPTIONS = [
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'IN_REVIEW', label: 'In Review' },
-  { value: 'VERIFIED', label: 'Verified' },
+  { value: 'DOCUMENTS_PENDING', label: 'Documents Pending' },
+  { value: 'UNDER_REVIEW', label: 'Under Review' },
+  { value: 'COMPLETED', label: 'Completed' },
   { value: 'REJECTED', label: 'Rejected' },
 ];
 
 const KycVerificationPage = () => {
-  const { user } = useAuth();
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  
-  // Chat state
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
-  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
   
   // Document viewer state
   const [viewingDoc, setViewingDoc] = useState<BaseDocument | null>(null);
   
-  // Verification modals - using new VerificationModal component
+  // Verification modals
   const [kycVerifyModal, setKycVerifyModal] = useState<{ show: boolean; defaultDecision?: 'approve' | 'reject' }>({ show: false });
   const [docVerifyModal, setDocVerifyModal] = useState<{ show: boolean; doc: KycDocument | null; defaultDecision?: 'approve' | 'reject' }>({
     show: false,
     doc: null,
   });
+  const [bankVerifyModal, setBankVerifyModal] = useState<{ show: boolean; defaultDecision?: 'approve' | 'reject' }>({ show: false });
+  const [additionalVerifyModal, setAdditionalVerifyModal] = useState<{ show: boolean; docId: string | null; defaultDecision?: 'approve' | 'reject' }>({ show: false, docId: null });
   const [processingAction, setProcessingAction] = useState(false);
+
+  // Request additional document form
+  const [requestDocForm, setRequestDocForm] = useState({ show: false, label: '', description: '' });
+  const [submittingRequest, setSubmittingRequest] = useState(false);
 
   const fetchSellers = useCallback(async () => {
     try {
@@ -140,76 +132,20 @@ const KycVerificationPage = () => {
     }
   }, [statusFilter]);
 
-  const fetchMessages = useCallback(async (sellerId: string) => {
-    try {
-      const res = await opsApi.getKycChat(sellerId);
-      setMessages(res.data.messages || []);
-    } catch {
-      console.error("Failed to load messages");
-    }
-  }, []);
-
   useEffect(() => {
     fetchSellers();
   }, [fetchSellers]);
 
-  useEffect(() => {
-    if (selectedSeller) {
-      fetchMessages(selectedSeller._id);
-      const interval = setInterval(() => fetchMessages(selectedSeller._id), 10000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedSeller, fetchMessages]);
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!selectedSeller || !newMessage.trim()) return;
-    
+  const handleSelectSeller = async (seller: Seller) => {
+    setSelectedSeller(seller);
+    setLoadingDetail(true);
     try {
-      if (editingMessage) {
-        await opsApi.editKycMessage(editingMessage._id, { message: newMessage });
-        toast.success("Message updated");
-        setEditingMessage(null);
-      } else {
-        await opsApi.sendKycMessage(selectedSeller._id, {
-          message: newMessage,
-          replyTo: replyingTo?._id,
-        });
-      }
-      setNewMessage("");
-      setReplyingTo(null);
-      fetchMessages(selectedSeller._id);
+      const res = await opsApi.getSellerKyc(seller._id);
+      setSelectedSeller(res.data.seller);
     } catch {
-      toast.error("Failed to send message");
-    }
-  };
-
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!confirm("Delete this message?")) return;
-    try {
-      await opsApi.deleteKycMessage(messageId);
-      toast.success("Message deleted");
-      if (selectedSeller) {
-        fetchMessages(selectedSeller._id);
-      }
-    } catch {
-      toast.error("Failed to delete message");
-    }
-  };
-
-  const handleAddReaction = async (messageId: string, emoji: string) => {
-    try {
-      await opsApi.addKycReaction(messageId, emoji);
-      if (selectedSeller) {
-        fetchMessages(selectedSeller._id);
-      }
-    } catch {
-      toast.error("Failed to add reaction");
+      console.error("Failed to load seller details");
+    } finally {
+      setLoadingDetail(false);
     }
   };
 
@@ -238,25 +174,79 @@ const KycVerificationPage = () => {
     
     setProcessingAction(true);
     try {
-      console.log("Verifying document:", docVerifyModal.doc._id, decision);
       await opsApi.verifyKycDocument(docVerifyModal.doc._id, {
         decision: decision.decision,
         notes: decision.notes,
       });
-      toast.success("Document verified successfully!");
+      toast.success(decision.decision === "approve" ? "Document verified successfully!" : "Document rejected");
       setDocVerifyModal({ show: false, doc: null });
-      fetchSellers();
       if (selectedSeller) {
         const res = await opsApi.getSellerKyc(selectedSeller._id);
         setSelectedSeller(res.data.seller);
       }
+      fetchSellers();
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : 
         (error as { response?: { data?: { error?: string } } })?.response?.data?.error || "Failed to verify document";
       toast.error(errMsg);
-      console.error("Verify document error:", error);
     } finally {
       setProcessingAction(false);
+    }
+  };
+
+  const handleVerifyBankDetails = async (decision: VerificationDecision) => {
+    if (!selectedSeller) return;
+    setProcessingAction(true);
+    try {
+      await opsApi.verifyBankDetails(selectedSeller._id, {
+        decision: decision.decision,
+        notes: decision.notes,
+      });
+      toast.success(decision.decision === "approve" ? "Bank details verified!" : "Bank details rejected");
+      setBankVerifyModal({ show: false });
+      const res = await opsApi.getSellerKyc(selectedSeller._id);
+      setSelectedSeller(res.data.seller);
+    } catch {
+      toast.error("Failed to verify bank details");
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
+  const handleVerifyAdditionalDoc = async (decision: VerificationDecision) => {
+    if (!selectedSeller || !additionalVerifyModal.docId) return;
+    setProcessingAction(true);
+    try {
+      await opsApi.verifyAdditionalDoc(selectedSeller._id, additionalVerifyModal.docId, {
+        decision: decision.decision,
+      });
+      toast.success(decision.decision === "approve" ? "Document verified!" : "Document rejected");
+      setAdditionalVerifyModal({ show: false, docId: null });
+      const res = await opsApi.getSellerKyc(selectedSeller._id);
+      setSelectedSeller(res.data.seller);
+    } catch {
+      toast.error("Failed to verify document");
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
+  const handleRequestAdditionalDoc = async () => {
+    if (!selectedSeller || !requestDocForm.label.trim()) return;
+    setSubmittingRequest(true);
+    try {
+      await opsApi.requestAdditionalDoc(selectedSeller._id, {
+        label: requestDocForm.label,
+        description: requestDocForm.description,
+      });
+      toast.success("Additional document requested");
+      setRequestDocForm({ show: false, label: '', description: '' });
+      const res = await opsApi.getSellerKyc(selectedSeller._id);
+      setSelectedSeller(res.data.seller);
+    } catch {
+      toast.error("Failed to request document");
+    } finally {
+      setSubmittingRequest(false);
     }
   };
 
@@ -309,9 +299,8 @@ const KycVerificationPage = () => {
       );
   };
 
-  const formatTime = (date: string) => {
-    const d = new Date(date);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   return (
@@ -319,7 +308,7 @@ const KycVerificationPage = () => {
       <div className="page-header">
         <div className="header-content">
           <h1><HiOutlineIdentification /> Seller KYC Verification</h1>
-          <p>Verify seller identity documents and communicate directly</p>
+          <p>Review and verify subcontractor identity documents and bank details</p>
         </div>
         <button className="btn-refresh" onClick={fetchSellers}>
           <HiOutlineRefresh /> Refresh
@@ -367,7 +356,7 @@ const KycVerificationPage = () => {
                     createdAt: seller.createdAt,
                   }}
                   isSelected={selectedSeller?._id === seller._id}
-                  onClick={() => setSelectedSeller(seller)}
+                  onClick={() => handleSelectSeller(seller)}
                   subtitle={`${seller.kycDocuments?.length || 0} documents`}
                 />
               ))
@@ -414,8 +403,12 @@ const KycVerificationPage = () => {
                 )}
               </div>
 
-              <div className="content-grid">
-                {/* Documents Panel - Using DocumentList Component */}
+              {loadingDetail && (
+                <div className="detail-loading">Loading full KYC details...</div>
+              )}
+
+              <div className="content-column">
+                {/* Documents Panel */}
                 <div className="documents-panel">
                   <h3>KYC Documents</h3>
                   <DocumentList
@@ -434,158 +427,179 @@ const KycVerificationPage = () => {
                       <strong>Missing Required Documents:</strong>
                       <ul>
                         {getMissingDocs().map(([key, config]) => (
-                            <li key={key}>{config.label}</li>
-                          ))
-                        }
+                          <li key={key}>{config.label}</li>
+                        ))}
                       </ul>
                     </div>
                   )}
+                </div>
 
-                  {selectedSeller.kycStatus === 'PENDING' && (
+                {/* Bank Details Panel */}
+                <div className="bank-details-panel">
+                  <div className="panel-section-header">
+                    <HiOutlineCreditCard />
+                    <h3>Bank Details</h3>
+                    {selectedSeller.bankDetails?.verificationStatus && (
+                      <span className={`status-chip ${selectedSeller.bankDetails.verificationStatus.toLowerCase()}`}>
+                        {selectedSeller.bankDetails.verificationStatus}
+                      </span>
+                    )}
+                  </div>
+                  {selectedSeller.bankDetails?.accountNumber ? (
+                    <>
+                      <div className="bank-grid">
+                        <div className="bank-field">
+                          <label>Account Holder</label>
+                          <span>{selectedSeller.bankDetails.accountHolderName || '—'}</span>
+                        </div>
+                        <div className="bank-field">
+                          <label>Account Number</label>
+                          <span>{selectedSeller.bankDetails.accountNumber}</span>
+                        </div>
+                        <div className="bank-field">
+                          <label>IFSC Code</label>
+                          <span>{selectedSeller.bankDetails.ifscCode || '—'}</span>
+                        </div>
+                        <div className="bank-field">
+                          <label>Bank Name</label>
+                          <span>{selectedSeller.bankDetails.bankName || '—'}</span>
+                        </div>
+                        <div className="bank-field">
+                          <label>Branch</label>
+                          <span>{selectedSeller.bankDetails.branchName || '—'}</span>
+                        </div>
+                        <div className="bank-field">
+                          <label>Account Type</label>
+                          <span>{selectedSeller.bankDetails.accountType || '—'}</span>
+                        </div>
+                      </div>
+                      {selectedSeller.bankDetails.verificationStatus !== 'VERIFIED' && (
+                        <div className="bank-actions">
+                          <button
+                            className="btn-approve-sm"
+                            onClick={() => setBankVerifyModal({ show: true, defaultDecision: 'approve' })}
+                          >
+                            <HiOutlineCheckCircle /> Verify Bank
+                          </button>
+                          <button
+                            className="btn-reject-sm"
+                            onClick={() => setBankVerifyModal({ show: true, defaultDecision: 'reject' })}
+                          >
+                            <HiOutlineXCircle /> Reject Bank
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="no-bank-details">No bank details submitted yet</p>
+                  )}
+                </div>
+
+                {/* Additional Documents Panel */}
+                <div className="additional-docs-panel">
+                  <div className="panel-section-header">
+                    <HiOutlineDocumentText />
+                    <h3>Additional Documents</h3>
+                    <button
+                      className="btn-request-doc"
+                      onClick={() => setRequestDocForm({ show: true, label: '', description: '' })}
+                    >
+                      <HiOutlinePlus /> Request Document
+                    </button>
+                  </div>
+
+                  {requestDocForm.show && (
+                    <div className="request-doc-form">
+                      <input
+                        placeholder="Document label (e.g. GST Returns 2023-24)"
+                        value={requestDocForm.label}
+                        onChange={(e) => setRequestDocForm(f => ({ ...f, label: e.target.value }))}
+                      />
+                      <input
+                        placeholder="Description (optional)"
+                        value={requestDocForm.description}
+                        onChange={(e) => setRequestDocForm(f => ({ ...f, description: e.target.value }))}
+                      />
+                      <div className="form-actions">
+                        <button
+                          className="btn-cancel-sm"
+                          onClick={() => setRequestDocForm({ show: false, label: '', description: '' })}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className="btn-primary-sm"
+                          onClick={handleRequestAdditionalDoc}
+                          disabled={!requestDocForm.label.trim() || submittingRequest}
+                        >
+                          {submittingRequest ? 'Sending...' : 'Send Request'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {(selectedSeller.additionalDocuments || []).length === 0 && !requestDocForm.show && (
+                    <p className="no-additional-docs">No additional documents requested</p>
+                  )}
+
+                  {(selectedSeller.additionalDocuments || []).map(doc => (
+                    <div key={doc._id} className="additional-doc-item">
+                      <div className="additional-doc-info">
+                        <strong>{doc.label}</strong>
+                        {doc.description && <span className="doc-description">{doc.description}</span>}
+                        <div className="doc-meta">
+                          <span className={`status-chip ${doc.status.toLowerCase()}`}>{doc.status}</span>
+                          {doc.requestedAt && <span className="doc-date">Requested: {formatDate(doc.requestedAt)}</span>}
+                        </div>
+                      </div>
+                      <div className="additional-doc-actions">
+                        {doc.fileUrl && (
+                          <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="btn-view-sm">
+                            <HiOutlineExternalLink /> View
+                          </a>
+                        )}
+                        {doc.status === 'UPLOADED' && (
+                          <>
+                            <button
+                              className="btn-approve-sm"
+                              onClick={() => setAdditionalVerifyModal({ show: true, docId: doc._id, defaultDecision: 'approve' })}
+                            >
+                              <HiOutlineCheckCircle />
+                            </button>
+                            <button
+                              className="btn-reject-sm"
+                              onClick={() => setAdditionalVerifyModal({ show: true, docId: doc._id, defaultDecision: 'reject' })}
+                            >
+                              <HiOutlineXCircle />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Overall KYC Actions */}
+                {selectedSeller.kycStatus === 'UNDER_REVIEW' && (
+                  <div className="kyc-final-actions">
+                    <h3>Final KYC Decision</h3>
+                    <p>All required documents have been submitted for review.</p>
                     <div className="action-buttons">
-                      <button 
+                      <button
                         className="btn-approve"
                         onClick={() => setKycVerifyModal({ show: true, defaultDecision: 'approve' })}
                       >
                         <HiOutlineCheckCircle /> Approve KYC
                       </button>
-                      <button 
+                      <button
                         className="btn-reject"
                         onClick={() => setKycVerifyModal({ show: true, defaultDecision: 'reject' })}
                       >
                         <HiOutlineXCircle /> Reject KYC
                       </button>
                     </div>
-                  )}
-                </div>
-
-                {/* Chat Panel */}
-                <div className="chat-panel">
-                  <div className="chat-header">
-                    <HiOutlineChat />
-                    <h3>Communication</h3>
-                    <span className="message-count">{messages.length} messages</span>
                   </div>
-
-                  <div className="chat-messages" ref={chatContainerRef}>
-                    {messages.length === 0 ? (
-                      <div className="no-messages">
-                        <HiOutlineChat />
-                        <p>No messages yet. Start the conversation!</p>
-                      </div>
-                    ) : (
-                      messages.map(msg => {
-                        const isOwn = msg.sender._id === user?.id;
-                        return (
-                          <div 
-                            key={msg._id} 
-                            className={`message ${isOwn ? 'own' : ''} ${msg.type}`}
-                          >
-                            {msg.replyTo && (
-                              <div className="reply-preview">
-                                <HiOutlineReply />
-                                <span>{msg.replyTo.sender.name}: {msg.replyTo.message.substring(0, 50)}...</span>
-                              </div>
-                            )}
-                            <div className="message-content">
-                              {!isOwn && (
-                                <span className="sender-name">{msg.sender.name}</span>
-                              )}
-                              <p>{msg.message}</p>
-                              {msg.attachments && msg.attachments.length > 0 && (
-                                <div className="attachments">
-                                  {msg.attachments.map((att, i) => (
-                                    <a key={i} href={att.fileUrl} target="_blank" rel="noopener noreferrer">
-                                      <HiOutlineDocumentText />
-                                      {att.fileName}
-                                    </a>
-                                  ))}
-                                </div>
-                              )}
-                              <div className="message-meta">
-                                <span className="time">{formatTime(msg.createdAt)}</span>
-                                {msg.isEdited && <span className="edited">(edited)</span>}
-                              </div>
-                            </div>
-                            
-                            {/* Reactions */}
-                            {msg.reactions && msg.reactions.length > 0 && (
-                              <div className="reactions">
-                                {msg.reactions.map((r, i) => (
-                                  <span key={i} className="reaction">
-                                    {r.emoji} {r.users.length}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* Message Actions */}
-                            <div className="message-actions">
-                              <button onClick={() => setReplyingTo(msg)} title="Reply">
-                                <HiOutlineReply />
-                              </button>
-                              <button onClick={() => handleAddReaction(msg._id, '👍')} title="Like">
-                                👍
-                              </button>
-                              {isOwn && (
-                                <>
-                                  <button onClick={() => {
-                                    setEditingMessage(msg);
-                                    setNewMessage(msg.message);
-                                  }} title="Edit">
-                                    <HiOutlinePencil />
-                                  </button>
-                                  <button onClick={() => handleDeleteMessage(msg._id)} title="Delete">
-                                    <HiOutlineTrash />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  {/* Reply Preview */}
-                  {replyingTo && (
-                    <div className="reply-bar">
-                      <HiOutlineReply />
-                      <span>Replying to {replyingTo.sender.name}</span>
-                      <button onClick={() => setReplyingTo(null)}>×</button>
-                    </div>
-                  )}
-
-                  {/* Edit Preview */}
-                  {editingMessage && (
-                    <div className="edit-bar">
-                      <HiOutlinePencil />
-                      <span>Editing message</span>
-                      <button onClick={() => {
-                        setEditingMessage(null);
-                        setNewMessage("");
-                      }}>×</button>
-                    </div>
-                  )}
-
-                  {/* Message Input */}
-                  <div className="chat-input">
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type a message..."
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    />
-                    <button 
-                      className="btn-send"
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                    >
-                      <HiOutlinePaperAirplane />
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -626,6 +640,28 @@ const KycVerificationPage = () => {
         title="Verify Document"
         entityName={docVerifyModal.doc?.fileName}
         defaultDecision={docVerifyModal.defaultDecision}
+        isLoading={processingAction}
+      />
+
+      {/* Bank Details Verification Modal */}
+      <VerificationModal
+        isOpen={bankVerifyModal.show}
+        onClose={() => setBankVerifyModal({ show: false })}
+        onConfirm={handleVerifyBankDetails}
+        title="Verify Bank Details"
+        entityName={selectedSeller?.bankDetails?.bankName}
+        defaultDecision={bankVerifyModal.defaultDecision}
+        isLoading={processingAction}
+      />
+
+      {/* Additional Document Verification Modal */}
+      <VerificationModal
+        isOpen={additionalVerifyModal.show}
+        onClose={() => setAdditionalVerifyModal({ show: false, docId: null })}
+        onConfirm={handleVerifyAdditionalDoc}
+        title="Verify Additional Document"
+        entityName={selectedSeller?.additionalDocuments?.find(d => d._id === additionalVerifyModal.docId)?.label}
+        defaultDecision={additionalVerifyModal.defaultDecision}
         isLoading={processingAction}
       />
 
@@ -939,19 +975,28 @@ const KycVerificationPage = () => {
           color: var(--primary);
         }
 
-        .content-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
+        .content-column {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
           flex: 1;
-          overflow: hidden;
+          overflow-y: auto;
+          padding: 20px;
+        }
+
+        .detail-loading {
+          padding: 8px 20px;
+          font-size: 12px;
+          color: var(--text-muted);
+          background: var(--bg-secondary);
+          border-bottom: 1px solid var(--border);
         }
 
         .documents-panel {
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: 10px;
           padding: 20px;
-          border-right: 1px solid var(--border);
-          display: flex;
-          flex-direction: column;
-          overflow-y: auto;
         }
 
         .documents-panel h3 {
@@ -1111,250 +1156,244 @@ const KycVerificationPage = () => {
           margin-bottom: 4px;
         }
 
-        /* Chat Panel */
-        .chat-panel {
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
+        /* Bank Details Panel */
+        .bank-details-panel {
+          background: white;
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 20px;
         }
 
-        .chat-header {
+        .panel-section-header {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 16px 20px;
-          border-bottom: 1px solid var(--border);
+          margin-bottom: 16px;
         }
 
-        .chat-header h3 {
+        .panel-section-header h3 {
           font-size: 14px;
           font-weight: 600;
-          margin-right: auto;
-        }
-
-        .message-count {
-          font-size: 12px;
-          color: var(--text-muted);
-        }
-
-        .chat-messages {
           flex: 1;
-          overflow-y: auto;
-          padding: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
         }
 
-        .no-messages {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          color: var(--text-muted);
-          gap: 8px;
+        .panel-section-header svg {
+          color: var(--primary);
+          font-size: 18px;
         }
 
-        .no-messages svg {
-          font-size: 40px;
-          opacity: 0.3;
-        }
-
-        .message {
-          max-width: 80%;
-          padding: 10px 14px;
-          border-radius: 12px;
-          background: var(--bg-secondary);
-          position: relative;
-        }
-
-        .message.own {
-          margin-left: auto;
-          background: var(--primary);
-          color: white;
-        }
-
-        .message.system, .message.action_required {
-          margin: 0 auto;
-          max-width: 90%;
-          text-align: center;
-          background: #fef3c7;
-          font-size: 12px;
-        }
-
-        .reply-preview {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 10px;
-          margin-bottom: 8px;
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 6px;
-          font-size: 11px;
-          color: var(--text-muted);
-        }
-
-        .message.own .reply-preview {
-          background: rgba(255, 255, 255, 0.2);
-          color: rgba(255, 255, 255, 0.8);
-        }
-
-        .sender-name {
-          display: block;
+        .status-chip {
+          padding: 3px 10px;
+          border-radius: 20px;
           font-size: 11px;
           font-weight: 600;
-          margin-bottom: 4px;
-          color: var(--primary);
+          text-transform: uppercase;
         }
 
-        .message.own .sender-name {
-          color: rgba(255, 255, 255, 0.8);
+        .status-chip.verified { background: #d1fae5; color: #059669; }
+        .status-chip.pending { background: #fef3c7; color: #92400e; }
+        .status-chip.failed, .status-chip.rejected { background: #fee2e2; color: #dc2626; }
+        .status-chip.under_review { background: #dbeafe; color: #2563eb; }
+        .status-chip.requested { background: #f3f4f6; color: #6b7280; }
+        .status-chip.uploaded { background: #ede9fe; color: #7c3aed; }
+
+        .bank-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-bottom: 16px;
         }
 
-        .message-content p {
-          font-size: 13px;
-          line-height: 1.4;
-        }
-
-        .attachments {
+        .bank-field {
           display: flex;
           flex-direction: column;
-          gap: 4px;
-          margin-top: 8px;
+          gap: 3px;
         }
 
-        .attachments a {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 12px;
-          color: inherit;
-          opacity: 0.9;
-          text-decoration: underline;
-        }
-
-        .message-meta {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-top: 4px;
-        }
-
-        .time {
-          font-size: 10px;
-          opacity: 0.7;
-        }
-
-        .edited {
-          font-size: 10px;
-          opacity: 0.6;
-          font-style: italic;
-        }
-
-        .reactions {
-          display: flex;
-          gap: 4px;
-          margin-top: 6px;
-        }
-
-        .reaction {
-          padding: 2px 6px;
-          background: white;
-          border-radius: 10px;
+        .bank-field label {
           font-size: 11px;
-          border: 1px solid var(--border);
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
-        .message-actions {
-          display: none;
-          position: absolute;
-          top: -10px;
-          right: 4px;
+        .bank-field span {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--text-primary);
+        }
+
+        .bank-actions {
+          display: flex;
+          gap: 8px;
+        }
+
+        .no-bank-details, .no-additional-docs {
+          font-size: 13px;
+          color: var(--text-muted);
+          padding: 12px 0;
+        }
+
+        /* Additional Docs Panel */
+        .additional-docs-panel {
           background: white;
-          border-radius: 6px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          padding: 4px;
-        }
-
-        .message:hover .message-actions {
-          display: flex;
-          gap: 2px;
-        }
-
-        .message-actions button {
-          width: 24px;
-          height: 24px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          border-radius: 4px;
-          font-size: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .message-actions button:hover {
-          background: var(--bg-secondary);
-        }
-
-        .reply-bar, .edit-bar {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          background: var(--bg-secondary);
-          border-top: 1px solid var(--border);
-          font-size: 12px;
-        }
-
-        .reply-bar button, .edit-bar button {
-          margin-left: auto;
-          width: 20px;
-          height: 20px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          font-size: 16px;
-        }
-
-        .chat-input {
-          display: flex;
-          gap: 8px;
-          padding: 12px 16px;
-          border-top: 1px solid var(--border);
-        }
-
-        .chat-input input {
-          flex: 1;
-          padding: 10px 14px;
           border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 20px;
+        }
+
+        .btn-request-doc {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 6px 12px;
+          background: var(--primary);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .request-doc-form {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 16px;
+          padding: 14px;
+          background: var(--bg-secondary);
           border-radius: 8px;
+        }
+
+        .request-doc-form input {
+          padding: 8px 12px;
+          border: 1px solid var(--border);
+          border-radius: 6px;
           font-size: 13px;
           outline: none;
         }
 
-        .chat-input input:focus {
+        .request-doc-form input:focus {
           border-color: var(--primary);
         }
 
-        .btn-send {
-          width: 40px;
-          height: 40px;
-          background: var(--primary);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
+        .form-actions {
           display: flex;
-          align-items: center;
-          justify-content: center;
+          gap: 8px;
+          justify-content: flex-end;
         }
 
-        .btn-send:disabled {
+        .additional-doc-item {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          padding: 12px;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          margin-bottom: 8px;
+        }
+
+        .additional-doc-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          flex: 1;
+        }
+
+        .additional-doc-info strong {
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .doc-description {
+          font-size: 12px;
+          color: var(--text-muted);
+        }
+
+        .doc-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 4px;
+        }
+
+        .doc-date {
+          font-size: 11px;
+          color: var(--text-muted);
+        }
+
+        .additional-doc-actions {
+          display: flex;
+          gap: 6px;
+          align-items: center;
+          flex-shrink: 0;
+        }
+
+        /* Small buttons */
+        .btn-approve-sm, .btn-reject-sm, .btn-view-sm, .btn-cancel-sm, .btn-primary-sm {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 5px 10px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 500;
+          text-decoration: none;
+        }
+
+        .btn-approve-sm {
+          background: #d1fae5;
+          color: #059669;
+        }
+
+        .btn-reject-sm {
+          background: #fee2e2;
+          color: #dc2626;
+        }
+
+        .btn-view-sm {
+          background: #eff6ff;
+          color: #2563eb;
+        }
+
+        .btn-cancel-sm {
+          background: var(--bg-secondary);
+          color: var(--text-muted);
+          border: 1px solid var(--border);
+        }
+
+        .btn-primary-sm {
+          background: var(--primary);
+          color: white;
+        }
+
+        .btn-primary-sm:disabled {
           background: var(--text-muted);
           cursor: not-allowed;
+        }
+
+        /* KYC Final Actions */
+        .kyc-final-actions {
+          background: white;
+          border: 2px solid #2563eb;
+          border-radius: 10px;
+          padding: 20px;
+        }
+
+        .kyc-final-actions h3 {
+          font-size: 14px;
+          font-weight: 600;
+          margin-bottom: 6px;
+          color: var(--text-primary);
+        }
+
+        .kyc-final-actions p {
+          font-size: 13px;
+          color: var(--text-muted);
+          margin-bottom: 16px;
         }
 
         /* Modal Styles */

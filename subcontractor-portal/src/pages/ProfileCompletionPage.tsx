@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '@/api';
 import toast from 'react-hot-toast';
@@ -21,7 +20,6 @@ interface Company {
 }
 
 const ProfileCompletionPage = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);

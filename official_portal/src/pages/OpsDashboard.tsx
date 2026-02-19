@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { opsApi, casesApi } from "../api";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
@@ -74,7 +75,7 @@ const OpsDashboard = () => {
   const [activeTab, setActiveTab] = useState("companies");
   const [verifyModal, setVerifyModal] = useState<VerifyModal | null>(null);
   const [notes, setNotes] = useState("");
-  const [kycMessage, setKycMessage] = useState("");
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
@@ -105,18 +106,6 @@ const OpsDashboard = () => {
     } catch (err) {
       const axiosErr = err as AxiosError<{ error?: string }>;
       toast.error(axiosErr.response?.data?.error || "Failed to verify");
-    }
-  };
-
-  const handleKycRequest = async (id: string) => {
-    try {
-      await opsApi.requestKyc(id, kycMessage);
-      toast.success("KYC document request sent");
-      setKycMessage("");
-      fetchData();
-    } catch (err) {
-      const axiosErr = err as AxiosError<{ error?: string }>;
-      toast.error(axiosErr.response?.data?.error || "Failed to send request");
     }
   };
 
@@ -307,7 +296,12 @@ const OpsDashboard = () => {
       {/* KYC Tab */}
       {activeTab === "kyc" && (
         <div className="table-section">
-          <h2>Pending KYC</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h2>Pending KYC Verification</h2>
+            <button className="btn-primary" onClick={() => navigate("/ops/kyc")}>
+              Open KYC Verification
+            </button>
+          </div>
           <div className="table-wrapper">
             <table>
               <thead>
@@ -324,30 +318,13 @@ const OpsDashboard = () => {
                     <td>{k.subContractorId?.companyName || "—"}</td>
                     <td>{k.userId?.name || "—"}</td>
                     <td>{statusBadge(k.status)}</td>
-                    <td className="action-buttons">
-                      {k.status !== "KYC_COMPLETED" && (
-                        <>
-                          <div className="inline-form">
-                            <input
-                              placeholder="Request message..."
-                              value={kycMessage}
-                              onChange={(e) => setKycMessage(e.target.value)}
-                            />
-                            <button
-                              className="btn-sm btn-warning"
-                              onClick={() => handleKycRequest(k._id)}
-                            >
-                              Request Docs
-                            </button>
-                          </div>
-                          <button
-                            className="btn-sm btn-success"
-                            onClick={() => handleCompleteKyc(k._id)}
-                          >
-                            Complete KYC
-                          </button>
-                        </>
-                      )}
+                    <td>
+                      <button
+                        className="btn-sm btn-primary"
+                        onClick={() => navigate("/ops/kyc")}
+                      >
+                        Review KYC
+                      </button>
                     </td>
                   </tr>
                 ))}

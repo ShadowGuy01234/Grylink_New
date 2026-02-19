@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { scApi, kycApi } from "@/api";
+import { scApi } from "@/api";
 import {
   Card,
   CardHeader,
@@ -21,7 +21,6 @@ import {
   Send,
   FolderOpen,
   Gavel,
-  MessageSquare,
   Upload,
   Building2,
   Phone,
@@ -33,8 +32,6 @@ import {
   XCircle,
   TrendingUp,
   LayoutDashboard,
-  ArrowLeft,
-  Paperclip,
   MapPin,
   CreditCard,
 } from "lucide-react";
@@ -76,24 +73,9 @@ const DashboardPage = () => {
     message: "",
   });
 
-  // KYC Chat
-  const [selectedCwcRf, setSelectedCwcRf] = useState<any>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatFile, setChatFile] = useState<File | null>(null);
-  const [loadingChat, setLoadingChat] = useState(false);
-  const [sendingChat, setSendingChat] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     fetchDashboard();
   }, []);
-
-  useEffect(() => {
-    if (chatMessages.length > 0) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatMessages]);
 
   const fetchDashboard = async () => {
     try {
@@ -208,43 +190,6 @@ const DashboardPage = () => {
     }
   };
 
-  const fetchChatMessages = async (cwcRfId: string) => {
-    setLoadingChat(true);
-    try {
-      const res = await kycApi.getMessages(cwcRfId);
-      setChatMessages(res.data?.messages || res.data || []);
-    } catch {
-      toast.error("Failed to load messages");
-    } finally {
-      setLoadingChat(false);
-    }
-  };
-
-  const openChat = (cwcRf: any) => {
-    setSelectedCwcRf(cwcRf);
-    setActiveTab("kyc-chat");
-    fetchChatMessages(cwcRf._id);
-  };
-
-  const handleSendChat = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatMessage.trim() && !chatFile) return;
-    setSendingChat(true);
-    try {
-      const formData = new FormData();
-      formData.append("content", chatMessage);
-      if (chatFile) formData.append("file", chatFile);
-      await kycApi.sendMessage(selectedCwcRf._id, formData);
-      setChatMessage("");
-      setChatFile(null);
-      fetchChatMessages(selectedCwcRf._id);
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to send");
-    } finally {
-      setSendingChat(false);
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<
       string,
@@ -306,11 +251,6 @@ const DashboardPage = () => {
       (b: any) =>
         b.status === "SUBMITTED" || b.status === "NEGOTIATION_IN_PROGRESS",
     ) || [];
-  const pendingKyc =
-    dashboard?.cwcRfs?.filter((c: any) =>
-      ["ACTION_REQUIRED", "KYC_REQUIRED", "KYC_IN_PROGRESS"].includes(c.status),
-    ) || [];
-
   // Calculate profile completion
   const profileFields = ["companyName", "ownerName", "phone", "address"];
   const filledFields = profileFields.filter((f) => sc?.[f]).length;
@@ -357,12 +297,6 @@ const DashboardPage = () => {
       icon: Gavel,
       badge: pendingBids.length > 0 ? pendingBids.length : undefined,
     },
-    {
-      id: "kyc",
-      label: "KYC Chat",
-      icon: MessageSquare,
-      badge: pendingKyc.length > 0 ? pendingKyc.length : undefined,
-    },
   ];
 
   return (
@@ -395,9 +329,7 @@ const DashboardPage = () => {
       <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive =
-            activeTab === tab.id ||
-            (tab.id === "kyc" && activeTab === "kyc-chat");
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
@@ -1133,194 +1065,6 @@ const DashboardPage = () => {
           </motion.div>
         )}
 
-        {/* KYC Tab */}
-        {activeTab === "kyc" && (
-          <motion.div
-            key="kyc"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>KYC Chat</CardTitle>
-                <CardDescription>
-                  Document exchange with Ops team
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {dashboard?.cwcRfs?.length > 0 ? (
-                  <div className="space-y-3">
-                    {dashboard.cwcRfs.map((cwcRf: any) => (
-                      <div
-                        key={cwcRf._id}
-                        onClick={() => openChat(cwcRf)}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                            <MessageSquare className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              CWC RF #{cwcRf._id.slice(-6)}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Click to open chat
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(cwcRf.status)}
-                          <ChevronRight className="h-5 w-5 text-gray-400" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    No CWC RFs to chat about
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* KYC Chat View */}
-        {activeTab === "kyc-chat" && selectedCwcRf && (
-          <motion.div
-            key="kyc-chat"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Card>
-              <CardHeader className="border-b">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveTab("kyc")}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <div>
-                    <CardTitle>
-                      KYC Chat - #{selectedCwcRf._id.slice(-6)}
-                    </CardTitle>
-                    <CardDescription>
-                      Exchange documents with Ops team
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                {/* Messages */}
-                <div className="h-[400px] overflow-y-auto p-4 space-y-4">
-                  {loadingChat ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-                    </div>
-                  ) : chatMessages.length > 0 ? (
-                    chatMessages.map((msg: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className={`flex ${msg.sender === "subcontractor" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[70%] p-3 rounded-xl ${
-                            msg.sender === "subcontractor"
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-900"
-                          }`}
-                        >
-                          {msg.content && <p>{msg.content}</p>}
-                          {msg.file && (
-                            <a
-                              href={msg.file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`flex items-center gap-2 mt-2 text-sm ${
-                                msg.sender === "subcontractor"
-                                  ? "text-blue-100"
-                                  : "text-blue-600"
-                              }`}
-                            >
-                              <Paperclip className="h-4 w-4" />
-                              {msg.file.name}
-                            </a>
-                          )}
-                          <p
-                            className={`text-xs mt-1 ${msg.sender === "subcontractor" ? "text-blue-200" : "text-gray-400"}`}
-                          >
-                            {new Date(msg.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-gray-500">
-                      No messages yet. Start the conversation!
-                    </p>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* Input */}
-                <form onSubmit={handleSendChat} className="border-t p-4">
-                  <div className="flex gap-2">
-                    <div className="flex-1 flex gap-2">
-                      <Input
-                        value={chatMessage}
-                        onChange={(e) => setChatMessage(e.target.value)}
-                        placeholder="Type a message..."
-                        className="flex-1"
-                      />
-                      <input
-                        type="file"
-                        onChange={(e) =>
-                          setChatFile(e.target.files?.[0] || null)
-                        }
-                        className="hidden"
-                        id="chatFileInput"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() =>
-                          document.getElementById("chatFileInput")?.click()
-                        }
-                      >
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={
-                        sendingChat || (!chatMessage.trim() && !chatFile)
-                      }
-                    >
-                      {sendingChat ? "..." : <Send className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  {chatFile && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      📎 {chatFile.name}
-                      <button
-                        type="button"
-                        onClick={() => setChatFile(null)}
-                        className="ml-2 text-red-500"
-                      >
-                        Remove
-                      </button>
-                    </p>
-                  )}
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
       </AnimatePresence>
     </motion.div>
   );

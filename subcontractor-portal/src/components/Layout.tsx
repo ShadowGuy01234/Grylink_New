@@ -6,7 +6,6 @@ import {
   LayoutDashboard, 
   FileText, 
   FolderOpen, 
-  Shield, 
   LogOut, 
   Menu, 
   X,
@@ -20,7 +19,6 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { path: '/cwcrf', label: 'New CWCRF', icon: FileText },
   { path: '/my-cwcrfs', label: 'My CWCRFs', icon: FolderOpen },
-  { path: '/kyc', label: 'KYC Documents', icon: Shield },
 ];
 
 const Layout = () => {

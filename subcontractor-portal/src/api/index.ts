@@ -84,6 +84,11 @@ export const scApi = {
       headers: { "Content-Type": "multipart/form-data" },
     }),
   getKycStatus: () => api.get("/subcontractor/kyc/status"),
+  submitKycForReview: () => api.post("/subcontractor/kyc/submit"),
+  uploadAdditionalDocument: (docId: string, formData: FormData) =>
+    api.post(`/subcontractor/kyc/additional/${docId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
 
   // Bank Details
   updateBankDetails: (data: {

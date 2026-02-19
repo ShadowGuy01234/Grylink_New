@@ -70,8 +70,6 @@ export const opsApi = {
     api.post(`/ops/companies/${id}/verify`, data),
   verifyBill: (id: string, data: { decision: string; notes?: string }) =>
     api.post(`/ops/bills/${id}/verify`, data),
-  requestKyc: (id: string, message: string) =>
-    api.post(`/ops/kyc/${id}/request`, { message }),
   completeKyc: (id: string) => api.post(`/ops/kyc/${id}/complete`),
   
   // Bill Verification APIs
@@ -87,39 +85,12 @@ export const opsApi = {
     api.post(`/ops/kyc/${id}/verify`, data),
   verifyKycDocument: (id: string, data: { decision: string; notes?: string }) =>
     api.post(`/ops/kyc/documents/${id}/verify`, data),
-  getKycChat: (id: string) => api.get(`/ops/kyc/${id}/chat`),
-  sendKycMessage: (id: string, data: { message: string; replyTo?: string }) =>
-    api.post(`/ops/kyc/${id}/chat`, data),
-  editKycMessage: (messageId: string, data: { message: string }) =>
-    api.put(`/ops/chat/${messageId}`, data),
-  deleteKycMessage: (messageId: string) =>
-    api.delete(`/ops/chat/${messageId}`),
-  addKycReaction: (messageId: string, emoji: string) =>
-    api.post(`/ops/chat/${messageId}/reaction`, { emoji }),
-  
-  // Enhanced Chat API
-  getChatMessages: (id: string, params?: { since?: string; limit?: number }) => 
-    api.get(`/ops/kyc/${id}/chat`, { params }),
-  sendChatMessage: (id: string, data: FormData) =>
-    api.post(`/ops/kyc/${id}/chat`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  markMessagesAsRead: (id: string) => 
-    api.post(`/ops/kyc/${id}/chat/read`),
-  getUnreadCount: (id: string) => 
-    api.get(`/ops/kyc/${id}/chat/unread`),
-  searchMessages: (id: string, query: string) => 
-    api.get(`/ops/kyc/${id}/chat/search`, { params: { q: query } }),
-  addReaction: (messageId: string, emoji: string) => 
-    api.post(`/ops/chat/${messageId}/reaction`, { emoji }),
-  removeReaction: (messageId: string, emoji: string) => 
-    api.delete(`/ops/chat/${messageId}/reaction`, { data: { emoji } }),
-  editMessage: (messageId: string, content: string) => 
-    api.put(`/ops/chat/${messageId}`, { content }),
-  deleteMessage: (messageId: string) => 
-    api.delete(`/ops/chat/${messageId}`),
-  resolveAction: (messageId: string) => 
-    api.post(`/ops/chat/${messageId}/resolve`),
+  verifyBankDetails: (id: string, data: { decision: string; notes?: string }) =>
+    api.post(`/ops/kyc/${id}/verify-bank-details`, data),
+  requestAdditionalDoc: (id: string, data: { label: string; description?: string }) =>
+    api.post(`/ops/kyc/${id}/request-additional`, data),
+  verifyAdditionalDoc: (sellerId: string, docId: string, data: { decision: string }) =>
+    api.post(`/ops/kyc/${sellerId}/verify-additional/${docId}`, data),
 
   // SLA Tracking APIs
   getSlaItems: (params?: { type?: string; status?: string; priority?: string }) =>
