@@ -210,6 +210,6 @@ cwcRfSchema.pre("save", async function () {
 // Index for efficient queries
 cwcRfSchema.index({ status: 1, subContractorId: 1 });
 cwcRfSchema.index({ "buyerDetails.buyerId": 1, status: 1 });
-cwcRfSchema.index({ cwcRfNumber: 1 });
+// cwcRfNumber is already indexed via unique: true in schema definition
 
 module.exports = mongoose.model("CwcRf", cwcRfSchema);

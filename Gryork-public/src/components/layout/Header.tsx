@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { NAV_LINKS } from "@/lib/constants";
@@ -17,6 +17,22 @@ const PORTALS = {
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginDropdownOpen, setIsLoginDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsLoginDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
@@ -43,30 +59,45 @@ export default function Header() {
 
           {/* Desktop CTA - Login Dropdown */}
           <div className="hidden lg:flex items-center gap-4">
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
-                onBlur={() => setTimeout(() => setIsLoginDropdownOpen(false), 150)}
                 className="btn-primary flex items-center gap-2"
               >
                 Login <ChevronDown size={16} />
               </button>
               {isLoginDropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
-                  <a
+                  <Link
                     href={PORTALS.subcontractor}
                     className="block px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                    onClick={() => setIsLoginDropdownOpen(false)}
                   >
-                    <span className="font-medium">Sub-Contractor</span>
-                    <span className="block text-xs text-gray-500">Upload bills & get funded</span>
-                  </a>
+                    <span className="font-medium block">Sub-Contractor</span>
+                    <span className="block text-xs text-gray-500">
+                      Upload bills & get funded
+                    </span>
+                  </Link>
+                  <Link
+                    href={PORTALS.partner}
+                    className="block px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+                    onClick={() => setIsLoginDropdownOpen(false)}
+                  >
+                    <span className="font-medium block">
+                      Partner (EPC/NBFC)
+                    </span>
+                    <span className="block text-xs text-gray-500">
+                      Manage deals & financing
+                    </span>
+                  </Link>
                   <hr className="my-2 border-gray-100" />
-                  <a
+                  <Link
                     href={PORTALS.admin}
                     className="block px-4 py-2 text-gray-500 hover:bg-gray-50 transition-colors text-sm"
+                    onClick={() => setIsLoginDropdownOpen(false)}
                   >
                     Internal Login
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>
@@ -86,7 +117,7 @@ export default function Header() {
         <div
           className={cn(
             "lg:hidden overflow-hidden transition-all duration-300",
-            isMenuOpen ? "max-h-[500px] pb-4" : "max-h-0"
+            isMenuOpen ? "max-h-[500px] pb-4" : "max-h-0",
           )}
         >
           <nav className="flex flex-col gap-2">
@@ -101,13 +132,22 @@ export default function Header() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 mt-4 px-4 border-t border-gray-100 pt-4">
-              <span className="text-sm font-medium text-gray-500 mb-2">Login as:</span>
+              <span className="text-sm font-medium text-gray-500 mb-2">
+                Login as:
+              </span>
               <a
                 href={PORTALS.subcontractor}
                 className="btn-primary text-center"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sub-Contractor
+              </a>
+              <a
+                href={PORTALS.partner}
+                className="btn-secondary text-center"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Partner (EPC/NBFC)
               </a>
             </div>
           </nav>
