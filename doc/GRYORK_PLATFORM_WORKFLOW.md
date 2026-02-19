@@ -10,19 +10,20 @@
 
 1. [Platform Overview](#1-platform-overview)
 2. [Actors & Portals](#2-actors--portals)
-3. [Phase 1 — EPC Company Onboarding](#phase-1--epc-company-onboarding)
-4. [Phase 2 — EPC Document Verification](#phase-2--epc-document-verification)
-5. [Phase 3 — Sub-Contractor Registration via EPC](#phase-3--sub-contractor-registration-via-epc)
-6. [Phase 4 — Sub-Contractor Onboarding & KYC](#phase-4--sub-contractor-onboarding--kyc)
-7. [Phase 5 — CWCRF Submission (with Bill)](#phase-5--cwcrf-submission-with-bill)
-8. [Phase 6 — Ops Review & Verification (Super Access)](#phase-6--ops-review--verification-super-access)
-9. [Phase 7 — RMT Risk Assessment](#phase-7--rmt-risk-assessment)
-10. [Phase 8 — Ops Risk Triage & Forward to EPC](#phase-8--ops-risk-triage--forward-to-epc)
-11. [Phase 9 — EPC Case Review & Bid](#phase-9--epc-case-review--bid)
-12. [Phase 10 — CWCAF Generation & NBFC Selection](#phase-10--cwcaf-generation--nbfc-selection)
-13. [Phase 11 — NBFC Review (In Progress)](#phase-11--nbfc-review-in-progress)
-14. [Status Reference Tables](#14-status-reference-tables)
-15. [API Endpoint Map by Phase](#15-api-endpoint-map-by-phase)
+3. [Implementation Status Summary](#3-implementation-status-summary)
+4. [Phase 1 — EPC Company Onboarding](#phase-1--epc-company-onboarding)
+5. [Phase 2 — EPC Document Verification](#phase-2--epc-document-verification)
+6. [Phase 3 — Sub-Contractor Registration via EPC](#phase-3--sub-contractor-registration-via-epc)
+7. [Phase 4 — Sub-Contractor Onboarding & KYC](#phase-4--sub-contractor-onboarding--kyc)
+8. [Phase 5 — CWCRF Submission (with Bill)](#phase-5--cwcrf-submission-with-bill)
+9. [Phase 6 — Ops Review & Verification (Super Access)](#phase-6--ops-review--verification-super-access)
+10. [Phase 7 — RMT Risk Assessment](#phase-7--rmt-risk-assessment)
+11. [Phase 8 — Ops Risk Triage & Forward to EPC](#phase-8--ops-risk-triage--forward-to-epc)
+12. [Phase 9 — EPC Case Review & Bid](#phase-9--epc-case-review--bid)
+13. [Phase 10 — CWCAF Generation & NBFC Selection](#phase-10--cwcaf-generation--nbfc-selection)
+14. [Phase 11 — NBFC Review (In Progress)](#phase-11--nbfc-review-in-progress)
+15. [Status Reference Tables](#15-status-reference-tables)
+16. [API Endpoint Map by Phase](#16-api-endpoint-map-by-phase)
 
 ---
 
@@ -50,6 +51,219 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
 | **NBFC** | `nbfc` | `partner-portal` | — | Non-Banking Financial Company that funds invoices |
 | **Admin** | `admin` | — | `official_portal` | Platform administrator — manages users and system |
 | **Founder** | `founder` | — | `official_portal` | Founder oversight — approves high-risk cases and agents |
+
+---
+
+## 3. Implementation Status Summary
+
+> **Last analysed:** February 20, 2026  
+> **Legend:** ✅ Fully built | ⚠️ Partially built / has gaps | ❌ Not built
+
+---
+
+### Overall Progress by Phase
+
+| Phase | Description | Status | Completion |
+|-------|-------------|--------|-----------|
+| **Phase 1** | EPC Company Onboarding | ✅ Complete | 100% |
+| **Phase 2** | EPC Document Verification | ✅ Complete | 100% |
+| **Phase 3** | SC Registration via EPC | ✅ Complete | 100% |
+| **Phase 4** | SC Onboarding & KYC | ✅ Complete | 100% |
+| **Phase 5** | CWCRF Submission | ⚠️ Partially built | ~70% |
+| **Phase 6** | Ops CWCRF Review (Super Access) | ❌ Not built | ~15% |
+| **Phase 7** | RMT Risk Assessment | ⚠️ Partially built | ~75% |
+| **Phase 8** | Ops Risk Triage & Forward to EPC | ❌ Not built | 0% |
+| **Phase 9** | EPC Case Review & Bid | ⚠️ Partially built | ~50% |
+| **Phase 10** | CWCAF Generation & NBFC Selection | ⚠️ Partially built | ~40% |
+| **Phase 11** | NBFC Review | ⚠️ Partially built | ~60% |
+
+---
+
+### Phase-by-Phase Detailed Status
+
+#### Phase 1 — EPC Company Onboarding ✅ COMPLETE
+
+| Step | Description | Frontend | Backend | Status |
+|------|-------------|----------|---------|--------|
+| 1.1 | Sales creates EPC lead | `CompaniesListPage.tsx` + Create Lead modal | `POST /api/sales/companies` | ✅ |
+| 1.2 | GryLink generated & sent | `GryLinksPage.tsx`, `CompanyDetailPage.tsx` | `POST /api/sales/companies/:id/grylink` | ✅ |
+| 1.3 | EPC onboards at link.gryork.com | `grylink-portal/OnboardingPage.tsx` | `GET /api/grylink/validate/:token` + `POST set-password` | ✅ |
+| 1.4 | EPC uploads company documents | `partner-portal/DashboardPage.tsx` → Documents tab | `POST /api/company/documents` | ✅ |
+
+---
+
+#### Phase 2 — EPC Document Verification ✅ COMPLETE
+
+| Step | Description | Frontend | Backend | Status |
+|------|-------------|----------|---------|--------|
+| 2.1 | Ops reviews documents individually | `OpsDashboardNew.tsx` → Companies tab | `GET /api/ops/companies/:id/documents` | ✅ |
+| 2.2 | Ops approves/rejects EPC | `OpsDashboardNew.tsx` → Companies tab | `POST /api/ops/companies/:id/verify` | ✅ |
+
+---
+
+#### Phase 3 — SC Registration via EPC ✅ COMPLETE
+
+| Step | Description | Frontend | Backend | Status |
+|------|-------------|----------|---------|--------|
+| 3.1 | EPC uploads SC list (manual + bulk Excel) | `partner-portal/SubContractorsSection.tsx` | `POST /api/company/subcontractors` + `/bulk` | ✅ |
+| 3.2 | Sales contacts SC, logs contact | `SubContractorDetailPage.tsx` → Contact Log | `POST /api/sales/subcontractors/:id/contact-log` | ✅ |
+| 3.3 | SC self-registers with same email | `subcontractor-portal/RegisterPage.tsx` | `POST /api/auth/register-subcontractor` | ✅ |
+
+---
+
+#### Phase 4 — SC Onboarding & KYC ✅ COMPLETE
+
+| Step | Description | Frontend | Backend | Status |
+|------|-------------|----------|---------|--------|
+| 4.1 | SC completes basic profile | `ProfileCompletionPage.tsx` (204 lines) | `PUT /api/subcontractor/profile` | ✅ |
+| 4.2 | SC uploads KYC documents | `KycUploadPage.tsx` (685 lines) | `POST /api/subcontractor/kyc/upload` | ✅ |
+| 4.3 | SC submits bank details | `KycUploadPage.tsx` — bank details section | `PUT /api/subcontractor/bank-details` | ✅ |
+| 4.4 | SC accepts seller declaration | `SellerDeclarationPage.tsx` (249 lines) | `POST /api/subcontractor/declaration/accept` | ✅ |
+| 4.5 | Ops KYC review via chat | `OpsDashboardNew.tsx` → KYC tab + chat | `POST /api/ops/kyc/:id/chat`, `/complete`, `/documents/:id/verify` | ✅ |
+
+---
+
+#### Phase 5 — CWCRF Submission ⚠️ PARTIALLY BUILT
+
+| Step | Description | Frontend | Backend | Status | Gap |
+|------|-------------|----------|---------|--------|-----|
+| 5.1 | SC fills CWCRF form (4 sections) | `CwcrfSubmissionPage.tsx` (677 lines) | `POST /api/cwcrf` | ✅ | — |
+| 5.2 | Bill uploaded INSIDE CWCRF | `CwcrfSubmissionPage.tsx` → Step 1 selects from verified bills | Separate bill upload then selection | ⚠️ | **Gap:** Bill is uploaded separately first, then selected in CWCRF. Doc says bill should be uploaded inside CWCRF as part of the same form. The `POST /api/subcontractor/bill-with-cwcrf` endpoint exists in backend but the SC portal's CWCRF page selects from pre-uploaded bills instead. |
+| 5.3 | SC pays ₹1,000 platform fee | Not built | No payment route exists | ❌ | **Missing:** No payment gateway integration. No payment route in backend. No payment confirmation recorded against CWCRF. |
+| 5.4 | SC submits CWCRF | `CwcrfSubmissionPage.tsx` | `POST /api/cwcrf` | ✅ | — |
+
+---
+
+#### Phase 6 — Ops CWCRF Review (Super Access) ❌ NOT BUILT
+
+| Step | Description | Frontend | Backend | Status | Gap |
+|------|-------------|----------|---------|--------|-----|
+| 6.1 | Ops sees CWCRF queue | No CWCRF tab in `OpsDashboardNew.tsx` | No `/api/ops/cwcrf` listing endpoint | ❌ | **Missing:** `OpsDashboardNew.tsx` has tabs: overview, companies, bills, kyc, cases, nbfc, sla, rekyc — **no CWCRF tab**. |
+| 6.2 | Ops section-by-section verification + Super Access | Not built | No section verification endpoints in ops.js | ❌ | **Missing entirely:** No per-section verify, no detach document, no edit field, no re-request-via-chat for CWCRF fields. |
+| 6.3 | Bill verification | `OpsDashboardNew.tsx` → Bills tab | `POST /api/ops/bills/:id/verify` | ✅ | — |
+| 6.4 | Forward to RMT button | Not in Ops UI | `POST /api/cwcrf/:id/rmt/move-to-queue` ✅ exists | ❌ | **Missing:** Endpoint exists in backend but no button/flow in `OpsDashboardNew.tsx` to trigger it. |
+
+---
+
+#### Phase 7 — RMT Risk Assessment ⚠️ PARTIALLY BUILT
+
+| Step | Description | Frontend | Backend | Status | Gap |
+|------|-------------|----------|---------|--------|-----|
+| 7.1 | RMT receives case with full details | `RmtDashboard.tsx` (1295 lines) — queue view | `GET /api/cwcrf/rmt/queue` | ✅ | — |
+| 7.2 | Download full case as PDF | Not built | No PDF generation endpoint | ❌ | **Missing:** No PDF download feature. Case data is visible in the UI but cannot be exported as a formatted printable document. |
+| 7.3 | 12-point risk checklist + scoring | `RmtDashboard.tsx` — risk assessment form | `POST /api/cases/:id/risk-assessment` | ✅ | — |
+| 7.4 | Upload/create assessment report | `RmtDashboard.tsx` — assessment section | `POST /api/cases/:id/risk-assessment` | ✅ | — |
+| 7.5 | RMT forwards back to Ops | `RmtDashboard.tsx` — Generate CWCAF button exists, but flow goes directly to CWCAF_READY rather than back to Ops | `/api/cwcrf/:id/rmt/generate-cwcaf` | ⚠️ | **Gap:** Current flow: RMT → generates CWCAF → status `CWCAF_READY`. Doc says RMT should forward back to **Ops** with risk report, and Ops then triages. The "forward to Ops" step before CWCAF generation is not modelled in the frontend flow. |
+
+---
+
+#### Phase 8 — Ops Risk Triage & Forward to EPC ❌ NOT BUILT
+
+| Step | Description | Frontend | Backend | Status | Gap |
+|------|-------------|----------|---------|--------|-----|
+| 8.1 | Ops reviews RMT report | No Risk Triage section in Ops | No dedicated queue | ❌ | **Missing:** No "Risk Triage Queue" in `OpsDashboardNew.tsx`. After RMT assessment, no Ops review step exists. |
+| 8.2A | Low risk → direct forward to EPC | Not built | `POST /api/cases/:id/review` ✅ exists | ❌ | **Missing:** No low/medium/high branching logic in Ops UI. |
+| 8.2B | Medium risk → Ops analysis then forward | Not built | Endpoint exists | ❌ | **Missing:** No medium-risk ops analysis flow. |
+| 8.2C | High risk → contact SC or override forward | Not built | Endpoint exists | ❌ | **Missing:** No high-risk ops action flow. Founder approval route (`ApprovalRequest`) exists in model/backend but no UI trigger. |
+
+---
+
+#### Phase 9 — EPC Case Review & Bid ⚠️ PARTIALLY BUILT
+
+| Step | Description | Frontend | Backend | Status | Gap |
+|------|-------------|----------|---------|--------|-----|
+| 9.1 | EPC sees case notification | `partner-portal/DashboardPage.tsx` → Cases tab | `GET /api/cases` | ⚠️ | Cases are listed but no notification system is implemented. |
+| 9.2 | EPC verifies SC documents | `CasesAndBillsSection.tsx` shows basic case info | Partial | ⚠️ | **Gap:** No dedicated SC document review tab within the case detail. EPC cannot individually view/approve SC KYC documents, bank details, profile. |
+| 9.3 | EPC reviews RMT risk report | `CasesAndBillsSection.tsx` shows risk category badge | Partial | ⚠️ | **Gap:** Only a risk category badge is shown (`LOW/MEDIUM/HIGH`). Full RMT assessment report with checklist scores and recommendation is not displayed. |
+| 9.4 | EPC accepts buyer declaration | Not built | No buyer declaration endpoint | ❌ | **Missing entirely:** No declaration step exists in the partner portal case flow before EPC submits bid terms. |
+| 9.5 | EPC enters bid terms (amount + timeline) | `CwcrfVerificationPage.tsx` (550 lines) — separate page | `POST /api/cwcrf/:id/buyer/verify` | ⚠️ | **Gap:** Form exists and works but it is a standalone page (`/cwcrf-verification`) not integrated as a guided step within the case detail view. Steps 9.2 → 9.3 → 9.4 → 9.5 should be a sequential flow in one case view. |
+
+---
+
+#### Phase 10 — CWCAF Generation & NBFC Selection ⚠️ PARTIALLY BUILT
+
+| Step | Description | Frontend | Backend | Status | Gap |
+|------|-------------|----------|---------|--------|-----|
+| 10.1 | Ops generates CWCAF | CWCAF generation is currently in `RmtDashboard.tsx` (RMT role), not Ops | `POST /api/cwcrf/:id/rmt/generate-cwcaf` | ⚠️ | **Gap:** Per the corrected doc, CWCAF should be generated by **Ops** after receiving the EPC-verified case back. Currently it sits in the RMT dashboard which is the wrong actor. |
+| 10.2 | Dedicated NBFC Selection page (Ops picks NBFCs) | Not built | `GET /api/nbfc/match/:caseId` ✅ exists | ❌ | **Missing:** No NBFC selection page in `official_portal`. Ops cannot see the eligible NBFC list with match scores and manually select which ones to send the CWCAF to. |
+| 10.3 | CWCAF sent to selected NBFCs | Not built | `POST /api/cwcrf/:id/share-with-nbfcs` ✅ exists | ❌ | **Missing:** No UI trigger for the share action in `official_portal`. Endpoint exists but unreachable from any Ops screen. |
+
+---
+
+#### Phase 11 — NBFC Review ⚠️ PARTIALLY BUILT
+
+| Step | Description | Frontend | Backend | Status | Gap |
+|------|-------------|----------|---------|--------|-----|
+| 11.1 | NBFC sees available CWCAFs | `partner-portal/NbfcDashboard.tsx` | `GET /api/cwcrf/nbfc/available` | ✅ | — |
+| 11.2 | NBFC submits quotation | `partner-portal/NbfcQuotationPage.tsx` | `POST /api/cwcrf/:id/nbfc/quote` + `POST /api/nbfc/:caseId/respond` | ✅ | — |
+| 11.3 | NBFC manages LPS | `partner-portal/LpsManagementPage.tsx` | `GET+PUT /api/nbfc/lps` | ✅ | — |
+| 11.4 | Further NBFC process (due diligence, sanction, disbursement) | Not built | Not built | ❌ | **Missing:** Phase 11 is documented as "in progress". Post-quotation NBFC workflow (due diligence, final sanction letter, disbursement instruction) not yet built. |
+
+---
+
+### What Needs to Be Built (Priority Order)
+
+#### 🔴 High Priority — Core Workflow Blockers
+
+1. **Phase 6 — Ops CWCRF Verification (Super Access)**
+   - Add CWCRF queue tab to `OpsDashboardNew.tsx`
+   - Build section-by-section verify UI (Section A/B/C/D + bill + WCC + measurement sheet)
+   - Backend: `POST /api/ops/cwcrf/:id/sections/:section/verify`
+   - Build detach document / edit field / re-request actions
+   - Backend: `PATCH /api/ops/cwcrf/:id/sections/:section/detach`
+   - Add "Forward to RMT" button that calls existing `POST /api/cwcrf/:id/rmt/move-to-queue`
+
+2. **Phase 8 — Ops Risk Triage**
+   - Add Risk Triage Queue section to `OpsDashboardNew.tsx` (post-RMT cases)
+   - Build 3-path forward UI: Low/Medium/High with appropriate actions per path
+   - "Forward to EPC" → calls existing `POST /api/cases/:id/review`
+   - High-risk: contact SC chat + Founder approval trigger
+
+3. **Phase 9 — EPC Full Case Review Flow**
+   - Redesign partner-portal case detail into a **4-step sequential flow**:
+     - Step 1: SC Document Verification (view KYC docs, bank details, profile)
+     - Step 2: RMT Risk Report viewer (full report with checklist scores)
+     - Step 3: Buyer Declaration acceptance (new — `POST /api/cwcrf/:id/buyer/declaration`)
+     - Step 4: Bid entry form (already exists in `CwcrfVerificationPage.tsx`, integrate here)
+
+4. **Phase 10 — CWCAF & NBFC Selection in Ops**
+   - Move CWCAF generation from RmtDashboard to OpsDashboardNew (correct actor)
+   - Build dedicated NBFC Selection page in `official_portal`:
+     - Calls `GET /api/nbfc/match/:caseId` to show eligible NBFCs with match scores
+     - Manual checkbox selection of NBFCs
+     - "Send CWCAF" → calls `POST /api/cwcrf/:id/share-with-nbfcs`
+
+#### 🟡 Medium Priority — Feature Completeness
+
+5. **Phase 5 — ₹1,000 Platform Fee Payment**
+   - Integrate payment gateway (Razorpay recommended for India)
+   - Backend: `POST /api/cwcrf/:id/payment` to record payment reference
+   - SC portal: Payment step between Section D and Submit in `CwcrfSubmissionPage.tsx`
+
+6. **Phase 5 — Bill Upload Inside CWCRF**
+   - Current flow: SC uploads bill separately → selects verified bill in CWCRF
+   - Required flow: Bill + WCC + Measurement Sheet uploaded as part of CWCRF Step 1
+   - The backend endpoint `POST /api/subcontractor/bill-with-cwcrf` exists — frontend needs to use it
+
+7. **Phase 7 — PDF Case Download for RMT**
+   - Generate a formatted PDF document of the full case (SC profile + EPC + bill + CWCRF + Gryork stamps)
+   - Options: server-side (puppeteer/pdfkit) or client-side (react-pdf/jsPDF)
+
+8. **Phase 7 — RMT → Ops Forward Step**
+   - Add "Forward to Ops" button in `RmtDashboard.tsx` after risk assessment is complete
+   - This should trigger status change and put case in Ops' risk triage queue
+
+#### 🟢 Lower Priority — Polish & Completion
+
+9. **Phase 11 — Full NBFC Process**
+   - Post-quotation flow: due diligence checklist, final sanction, disbursement instruction
+   - SC notification when NBFC is confirmed
+
+10. **Notification System**
+    - Email/in-app notifications at each major status transition
+    - `config/email.js` is set up but notifications are not triggered at all workflow events
+
+11. **EPC SC Subcontractor removal** — backend endpoint exists (`DELETE /api/company/subcontractors/:id`) but no UI in partner portal
 
 ---
 
@@ -794,7 +1008,7 @@ NBFC reviews the case and submits a quotation:
 
 ---
 
-## 14. Status Reference Tables
+## 15. Status Reference Tables
 
 ### CWCRF Status Flow
 
@@ -849,7 +1063,7 @@ NOT_STARTED → DOCUMENTS_PENDING → UNDER_REVIEW → COMPLETED / REJECTED
 
 ---
 
-## 15. API Endpoint Map by Phase
+## 16. API Endpoint Map by Phase
 
 | Phase | Action | Method | Endpoint | Role |
 |-------|--------|--------|----------|------|
