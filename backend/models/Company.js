@@ -77,6 +77,15 @@ const companySchema = new mongoose.Schema(
         notes: String,
       },
     ],
+
+    // Sales internal notes
+    salesNotes: [
+      {
+        text: { type: String, required: true },
+        addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        addedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

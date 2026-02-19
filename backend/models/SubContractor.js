@@ -279,6 +279,17 @@ const subContractorSchema = new mongoose.Schema(
         notes: String,
       },
     ],
+
+    // Sales contact log (tracked by sales team)
+    contactLog: [
+      {
+        method: { type: String, enum: ['Call', 'Email', 'WhatsApp', 'In-Person'] },
+        outcome: { type: String },
+        notes: { type: String },
+        loggedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        loggedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true },
 );
