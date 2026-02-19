@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import toast from 'react-hot-toast';
 
@@ -31,6 +32,7 @@ interface Dashboard {
 }
 
 const NbfcDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [cases, setCases] = useState<NbfcCase[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -189,6 +191,12 @@ const NbfcDashboard: React.FC = () => {
             }`}
           >
             History
+          </button>
+          <button
+            onClick={() => navigate('/nbfc/lps')}
+            className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 ml-auto"
+          >
+            ⚙ Manage LPS
           </button>
         </div>
 

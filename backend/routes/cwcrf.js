@@ -176,6 +176,27 @@ router.post(
 );
 
 // ========================================
+// OPS ENDPOINTS
+// ========================================
+
+/**
+ * GET /api/cwcrf/ops/queue - Get CWCRFs awaiting Ops review (BUYER_APPROVED)
+ */
+router.get(
+  "/ops/queue",
+  authenticate,
+  authorize("ops", "admin", "founder"),
+  async (req, res) => {
+    try {
+      const cwcrfs = await cwcrfService.getCwcRfsForOps(req.query);
+      res.json({ cwcrfs });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+// ========================================
 // RMT ENDPOINTS
 // ========================================
 

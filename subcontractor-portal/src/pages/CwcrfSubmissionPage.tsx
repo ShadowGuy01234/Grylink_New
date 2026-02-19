@@ -234,16 +234,30 @@ const CwcrfSubmissionPage = () => {
           invoiceDate: formData.sectionB.invoiceDate,
           invoiceAmount: formData.sectionB.invoiceAmount,
           expectedPaymentDate: formData.sectionB.invoiceDueDate,
-          workDescription: formData.sectionB.workDescription
+          workDescription: formData.sectionB.workDescription,
+          purchaseOrderNumber: formData.sectionB.purchaseOrderNumber,
+          purchaseOrderDate: formData.sectionB.purchaseOrderDate,
+          workCompletionDate: formData.sectionB.workCompletionDate,
+          gstAmount: formData.sectionB.gstAmount,
+          netInvoiceAmount: formData.sectionB.netInvoiceAmount
         },
         cwcRequest: {
           requestedAmount: formData.sectionC.requestedAmount,
-          requestedTenure: formData.sectionC.requestedTenure
+          requestedTenure: formData.sectionC.requestedTenure,
+          urgencyLevel: formData.sectionC.urgencyLevel,
+          reasonForFunding: formData.sectionC.reasonForFunding,
+          preferredDisbursementDate: formData.sectionC.preferredDisbursementDate || undefined,
+          collateralOffered: formData.sectionC.collateralOffered,
+          existingLoanDetails: formData.sectionC.existingLoanDetails
         },
         interestPreference: {
           preferenceType: 'RANGE' as const,
           minRate: formData.sectionD.acceptableInterestRateMin,
-          maxRate: formData.sectionD.acceptableInterestRateMax
+          maxRate: formData.sectionD.acceptableInterestRateMax,
+          preferredRepaymentFrequency: formData.sectionD.preferredRepaymentFrequency,
+          processingFeeAcceptance: formData.sectionD.processingFeeAcceptance,
+          maxProcessingFeePercent: formData.sectionD.maxProcessingFeePercent,
+          prepaymentPreference: formData.sectionD.prepaymentPreference
         }
       });
       toast.success('CWCRF submitted successfully!');

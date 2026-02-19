@@ -107,6 +107,11 @@ export const opsApi = {
 
   // NBFC
   inviteNbfc: (data: Record<string, unknown>) => api.post("/ops/nbfc/invite", data),
+
+  // CWCRF Queue (Buyer-Approved CWCRFs waiting to be forwarded to RMT)
+  getCwcrfQueue: () => api.get("/cwcrf/ops/queue"),
+  forwardCwcrfToRmt: (id: string, notes?: string) =>
+    api.post(`/cwcrf/${id}/rmt/move-to-queue`, { notes }),
 };
 
 // Cases

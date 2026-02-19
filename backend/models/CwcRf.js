@@ -41,6 +41,11 @@ const cwcRfSchema = new mongoose.Schema(
       invoiceAmount: { type: Number },
       expectedPaymentDate: { type: Date },
       workDescription: { type: String, trim: true },
+      purchaseOrderNumber: { type: String, trim: true },
+      purchaseOrderDate: { type: Date },
+      workCompletionDate: { type: Date },
+      gstAmount: { type: Number },
+      netInvoiceAmount: { type: Number },
     },
 
     // ========================================
@@ -50,6 +55,15 @@ const cwcRfSchema = new mongoose.Schema(
       invoiceAmount: { type: Number }, // Auto-filled from invoiceDetails
       requestedAmount: { type: Number },
       requestedTenure: { type: Number }, // In days (30/45/60/90)
+      urgencyLevel: {
+        type: String,
+        enum: ['NORMAL', 'URGENT', 'CRITICAL'],
+        default: 'NORMAL',
+      },
+      reasonForFunding: { type: String, trim: true },
+      preferredDisbursementDate: { type: Date },
+      collateralOffered: { type: String, trim: true },
+      existingLoanDetails: { type: String, trim: true },
     },
 
     // ========================================
@@ -64,6 +78,18 @@ const cwcRfSchema = new mongoose.Schema(
       minRate: { type: Number }, // Annual % (e.g., 16)
       maxRate: { type: Number }, // Annual % (e.g., 18)
       maxAcceptableRate: { type: Number }, // Alternative: "Up to X% p.a."
+      preferredRepaymentFrequency: {
+        type: String,
+        enum: ['ONE_TIME', 'MONTHLY', 'QUARTERLY'],
+        default: 'ONE_TIME',
+      },
+      processingFeeAcceptance: { type: Boolean, default: true },
+      maxProcessingFeePercent: { type: Number },
+      prepaymentPreference: {
+        type: String,
+        enum: ['WITH_PENALTY', 'WITHOUT_PENALTY', 'NO_PREPAYMENT'],
+        default: 'WITHOUT_PENALTY',
+      },
     },
 
     // ========================================

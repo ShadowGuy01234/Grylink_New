@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { companyApi, casesApi, bidsApi } from "../api";
+import { companyApi, casesApi, bidsApi, cwcrfApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,6 +45,18 @@ const DashboardPage = () => {
   const [billNotes, setBillNotes] = useState("");
   const [billDecisionLoading, setBillDecisionLoading] = useState(false);
 
+  // CWCRF Verification State
+  const [pendingCwcrfs, setPendingCwcrfs] = useState<any[]>([]);
+  const [selectedCwcrf, setSelectedCwcrf] = useState<any | null>(null);
+  const [cwcrfActionMode, setCwcrfActionMode] = useState<"approve" | "reject" | null>(null);
+  const [cwcrfVerifyForm, setCwcrfVerifyForm] = useState({
+    approvedAmount: 0,
+    repaymentTimeline: 30 as 30 | 45 | 60 | 90,
+    repaymentArrangement: { source: "PAYMENT_FROM_RA_BILL", remarks: "", otherDetails: "" },
+    rejectionReason: "",
+  });
+  const [cwcrfDecisionLoading, setCwcrfDecisionLoading] = useState(false);
+
   // UI State
   const [activeTab, setActiveTab] = useState("documents");
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
@@ -71,6 +83,14 @@ const DashboardPage = () => {
         setBills(billsRes.data?.bills || []);
       } catch {
         // ignore if not EPC or endpoint not ready
+      }
+
+      // Fetch CWCRFs pending buyer verification (only for EPC users)
+      try {
+        const cwcrfsRes = await cwcrfApi.getPendingVerifications();
+        setPendingCwcrfs(cwcrfsRes.data?.cwcrfs || cwcrfsRes.data || []);
+      } catch {
+        // ignore if not EPC
       }
     } catch {
       toast.error("Failed to load data");
@@ -193,6 +213,45 @@ const DashboardPage = () => {
     }
   };
 
+  const handleCwcrfApprove = async () => {
+    if (!selectedCwcrf) return;
+    setCwcrfDecisionLoading(true);
+    try {
+      await cwcrfApi.verifyCwcrf(selectedCwcrf._id, {
+        approvedAmount: cwcrfVerifyForm.approvedAmount,
+        repaymentTimeline: cwcrfVerifyForm.repaymentTimeline,
+        repaymentArrangement: cwcrfVerifyForm.repaymentArrangement,
+      });
+      toast.success("CWCRF approved successfully");
+      setSelectedCwcrf(null);
+      setCwcrfActionMode(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to approve CWCRF");
+    } finally {
+      setCwcrfDecisionLoading(false);
+    }
+  };
+
+  const handleCwcrfReject = async () => {
+    if (!selectedCwcrf || !cwcrfVerifyForm.rejectionReason.trim()) {
+      toast.error("Please provide a rejection reason");
+      return;
+    }
+    setCwcrfDecisionLoading(true);
+    try {
+      await cwcrfApi.rejectCwcrf(selectedCwcrf._id, { reason: cwcrfVerifyForm.rejectionReason });
+      toast.success("CWCRF rejected");
+      setSelectedCwcrf(null);
+      setCwcrfActionMode(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to reject CWCRF");
+    } finally {
+      setCwcrfDecisionLoading(false);
+    }
+  };
+
   const isEpc = user?.role === "epc";
   const isNbfc = user?.role === "nbfc";
 
@@ -214,6 +273,7 @@ const DashboardPage = () => {
     ["SUBMITTED", "NEGOTIATION_IN_PROGRESS"].includes(b.status),
   );
   const pendingBillsCount = bills.length;
+  const pendingCwcrfsCount = pendingCwcrfs.length;
   const uploadedDocsCount = profile?.documents?.length || 0;
   const verifiedDocsCount = verifiedDocs.length;
   const pendingCasesCount = cases.filter(
@@ -341,6 +401,25 @@ const DashboardPage = () => {
             </button>
           )}
 
+          {isEpc && areDocsVerified && (
+            <button
+              onClick={() => setActiveTab("cwcrfverify")}
+              className={`nav-item ${activeTab === "cwcrfverify" ? "active" : ""}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              CWC Requests
+              {pendingCwcrfsCount > 0 && (
+                <span className="ml-auto bg-violet-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                  {pendingCwcrfsCount}
+                </span>
+              )}
+            </button>
+          )}
+
           <button
             onClick={() => (areDocsVerified || isNbfc) && setActiveTab("bids")}
             disabled={isEpc && !areDocsVerified}
@@ -418,7 +497,9 @@ const DashboardPage = () => {
                     ? "Cases & Bills"
                     : activeTab === "billreview"
                       ? "Invoice Review"
-                      : "My Bids"}
+                      : activeTab === "cwcrfverify"
+                        ? "CWC Request Forms"
+                        : "My Bids"}
             </h2>
             <p className="text-slate-500">Manage your partnership details</p>
           </div>
@@ -822,6 +903,402 @@ const DashboardPage = () => {
               onNegotiate={handleNegotiate}
               onLockBid={handleLockBid}
             />
+          )}
+
+          {/* ===== CWC REQUEST FORM VERIFICATION TAB ===== */}
+          {activeTab === "cwcrfverify" && isEpc && areDocsVerified && (
+            <motion.div
+              key="cwcrfverify"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800">Pending CWC Request Forms</h3>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      {pendingCwcrfs.length} request{pendingCwcrfs.length !== 1 ? "s" : ""} awaiting your verification
+                    </p>
+                  </div>
+                  <div className="px-3 py-1 bg-violet-50 text-violet-700 text-xs font-semibold rounded-full border border-violet-200">
+                    Buyer Verification Required
+                  </div>
+                </div>
+
+                {pendingCwcrfs.length === 0 ? (
+                  <div className="flex flex-col items-center gap-3 py-16 text-slate-400">
+                    <svg className="w-12 h-12 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm font-medium">No pending CWC request forms</p>
+                    <p className="text-xs text-slate-400">All requests have been processed</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          <th className="px-6 py-3 text-left">CWCRF #</th>
+                          <th className="px-6 py-3 text-left">Seller</th>
+                          <th className="px-6 py-3 text-left">Invoice Amt</th>
+                          <th className="px-6 py-3 text-left">Requested Amt</th>
+                          <th className="px-6 py-3 text-left">Tenure</th>
+                          <th className="px-6 py-3 text-left">Submitted</th>
+                          <th className="px-6 py-3 text-left">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {pendingCwcrfs.map((cwcrf: any) => (
+                          <tr key={cwcrf._id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-6 py-4 font-semibold text-violet-700 text-sm">
+                              {cwcrf.cwcRfNumber || cwcrf._id?.slice(-8).toUpperCase()}
+                            </td>
+                            <td className="px-6 py-4 text-slate-700">
+                              {cwcrf.subContractorId?.companyName || cwcrf.subContractorId?.name || "—"}
+                            </td>
+                            <td className="px-6 py-4 font-semibold text-slate-800">
+                              {cwcrf.invoiceDetails?.invoiceAmount
+                                ? `₹${Number(cwcrf.invoiceDetails.invoiceAmount).toLocaleString()}`
+                                : "—"}
+                            </td>
+                            <td className="px-6 py-4 font-semibold text-emerald-700">
+                              {cwcrf.cwcRequest?.requestedAmount
+                                ? `₹${Number(cwcrf.cwcRequest.requestedAmount).toLocaleString()}`
+                                : "—"}
+                            </td>
+                            <td className="px-6 py-4 text-slate-600 text-sm">
+                              {cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}
+                            </td>
+                            <td className="px-6 py-4 text-slate-500 text-sm">
+                              {new Date(cwcrf.createdAt).toLocaleDateString("en-IN", {
+                                day: "2-digit", month: "short", year: "numeric"
+                              })}
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => {
+                                  setSelectedCwcrf(cwcrf);
+                                  setCwcrfActionMode(null);
+                                  setCwcrfVerifyForm({
+                                    approvedAmount: cwcrf.cwcRequest?.requestedAmount || 0,
+                                    repaymentTimeline: 30,
+                                    repaymentArrangement: { source: "PAYMENT_FROM_RA_BILL", remarks: "", otherDetails: "" },
+                                    rejectionReason: "",
+                                  });
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Review
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* CWCRF Review Modal */}
+              {selectedCwcrf && (
+                <div
+                  className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                  onClick={() => { setSelectedCwcrf(null); setCwcrfActionMode(null); }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                    className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Modal Header */}
+                    <div className="flex items-center gap-4 px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-white sticky top-0 z-10">
+                      <div className="w-11 h-11 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">CWC Request Form Review</p>
+                        <h3 className="text-lg font-bold text-slate-800">
+                          {selectedCwcrf.cwcRfNumber || `#${selectedCwcrf._id?.slice(-8).toUpperCase()}`}
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() => { setSelectedCwcrf(null); setCwcrfActionMode(null); }}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors text-xl"
+                      >×</button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-6">
+                      {/* Section A: Buyer & Project */}
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Section A — Buyer & Project Details</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-slate-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-400 mb-0.5">Buyer / EPC</p>
+                            <p className="font-semibold text-slate-800 text-sm">
+                              {selectedCwcrf.buyerDetails?.buyerName || "—"}
+                            </p>
+                          </div>
+                          <div className="bg-slate-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-400 mb-0.5">Project Name</p>
+                            <p className="font-semibold text-slate-800 text-sm">
+                              {selectedCwcrf.buyerDetails?.projectName || "—"}
+                            </p>
+                          </div>
+                          <div className="bg-slate-50 rounded-xl p-3 col-span-2">
+                            <p className="text-xs text-slate-400 mb-0.5">Project Location</p>
+                            <p className="font-semibold text-slate-800 text-sm">
+                              {selectedCwcrf.buyerDetails?.projectLocation || "—"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section B: Invoice Details */}
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Section B — Invoice Details</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-blue-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-400 mb-0.5">Invoice Number</p>
+                            <p className="font-semibold text-slate-800 text-sm">
+                              {selectedCwcrf.invoiceDetails?.invoiceNumber || "—"}
+                            </p>
+                          </div>
+                          <div className="bg-blue-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-400 mb-0.5">Invoice Date</p>
+                            <p className="font-semibold text-slate-800 text-sm">
+                              {selectedCwcrf.invoiceDetails?.invoiceDate
+                                ? new Date(selectedCwcrf.invoiceDetails.invoiceDate).toLocaleDateString("en-IN")
+                                : "—"}
+                            </p>
+                          </div>
+                          <div className="bg-emerald-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-400 mb-0.5">Invoice Amount</p>
+                            <p className="text-xl font-bold text-emerald-700">
+                              {selectedCwcrf.invoiceDetails?.invoiceAmount
+                                ? `₹${Number(selectedCwcrf.invoiceDetails.invoiceAmount).toLocaleString()}`
+                                : "—"}
+                            </p>
+                          </div>
+                          <div className="bg-blue-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-400 mb-0.5">Expected Payment Date</p>
+                            <p className="font-semibold text-slate-800 text-sm">
+                              {selectedCwcrf.invoiceDetails?.expectedPaymentDate
+                                ? new Date(selectedCwcrf.invoiceDetails.expectedPaymentDate).toLocaleDateString("en-IN")
+                                : "—"}
+                            </p>
+                          </div>
+                          {selectedCwcrf.invoiceDetails?.workDescription && (
+                            <div className="bg-slate-50 rounded-xl p-3 col-span-2">
+                              <p className="text-xs text-slate-400 mb-0.5">Work Description</p>
+                              <p className="text-slate-700 text-sm">{selectedCwcrf.invoiceDetails.workDescription}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Section C: CWC Request */}
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Section C — CWC Request</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-violet-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-400 mb-0.5">Requested Amount</p>
+                            <p className="text-xl font-bold text-violet-700">
+                              {selectedCwcrf.cwcRequest?.requestedAmount
+                                ? `₹${Number(selectedCwcrf.cwcRequest.requestedAmount).toLocaleString()}`
+                                : "—"}
+                            </p>
+                          </div>
+                          <div className="bg-violet-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-400 mb-0.5">Requested Tenure</p>
+                            <p className="font-semibold text-slate-800 text-sm">
+                              {selectedCwcrf.cwcRequest?.requestedTenure
+                                ? `${selectedCwcrf.cwcRequest.requestedTenure} days`
+                                : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Selector */}
+                      {!cwcrfActionMode && (
+                        <div className="flex gap-3 pt-2">
+                          <button
+                            onClick={() => setCwcrfActionMode("approve")}
+                            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Approve CWCRF
+                          </button>
+                          <button
+                            onClick={() => setCwcrfActionMode("reject")}
+                            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-white border-2 border-red-300 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Reject
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Approve Form */}
+                      {cwcrfActionMode === "approve" && (
+                        <div className="border-2 border-emerald-200 rounded-xl p-5 space-y-4 bg-emerald-50/30">
+                          <p className="text-sm font-bold text-emerald-800">Verification Details</p>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                              Approved CWC Amount (₹) <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                              value={cwcrfVerifyForm.approvedAmount || ""}
+                              max={selectedCwcrf.cwcRequest?.requestedAmount}
+                              onChange={(e) => setCwcrfVerifyForm(prev => ({
+                                ...prev, approvedAmount: Number(e.target.value)
+                              }))}
+                              placeholder="Enter approved amount"
+                            />
+                            <p className="text-xs text-slate-400 mt-1">
+                              Max: ₹{Number(selectedCwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                              Repayment Timeline <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white"
+                              value={cwcrfVerifyForm.repaymentTimeline}
+                              onChange={(e) => setCwcrfVerifyForm(prev => ({
+                                ...prev, repaymentTimeline: Number(e.target.value) as 30 | 45 | 60 | 90
+                              }))}
+                            >
+                              <option value={30}>30 days</option>
+                              <option value={45}>45 days</option>
+                              <option value={60}>60 days</option>
+                              <option value={90}>90 days</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                              Repayment Source <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white"
+                              value={cwcrfVerifyForm.repaymentArrangement.source}
+                              onChange={(e) => setCwcrfVerifyForm(prev => ({
+                                ...prev,
+                                repaymentArrangement: { ...prev.repaymentArrangement, source: e.target.value }
+                              }))}
+                            >
+                              <option value="PAYMENT_FROM_RA_BILL">Payment from RA Bill</option>
+                              <option value="PAYMENT_FROM_CLIENT_RELEASE">Payment from Client Release</option>
+                              <option value="PAYMENT_FROM_INTERNAL_TREASURY">Payment from Internal Treasury</option>
+                              <option value="PAYMENT_FROM_RETENTION_RELEASE">Payment from Retention Release</option>
+                              <option value="OTHER">Other</option>
+                            </select>
+                          </div>
+
+                          {cwcrfVerifyForm.repaymentArrangement.source === "OTHER" && (
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Other Details</label>
+                              <input
+                                type="text"
+                                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                                value={cwcrfVerifyForm.repaymentArrangement.otherDetails}
+                                onChange={(e) => setCwcrfVerifyForm(prev => ({
+                                  ...prev,
+                                  repaymentArrangement: { ...prev.repaymentArrangement, otherDetails: e.target.value }
+                                }))}
+                                placeholder="Describe the repayment arrangement"
+                              />
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Remarks (optional)</label>
+                            <textarea
+                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
+                              rows={2}
+                              value={cwcrfVerifyForm.repaymentArrangement.remarks}
+                              onChange={(e) => setCwcrfVerifyForm(prev => ({
+                                ...prev,
+                                repaymentArrangement: { ...prev.repaymentArrangement, remarks: e.target.value }
+                              }))}
+                              placeholder="Any additional notes..."
+                            />
+                          </div>
+
+                          <div className="flex gap-3 pt-1">
+                            <button
+                              onClick={() => setCwcrfActionMode(null)}
+                              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                            >Back</button>
+                            <button
+                              onClick={handleCwcrfApprove}
+                              disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.approvedAmount}
+                              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                            >
+                              {cwcrfDecisionLoading ? "Processing..." : "Confirm Approval"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reject Form */}
+                      {cwcrfActionMode === "reject" && (
+                        <div className="border-2 border-red-200 rounded-xl p-5 space-y-4 bg-red-50/30">
+                          <p className="text-sm font-bold text-red-800">Rejection Reason</p>
+                          <textarea
+                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+                            rows={3}
+                            value={cwcrfVerifyForm.rejectionReason}
+                            onChange={(e) => setCwcrfVerifyForm(prev => ({
+                              ...prev, rejectionReason: e.target.value
+                            }))}
+                            placeholder="Explain why this CWCRF is being rejected..."
+                          />
+                          <div className="flex gap-3 pt-1">
+                            <button
+                              onClick={() => setCwcrfActionMode(null)}
+                              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                            >Back</button>
+                            <button
+                              onClick={handleCwcrfReject}
+                              disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.rejectionReason.trim()}
+                              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+                            >
+                              {cwcrfDecisionLoading ? "Processing..." : "Confirm Rejection"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </motion.div>
           )}
         </AnimatePresence>
       </main>

@@ -132,6 +132,7 @@ type TabType =
   | "bills"
   | "kyc"
   | "cases"
+  | "cwcrf"
   | "nbfc"
   | "sla"
   | "rekyc";
@@ -150,16 +151,19 @@ const OpsDashboardNew = () => {
   const [slaDashboard, setSlaDashboard] = useState<SlaDashboard | null>(null);
   const [activeSlas, setActiveSlas] = useState<SlaItem[]>([]);
   const [overdueSlas, setOverdueSlas] = useState<SlaItem[]>([]);
+  const [cwcrfQueue, setCwcrfQueue] = useState<any[]>([]);
+  const [cwcrfForwardingId, setCwcrfForwardingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [pendingRes, casesRes, approvalRes, slaDashboardRes, activeSlaRes, overdueSlaRes] = await Promise.all([
+      const [pendingRes, casesRes, approvalRes, slaDashboardRes, activeSlaRes, overdueSlaRes, cwcrfRes] = await Promise.all([
         opsApi.getPending(),
         casesApi.getCases(),
         approvalApi.getPendingCount().catch(() => ({ data: { count: 0 } })),
         slaApi.getDashboard().catch(() => ({ data: { stats: { total: 0, active: 0, completed: 0, overdue: 0 }, recentOverdue: [] } })),
         slaApi.getActive().catch(() => ({ data: [] })),
         slaApi.getOverdue().catch(() => ({ data: [] })),
+        opsApi.getCwcrfQueue().catch(() => ({ data: { cwcrfs: [] } })),
       ]);
       setPending(pendingRes.data);
       setCases(casesRes.data);
@@ -167,6 +171,7 @@ const OpsDashboardNew = () => {
       setSlaDashboard(slaDashboardRes.data);
       setActiveSlas(activeSlaRes.data);
       setOverdueSlas(overdueSlaRes.data);
+      setCwcrfQueue(cwcrfRes.data.cwcrfs || []);
     } catch {
       toast.error("Failed to load data");
     } finally {
@@ -333,6 +338,7 @@ const OpsDashboardNew = () => {
               "bills",
               "kyc",
               "cases",
+              "cwcrf",
               "sla",
               "nbfc",
             ] as TabType[]
@@ -350,7 +356,9 @@ const OpsDashboardNew = () => {
                     ? "Bill Verification"
                     : tab === "sla"
                       ? "SLA Tracker"
-                      : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      : tab === "cwcrf"
+                        ? "CWC Requests"
+                        : tab.charAt(0).toUpperCase() + tab.slice(1)}
               {tab === "kyc" && pending.pendingKyc.length > 0 && (
                 <span className="tab-badge">{pending.pendingKyc.length}</span>
               )}
@@ -364,6 +372,9 @@ const OpsDashboardNew = () => {
               )}
               {tab === "bills" && pending.pendingBills.length > 0 && (
                 <span className="tab-badge">{pending.pendingBills.length}</span>
+              )}
+              {tab === "cwcrf" && cwcrfQueue.length > 0 && (
+                <span className="tab-badge">{cwcrfQueue.length}</span>
               )}
             </button>
           ))}
@@ -507,6 +518,28 @@ const OpsDashboardNew = () => {
           pendingCompanies={pending.pendingCompanies.length}
           pendingBills={pending.pendingBills.length}
           pendingKyc={pending.pendingKyc.length}
+        />
+      )}
+
+      {/* CWC Requests Tab */}
+      {activeTab === "cwcrf" && (
+        <CwcrfOpsTab
+          cwcrfs={cwcrfQueue}
+          forwardingId={cwcrfForwardingId}
+          onForwardToRmt={async (id: string) => {
+            setCwcrfForwardingId(id);
+            try {
+              await opsApi.forwardCwcrfToRmt(id);
+              toast.success("CWCRF forwarded to RMT queue");
+              fetchData();
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || "Failed to forward CWCRF");
+            } finally {
+              setCwcrfForwardingId(null);
+            }
+          }}
+          formatDate={formatDate}
+          statusBadge={statusBadge}
         />
       )}
 
@@ -3434,3 +3467,188 @@ const NbfcInviteTab = () => {
 };
 
 export default OpsDashboardNew;
+
+// ========================================
+// CWCRF Ops Tab Component
+// ========================================
+interface CwcrfOpsTabProps {
+  cwcrfs: any[];
+  forwardingId: string | null;
+  onForwardToRmt: (id: string) => Promise<void>;
+  formatDate: (date: string) => string;
+  statusBadge: (status: string) => JSX.Element;
+}
+
+const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({ cwcrfs, forwardingId, onForwardToRmt, formatDate, statusBadge }) => {
+  const [expanded, setExpanded] = React.useState<string | null>(null);
+
+  return (
+    <div style={{ padding: "0 0 32px" }}>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1e293b", margin: 0 }}>
+          CWC Request Forms — Ops Review Queue
+        </h2>
+        <p style={{ fontSize: 14, color: "#64748b", marginTop: 4 }}>
+          Buyer-approved CWCRFs waiting to be forwarded to RMT for risk assessment
+        </p>
+      </div>
+
+      {cwcrfs.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "64px 0", color: "#94a3b8" }}>
+          <HiOutlineCheckCircle style={{ width: 48, height: 48, margin: "0 auto 12px", display: "block", color: "#86efac" }} />
+          <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>No buyer-approved CWCRFs in queue</p>
+          <p style={{ fontSize: 13, marginTop: 4 }}>All CWCRFs have been processed</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {cwcrfs.map((cwcrf) => (
+            <div
+              key={cwcrf._id}
+              style={{
+                background: "#fff",
+                border: "1px solid #e2e8f0",
+                borderRadius: 12,
+                overflow: "hidden",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              }}
+            >
+              {/* Row Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "16px 20px",
+                  gap: 16,
+                  cursor: "pointer",
+                  background: expanded === cwcrf._id ? "#f8fafc" : "#fff",
+                  borderBottom: expanded === cwcrf._id ? "1px solid #e2e8f0" : "none",
+                }}
+                onClick={() => setExpanded(expanded === cwcrf._id ? null : cwcrf._id)}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 700, color: "#6d28d9", fontSize: 14 }}>
+                      {cwcrf.cwcRfNumber || `#${cwcrf._id?.slice(-8).toUpperCase()}`}
+                    </span>
+                    {statusBadge(cwcrf.status)}
+                  </div>
+                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+                    Seller: <strong>{cwcrf.subContractorId?.companyName || "—"}</strong>
+                    {cwcrf.epcId?.companyName && (
+                      <> &bull; EPC: <strong>{cwcrf.epcId.companyName}</strong></>
+                    )}
+                  </p>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <p style={{ fontWeight: 700, color: "#059669", fontSize: 16, margin: 0 }}>
+                    ₹{Number(cwcrf.buyerVerification?.approvedAmount || cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                  </p>
+                  <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 0" }}>
+                    Approved Amount
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onForwardToRmt(cwcrf._id);
+                  }}
+                  disabled={forwardingId === cwcrf._id}
+                  style={{
+                    padding: "8px 18px",
+                    background: forwardingId === cwcrf._id ? "#a78bfa" : "#7c3aed",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: forwardingId === cwcrf._id ? "not-allowed" : "pointer",
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <HiOutlineLightningBolt style={{ width: 15, height: 15 }} />
+                  {forwardingId === cwcrf._id ? "Forwarding..." : "Forward to RMT"}
+                </button>
+                <HiOutlineChevronRight
+                  style={{
+                    width: 20,
+                    height: 20,
+                    color: "#94a3b8",
+                    transform: expanded === cwcrf._id ? "rotate(90deg)" : "none",
+                    transition: "transform 0.2s",
+                    flexShrink: 0,
+                  }}
+                />
+              </div>
+
+              {/* Expandable Details */}
+              {expanded === cwcrf._id && (
+                <div style={{ padding: 20, background: "#fafafa" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
+                    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                      <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Number</p>
+                      <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>
+                        {cwcrf.invoiceDetails?.invoiceNumber || "—"}
+                      </p>
+                    </div>
+                    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                      <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Amount</p>
+                      <p style={{ fontWeight: 700, color: "#059669", fontSize: 15, margin: 0 }}>
+                        ₹{Number(cwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                      <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Requested Tenure</p>
+                      <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>
+                        {cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Buyer Verification Summary */}
+                  {cwcrf.buyerVerification?.approvedAmount && (
+                    <div style={{
+                      background: "#ecfdf5",
+                      border: "1px solid #a7f3d0",
+                      borderRadius: 10,
+                      padding: 14,
+                    }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: "#065f46", marginBottom: 10 }}>
+                        ✓ Buyer Verification Details
+                      </p>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, fontSize: 13 }}>
+                        <div>
+                          <span style={{ color: "#6b7280" }}>Approved Amt: </span>
+                          <strong>₹{Number(cwcrf.buyerVerification.approvedAmount).toLocaleString()}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: "#6b7280" }}>Timeline: </span>
+                          <strong>{cwcrf.buyerVerification.repaymentTimeline} days</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: "#6b7280" }}>Repayment: </span>
+                          <strong>{(cwcrf.buyerVerification.repaymentArrangement?.source || "").replace(/_/g, " ")}</strong>
+                        </div>
+                      </div>
+                      {cwcrf.buyerVerification.repaymentArrangement?.remarks && (
+                        <p style={{ marginTop: 8, fontSize: 13, color: "#374151" }}>
+                          Remarks: {cwcrf.buyerVerification.repaymentArrangement.remarks}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 14, marginBottom: 0 }}>
+                    Submitted: {formatDate(cwcrf.createdAt)}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};

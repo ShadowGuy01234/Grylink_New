@@ -120,16 +120,30 @@ export const cwcrfApi = {
       invoiceAmount: number;
       expectedPaymentDate: string;
       workDescription?: string;
+      purchaseOrderNumber?: string;
+      purchaseOrderDate?: string;
+      workCompletionDate?: string;
+      gstAmount?: number;
+      netInvoiceAmount?: number;
     };
     cwcRequest: {
       requestedAmount: number;
       requestedTenure: number; // 30, 45, 60, 90 days
+      urgencyLevel?: 'NORMAL' | 'URGENT' | 'CRITICAL';
+      reasonForFunding?: string;
+      preferredDisbursementDate?: string;
+      collateralOffered?: string;
+      existingLoanDetails?: string;
     };
     interestPreference: {
       preferenceType: "RANGE" | "MAX_ACCEPTABLE";
       minRate?: number;
       maxRate?: number;
       maxAcceptableRate?: number;
+      preferredRepaymentFrequency?: 'ONE_TIME' | 'MONTHLY' | 'QUARTERLY';
+      processingFeeAcceptance?: boolean;
+      maxProcessingFeePercent?: number;
+      prepaymentPreference?: 'WITH_PENALTY' | 'WITHOUT_PENALTY' | 'NO_PREPAYMENT';
     };
     platformFeePaid?: boolean;
     paymentReference?: string;

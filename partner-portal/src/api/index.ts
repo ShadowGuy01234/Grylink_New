@@ -94,13 +94,16 @@ export const cwcrfApi = {
     cwcrfId: string,
     verificationData: {
       approvedAmount: number;
-      repaymentTimeline: string;
-      repaymentArrangement: string;
-      notes?: string;
+      repaymentTimeline: number;
+      repaymentArrangement: {
+        source: string;
+        otherDetails?: string;
+        remarks?: string;
+      };
     },
   ) => api.post(`/cwcrf/${cwcrfId}/buyer/verify`, verificationData),
-  rejectCwcrf: (cwcrfId: string, reason: string) =>
-    api.post(`/cwcrf/${cwcrfId}/buyer/reject`, { reason }),
+  rejectCwcrf: (cwcrfId: string, data: { reason: string }) =>
+    api.post(`/cwcrf/${cwcrfId}/buyer/reject`, data),
 
   // For NBFC
   getAvailableCwcrfs: () => api.get("/cwcrf/nbfc/available"),

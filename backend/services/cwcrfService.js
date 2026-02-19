@@ -73,6 +73,11 @@ class CwcRfService {
         expectedPaymentDate: data.invoiceDetails?.expectedPaymentDate,
         workDescription:
           data.invoiceDetails?.workDescription || bill.description,
+        purchaseOrderNumber: data.invoiceDetails?.purchaseOrderNumber,
+        purchaseOrderDate: data.invoiceDetails?.purchaseOrderDate,
+        workCompletionDate: data.invoiceDetails?.workCompletionDate,
+        gstAmount: data.invoiceDetails?.gstAmount,
+        netInvoiceAmount: data.invoiceDetails?.netInvoiceAmount,
       },
 
       // Section C: CWC Request
@@ -80,6 +85,11 @@ class CwcRfService {
         invoiceAmount: data.invoiceDetails?.invoiceAmount || bill.amount,
         requestedAmount: data.cwcRequest?.requestedAmount,
         requestedTenure: data.cwcRequest?.requestedTenure,
+        urgencyLevel: data.cwcRequest?.urgencyLevel || 'NORMAL',
+        reasonForFunding: data.cwcRequest?.reasonForFunding,
+        preferredDisbursementDate: data.cwcRequest?.preferredDisbursementDate,
+        collateralOffered: data.cwcRequest?.collateralOffered,
+        existingLoanDetails: data.cwcRequest?.existingLoanDetails,
       },
 
       // Section D: Interest Rate Preference
@@ -88,6 +98,10 @@ class CwcRfService {
         minRate: data.interestPreference?.minRate,
         maxRate: data.interestPreference?.maxRate,
         maxAcceptableRate: data.interestPreference?.maxAcceptableRate,
+        preferredRepaymentFrequency: data.interestPreference?.preferredRepaymentFrequency || 'ONE_TIME',
+        processingFeeAcceptance: data.interestPreference?.processingFeeAcceptance ?? true,
+        maxProcessingFeePercent: data.interestPreference?.maxProcessingFeePercent,
+        prepaymentPreference: data.interestPreference?.prepaymentPreference || 'WITHOUT_PENALTY',
       },
 
       // Copy seller declaration
@@ -143,6 +157,22 @@ class CwcRfService {
       },
     })
       .populate("subContractorId", "companyName ownerName")
+      .populate("billId", "billNumber amount")
+      .sort({ createdAt: -1 });
+  }
+
+  /**
+   * Get CWCRFs for Ops review queue (BUYER_APPROVED — waiting to be forwarded to RMT)
+   */
+  async getCwcRfsForOps(query = {}) {
+    const filter = {
+      status: { $in: ["BUYER_APPROVED"] },
+    };
+    if (query.status) filter.status = query.status;
+
+    return CwcRf.find(filter)
+      .populate("subContractorId", "companyName ownerName")
+      .populate("epcId", "companyName")
       .populate("billId", "billNumber amount")
       .sort({ createdAt: -1 });
   }
