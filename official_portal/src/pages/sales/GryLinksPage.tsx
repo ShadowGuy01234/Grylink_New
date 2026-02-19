@@ -138,7 +138,7 @@ const GryLinksPage = () => {
   const filtered = links.filter((l) => {
     if (!search) return true;
     const q = search.toLowerCase();
-    const name = l.linkType === 'company' ? l.companyId?.companyName : l.subContractorId?.name;
+    const name = l.linkType === 'company' ? l.companyId?.companyName : l.subContractorId?.contactName;
     const email = l.linkType === 'company' ? l.companyId?.email : l.subContractorId?.email;
     return name?.toLowerCase().includes(q) || email?.toLowerCase().includes(q) || l.sentTo?.toLowerCase().includes(q);
   });
