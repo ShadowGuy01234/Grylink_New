@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
-import HomePage from "./pages/HomePageNew";
+import HomePage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SalesOverview from "./pages/sales/SalesOverview";
 import CompaniesListPage from "./pages/sales/CompaniesListPage";

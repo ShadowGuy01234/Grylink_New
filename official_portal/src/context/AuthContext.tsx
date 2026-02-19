@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { user: userData, token: authToken } = res.data;
     
     // Only allow internal roles
-    if (!['sales', 'ops', 'rmt', 'admin'].includes(userData.role)) {
+    if (!['sales', 'ops', 'rmt', 'admin', 'founder'].includes(userData.role)) {
       throw new Error('Access denied. This portal is for internal users only.');
     }
 
