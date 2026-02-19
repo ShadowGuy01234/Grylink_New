@@ -69,7 +69,7 @@ interface CwcafFormData {
     collateralCoverage: { score: number; remarks: string };
   };
   riskCategory: "LOW" | "MEDIUM" | "HIGH";
-  rmtRecommendation: string;
+  rmtRecommendation: "PROCEED" | "REVIEW" | "REJECT";
 }
 
 interface DashboardData {
@@ -146,7 +146,7 @@ const RmtDashboard: React.FC = () => {
       collateralCoverage: { score: 0, remarks: "" },
     },
     riskCategory: "MEDIUM",
-    rmtRecommendation: "",
+    rmtRecommendation: "PROCEED",
   });
 
   const fetchData = async () => {
@@ -254,7 +254,7 @@ const RmtDashboard: React.FC = () => {
           collateralCoverage: { score: 0, remarks: "" },
         },
         riskCategory: "MEDIUM",
-        rmtRecommendation: "",
+        rmtRecommendation: "PROCEED",
       });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -500,7 +500,7 @@ const RmtDashboard: React.FC = () => {
                       <td className="px-6 py-4">{statusBadge(cwcrf.status)}</td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          {cwcrf.status === "BUYER_APPROVED" && (
+                          {(cwcrf.status === "UNDER_RISK_REVIEW" || cwcrf.status === "BUYER_APPROVED") && (
                             <button
                               onClick={() => {
                                 setSelectedCwcrf(cwcrf);
@@ -508,16 +508,28 @@ const RmtDashboard: React.FC = () => {
                               }}
                               className="text-blue-600 hover:underline text-sm"
                             >
-                              Generate CWCAF
+                              Complete Assessment
                             </button>
                           )}
                           {cwcrf.status === "CWCAF_READY" && (
                             <button
-                              onClick={() => handleOpenNbfcModal(cwcrf)}
-                              className="text-green-600 hover:underline text-sm"
+                              onClick={async () => {
+                                try {
+                                  await cwcrfApi.rmtForwardToOps(cwcrf._id, "Risk assessment complete");
+                                  toast.success("Forwarded to Ops for risk triage");
+                                  fetchData();
+                                } catch (err: unknown) {
+                                  const e = err as { response?: { data?: { message?: string } } };
+                                  toast.error(e.response?.data?.message || "Failed to forward");
+                                }
+                              }}
+                              className="text-orange-600 hover:underline text-sm font-medium"
                             >
-                              Share with NBFCs
+                              Forward to Ops
                             </button>
+                          )}
+                          {cwcrf.status === "RMT_APPROVED" && (
+                            <span className="text-green-600 text-sm">✓ Sent to Ops</span>
                           )}
                         </div>
                       </td>
@@ -1118,18 +1130,20 @@ const RmtDashboard: React.FC = () => {
                     <label className="block font-medium mb-2">
                       RMT Recommendation
                     </label>
-                    <textarea
+                    <select
                       value={cwcafForm.rmtRecommendation}
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          rmtRecommendation: e.target.value,
+                          rmtRecommendation: e.target.value as "PROCEED" | "REVIEW" | "REJECT",
                         })
                       }
-                      placeholder="Enter your recommendation..."
                       className="w-full p-2 border rounded"
-                      rows={4}
-                    />
+                    >
+                      <option value="PROCEED">PROCEED — Recommend for funding</option>
+                      <option value="REVIEW">REVIEW — Needs further scrutiny</option>
+                      <option value="REJECT">REJECT — Not recommended</option>
+                    </select>
                   </div>
 
                   {/* Actions */}

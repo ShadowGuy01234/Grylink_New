@@ -108,10 +108,19 @@ export const opsApi = {
   // NBFC
   inviteNbfc: (data: Record<string, unknown>) => api.post("/ops/nbfc/invite", data),
 
-  // CWCRF Queue (Buyer-Approved CWCRFs waiting to be forwarded to RMT)
+  // CWCRF Queue — Phase 6 (SUBMITTED/OPS_REVIEW) + Phase 8 (RMT_APPROVED triage)
   getCwcrfQueue: () => api.get("/cwcrf/ops/queue"),
+  getCwcrfTriageQueue: () => api.get("/cwcrf/ops/queue?phase=triage"),
   forwardCwcrfToRmt: (id: string, notes?: string) =>
     api.post(`/cwcrf/${id}/rmt/move-to-queue`, { notes }),
+  verifyCwcrfSection: (id: string, data: { section: string; verified: boolean; notes?: string }) =>
+    api.post(`/cwcrf/${id}/ops/verify-section`, data),
+  triageCwcrf: (id: string, data: { action: 'forward_to_epc' | 'reject'; notes?: string }) =>
+    api.post(`/cwcrf/${id}/ops/triage`, data),
+  getMatchingNbfcs: (cwcrfId: string) =>
+    api.get(`/cwcrf/${cwcrfId}/matching-nbfcs`),
+  shareWithNbfcs: (cwcrfId: string, nbfcIds?: string[]) =>
+    api.post(`/cwcrf/${cwcrfId}/share-with-nbfcs`, { nbfcIds }),
 };
 
 // Cases
@@ -145,7 +154,7 @@ export const cwcrfApi = {
   // Get CWCRFs in RMT queue
   getRmtQueue: () => api.get("/cwcrf/rmt/queue"),
 
-  // Generate CWCAF for a CWCRF
+  // Generate CWCAF for a CWCRF — Ops & RMT (Phase 10.1)
   generateCwcaf: (
     cwcrfId: string,
     cwcafData: {
@@ -162,9 +171,14 @@ export const cwcrfApi = {
         collateralCoverage: { score: number; remarks: string };
       };
       riskCategory: "LOW" | "MEDIUM" | "HIGH";
-      rmtRecommendation: string;
+      rmtRecommendation: "PROCEED" | "REVIEW" | "REJECT";
+      rmtNotes?: string;
     },
   ) => api.post(`/cwcrf/${cwcrfId}/rmt/generate-cwcaf`, cwcafData),
+
+  // RMT forwards assessment to Ops (Phase 7.5)
+  rmtForwardToOps: (cwcrfId: string, notes?: string) =>
+    api.post(`/cwcrf/${cwcrfId}/rmt/forward-to-ops`, { notes }),
 
   // Get CWCAF details
   getCwcaf: (cwcrfId: string) => api.get(`/cwcrf/${cwcrfId}/cwcaf`),

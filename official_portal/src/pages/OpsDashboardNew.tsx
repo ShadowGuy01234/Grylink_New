@@ -152,11 +152,14 @@ const OpsDashboardNew = () => {
   const [activeSlas, setActiveSlas] = useState<SlaItem[]>([]);
   const [overdueSlas, setOverdueSlas] = useState<SlaItem[]>([]);
   const [cwcrfQueue, setCwcrfQueue] = useState<any[]>([]);
+  const [cwcrfTriageQueue, setCwcrfTriageQueue] = useState<any[]>([]);
   const [cwcrfForwardingId, setCwcrfForwardingId] = useState<string | null>(null);
+  const [cwcrfVerifyingSection, setCwcrfVerifyingSection] = useState<string | null>(null);
+  const [cwcrfTriageId, setCwcrfTriageId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [pendingRes, casesRes, approvalRes, slaDashboardRes, activeSlaRes, overdueSlaRes, cwcrfRes] = await Promise.all([
+      const [pendingRes, casesRes, approvalRes, slaDashboardRes, activeSlaRes, overdueSlaRes, cwcrfRes, cwcrfTriageRes] = await Promise.all([
         opsApi.getPending(),
         casesApi.getCases(),
         approvalApi.getPendingCount().catch(() => ({ data: { count: 0 } })),
@@ -164,6 +167,7 @@ const OpsDashboardNew = () => {
         slaApi.getActive().catch(() => ({ data: [] })),
         slaApi.getOverdue().catch(() => ({ data: [] })),
         opsApi.getCwcrfQueue().catch(() => ({ data: { cwcrfs: [] } })),
+        opsApi.getCwcrfTriageQueue().catch(() => ({ data: { cwcrfs: [] } })),
       ]);
       setPending(pendingRes.data);
       setCases(casesRes.data);
@@ -172,6 +176,7 @@ const OpsDashboardNew = () => {
       setActiveSlas(activeSlaRes.data);
       setOverdueSlas(overdueSlaRes.data);
       setCwcrfQueue(cwcrfRes.data.cwcrfs || []);
+      setCwcrfTriageQueue(cwcrfTriageRes.data.cwcrfs || []);
     } catch {
       toast.error("Failed to load data");
     } finally {
@@ -525,7 +530,10 @@ const OpsDashboardNew = () => {
       {activeTab === "cwcrf" && (
         <CwcrfOpsTab
           cwcrfs={cwcrfQueue}
+          triageCwcrfs={cwcrfTriageQueue}
           forwardingId={cwcrfForwardingId}
+          verifyingSection={cwcrfVerifyingSection}
+          triageId={cwcrfTriageId}
           onForwardToRmt={async (id: string) => {
             setCwcrfForwardingId(id);
             try {
@@ -536,6 +544,30 @@ const OpsDashboardNew = () => {
               toast.error(err.response?.data?.error || "Failed to forward CWCRF");
             } finally {
               setCwcrfForwardingId(null);
+            }
+          }}
+          onVerifySection={async (id: string, section: string, verified: boolean, notes: string) => {
+            setCwcrfVerifyingSection(`${id}-${section}`);
+            try {
+              await opsApi.verifyCwcrfSection(id, { section, verified, notes });
+              toast.success(`Section ${section.toUpperCase()} marked as ${verified ? "verified" : "unverified"}`);
+              fetchData();
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || "Failed to verify section");
+            } finally {
+              setCwcrfVerifyingSection(null);
+            }
+          }}
+          onTriage={async (id: string, action: string, notes: string) => {
+            setCwcrfTriageId(id);
+            try {
+              await opsApi.triageCwcrf(id, { action, notes });
+              toast.success(action === "forward_to_epc" ? "CWCRF forwarded to EPC for buyer verification" : "CWCRF rejected");
+              fetchData();
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || "Failed to triage CWCRF");
+            } finally {
+              setCwcrfTriageId(null);
             }
           }}
           formatDate={formatDate}
@@ -3472,181 +3504,354 @@ export default OpsDashboardNew;
 // CWCRF Ops Tab Component
 // ========================================
 interface CwcrfOpsTabProps {
-  cwcrfs: any[];
+  cwcrfs: any[];        // Phase 6: SUBMITTED / OPS_REVIEW
+  triageCwcrfs: any[]; // Phase 8: RMT_APPROVED
   forwardingId: string | null;
+  verifyingSection: string | null;
+  triageId: string | null;
   onForwardToRmt: (id: string) => Promise<void>;
+  onVerifySection: (id: string, section: string, verified: boolean, notes: string) => Promise<void>;
+  onTriage: (id: string, action: string, notes: string) => Promise<void>;
   formatDate: (date: string) => string;
   statusBadge: (status: string) => JSX.Element;
 }
 
-const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({ cwcrfs, forwardingId, onForwardToRmt, formatDate, statusBadge }) => {
+const CWCRF_SECTIONS = [
+  { key: "sectionA", label: "Section A", desc: "Seller / SC Details" },
+  { key: "sectionB", label: "Section B", desc: "Buyer / EPC Details" },
+  { key: "sectionC", label: "Section C", desc: "CWC Request & Invoice" },
+  { key: "sectionD", label: "Section D", desc: "Supporting Documents" },
+  { key: "raBillVerified", label: "RA Bill", desc: "Running Account Bill" },
+  { key: "wccVerified", label: "WCC", desc: "Work Completion Certificate" },
+  { key: "measurementSheetVerified", label: "Meas. Sheet", desc: "Measurement Sheet" },
+];
+
+const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
+  cwcrfs, triageCwcrfs, forwardingId, verifyingSection, triageId,
+  onForwardToRmt, onVerifySection, onTriage, formatDate, statusBadge,
+}) => {
+  const [subTab, setSubTab] = React.useState<"verify" | "triage">("verify");
   const [expanded, setExpanded] = React.useState<string | null>(null);
+  const [sectionNotes, setSectionNotes] = React.useState<Record<string, string>>({});
+  const [triageNotes, setTriageNotes] = React.useState<Record<string, string>>({});
+
+  const totalBadge = cwcrfs.length + triageCwcrfs.length;
 
   return (
     <div style={{ padding: "0 0 32px" }}>
+      {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1e293b", margin: 0 }}>
-          CWC Request Forms — Ops Review Queue
+          CWC Request Forms — Ops Dashboard
         </h2>
         <p style={{ fontSize: 14, color: "#64748b", marginTop: 4 }}>
-          Buyer-approved CWCRFs waiting to be forwarded to RMT for risk assessment
+          Phase 6: Verify CWCRF sections &bull; Phase 8: Risk triage after RMT assessment
         </p>
       </div>
 
-      {cwcrfs.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "64px 0", color: "#94a3b8" }}>
-          <HiOutlineCheckCircle style={{ width: 48, height: 48, margin: "0 auto 12px", display: "block", color: "#86efac" }} />
-          <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>No buyer-approved CWCRFs in queue</p>
-          <p style={{ fontSize: 13, marginTop: 4 }}>All CWCRFs have been processed</p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {cwcrfs.map((cwcrf) => (
-            <div
-              key={cwcrf._id}
-              style={{
-                background: "#fff",
-                border: "1px solid #e2e8f0",
-                borderRadius: 12,
-                overflow: "hidden",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              }}
-            >
-              {/* Row Header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "16px 20px",
-                  gap: 16,
-                  cursor: "pointer",
-                  background: expanded === cwcrf._id ? "#f8fafc" : "#fff",
-                  borderBottom: expanded === cwcrf._id ? "1px solid #e2e8f0" : "none",
-                }}
-                onClick={() => setExpanded(expanded === cwcrf._id ? null : cwcrf._id)}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 700, color: "#6d28d9", fontSize: 14 }}>
-                      {cwcrf.cwcRfNumber || `#${cwcrf._id?.slice(-8).toUpperCase()}`}
-                    </span>
-                    {statusBadge(cwcrf.status)}
-                  </div>
-                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
-                    Seller: <strong>{cwcrf.subContractorId?.companyName || "—"}</strong>
-                    {cwcrf.epcId?.companyName && (
-                      <> &bull; EPC: <strong>{cwcrf.epcId.companyName}</strong></>
-                    )}
-                  </p>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <p style={{ fontWeight: 700, color: "#059669", fontSize: 16, margin: 0 }}>
-                    ₹{Number(cwcrf.buyerVerification?.approvedAmount || cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
-                  </p>
-                  <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 0" }}>
-                    Approved Amount
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onForwardToRmt(cwcrf._id);
-                  }}
-                  disabled={forwardingId === cwcrf._id}
-                  style={{
-                    padding: "8px 18px",
-                    background: forwardingId === cwcrf._id ? "#a78bfa" : "#7c3aed",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: forwardingId === cwcrf._id ? "not-allowed" : "pointer",
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  <HiOutlineLightningBolt style={{ width: 15, height: 15 }} />
-                  {forwardingId === cwcrf._id ? "Forwarding..." : "Forward to RMT"}
-                </button>
-                <HiOutlineChevronRight
-                  style={{
-                    width: 20,
-                    height: 20,
-                    color: "#94a3b8",
-                    transform: expanded === cwcrf._id ? "rotate(90deg)" : "none",
-                    transition: "transform 0.2s",
-                    flexShrink: 0,
-                  }}
-                />
-              </div>
+      {/* Sub-tab bar */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "2px solid #e2e8f0", paddingBottom: 0 }}>
+        {([
+          { key: "verify", label: "Section Verify (Phase 6)", count: cwcrfs.length },
+          { key: "triage", label: "Risk Triage (Phase 8)", count: triageCwcrfs.length },
+        ] as const).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setSubTab(t.key)}
+            style={{
+              padding: "10px 20px",
+              border: "none",
+              background: "none",
+              fontSize: 13,
+              fontWeight: subTab === t.key ? 700 : 500,
+              color: subTab === t.key ? "#7c3aed" : "#64748b",
+              borderBottom: subTab === t.key ? "2px solid #7c3aed" : "2px solid transparent",
+              cursor: "pointer",
+              marginBottom: -2,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            {t.label}
+            {t.count > 0 && (
+              <span style={{
+                background: subTab === t.key ? "#7c3aed" : "#94a3b8",
+                color: "#fff",
+                borderRadius: 999,
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "1px 7px",
+              }}>{t.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
 
-              {/* Expandable Details */}
-              {expanded === cwcrf._id && (
-                <div style={{ padding: 20, background: "#fafafa" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
-                    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                      <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Number</p>
-                      <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>
-                        {cwcrf.invoiceDetails?.invoiceNumber || "—"}
-                      </p>
-                    </div>
-                    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                      <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Amount</p>
-                      <p style={{ fontWeight: 700, color: "#059669", fontSize: 15, margin: 0 }}>
-                        ₹{Number(cwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}
-                      </p>
-                    </div>
-                    <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                      <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Requested Tenure</p>
-                      <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>
-                        {cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Buyer Verification Summary */}
-                  {cwcrf.buyerVerification?.approvedAmount && (
-                    <div style={{
-                      background: "#ecfdf5",
-                      border: "1px solid #a7f3d0",
-                      borderRadius: 10,
-                      padding: 14,
-                    }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: "#065f46", marginBottom: 10 }}>
-                        ✓ Buyer Verification Details
-                      </p>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, fontSize: 13 }}>
-                        <div>
-                          <span style={{ color: "#6b7280" }}>Approved Amt: </span>
-                          <strong>₹{Number(cwcrf.buyerVerification.approvedAmount).toLocaleString()}</strong>
-                        </div>
-                        <div>
-                          <span style={{ color: "#6b7280" }}>Timeline: </span>
-                          <strong>{cwcrf.buyerVerification.repaymentTimeline} days</strong>
-                        </div>
-                        <div>
-                          <span style={{ color: "#6b7280" }}>Repayment: </span>
-                          <strong>{(cwcrf.buyerVerification.repaymentArrangement?.source || "").replace(/_/g, " ")}</strong>
-                        </div>
-                      </div>
-                      {cwcrf.buyerVerification.repaymentArrangement?.remarks && (
-                        <p style={{ marginTop: 8, fontSize: 13, color: "#374151" }}>
-                          Remarks: {cwcrf.buyerVerification.repaymentArrangement.remarks}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 14, marginBottom: 0 }}>
-                    Submitted: {formatDate(cwcrf.createdAt)}
-                  </p>
-                </div>
-              )}
+      {/* ── Phase 6: Section Verify ── */}
+      {subTab === "verify" && (
+        <div>
+          {cwcrfs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "64px 0", color: "#94a3b8" }}>
+              <HiOutlineCheckCircle style={{ width: 48, height: 48, margin: "0 auto 12px", display: "block", color: "#86efac" }} />
+              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>No CWCRFs pending section verification</p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>Submitted CWCRFs will appear here</p>
             </div>
-          ))}
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {cwcrfs.map((cwcrf) => {
+                const ov = cwcrf.opsVerification || {};
+                const allSectionsVerified = ["sectionA","sectionB","sectionC","sectionD"].every(
+                  (s) => ov[s]?.verified
+                );
+                return (
+                  <div key={cwcrf._id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                    {/* Row header */}
+                    <div
+                      style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: 16, cursor: "pointer",
+                        background: expanded === cwcrf._id ? "#f8fafc" : "#fff",
+                        borderBottom: expanded === cwcrf._id ? "1px solid #e2e8f0" : "none" }}
+                      onClick={() => setExpanded(expanded === cwcrf._id ? null : cwcrf._id)}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 700, color: "#6d28d9", fontSize: 14 }}>
+                            {cwcrf.cwcRfNumber || `#${cwcrf._id?.slice(-8).toUpperCase()}`}
+                          </span>
+                          {statusBadge(cwcrf.status)}
+                          {allSectionsVerified && (
+                            <span style={{ fontSize: 11, background: "#d1fae5", color: "#065f46", borderRadius: 999, padding: "2px 8px", fontWeight: 600 }}>✓ All Sections Verified</span>
+                          )}
+                        </div>
+                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+                          Seller: <strong>{cwcrf.subContractorId?.companyName || "—"}</strong>
+                          {cwcrf.epcId?.companyName && (<> &bull; EPC: <strong>{cwcrf.epcId.companyName}</strong></>)}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <p style={{ fontWeight: 700, color: "#059669", fontSize: 16, margin: 0 }}>
+                          ₹{Number(cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                        </p>
+                        <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 0" }}>Requested</p>
+                      </div>
+                      {allSectionsVerified && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onForwardToRmt(cwcrf._id); }}
+                          disabled={forwardingId === cwcrf._id}
+                          style={{ padding: "8px 16px", background: forwardingId === cwcrf._id ? "#a78bfa" : "#7c3aed", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", flexShrink: 0 }}
+                        >
+                          {forwardingId === cwcrf._id ? "Forwarding..." : "Forward to RMT →"}
+                        </button>
+                      )}
+                      <HiOutlineChevronRight style={{ width: 20, height: 20, color: "#94a3b8", transform: expanded === cwcrf._id ? "rotate(90deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
+                    </div>
+
+                    {/* Expandable: section verify */}
+                    {expanded === cwcrf._id && (
+                      <div style={{ padding: 20, background: "#fafafa" }}>
+                        {/* Invoice summary */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice No.</p>
+                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.invoiceDetails?.invoiceNumber || "—"}</p>
+                          </div>
+                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Amount</p>
+                            <p style={{ fontWeight: 700, color: "#059669", fontSize: 15, margin: 0 }}>₹{Number(cwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}</p>
+                          </div>
+                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Tenure</p>
+                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}</p>
+                          </div>
+                        </div>
+
+                        {/* Section verify grid */}
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 12 }}>Section Verification</p>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+                          {CWCRF_SECTIONS.map((sec) => {
+                            const isBool = sec.key.endsWith("Verified");
+                            const isVerified = isBool ? ov[sec.key] === true : ov[sec.key]?.verified === true;
+                            const noteKey = `${cwcrf._id}-${sec.key}`;
+                            const isVerifying = verifyingSection === noteKey;
+                            return (
+                              <div key={sec.key} style={{
+                                background: isVerified ? "#f0fdf4" : "#fff",
+                                border: `1px solid ${isVerified ? "#86efac" : "#e2e8f0"}`,
+                                borderRadius: 10,
+                                padding: 14,
+                              }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                  <div>
+                                    <p style={{ fontWeight: 700, fontSize: 13, color: "#1e293b", margin: 0 }}>{sec.label}</p>
+                                    <p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>{sec.desc}</p>
+                                  </div>
+                                  {isVerified && <span style={{ fontSize: 18, color: "#22c55e" }}>✓</span>}
+                                </div>
+                                <textarea
+                                  placeholder="Notes (optional)"
+                                  value={sectionNotes[noteKey] || ""}
+                                  onChange={(e) => setSectionNotes((prev) => ({ ...prev, [noteKey]: e.target.value }))}
+                                  rows={2}
+                                  style={{ width: "100%", fontSize: 12, border: "1px solid #e2e8f0", borderRadius: 6, padding: "6px 8px", resize: "vertical", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }}
+                                />
+                                <div style={{ display: "flex", gap: 6 }}>
+                                  {!isVerified ? (
+                                    <button
+                                      disabled={isVerifying}
+                                      onClick={() => onVerifySection(cwcrf._id, sec.key, true, sectionNotes[noteKey] || "")}
+                                      style={{ flex: 1, padding: "6px 0", background: isVerifying ? "#a7f3d0" : "#10b981", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+                                    >
+                                      {isVerifying ? "Saving..." : "Mark Verified"}
+                                    </button>
+                                  ) : (
+                                    <button
+                                      disabled={isVerifying}
+                                      onClick={() => onVerifySection(cwcrf._id, sec.key, false, sectionNotes[noteKey] || "")}
+                                      style={{ flex: 1, padding: "6px 0", background: isVerifying ? "#fca5a5" : "#ef4444", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+                                    >
+                                      {isVerifying ? "Saving..." : "Unmark"}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 14, marginBottom: 0 }}>Submitted: {formatDate(cwcrf.createdAt)}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Phase 8: Risk Triage ── */}
+      {subTab === "triage" && (
+        <div>
+          {triageCwcrfs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "64px 0", color: "#94a3b8" }}>
+              <HiOutlineCheckCircle style={{ width: 48, height: 48, margin: "0 auto 12px", display: "block", color: "#86efac" }} />
+              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>No CWCRFs in triage queue</p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>RMT-assessed CWCRFs will appear here</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {triageCwcrfs.map((cwcrf) => {
+                const risk = cwcrf.cwcafData?.riskCategory || cwcrf.rmtAssessment?.riskCategory || "—";
+                const riskColor = risk === "LOW" ? "#10b981" : risk === "MEDIUM" ? "#f59e0b" : risk === "HIGH" ? "#ef4444" : "#94a3b8";
+                const noteKey = `triage-${cwcrf._id}`;
+                const isTriaging = triageId === cwcrf._id;
+                return (
+                  <div key={cwcrf._id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                    {/* Row header */}
+                    <div
+                      style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: 16, cursor: "pointer",
+                        background: expanded === `t-${cwcrf._id}` ? "#f8fafc" : "#fff",
+                        borderBottom: expanded === `t-${cwcrf._id}` ? "1px solid #e2e8f0" : "none" }}
+                      onClick={() => setExpanded(expanded === `t-${cwcrf._id}` ? null : `t-${cwcrf._id}`)}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 700, color: "#6d28d9", fontSize: 14 }}>
+                            {cwcrf.cwcRfNumber || `#${cwcrf._id?.slice(-8).toUpperCase()}`}
+                          </span>
+                          {statusBadge(cwcrf.status)}
+                          <span style={{ fontSize: 11, background: `${riskColor}20`, color: riskColor, borderRadius: 999, padding: "2px 8px", fontWeight: 700, border: `1px solid ${riskColor}40` }}>
+                            Risk: {risk}
+                          </span>
+                        </div>
+                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+                          Seller: <strong>{cwcrf.subContractorId?.companyName || "—"}</strong>
+                          {cwcrf.epcId?.companyName && (<> &bull; EPC: <strong>{cwcrf.epcId.companyName}</strong></>)}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <p style={{ fontWeight: 700, color: "#059669", fontSize: 16, margin: 0 }}>
+                          ₹{Number(cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                        </p>
+                        <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 0" }}>Requested</p>
+                      </div>
+                      <HiOutlineChevronRight style={{ width: 20, height: 20, color: "#94a3b8", transform: expanded === `t-${cwcrf._id}` ? "rotate(90deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
+                    </div>
+
+                    {/* Expandable: triage actions */}
+                    {expanded === `t-${cwcrf._id}` && (
+                      <div style={{ padding: 20, background: "#fafafa" }}>
+                        {/* RMT recommendation banner */}
+                        {cwcrf.rmtAssessment?.recommendation && (
+                          <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: 14, marginBottom: 16 }}>
+                            <p style={{ fontSize: 12, fontWeight: 700, color: "#1d4ed8", marginBottom: 6 }}>RMT Recommendation</p>
+                            <p style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", margin: 0 }}>
+                              {cwcrf.rmtAssessment.recommendation}
+                            </p>
+                            {cwcrf.rmtAssessment.notes && (
+                              <p style={{ fontSize: 13, color: "#374151", marginTop: 6, marginBottom: 0 }}>{cwcrf.rmtAssessment.notes}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {risk === "HIGH" && (
+                          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13, color: "#b91c1c" }}>
+                            ⚠️ <strong>High-risk case:</strong> Ensure Founder / Senior Ops approval has been obtained before forwarding to EPC.
+                          </div>
+                        )}
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
+                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Amount</p>
+                            <p style={{ fontWeight: 700, color: "#059669", fontSize: 15, margin: 0 }}>₹{Number(cwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}</p>
+                          </div>
+                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Requested Tenure</p>
+                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}</p>
+                          </div>
+                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Submitted</p>
+                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{formatDate(cwcrf.createdAt)}</p>
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: 16 }}>
+                          <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Notes / Reason (required for rejection)</label>
+                          <textarea
+                            value={triageNotes[noteKey] || ""}
+                            onChange={(e) => setTriageNotes((prev) => ({ ...prev, [noteKey]: e.target.value }))}
+                            rows={3}
+                            placeholder="Add notes for this triage decision..."
+                            style={{ width: "100%", fontSize: 13, border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }}
+                          />
+                        </div>
+
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <button
+                            disabled={isTriaging}
+                            onClick={() => onTriage(cwcrf._id, "forward_to_epc", triageNotes[noteKey] || "")}
+                            style={{ flex: 1, padding: "10px 0", background: isTriaging ? "#a7f3d0" : "#10b981", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+                          >
+                            {isTriaging ? "Processing..." : "✓ Forward to EPC"}
+                          </button>
+                          <button
+                            disabled={isTriaging || !triageNotes[noteKey]?.trim()}
+                            onClick={() => onTriage(cwcrf._id, "reject", triageNotes[noteKey] || "")}
+                            style={{ flex: 1, padding: "10px 0", background: isTriaging || !triageNotes[noteKey]?.trim() ? "#fca5a5" : "#ef4444", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+                          >
+                            {isTriaging ? "Processing..." : "✕ Reject"}
+                          </button>
+                        </div>
+                        {!triageNotes[noteKey]?.trim() && (
+                          <p style={{ fontSize: 11, color: "#f59e0b", marginTop: 6 }}>* Notes are required to reject a CWCRF</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

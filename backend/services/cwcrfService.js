@@ -162,19 +162,188 @@ class CwcRfService {
   }
 
   /**
-   * Get CWCRFs for Ops review queue (BUYER_APPROVED — waiting to be forwarded to RMT)
+   * Get CWCRFs for Ops review queue
+   * Phase 6: SUBMITTED + OPS_REVIEW  (initial Ops review)
+   * Phase 8: RMT_APPROVED           (Ops risk triage after RMT)
    */
   async getCwcRfsForOps(query = {}) {
     const filter = {
-      status: { $in: ["BUYER_APPROVED"] },
+      status: { $in: ["SUBMITTED", "OPS_REVIEW", "RMT_APPROVED"] },
     };
     if (query.status) filter.status = query.status;
+    if (query.phase === "triage") filter.status = { $in: ["RMT_APPROVED"] };
 
     return CwcRf.find(filter)
       .populate("subContractorId", "companyName ownerName")
       .populate("epcId", "companyName")
       .populate("billId", "billNumber amount")
       .sort({ createdAt: -1 });
+  }
+
+  /**
+   * Ops verifies individual CWCRF section (Phase 6.2 super access)
+   * section: 'sectionA' | 'sectionB' | 'sectionC' | 'sectionD' | 'raBill' | 'wcc' | 'measurementSheet'
+   */
+  async opsVerifySection(cwcRfId, userId, { section, verified, notes }) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    if (!cwcRf.opsVerification) cwcRf.opsVerification = {};
+
+    const sectionMap = {
+      sectionA: 'sectionA',
+      sectionB: 'sectionB',
+      sectionC: 'sectionC',
+      sectionD: 'sectionD',
+      raBill: null,
+      wcc: null,
+      measurementSheet: null,
+    };
+
+    if (!Object.keys(sectionMap).includes(section)) {
+      throw new Error(`Invalid section: ${section}`);
+    }
+
+    if (['sectionA', 'sectionB', 'sectionC', 'sectionD'].includes(section)) {
+      cwcRf.opsVerification[section] = { verified, notes, verifiedBy: userId, verifiedAt: new Date() };
+    } else if (section === 'raBill') {
+      cwcRf.opsVerification.raBillVerified = verified;
+    } else if (section === 'wcc') {
+      cwcRf.opsVerification.wccVerified = verified;
+    } else if (section === 'measurementSheet') {
+      cwcRf.opsVerification.measurementSheetVerified = verified;
+    }
+
+    // If all 4 sections verified, advance status to OPS_REVIEW
+    const allSections = ['sectionA', 'sectionB', 'sectionC', 'sectionD'].every(
+      (s) => cwcRf.opsVerification[s]?.verified
+    );
+    if (allSections && cwcRf.status === 'SUBMITTED') {
+      cwcRf.status = 'OPS_REVIEW';
+      cwcRf.statusHistory.push({ status: 'OPS_REVIEW', changedBy: userId, notes: 'All sections verified by Ops' });
+    }
+
+    await cwcRf.save();
+    return cwcRf;
+  }
+
+  /**
+   * RMT forwards completed risk assessment to Ops (Phase 7.5)
+   */
+  async rmtForwardToOps(cwcRfId, rmtUserId, data) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    if (!['UNDER_RISK_REVIEW', 'CWCAF_READY'].includes(cwcRf.status)) {
+      throw new Error("CWCRF must be under risk review or have CWCAF ready");
+    }
+
+    cwcRf.status = "RMT_APPROVED";
+    cwcRf.statusHistory.push({
+      status: "RMT_APPROVED",
+      changedBy: rmtUserId,
+      notes: data?.notes || "RMT assessment complete — forwarded to Ops for risk triage",
+    });
+
+    await cwcRf.save();
+    return cwcRf;
+  }
+
+  /**
+   * Ops risk triage after RMT review (Phase 8)
+   * action: 'forward_to_epc' | 'reject'
+   */
+  async opsTriage(cwcRfId, opsUserId, { action, notes }) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    if (cwcRf.status !== "RMT_APPROVED") {
+      throw new Error("CWCRF must be in RMT_APPROVED status for triage");
+    }
+
+    if (action === "forward_to_epc") {
+      cwcRf.status = "BUYER_VERIFICATION_PENDING";
+      cwcRf.statusHistory.push({
+        status: "BUYER_VERIFICATION_PENDING",
+        changedBy: opsUserId,
+        notes: notes || "Ops triaged — forwarded to EPC for buyer verification",
+      });
+    } else if (action === "reject") {
+      cwcRf.status = "REJECTED";
+      cwcRf.statusHistory.push({
+        status: "REJECTED",
+        changedBy: opsUserId,
+        notes: notes || "Ops rejected after risk triage",
+      });
+    }
+
+    await cwcRf.save();
+    return cwcRf;
+  }
+
+  /**
+   * Get eligible NBFCs for a CWCRF (Phase 10.2)
+   * Filters by LPS: risk appetite, ticket size, tenure, sector, monthly capacity
+   */
+  async getMatchingNbfcs(cwcRfId) {
+    const cwcRf = await this.getCwcRfById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    const requestedAmount = cwcRf.buyerVerification?.approvedAmount || cwcRf.cwcRequest?.requestedAmount || 0;
+    const tenure = cwcRf.buyerVerification?.repaymentTimeline || cwcRf.cwcRequest?.requestedTenure || 30;
+
+    // Get risk category from CWCAF (via case) if available
+    const caseDoc = cwcRf.caseId ? await Case.findById(cwcRf.caseId) : null;
+    const riskCategory = caseDoc?.cwcaf?.riskCategory || "MEDIUM";
+
+    const nbfcs = await Nbfc.find({ status: "ACTIVE", activeLendingStatus: true });
+
+    const results = [];
+    for (const nbfc of nbfcs) {
+      const lps = nbfc.lendingPreferenceSheet;
+      if (!lps) continue;
+
+      let score = 0;
+      let reasons = [];
+
+      // Check ticket size
+      const minTicket = lps.ticketSize?.minimum || 0;
+      const maxTicket = lps.ticketSize?.maximum || Infinity;
+      if (requestedAmount < minTicket || requestedAmount > maxTicket) { reasons.push('ticket_size'); continue; }
+      score += 25;
+
+      // Check risk appetite
+      const accepted = lps.riskAppetite?.acceptedCategories || [];
+      if (!accepted.includes(riskCategory)) { reasons.push('risk_appetite'); continue; }
+      score += 25;
+
+      // Check tenure
+      const minDays = lps.tenurePreference?.minDays || 0;
+      const maxDays = lps.tenurePreference?.maxDays || 365;
+      if (tenure < minDays || tenure > maxDays) { reasons.push('tenure'); continue; }
+      score += 25;
+
+      // Check available monthly capacity
+      const available = (lps.monthlyCapacity?.totalLimit || 0) - (lps.monthlyCapacity?.utilized || 0);
+      if (available < requestedAmount) { reasons.push('capacity'); continue; }
+      score += 25;
+
+      results.push({
+        nbfcId: nbfc._id,
+        name: nbfc.name,
+        companyName: nbfc.companyName,
+        matchScore: score,
+        lps: {
+          interestRatePolicy: lps.interestRatePolicy,
+          riskAppetite: { acceptedCategories: lps.riskAppetite?.acceptedCategories },
+          ticketSize: lps.ticketSize,
+          tenurePreference: lps.tenurePreference,
+        },
+      });
+    }
+
+    results.sort((a, b) => b.matchScore - a.matchScore);
+    return { cwcRf, matchingNbfcs: results };
   }
 
   /**
@@ -197,6 +366,11 @@ class CwcRfService {
       throw new Error("Repayment Arrangement Logic (C) is mandatory");
     }
 
+    // Validate buyer declaration is accepted (Step 9.4)
+    if (!verificationData.buyerDeclaration?.accepted) {
+      throw new Error("Buyer declaration must be accepted before verifying");
+    }
+
     // Update buyer verification
     cwcRf.buyerVerification = {
       approvedAmount: verificationData.approvedAmount,
@@ -206,6 +380,11 @@ class CwcRfService {
         otherDetails: verificationData.repaymentArrangement.otherDetails,
         remarks: verificationData.repaymentArrangement.remarks,
       },
+      buyerDeclaration: {
+        accepted: true,
+        acceptedAt: new Date(),
+      },
+      notes: verificationData.notes,
       verifiedBy: userId,
       verifiedAt: new Date(),
     };

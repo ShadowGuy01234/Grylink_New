@@ -180,7 +180,8 @@ router.post(
 // ========================================
 
 /**
- * GET /api/cwcrf/ops/queue - Get CWCRFs awaiting Ops review (BUYER_APPROVED)
+ * GET /api/cwcrf/ops/queue - Get CWCRFs awaiting Ops review
+ * Phase 6 queue: SUBMITTED + OPS_REVIEW + RMT_APPROVED (triage)
  */
 router.get(
   "/ops/queue",
@@ -192,6 +193,56 @@ router.get(
       res.json({ cwcrfs });
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/ops/verify-section - Ops verifies a CWCRF section (Phase 6.2)
+ */
+router.post(
+  "/:id/ops/verify-section",
+  authenticate,
+  authorize("ops", "admin"),
+  async (req, res) => {
+    try {
+      const { section, verified, notes } = req.body;
+      if (!section) {
+        return res.status(400).json({ error: "section is required (sectionA, sectionB, sectionC, sectionD, raBill, wcc, measurementSheet)" });
+      }
+      const cwcRf = await cwcrfService.opsVerifySection(
+        req.params.id,
+        req.user._id,
+        { section, verified: !!verified, notes },
+      );
+      res.json({ message: `Section ${section} verification updated`, cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/ops/triage - Ops risk triage after RMT review (Phase 8)
+ */
+router.post(
+  "/:id/ops/triage",
+  authenticate,
+  authorize("ops", "admin"),
+  async (req, res) => {
+    try {
+      const { action, notes } = req.body;
+      if (!action || !["forward_to_epc", "reject"].includes(action)) {
+        return res.status(400).json({ error: "action must be 'forward_to_epc' or 'reject'" });
+      }
+      const cwcRf = await cwcrfService.opsTriage(
+        req.params.id,
+        req.user._id,
+        { action, notes },
+      );
+      res.json({ message: action === "forward_to_epc" ? "Forwarded to EPC" : "CWCRF rejected", cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
   },
 );
@@ -241,12 +292,33 @@ router.post(
 );
 
 /**
- * POST /api/cwcrf/:id/rmt/generate-cwcaf - Generate CWCAF
+ * POST /api/cwcrf/:id/rmt/forward-to-ops - RMT forwards completed assessment to Ops (Phase 7.5)
+ */
+router.post(
+  "/:id/rmt/forward-to-ops",
+  authenticate,
+  authorize("rmt", "admin"),
+  async (req, res) => {
+    try {
+      const cwcRf = await cwcrfService.rmtForwardToOps(
+        req.params.id,
+        req.user._id,
+        req.body,
+      );
+      res.json({ message: "Forwarded to Ops for risk triage", cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/rmt/generate-cwcaf - Generate CWCAF (Ops or RMT, Phase 10.1)
  */
 router.post(
   "/:id/rmt/generate-cwcaf",
   authenticate,
-  authorize("rmt", "admin"),
+  authorize("rmt", "ops", "admin"),
   async (req, res) => {
     try {
       const result = await cwcrfService.generateCwcaf(
@@ -265,12 +337,29 @@ router.post(
 );
 
 /**
- * POST /api/cwcrf/:id/share-with-nbfcs - Share CWCAF with matching NBFCs
+ * GET /api/cwcrf/:id/matching-nbfcs - Get eligible NBFCs for a CWCRF (Phase 10.2)
+ */
+router.get(
+  "/:id/matching-nbfcs",
+  authenticate,
+  authorize("ops", "rmt", "admin"),
+  async (req, res) => {
+    try {
+      const result = await cwcrfService.getMatchingNbfcs(req.params.id);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/share-with-nbfcs - Share CWCAF with matching NBFCs (Phase 10.3)
  */
 router.post(
   "/:id/share-with-nbfcs",
   authenticate,
-  authorize("rmt", "admin"),
+  authorize("ops", "rmt", "admin"),
   async (req, res) => {
     try {
       const result = await cwcrfService.shareWithNbfcs(

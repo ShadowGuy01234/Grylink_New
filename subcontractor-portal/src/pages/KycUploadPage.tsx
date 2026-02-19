@@ -50,11 +50,12 @@ const KycUploadPage = () => {
     overall: string;
     documents: Record<string, { uploaded: boolean; url?: string; status?: string; rejectionReason?: string }>;
     bankDetailsVerified: boolean;
-    bankDetails?: { accountNumber?: string; ifscCode?: string; bankName?: string; branchName?: string; accountHolderName?: string };
+    bankDetails?: { accountNumber?: string; ifscCode?: string; bankName?: string; branchName?: string; accountHolderName?: string; accountType?: string };
     additionalDocuments?: AdditionalDocument[];
   } | null>(null);
   const [bankDetails, setBankDetails] = useState({
-    accountNumber: '', ifscCode: '', bankName: '', branchName: '', accountHolderName: ''
+    accountNumber: '', ifscCode: '', bankName: '', branchName: '', accountHolderName: '',
+    accountType: 'savings' as 'savings' | 'current'
   });
   const [savingBank, setSavingBank] = useState(false);
   const [uploadingAdditional, setUploadingAdditional] = useState<string | null>(null);
@@ -74,7 +75,8 @@ const KycUploadPage = () => {
           ifscCode: res.data.bankDetails.ifscCode || '',
           bankName: res.data.bankDetails.bankName || '',
           branchName: res.data.bankDetails.branchName || '',
-          accountHolderName: res.data.bankDetails.accountHolderName || ''
+          accountHolderName: res.data.bankDetails.accountHolderName || '',
+          accountType: (res.data.bankDetails.accountType as 'savings' | 'current') || 'savings'
         });
       }
     } catch {
@@ -505,6 +507,18 @@ const KycUploadPage = () => {
               <div className="space-y-2">
                 <Label>Branch Name</Label>
                 <Input value={bankDetails.branchName} onChange={(e) => setBankDetails(prev => ({ ...prev, branchName: e.target.value }))} placeholder="Enter branch name (optional)" disabled={kycStatus?.bankDetailsVerified} />
+              </div>
+              <div className="space-y-2">
+                <Label required>Account Type</Label>
+                <select
+                  value={bankDetails.accountType}
+                  onChange={(e) => setBankDetails(prev => ({ ...prev, accountType: e.target.value as 'savings' | 'current' }))}
+                  disabled={kycStatus?.bankDetailsVerified}
+                  className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="savings">Savings Account</option>
+                  <option value="current">Current Account</option>
+                </select>
               </div>
               <div className="flex items-end">
                 {kycStatus?.bankDetailsVerified ? (

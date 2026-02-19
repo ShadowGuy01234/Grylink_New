@@ -11,7 +11,8 @@ const SalesDashboard = () => {
   const [contactNotes, setContactNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    companyName: '', ownerName: '', email: '', phone: '', address: ''
+    companyName: '', ownerName: '', email: '', phone: '', address: '',
+    gstNumber: '', city: '', state: '', notes: ''
   });
   const [creating, setCreating] = useState(false);
 
@@ -41,7 +42,7 @@ const SalesDashboard = () => {
       await salesApi.createLead(formData);
       toast.success('Company lead created! Onboarding link sent.');
       setShowCreateModal(false);
-      setFormData({ companyName: '', ownerName: '', email: '', phone: '', address: '' });
+      setFormData({ companyName: '', ownerName: '', email: '', phone: '', address: '', gstNumber: '', city: '', state: '', notes: '' });
       fetchData();
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to create lead');
@@ -225,6 +226,33 @@ const SalesDashboard = () => {
                 <label>Address *</label>
                 <textarea required value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>GST Number</label>
+                <input placeholder="e.g. 22AAAAA0000A1Z5 (optional)" value={formData.gstNumber}
+                  onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })} />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>City</label>
+                  <input placeholder="City" value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>State</label>
+                  <select value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}>
+                    <option value="">-- Select State --</option>
+                    {['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'].map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Notes (optional)</label>
+                <textarea placeholder="Internal notes about this lead..." value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../api';
+import { api, cwcrfApi } from '../api';
 import toast from 'react-hot-toast';
 
 interface NbfcCase {
@@ -39,6 +39,7 @@ const NbfcDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
   const [responseModal, setResponseModal] = useState<NbfcCase | null>(null);
+  const [availableCwcrfCount, setAvailableCwcrfCount] = useState(0);
   const [responseForm, setResponseForm] = useState({
     fundingPercentage: 65,
     interestRate: 12,
@@ -49,14 +50,20 @@ const NbfcDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [casesRes, dashboardRes, transactionsRes] = await Promise.all([
-        api.get('/nbfc/cases'),
-        api.get('/nbfc/dashboard'),
-        api.get('/transactions'),
+      const [casesRes, dashboardRes, transactionsRes, cwcrfsRes] = await Promise.all([
+        api.get('/nbfc/cases').catch(() => ({ data: [] })),
+        api.get('/nbfc/dashboard').catch(() => ({ data: null })),
+        api.get('/transactions').catch(() => ({ data: [] })),
+        cwcrfApi.getAvailableCwcrfs().catch(() => ({ data: { cwcrfs: [] } })),
       ]);
       setCases(casesRes.data);
       setDashboard(dashboardRes.data);
       setTransactions(transactionsRes.data);
+      const cwcrfsData = cwcrfsRes.data;
+      setAvailableCwcrfCount(
+        Array.isArray(cwcrfsData) ? cwcrfsData.length :
+        Array.isArray(cwcrfsData?.cwcrfs) ? cwcrfsData.cwcrfs.length : 0
+      );
     } catch {
       toast.error('Failed to load data');
     } finally {
@@ -139,7 +146,20 @@ const NbfcDashboard: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-6">NBFC Dashboard</h1>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+          <div
+            className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md border-2 border-emerald-200 col-span-1 md:col-span-2"
+            onClick={() => navigate('/nbfc/quotations')}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-3xl font-bold text-emerald-600">{availableCwcrfCount}</h3>
+                <p className="text-gray-600 font-medium">Available CWCAFs</p>
+                <p className="text-xs text-emerald-700 mt-1">Click to view &amp; submit quotes →</p>
+              </div>
+              <div className="text-3xl">📋</div>
+            </div>
+          </div>
           <div className="bg-white rounded-lg shadow p-4">
             <h3 className="text-3xl font-bold text-blue-600">{dashboard?.totalCases || 0}</h3>
             <p className="text-gray-600">Total Cases</p>
@@ -157,12 +177,6 @@ const NbfcDashboard: React.FC = () => {
               {formatCurrency(dashboard?.totalDisbursed || 0)}
             </h3>
             <p className="text-gray-600">Total Disbursed</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-3xl font-bold text-indigo-600">
-              {dashboard?.approvalRate || 0}%
-            </h3>
-            <p className="text-gray-600">Approval Rate</p>
           </div>
         </div>
 

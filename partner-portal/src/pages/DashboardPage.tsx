@@ -54,6 +54,8 @@ const DashboardPage = () => {
     repaymentTimeline: 30 as 30 | 45 | 60 | 90,
     repaymentArrangement: { source: "PAYMENT_FROM_RA_BILL", remarks: "", otherDetails: "" },
     rejectionReason: "",
+    notes: "",
+    buyerDeclarationAccepted: false,
   });
   const [cwcrfDecisionLoading, setCwcrfDecisionLoading] = useState(false);
 
@@ -221,6 +223,8 @@ const DashboardPage = () => {
         approvedAmount: cwcrfVerifyForm.approvedAmount,
         repaymentTimeline: cwcrfVerifyForm.repaymentTimeline,
         repaymentArrangement: cwcrfVerifyForm.repaymentArrangement,
+        notes: cwcrfVerifyForm.notes,
+        buyerDeclaration: { accepted: cwcrfVerifyForm.buyerDeclarationAccepted },
       });
       toast.success("CWCRF approved successfully");
       setSelectedCwcrf(null);
@@ -987,6 +991,8 @@ const DashboardPage = () => {
                                     repaymentTimeline: 30,
                                     repaymentArrangement: { source: "PAYMENT_FROM_RA_BILL", remarks: "", otherDetails: "" },
                                     rejectionReason: "",
+                                    notes: "",
+                                    buyerDeclarationAccepted: false,
                                   });
                                 }}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors"
@@ -1250,6 +1256,32 @@ const DashboardPage = () => {
                             />
                           </div>
 
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Verification Notes (optional)</label>
+                            <textarea
+                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
+                              rows={2}
+                              value={cwcrfVerifyForm.notes}
+                              onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, notes: e.target.value }))}
+                              placeholder="Internal notes for Ops / RMT team..."
+                            />
+                          </div>
+
+                          {/* Buyer Declaration */}
+                          <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                            <input
+                              type="checkbox"
+                              id="buyerDeclaration"
+                              checked={cwcrfVerifyForm.buyerDeclarationAccepted}
+                              onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, buyerDeclarationAccepted: e.target.checked }))}
+                              className="mt-0.5 w-4 h-4 accent-emerald-600 cursor-pointer flex-shrink-0"
+                            />
+                            <label htmlFor="buyerDeclaration" className="text-xs text-amber-900 cursor-pointer leading-relaxed">
+                              <span className="font-bold">Declaration: </span>
+                              I confirm that the sub-contractor named in this CWCRF is a registered vendor on our rolls, the invoice referenced is genuine, and the work described has been executed to satisfaction. I authorise the disbursement of the approved amount to this vendor through the GryLink CWC facility.
+                            </label>
+                          </div>
+
                           <div className="flex gap-3 pt-1">
                             <button
                               onClick={() => setCwcrfActionMode(null)}
@@ -1257,7 +1289,7 @@ const DashboardPage = () => {
                             >Back</button>
                             <button
                               onClick={handleCwcrfApprove}
-                              disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.approvedAmount}
+                              disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.approvedAmount || !cwcrfVerifyForm.buyerDeclarationAccepted}
                               className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50"
                             >
                               {cwcrfDecisionLoading ? "Processing..." : "Confirm Approval"}
