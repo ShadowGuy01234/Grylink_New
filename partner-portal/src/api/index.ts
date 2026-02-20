@@ -84,6 +84,32 @@ export const nbfcApi = {
   // LPS Management
   getLps: () => api.get("/nbfc/lps"),
   updateLps: (lpsData: any) => api.put("/nbfc/lps", lpsData),
+  // NBFC Post-Quotation Process (Phase 11.4)
+  getProcessCwcrfs: () => api.get("/cwcrf/nbfc/process"),
+  startDueDiligence: (cwcrfId: string) =>
+    api.post(`/cwcrf/${cwcrfId}/nbfc/start-due-diligence`),
+  completeDueDiligence: (cwcrfId: string, data: {
+    result: "APPROVED" | "REJECTED" | "CONDITIONAL";
+    checklist?: Record<string, boolean>;
+    notes?: string;
+    conditions?: string;
+  }) => api.post(`/cwcrf/${cwcrfId}/nbfc/complete-due-diligence`, data),
+  issueSanctionLetter: (cwcrfId: string, data: {
+    sanctionAmount: number;
+    sanctionedInterestRate: number;
+    sanctionedTenure: number;
+    specialConditions?: string;
+    letterUrl?: string;
+  }) => api.post(`/cwcrf/${cwcrfId}/nbfc/issue-sanction`, data),
+  initiateDisbursement: (cwcrfId: string, data: {
+    amount: number;
+    disbursementMode?: string;
+    escrowAccountId?: string;
+  }) => api.post(`/cwcrf/${cwcrfId}/nbfc/initiate-disbursement`, data),
+  confirmDisbursement: (cwcrfId: string, data: {
+    utrNumber: string;
+    disbursedAt?: string;
+  }) => api.post(`/cwcrf/${cwcrfId}/nbfc/confirm-disbursement`, data),
 };
 
 // ============= CWCRF APIs (EPC Buyer Verification) =============

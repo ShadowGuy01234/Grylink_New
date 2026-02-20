@@ -104,21 +104,35 @@ router.post(
   },
 );
 
-// POST /api/subcontractor/bill-with-cwcrf - Submit bill + CWCRF together (new flow)
+// POST /api/subcontractor/bill-with-cwcrf - Submit bill + CWCRF together (Phase 5.2)
 router.post(
   "/bill-with-cwcrf",
   authenticate,
   authorize("subcontractor"),
-  uploadBills.single("bill"),
+  uploadBills.fields([
+    { name: "raBill", maxCount: 1 },
+    { name: "wcc", maxCount: 1 },
+    { name: "measurementSheet", maxCount: 1 },
+  ]),
   async (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ error: "Bill file is required" });
+      const raBill = req.files?.raBill?.[0];
+      if (!raBill) {
+        return res.status(400).json({ error: "RA Bill file is required" });
       }
+      const wcc = req.files?.wcc?.[0] || null;
+      const measSheet = req.files?.measurementSheet?.[0] || null;
+
+      // Parse CWCRF JSON data sent alongside files
+      let cwcrfData = {};
+      if (req.body.cwcrfData) {
+        try { cwcrfData = JSON.parse(req.body.cwcrfData); } catch { cwcrfData = {}; }
+      }
+
       const result = await subContractorService.uploadBillWithCwcrf(
         req.user._id,
-        [req.file],
-        req.body,
+        { raBill, wcc, measurementSheet: measSheet },
+        cwcrfData,
       );
       res.status(201).json(result);
     } catch (error) {

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, Building2, Receipt, Target, Percent, Clock, CheckCircle2,
   AlertCircle, FileText, Banknote, Calendar, MapPin, Hash,
-  TrendingUp, Timer, History, ChevronRight
+  TrendingUp, Timer, History, ChevronRight, Shield, CreditCard
 } from 'lucide-react';
 
 interface CwcrfDetail {
@@ -55,6 +55,48 @@ interface CwcrfDetail {
     interestRate: number;
     selectedAt: string;
   };
+  platformFeePaid?: boolean;
+  platformFeeAmount?: number;
+  paymentReference?: string;
+  nbfcProcess?: {
+    dueDiligence: {
+      started: boolean;
+      startedAt?: string;
+      checklist: {
+        kycVerified: boolean;
+        bankStatementReviewed: boolean;
+        invoiceAuthenticated: boolean;
+        epcConfirmationReceived: boolean;
+        creditScoreChecked: boolean;
+        collateralAssessed: boolean;
+      };
+      notes?: string;
+      completedAt?: string;
+      result?: 'APPROVED' | 'REJECTED' | 'CONDITIONAL';
+      conditions?: string;
+    };
+    sanctionLetter: {
+      issued: boolean;
+      issuedAt?: string;
+      sanctionAmount?: number;
+      sanctionedInterestRate?: number;
+      sanctionedTenure?: number;
+      specialConditions?: string;
+      letterUrl?: string;
+      acceptedBySc: boolean;
+      acceptedAt?: string;
+    };
+    disbursement: {
+      initiated: boolean;
+      initiatedAt?: string;
+      amount?: number;
+      utrNumber?: string;
+      disbursedAt?: string;
+      disbursementMode?: string;
+      confirmed: boolean;
+      confirmedAt?: string;
+    };
+  };
   timeline: Array<{
     status: string;
     timestamp: string;
@@ -74,7 +116,8 @@ const statusSteps = [
   { key: 'SHARED_WITH_NBFC', label: 'Shared with NBFCs', icon: Building2 },
   { key: 'QUOTATIONS_RECEIVED', label: 'Quotes Received', icon: Banknote },
   { key: 'NBFC_SELECTED', label: 'NBFC Selected', icon: CheckCircle2 },
-  { key: 'DOCUMENTATION_PENDING', label: 'Documentation', icon: FileText },
+  { key: 'NBFC_DUE_DILIGENCE', label: 'Due Diligence', icon: Target },
+  { key: 'NBFC_SANCTIONED', label: 'Sanction Issued', icon: FileText },
   { key: 'DISBURSED', label: 'Disbursed', icon: Banknote }
 ];
 
@@ -88,8 +131,11 @@ const statusLabels: Record<string, string> = {
   SHARED_WITH_NBFC: 'Shared with NBFCs',
   QUOTATIONS_RECEIVED: 'Quotations Received',
   NBFC_SELECTED: 'NBFC Selected',
-  DOCUMENTATION_PENDING: 'Documentation Pending',
-  DISBURSED: 'Disbursed',
+  MOVED_TO_NBFC_PROCESS: 'NBFC Processing',
+  NBFC_DUE_DILIGENCE: 'Due Diligence In Progress',
+  NBFC_SANCTIONED: 'Sanction Letter Issued',
+  DISBURSEMENT_INITIATED: 'Disbursement In Progress',
+  DISBURSED: 'Funds Disbursed',
   REJECTED: 'Rejected',
   CANCELLED: 'Cancelled'
 };
@@ -100,6 +146,7 @@ const CwcrfDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [cwcrf, setCwcrf] = useState<CwcrfDetail | null>(null);
   const [selectingNbfc, setSelectingNbfc] = useState(false);
+  const [acceptingSanction, setAcceptingSanction] = useState(false);
 
   useEffect(() => {
     loadCwcrfDetail();
@@ -132,6 +179,20 @@ const CwcrfDetailPage = () => {
     }
   };
 
+  const handleAcceptSanction = async () => {
+    if (!cwcrf) return;
+    setAcceptingSanction(true);
+    try {
+      await cwcrfApi.acceptSanctionLetter(cwcrf._id);
+      toast.success('Sanction letter accepted!');
+      loadCwcrfDetail();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to accept sanction letter');
+    } finally {
+      setAcceptingSanction(false);
+    }
+  };
+
   const getStatusIndex = (status: string) => {
     const idx = statusSteps.findIndex((s) => s.key === status);
     return idx >= 0 ? idx : 0;
@@ -140,7 +201,8 @@ const CwcrfDetailPage = () => {
   const getStatusVariant = (status: string): 'success' | 'destructive' | 'warning' | 'secondary' => {
     if (['DISBURSED'].includes(status)) return 'success';
     if (['REJECTED', 'CANCELLED', 'BUYER_REJECTED'].includes(status)) return 'destructive';
-    if (['QUOTATIONS_RECEIVED', 'NBFC_SELECTED'].includes(status)) return 'warning';
+    if (['QUOTATIONS_RECEIVED', 'NBFC_SELECTED', 'NBFC_SANCTIONED', 'DISBURSEMENT_INITIATED'].includes(status)) return 'warning';
+    if (['NBFC_DUE_DILIGENCE', 'MOVED_TO_NBFC_PROCESS'].includes(status)) return 'secondary';
     return 'secondary';
   };
 
@@ -253,6 +315,41 @@ const CwcrfDetailPage = () => {
             <div>
               <p className="font-medium text-amber-900">Action Required</p>
               <p className="text-amber-700 text-sm">You have received quotations from NBFCs. Please review and select one to proceed.</p>
+            </div>
+          </motion.div>
+        )}
+        {cwcrf.status === 'NBFC_SANCTIONED' && cwcrf.nbfcProcess?.sanctionLetter?.issued && !cwcrf.nbfcProcess?.sanctionLetter?.acceptedBySc && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-4"
+          >
+            <div className="flex items-start gap-3">
+              <FileText className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-green-900">Sanction Letter Issued - Your Acceptance Required</p>
+                <p className="text-green-700 text-sm mt-1">The NBFC has issued a sanction letter. Review the terms below and accept to proceed with disbursement.</p>
+                <div className="grid sm:grid-cols-3 gap-3 mt-3 bg-white rounded-lg p-3 border border-green-100">
+                  <div>
+                    <p className="text-xs text-gray-500">Sanctioned Amount</p>
+                    <p className="font-bold text-green-700">{formatCurrency(cwcrf.nbfcProcess.sanctionLetter.sanctionAmount || 0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Interest Rate</p>
+                    <p className="font-bold text-gray-900">{cwcrf.nbfcProcess.sanctionLetter.sanctionedInterestRate}% p.a.</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Tenure</p>
+                    <p className="font-bold text-gray-900">{cwcrf.nbfcProcess.sanctionLetter.sanctionedTenure} days</p>
+                  </div>
+                </div>
+                {cwcrf.nbfcProcess.sanctionLetter.specialConditions && (
+                  <p className="text-sm text-green-700 mt-2"><span className="font-medium">Conditions:</span> {cwcrf.nbfcProcess.sanctionLetter.specialConditions}</p>
+                )}
+                <Button className="mt-3" onClick={handleAcceptSanction} disabled={acceptingSanction}>
+                  {acceptingSanction ? 'Accepting...' : 'Accept Sanction Letter'}
+                  <CheckCircle2 className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -468,6 +565,111 @@ const CwcrfDetailPage = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* NBFC Process Tracker */}
+          {cwcrf.nbfcProcess && (cwcrf.nbfcProcess.dueDiligence?.started || cwcrf.nbfcProcess.sanctionLetter?.issued || cwcrf.nbfcProcess.disbursement?.initiated) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5 text-indigo-600" />NBFC Process</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Due Diligence */}
+                {cwcrf.nbfcProcess.dueDiligence?.started && (
+                  <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="h-4 w-4 text-indigo-600" />
+                      <span className="font-medium text-indigo-900 text-sm">Due Diligence</span>
+                      <Badge variant={cwcrf.nbfcProcess.dueDiligence.result === 'APPROVED' ? 'success' : cwcrf.nbfcProcess.dueDiligence.result === 'REJECTED' ? 'destructive' : cwcrf.nbfcProcess.dueDiligence.result === 'CONDITIONAL' ? 'warning' : 'secondary'}>
+                        {cwcrf.nbfcProcess.dueDiligence.result || 'In Progress'}
+                      </Badge>
+                    </div>
+                    {cwcrf.nbfcProcess.dueDiligence.completedAt && (
+                      <p className="text-xs text-indigo-600">Completed: {formatDate(cwcrf.nbfcProcess.dueDiligence.completedAt)}</p>
+                    )}
+                    {cwcrf.nbfcProcess.dueDiligence.conditions && (
+                      <p className="text-xs text-gray-600 mt-1">Conditions: {cwcrf.nbfcProcess.dueDiligence.conditions}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Sanction Letter */}
+                {cwcrf.nbfcProcess.sanctionLetter?.issued && (
+                  <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-green-900 text-sm">Sanction Letter</span>
+                      {cwcrf.nbfcProcess.sanctionLetter.acceptedBySc ? (
+                        <Badge variant="success">Accepted</Badge>
+                      ) : (
+                        <Badge variant="warning">Pending Acceptance</Badge>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-gray-500">Amount</p>
+                        <p className="font-medium">{formatCurrency(cwcrf.nbfcProcess.sanctionLetter.sanctionAmount || 0)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Rate</p>
+                        <p className="font-medium">{cwcrf.nbfcProcess.sanctionLetter.sanctionedInterestRate}% p.a.</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Tenure</p>
+                        <p className="font-medium">{cwcrf.nbfcProcess.sanctionLetter.sanctionedTenure} days</p>
+                      </div>
+                      {cwcrf.nbfcProcess.sanctionLetter.issuedAt && (
+                        <div>
+                          <p className="text-xs text-gray-500">Issued</p>
+                          <p className="font-medium">{formatDate(cwcrf.nbfcProcess.sanctionLetter.issuedAt)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Disbursement */}
+                {cwcrf.nbfcProcess.disbursement?.initiated && (
+                  <div className={`p-3 rounded-lg border ${
+                    cwcrf.nbfcProcess.disbursement.confirmed ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-100'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CreditCard className={`h-4 w-4 ${cwcrf.nbfcProcess.disbursement.confirmed ? 'text-emerald-600' : 'text-amber-600'}`} />
+                      <span className={`font-medium text-sm ${cwcrf.nbfcProcess.disbursement.confirmed ? 'text-emerald-900' : 'text-amber-900'}`}>Disbursement</span>
+                      <Badge variant={cwcrf.nbfcProcess.disbursement.confirmed ? 'success' : 'warning'}>
+                        {cwcrf.nbfcProcess.disbursement.confirmed ? 'Completed' : 'Initiated'}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {cwcrf.nbfcProcess.disbursement.amount && (
+                        <div>
+                          <p className="text-xs text-gray-500">Amount</p>
+                          <p className="font-bold text-emerald-700">{formatCurrency(cwcrf.nbfcProcess.disbursement.amount)}</p>
+                        </div>
+                      )}
+                      {cwcrf.nbfcProcess.disbursement.disbursementMode && (
+                        <div>
+                          <p className="text-xs text-gray-500">Mode</p>
+                          <p className="font-medium">{cwcrf.nbfcProcess.disbursement.disbursementMode}</p>
+                        </div>
+                      )}
+                      {cwcrf.nbfcProcess.disbursement.utrNumber && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500">UTR Number</p>
+                          <p className="font-mono font-medium text-gray-900">{cwcrf.nbfcProcess.disbursement.utrNumber}</p>
+                        </div>
+                      )}
+                      {cwcrf.nbfcProcess.disbursement.confirmedAt && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500">Disbursed On</p>
+                          <p className="font-medium">{formatDate(cwcrf.nbfcProcess.disbursement.confirmedAt)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Status History */}
           {cwcrf.timeline && cwcrf.timeline.length > 0 && (

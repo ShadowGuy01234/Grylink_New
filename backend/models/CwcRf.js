@@ -231,6 +231,10 @@ const cwcRfSchema = new mongoose.Schema(
         "QUOTES_RECEIVED",               // NBFCs submitted quotes
         "NBFC_SELECTED",                 // Seller picked an NBFC
         "MOVED_TO_NBFC_PROCESS",         // Handed off to NBFC
+        "NBFC_DUE_DILIGENCE",            // NBFC running due diligence (Phase 11.4)
+        "NBFC_SANCTIONED",               // NBFC issued sanction letter (Phase 11.4)
+        "DISBURSEMENT_INITIATED",        // Disbursement process started (Phase 11.4)
+        "DISBURSED",                     // Funds disbursed to SC (Phase 11.4)
         "ACTION_REQUIRED",               // Issues need resolution
         "REJECTED",                      // Final rejection
         "COMPLETED",                     // Successfully funded
@@ -266,6 +270,56 @@ const cwcRfSchema = new mongoose.Schema(
       selectedAt: { type: Date },
       finalInterestRate: { type: Number },
       finalTenure: { type: Number },
+    },
+
+    // ========================================
+    // NBFC POST-QUOTATION PROCESS (Phase 11.4)
+    // ========================================
+    nbfcProcess: {
+      // Due Diligence
+      dueDiligence: {
+        started: { type: Boolean, default: false },
+        startedAt: { type: Date },
+        checklist: {
+          kycVerified: { type: Boolean, default: false },
+          bankStatementReviewed: { type: Boolean, default: false },
+          invoiceAuthenticated: { type: Boolean, default: false },
+          epcConfirmationReceived: { type: Boolean, default: false },
+          creditScoreChecked: { type: Boolean, default: false },
+          collateralAssessed: { type: Boolean, default: false },
+        },
+        notes: { type: String, trim: true },
+        completedAt: { type: Date },
+        completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        result: { type: String, enum: ["APPROVED", "REJECTED", "CONDITIONAL"], },
+        conditions: { type: String, trim: true },
+      },
+      // Sanction Letter
+      sanctionLetter: {
+        issued: { type: Boolean, default: false },
+        issuedAt: { type: Date },
+        issuedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        sanctionAmount: { type: Number },
+        sanctionedInterestRate: { type: Number },
+        sanctionedTenure: { type: Number },
+        specialConditions: { type: String, trim: true },
+        letterUrl: { type: String },                   // Uploaded sanction letter PDF
+        acceptedBySc: { type: Boolean, default: false },
+        acceptedAt: { type: Date },
+      },
+      // Disbursement
+      disbursement: {
+        initiated: { type: Boolean, default: false },
+        initiatedAt: { type: Date },
+        initiatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        amount: { type: Number },
+        utrNumber: { type: String, trim: true },       // Bank UTR
+        disbursedAt: { type: Date },
+        disbursementMode: { type: String, enum: ["NEFT", "RTGS", "IMPS", "OTHER"], default: "NEFT" },
+        escrowAccountId: { type: String, trim: true },
+        confirmed: { type: Boolean, default: false },
+        confirmedAt: { type: Date },
+      },
     },
 
     // Platform fee
