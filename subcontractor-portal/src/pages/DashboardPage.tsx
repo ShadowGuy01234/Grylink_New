@@ -15,7 +15,9 @@ import {
   Hash, ChevronRight, CheckCircle2, Clock, AlertCircle, XCircle,
   TrendingUp, LayoutDashboard, MapPin, CreditCard, IndianRupee,
   ArrowUpRight, CalendarDays, ClipboardList, FilePlus2, FolderUp, Paperclip,
+  HelpCircle,
 } from "lucide-react";
+import HelpCenterTab from "../components/HelpCenterTab";
 
 const DashboardPage = () => {
   const { logout } = useAuth();
@@ -228,6 +230,7 @@ const DashboardPage = () => {
       badge: (() => { const n = sc?.additionalDocuments?.filter((d: any) => d.status === "REQUESTED").length; return n > 0 ? n : undefined; })() },
     { id: "cases",          label: "Cases",         icon: FolderOpen },
     { id: "bids",           label: "Bids",          icon: Gavel, badge: pendingBids.length > 0 ? pendingBids.length : undefined },
+    { id: "help",           label: "Help Center",   icon: HelpCircle },
   ];
 
   const statusConfig: Record<string, { variant: "success" | "warning" | "destructive" | "secondary"; label: string }> = {
@@ -262,6 +265,7 @@ const DashboardPage = () => {
     "additional-docs":"Additional Documents",
     cases:            "Cases",
     bids:             "My Bids",
+    help:             "Help Center",
   };
 
   const tabDescriptions: Record<string, string> = {
@@ -272,6 +276,7 @@ const DashboardPage = () => {
     "additional-docs":"Upload documents requested by the operations team",
     cases:            "Track your financing cases",
     bids:             "View and respond to bid offers",
+    help:             "FAQ, virtual assistant, and support contact",
   };
 
   return (
@@ -1006,6 +1011,9 @@ const DashboardPage = () => {
             </Card>
           </motion.div>
         )}
+
+        {/* ── Help Center ── */}
+        {activeTab === "help" && <HelpCenterTab />}
 
       </AnimatePresence>
       </main>

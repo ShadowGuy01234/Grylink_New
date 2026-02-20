@@ -3,6 +3,7 @@ import { companyApi, casesApi, bidsApi, cwcrfApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import HelpCenterTab from "../components/HelpCenterTab";
 
 // Components
 import {
@@ -464,6 +465,17 @@ const DashboardPage = () => {
               </span>
             )}
           </button>
+
+          <button
+            onClick={() => setActiveTab("help")}
+            className={`nav-item ${activeTab === "help" ? "active" : ""}`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Help Center
+          </button>
         </nav>
 
         <div className="mt-auto pt-8 border-t border-slate-100">
@@ -513,6 +525,7 @@ const DashboardPage = () => {
                 billreview: "Invoice Review",
                 cwcrfverify: "CWC Request Forms",
                 bids: "My Bids",
+                help: "Help Center",
               } as Record<string, string>)[activeTab] ?? "Dashboard"}
             </h2>
             <p className="text-slate-500">
@@ -524,6 +537,7 @@ const DashboardPage = () => {
                 billreview: "Review and approve invoices from sub-contractors",
                 cwcrfverify: "Review and respond to CWC Request Forms",
                 bids: "Track and manage your bid commitments",
+                help: "FAQ, virtual assistant, and support contact",
               } as Record<string, string>)[activeTab] ?? "Manage your partnership details"}
             </p>
           </div>
@@ -1470,6 +1484,11 @@ const DashboardPage = () => {
                   </motion.div>
                 </div>
               )}
+            </motion.div>
+          )}
+          {activeTab === "help" && (
+            <motion.div key="help" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+              <HelpCenterTab userRole={isEpc ? "epc" : "nbfc"} />
             </motion.div>
           )}
         </AnimatePresence>

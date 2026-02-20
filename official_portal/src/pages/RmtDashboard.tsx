@@ -134,6 +134,7 @@ const RmtDashboard: React.FC = () => {
   const [showNbfcModal, setShowNbfcModal] = useState(false);
   const [matchingNbfcs, setMatchingNbfcs] = useState<MatchingNbfc[]>([]);
   const [selectedNbfcs, setSelectedNbfcs] = useState<string[]>([]);
+  const [caseDetailCwcrf, setCaseDetailCwcrf] = useState<Cwcrf | null>(null);
   const [cwcafForm, setCwcafForm] = useState<CwcafFormData>({
     sellerProfileSummary: {
       businessAge: 0,
@@ -520,7 +521,13 @@ const RmtDashboard: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">{statusBadge(cwcrf.status)}</td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => setCaseDetailCwcrf(cwcrf)}
+                            className="text-indigo-600 hover:bg-indigo-50 border border-indigo-200 text-xs px-2.5 py-1 rounded-lg font-medium transition-colors"
+                          >
+                            View Details
+                          </button>
                           {(cwcrf.status === "UNDER_RISK_REVIEW" || cwcrf.status === "BUYER_APPROVED") && (
                             <button
                               onClick={() => {
@@ -1228,6 +1235,243 @@ const RmtDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ═══ Case Detail Modal ═══ */}
+        {caseDetailCwcrf && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-start justify-center z-50 p-4 overflow-y-auto" id="case-detail-overlay">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-8" id="case-detail-printable">
+              {/* ── Modal Header ── */}
+              <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-sky-50 rounded-t-2xl no-print-header">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-2xl font-bold text-gray-900">{caseDetailCwcrf.cwcRfNumber}</span>
+                    <span style={{
+                      display: "inline-block",
+                      padding: "3px 12px",
+                      borderRadius: 20,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      background: caseDetailCwcrf.status === "CWCAF_READY" ? "#d1fae5" : caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ? "#dbeafe" : "#fef3c7",
+                      color: caseDetailCwcrf.status === "CWCAF_READY" ? "#065f46" : caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ? "#1e40af" : "#92400e",
+                    }}>
+                      {caseDetailCwcrf.status?.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Submitted: {caseDetailCwcrf.createdAt ? new Date(caseDetailCwcrf.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      const overlay = document.getElementById("case-detail-overlay");
+                      if (overlay) overlay.style.display = "none";
+                      window.print();
+                      if (overlay) overlay.style.display = "";
+                    }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      background: "#4f46e5", color: "white",
+                      border: "none", borderRadius: 8,
+                      padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                    }}
+                  >
+                    🖨️ Print / Download PDF
+                  </button>
+                  <button
+                    onClick={() => setCaseDetailCwcrf(null)}
+                    style={{ background: "none", border: "none", fontSize: 24, color: "#94a3b8", cursor: "pointer", lineHeight: 1 }}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              {/* ── Print Header (only visible when printing) ── */}
+              <div className="print-only-header" style={{ display: "none", padding: "24px 28px 0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #4f46e5", paddingBottom: 16, marginBottom: 24 }}>
+                  <div>
+                    <h1 style={{ fontSize: 22, fontWeight: 800, color: "#1e293b", margin: "0 0 4px" }}>Gryork Platform — CWCRF Case Report</h1>
+                    <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Credit on Working Capital Request Form — Detailed Assessment</p>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#1e293b", margin: "0 0 2px" }}>{caseDetailCwcrf.cwcRfNumber}</p>
+                    <p style={{ fontSize: 11, color: "#64748b", margin: 0 }}>Printed: {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Body ── */}
+              <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20 }}>
+
+                {/* Row 1: SC + EPC + Status */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                  {/* Sub-Contractor */}
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px" }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", margin: "0 0 10px" }}>Sub-Contractor (Seller)</p>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                      {caseDetailCwcrf.subContractorId?.companyName || "—"}
+                    </p>
+                    <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>ID: {caseDetailCwcrf.subContractorId?._id?.slice(-8) || "—"}</p>
+                  </div>
+                  {/* EPC Buyer */}
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px" }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", margin: "0 0 10px" }}>EPC Buyer</p>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                      {caseDetailCwcrf.buyerDetails?.buyerName || "—"}
+                    </p>
+                    <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>GSTIN: {caseDetailCwcrf.buyerDetails?.buyerGstin || "—"}</p>
+                    {caseDetailCwcrf.buyerVerification?.verifiedAt && (
+                      <p style={{ fontSize: 11, color: "#059669", fontWeight: 600, marginTop: 4 }}>✓ Buyer Verified</p>
+                    )}
+                  </div>
+                  {/* Case Status */}
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px" }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", margin: "0 0 10px" }}>Case Status</p>
+                    <span style={{
+                      display: "inline-block",
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      background: caseDetailCwcrf.status === "CWCAF_READY" ? "#d1fae5" : caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ? "#dbeafe" : "#fef3c7",
+                      color: caseDetailCwcrf.status === "CWCAF_READY" ? "#065f46" : caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ? "#1e40af" : "#92400e",
+                    }}>
+                      {caseDetailCwcrf.status?.replace(/_/g, " ") || "—"}
+                    </span>
+                    <p style={{ fontSize: 12, color: "#64748b", margin: "8px 0 0" }}>
+                      Submitted: {caseDetailCwcrf.createdAt ? new Date(caseDetailCwcrf.createdAt).toLocaleDateString("en-IN") : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: 0 }} />
+
+                {/* Section B: Invoice Details */}
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#4f46e5", margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                    📄 Section B — Invoice Details
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                    {[
+                      { label: "Invoice Number", value: caseDetailCwcrf.invoiceDetails?.invoiceNumber || "—" },
+                      { label: "Invoice Amount", value: caseDetailCwcrf.invoiceDetails?.invoiceAmount ? `₹${caseDetailCwcrf.invoiceDetails.invoiceAmount.toLocaleString()}` : "—" },
+                      { label: "Invoice Date", value: caseDetailCwcrf.invoiceDetails?.invoiceDate ? new Date(caseDetailCwcrf.invoiceDetails.invoiceDate).toLocaleDateString("en-IN") : "—" },
+                      { label: "Approved by EPC", value: caseDetailCwcrf.buyerVerification?.approvedAmount ? `₹${caseDetailCwcrf.buyerVerification.approvedAmount.toLocaleString()}` : "Pending" },
+                      { label: "Repayment Timeline", value: caseDetailCwcrf.buyerVerification?.repaymentTimeline ? `${caseDetailCwcrf.buyerVerification.repaymentTimeline} days` : "—" },
+                      { label: "Repayment Arrangement", value: caseDetailCwcrf.buyerVerification?.repaymentArrangement || "—" },
+                    ].map((f) => (
+                      <div key={f.label} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px" }}>
+                        <p style={{ fontSize: 11, color: "#64748b", margin: "0 0 4px", fontWeight: 600 }}>{f.label}</p>
+                        <p style={{ fontSize: 14, color: "#1e293b", margin: 0, fontWeight: 600 }}>{f.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: 0 }} />
+
+                {/* Section C: Credit Request */}
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#0284c7", margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                    💳 Section C — Credit Request
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                    {[
+                      { label: "Requested Amount", value: caseDetailCwcrf.cwcRequest?.requestedAmount ? `₹${caseDetailCwcrf.cwcRequest.requestedAmount.toLocaleString()}` : "—" },
+                      { label: "Requested Tenure", value: caseDetailCwcrf.cwcRequest?.requestedTenure ? `${caseDetailCwcrf.cwcRequest.requestedTenure} days` : "—" },
+                      { label: "Urgency Level", value: caseDetailCwcrf.cwcRequest?.urgencyLevel || "—" },
+                    ].map((f) => (
+                      <div key={f.label} style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "10px 14px" }}>
+                        <p style={{ fontSize: 11, color: "#0284c7", margin: "0 0 4px", fontWeight: 600 }}>{f.label}</p>
+                        <p style={{ fontSize: 14, color: "#0c4a6e", margin: 0, fontWeight: 700 }}>{f.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {caseDetailCwcrf.cwcRequest?.reasonForFunding && (
+                    <div style={{ marginTop: 10, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px" }}>
+                      <p style={{ fontSize: 11, color: "#64748b", margin: "0 0 4px", fontWeight: 600 }}>Reason for Funding</p>
+                      <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>{caseDetailCwcrf.cwcRequest.reasonForFunding}</p>
+                    </div>
+                  )}
+                </div>
+
+                <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: 0 }} />
+
+                {/* Section D: Interest Preference */}
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#059669", margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                    📈 Section D — Interest Preference
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                    {[
+                      { label: "Minimum Interest Rate", value: caseDetailCwcrf.interestPreference?.minRate != null ? `${caseDetailCwcrf.interestPreference.minRate}%` : "—" },
+                      { label: "Maximum Interest Rate", value: caseDetailCwcrf.interestPreference?.maxRate != null ? `${caseDetailCwcrf.interestPreference.maxRate}%` : "—" },
+                      { label: "Max Acceptable Rate", value: caseDetailCwcrf.interestPreference?.maxAcceptableRate != null ? `${caseDetailCwcrf.interestPreference.maxAcceptableRate}%` : "—" },
+                    ].map((f) => (
+                      <div key={f.label} style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px" }}>
+                        <p style={{ fontSize: 11, color: "#059669", margin: "0 0 4px", fontWeight: 600 }}>{f.label}</p>
+                        <p style={{ fontSize: 14, color: "#14532d", margin: 0, fontWeight: 700 }}>{f.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions (no-print) */}
+                <div className="no-print-actions" style={{ display: "flex", gap: 10, borderTop: "1px solid #e2e8f0", paddingTop: 16, flexWrap: "wrap" }}>
+                  {(caseDetailCwcrf.status === "UNDER_RISK_REVIEW" || caseDetailCwcrf.status === "BUYER_APPROVED") && (
+                    <button
+                      onClick={() => {
+                        setSelectedCwcrf(caseDetailCwcrf);
+                        setCaseDetailCwcrf(null);
+                        setShowCwcafModal(true);
+                      }}
+                      style={{ background: "#2563eb", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      Complete Risk Assessment
+                    </button>
+                  )}
+                  {caseDetailCwcrf.status === "CWCAF_READY" && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await cwcrfApi.rmtForwardToOps(caseDetailCwcrf._id, "Risk assessment complete");
+                          toast.success("Forwarded to Ops for risk triage");
+                          setCaseDetailCwcrf(null);
+                          fetchData();
+                        } catch {
+                          toast.error("Failed to forward");
+                        }
+                      }}
+                      style={{ background: "#d97706", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      Forward to Ops
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setCaseDetailCwcrf(null)}
+                    style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer", marginLeft: "auto" }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Print styles */}
+            <style>{`
+              @media print {
+                body * { visibility: hidden !important; }
+                #case-detail-printable, #case-detail-printable * { visibility: visible !important; }
+                #case-detail-printable { position: fixed; left: 0; top: 0; width: 100%; background: white !important; padding: 0 !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+                .no-print-header, .no-print-actions { display: none !important; }
+                .print-only-header { display: block !important; }
+                @page { margin: 16mm; size: A4; }
+              }
+            `}</style>
           </div>
         )}
 
