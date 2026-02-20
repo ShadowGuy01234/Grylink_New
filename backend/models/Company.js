@@ -7,6 +7,8 @@ const companySchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone: { type: String, required: true, trim: true },
     address: { type: String, required: true, trim: true },
+    city: { type: String, trim: true },
+    state: { type: String, trim: true },
 
     // Registration details
     cin: { type: String, trim: true },

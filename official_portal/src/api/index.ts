@@ -116,6 +116,12 @@ export const opsApi = {
     api.post(`/cwcrf/${id}/rmt/move-to-queue`, { notes }),
   verifyCwcrfSection: (id: string, data: { section: string; verified: boolean; notes?: string }) =>
     api.post(`/cwcrf/${id}/ops/verify-section`, data),
+  detachCwcrfField: (id: string, data: { section: string; field: string; reason?: string }) =>
+    api.post(`/cwcrf/${id}/ops/detach-field`, data),
+  editCwcrfField: (id: string, data: { section: string; field: string; newValue: unknown; reason?: string }) =>
+    api.patch(`/cwcrf/${id}/ops/edit-field`, data),
+  reRequestFromSc: (id: string, data: { message: string; section?: string }) =>
+    api.post(`/cwcrf/${id}/ops/re-request`, data),
   triageCwcrf: (id: string, data: { action: 'forward_to_epc' | 'reject'; notes?: string }) =>
     api.post(`/cwcrf/${id}/ops/triage`, data),
   getMatchingNbfcs: (cwcrfId: string) =>
@@ -154,6 +160,10 @@ export const rmtApi = {
 export const cwcrfApi = {
   // Get CWCRFs in RMT queue
   getRmtQueue: () => api.get("/cwcrf/rmt/queue"),
+
+  // Download full case as PDF (Phase 7.2)
+  downloadCasePdf: (cwcrfId: string) =>
+    api.get(`/cwcrf/${cwcrfId}/pdf`, { responseType: "blob" }),
 
   // Generate CWCAF for a CWCRF — Ops & RMT (Phase 10.1)
   generateCwcaf: (

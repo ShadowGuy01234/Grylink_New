@@ -140,20 +140,23 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
 |------|-------------|----------|---------|--------|
 | 6.1 | Ops sees CWCRF queue | `OpsDashboardNew.tsx` → **CWCRF tab** → "Section Verify" sub-tab | `GET /api/cwcrf/ops/queue` | ✅ |
 | 6.2 | Ops section-by-section verification | `CwcrfOpsTab` component (in-file) — Section A/B/C/D + RA Bill + WCC + Measurement Sheet, each card with Mark Verified / Unmark buttons + notes field | `POST /api/cwcrf/:id/ops/verify-section` → `cwcrfService.opsVerifySection()` | ✅ |
+| 6.2a | Ops Super Access — Detach Field | `CwcrfOpsTab` — per-section "Detach Field" button with inline form (field name + reason) | `POST /api/cwcrf/:id/ops/detach-field` → `cwcrfService.opsDetachField()` — clears value, records in `opsDetachedFields[]`, sets `ACTION_REQUIRED` | ✅ |
+| 6.2b | Ops Super Access — Edit Field | `CwcrfOpsTab` — per-section "Edit Field" button with inline form (field name + new value + reason) | `PATCH /api/cwcrf/:id/ops/edit-field` → `cwcrfService.opsEditField()` — records old/new in `opsEditLog[]` | ✅ |
+| 6.2c | Ops Super Access — Re-request from SC | `CwcrfOpsTab` — textarea + send button below section grid | `POST /api/cwcrf/:id/ops/re-request` → `cwcrfService.opsReRequest()` — creates ChatMessage of type `action_required` | ✅ |
 | 6.3 | "All sections verified" → Forward to RMT | "Forward to RMT →" button appears automatically when all 4 sections are verified, calls `opsApi.forwardCwcrfToRmt(id)` | `POST /api/cwcrf/:id/rmt/move-to-queue` | ✅ |
 | 6.4 | Bill verification | `OpsDashboardNew.tsx` → Bills tab | `POST /api/ops/bills/:id/verify` | ✅ |
 
 ---
 
-#### Phase 7 — RMT Risk Assessment ⚠️ PARTIALLY BUILT (~90%)
+#### Phase 7 — RMT Risk Assessment ✅ COMPLETE
 
-| Step | Description | Frontend | Backend | Status | Gap |
-|------|-------------|----------|---------|--------|-----|
-| 7.1 | RMT receives case with full details | `RmtDashboard.tsx` (1309 lines) — queue view | `GET /api/cwcrf/rmt/queue` | ✅ | — |
-| 7.2 | Download full case as PDF | Not built | No PDF generation endpoint | ❌ | **Missing:** No PDF download feature. |
-| 7.3 | 12-point risk checklist + scoring | `RmtDashboard.tsx` — risk assessment form | `POST /api/cases/:id/risk-assessment` | ✅ | — |
-| 7.4 | Upload/create assessment report + generate CWCAF | `RmtDashboard.tsx` — CWCAF modal (Generate CWCAF button) | `POST /api/cwcrf/:id/rmt/generate-cwcaf` | ✅ | — |
-| 7.5 | RMT forwards back to Ops | **NEW:** `RmtDashboard.tsx` — "Forward to Ops" button shown when `status === "CWCAF_READY"` calls `cwcrfApi.rmtForwardToOps()` | `POST /api/cwcrf/:id/rmt/forward-to-ops` | ✅ | — |
+| Step | Description | Frontend | Backend | Status |
+|------|-------------|----------|---------|--------|
+| 7.1 | RMT receives case with full details | `RmtDashboard.tsx` — queue view | `GET /api/cwcrf/rmt/queue` | ✅ |
+| 7.2 | Download full case as PDF | `RmtDashboard.tsx` — 📄 PDF button on every CWCRF row, triggers blob download | `GET /api/cwcrf/:id/pdf` → `cwcrfService.generateCasePdf()` using pdfkit (SC profile, Sections A–D, Ops verification, EPC verification, NBFC quotations, status history) | ✅ |
+| 7.3 | 12-point risk checklist + scoring | `RmtDashboard.tsx` — risk assessment form | `POST /api/cases/:id/risk-assessment` | ✅ |
+| 7.4 | Upload/create assessment report + generate CWCAF | `RmtDashboard.tsx` — CWCAF modal (Generate CWCAF button) | `POST /api/cwcrf/:id/rmt/generate-cwcaf` | ✅ |
+| 7.5 | RMT forwards back to Ops | `RmtDashboard.tsx` — "Forward to Ops" button shown when `status === "CWCAF_READY"` | `POST /api/cwcrf/:id/rmt/forward-to-ops` | ✅ |
 
 ---
 
@@ -168,25 +171,25 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
 
 ---
 
-#### Phase 9 — EPC Case Review & Bid ⚠️ PARTIALLY BUILT (~70%)
+#### Phase 9 — EPC Case Review & Bid ✅ COMPLETE
 
-| Step | Description | Frontend | Backend | Status | Gap |
-|------|-------------|----------|---------|--------|-----|
-| 9.1 | EPC sees case notification | `partner-portal/DashboardPage.tsx` → Cases / CWC Requests tab | `GET /api/cases` | ⚠️ | Cases listed but no push notification system. |
-| 9.2 | EPC verifies SC documents | `DashboardPage.tsx` shows basic case info | Partial | ⚠️ | **Gap:** No dedicated SC document review tab within case detail. EPC cannot individually view/approve SC KYC documents. |
-| 9.3 | EPC reviews RMT risk report | Shows risk category badge | Partial | ⚠️ | **Gap:** Only risk category badge shown. Full RMT assessment checklist and recommendation not displayed. |
-| 9.4 | EPC accepts buyer declaration | **NEW:** `DashboardPage.tsx` — `buyerDeclarationAccepted` checkbox, required before submit is enabled | `POST /api/cwcrf/:id/buyer/verify` (includes `buyerDeclaration.accepted`) | ✅ | — |
-| 9.5 | EPC enters bid terms (amount + timeline) | `DashboardPage.tsx` CWCRF verify form — `approvedAmount`, `repaymentTimeline`, `repaymentArrangement` + buyer declaration as one combined form | `POST /api/cwcrf/:id/buyer/verify` | ⚠️ | **Gap:** Steps 9.2 → 9.3 → 9.4 → 9.5 are NOT a sequential guided flow. Everything is one flat form. No dedicated SC doc / RMT report screens before the approval form. |
+| Step | Description | Frontend | Backend | Status |
+|------|-------------|----------|---------|--------|
+| 9.1 | EPC sees CWCRF list | `partner-portal/DashboardPage.tsx` → CWC Requests tab — table with Review button | `GET /api/cases` | ✅ |
+| 9.2 | EPC verifies SC documents (Step 1) | `DashboardPage.tsx` — **4-step guided review modal** (`cwcrfReviewStep=1`): SC profile grid (company name, email, GSTIN, PAN), KYC/Bank/Declaration status badges, supporting docs (RA Bill, WCC, Meas. Sheet) with View links, invoice summary | Populated from CWCRF + SC data | ✅ |
+| 9.3 | EPC reviews RMT risk report (Step 2) | `DashboardPage.tsx` — `cwcrfReviewStep=2`: Risk Category banner (color-coded LOW/MEDIUM/HIGH), RMT Recommendation block with notes, Assessment Breakdown grid (4-point scores with remarks), Seller Profile Summary | Populated from CWCAF data | ✅ |
+| 9.4 | EPC accepts buyer declaration (Step 3) | `DashboardPage.tsx` — `cwcrfReviewStep=3`: 6-point declaration list, checkbox to accept, Next button blocked until accepted | `POST /api/cwcrf/:id/buyer/verify` (includes `buyerDeclaration.accepted`) | ✅ |
+| 9.5 | EPC enters bid terms (Step 4) | `DashboardPage.tsx` — `cwcrfReviewStep=4`: approvedAmount, repaymentTimeline (30/45/60/90), repaymentSource (5 options + OTHER), remarks, notes, Approve/Reject buttons with confirm flow | `POST /api/cwcrf/:id/buyer/verify` | ✅ |
 
 ---
 
-#### Phase 10 — CWCAF Generation & NBFC Selection ⚠️ PARTIALLY BUILT
+#### Phase 10 — CWCAF Generation & NBFC Selection ✅ COMPLETE
 
-| Step | Description | Frontend | Backend | Status | Gap |
-|------|-------------|----------|---------|--------|-----|
-| 10.1 | Ops generates CWCAF | CWCAF generation is currently in `RmtDashboard.tsx` (RMT role), not Ops | `POST /api/cwcrf/:id/rmt/generate-cwcaf` | ⚠️ | **Gap:** Per the corrected doc, CWCAF should be generated by **Ops** after receiving the EPC-verified case back. Currently it sits in the RMT dashboard which is the wrong actor. |
-| 10.2 | Dedicated NBFC Selection page (Ops picks NBFCs) | Not built | `GET /api/nbfc/match/:caseId` ✅ exists | ❌ | **Missing:** No NBFC selection page in `official_portal`. Ops cannot see the eligible NBFC list with match scores and manually select which ones to send the CWCAF to. |
-| 10.3 | CWCAF sent to selected NBFCs | Not built | `POST /api/cwcrf/:id/share-with-nbfcs` ✅ exists | ❌ | **Missing:** No UI trigger for the share action in `official_portal`. Endpoint exists but unreachable from any Ops screen. |
+| Step | Description | Frontend | Backend | Status |
+|------|-------------|----------|---------|--------|
+| 10.1 | Ops generates CWCAF | `OpsDashboardNew.tsx` → CWCRF tab → **"NBFC Dispatch" sub-tab** — "Generate CWCAF" button (shown when `status=BUYER_APPROVED`) opens modal with riskCategory, recommendation, businessAge, totalTransactions, averageInvoiceValue, repaymentHistory, notes. Also available in `RmtDashboard.tsx`. | `POST /api/cwcrf/:id/rmt/generate-cwcaf` (authorized for `rmt, ops, admin`) | ✅ |
+| 10.2 | NBFC selection (Ops picks NBFCs) | `OpsDashboardNew.tsx` → NBFC Dispatch sub-tab — "Select & Share with NBFCs" button loads matching NBFCs with checkboxes + match scores | `GET /api/cwcrf/:id/matching-nbfcs` | ✅ |
+| 10.3 | CWCAF sent to selected NBFCs | `OpsDashboardNew.tsx` → NBFC Dispatch — Share button after NBFC selection | `POST /api/cwcrf/:id/share-with-nbfcs` | ✅ |
 
 ---
 
@@ -207,21 +210,9 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
 
 #### 🔴 High Priority — Core Workflow Blockers
 
-1. **Phase 9 — EPC Full Case Review Flow (Structured 4-Step)**
-   - Current: buyer declaration + bid form are a single flat approve form in `DashboardPage.tsx`
-   - Required: Redesign into sequential 4-step flow:
-     - Step 1: SC Document Verification (view KYC docs, bank details, profile)
-     - Step 2: RMT Risk Report viewer (full checklist scores + recommendation)
-     - Step 3: Buyer Declaration acceptance (checkbox, already in `cwcrfVerifyForm`)
-     - Step 4: Bid entry (approvedAmount + repaymentTimeline, already in `cwcrfVerifyForm`)
-   - Existing form data & API call can be preserved; just needs UI structure + SC docs/RMT report views added
+1. ~~**Phase 9 — EPC Full Case Review Flow**~~ ✅ **DONE** — 4-step guided modal built in `DashboardPage.tsx` (SC Docs → RMT Risk Report → Declaration → Bid Terms)
 
-2. **Phase 10 — CWCAF Move to Ops + NBFC Selection**
-   - CWCAF generation currently in `RmtDashboard.tsx` (RMT role) — should be triggered by **Ops**
-   - Build dedicated NBFC Selection page/section in `official_portal`:
-     - `GET /api/nbfc/match/:caseId` → show eligible NBFCs with scores
-     - Manual checkbox selection
-     - "Send CWCAF" → `POST /api/cwcrf/:id/share-with-nbfcs`
+2. ~~**Phase 10 — CWCAF Move to Ops + NBFC Selection**~~ ✅ **DONE** — CWCAF generation + NBFC selection + sharing all built in `OpsDashboardNew.tsx` NBFC Dispatch sub-tab
 
 #### 🟡 Medium Priority — Feature Completeness
 
@@ -235,9 +226,7 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
    - Required: Bill + WCC + Measurement Sheet uploaded in CWCRF Section A/B as part of the same form
    - Backend `POST /api/subcontractor/bill-with-cwcrf` already exists — frontend needs to use it
 
-5. **Phase 7 — PDF Case Download for RMT**
-   - Generate formatted PDF of the full case (SC profile + EPC + bill + CWCRF data + Gryork header)
-   - Recommended: server-side via puppeteer/pdfkit at `GET /api/cwcrf/:id/pdf`
+5. ~~**Phase 7 — PDF Case Download for RMT**~~ ✅ **DONE** — `GET /api/cwcrf/:id/pdf` using pdfkit, 📄 PDF button in RmtDashboard
 
 #### 🟢 Lower Priority — Polish & Completion
 

@@ -4,7 +4,9 @@ const Company = require("../models/Company");
 const Bill = require("../models/Bill");
 const Case = require("../models/Case");
 const Nbfc = require("../models/Nbfc");
+const ChatMessage = require("../models/ChatMessage");
 const mongoose = require("mongoose");
+const PDFDocument = require("pdfkit");
 
 /**
  * CWCRF Service - Handles all CWC Request Form operations
@@ -172,6 +174,7 @@ class CwcRfService {
     };
     if (query.status) filter.status = query.status;
     if (query.phase === "triage") filter.status = { $in: ["RMT_APPROVED"] };
+    if (query.phase === "epc_verified") filter.status = { $in: ["BUYER_APPROVED", "CWCAF_READY", "SHARED_WITH_NBFC"] };
 
     return CwcRf.find(filter)
       .populate("subContractorId", "companyName ownerName")
@@ -225,6 +228,144 @@ class CwcRfService {
 
     await cwcRf.save();
     return cwcRf;
+  }
+
+  // ========================================
+  // OPS SUPER ACCESS POWERS (Phase 6.2)
+  // ========================================
+
+  /**
+   * Ops detaches a document or field, forcing SC to re-upload/re-fill
+   */
+  async opsDetachField(cwcRfId, userId, { section, field, reason }) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    // Validate section/field path exists
+    const allowedSections = ['buyerDetails', 'invoiceDetails', 'cwcRequest', 'interestPreference'];
+    if (!allowedSections.includes(section)) {
+      throw new Error(`Invalid section: ${section}. Allowed: ${allowedSections.join(', ')}`);
+    }
+
+    // Record the detachment
+    if (!cwcRf.opsDetachedFields) cwcRf.opsDetachedFields = [];
+    cwcRf.opsDetachedFields.push({
+      section,
+      field,
+      detachedBy: userId,
+      detachedAt: new Date(),
+      reason: reason || '',
+      resolved: false,
+    });
+
+    // Clear the field value
+    if (cwcRf[section] && field && cwcRf[section][field] !== undefined) {
+      cwcRf[section][field] = undefined;
+      cwcRf.markModified(section);
+    }
+
+    // If a section was verified, un-verify it
+    const sectionKeyMap = {
+      buyerDetails: 'sectionA',
+      invoiceDetails: 'sectionB',
+      cwcRequest: 'sectionC',
+      interestPreference: 'sectionD',
+    };
+    const verifyKey = sectionKeyMap[section];
+    if (verifyKey && cwcRf.opsVerification?.[verifyKey]?.verified) {
+      cwcRf.opsVerification[verifyKey].verified = false;
+      cwcRf.opsVerification[verifyKey].notes = `Detached: ${field} — ${reason}`;
+      cwcRf.markModified('opsVerification');
+    }
+
+    // Set status to ACTION_REQUIRED so SC knows to fix
+    if (cwcRf.status === 'SUBMITTED' || cwcRf.status === 'OPS_REVIEW') {
+      cwcRf.status = 'ACTION_REQUIRED';
+      cwcRf.statusHistory.push({
+        status: 'ACTION_REQUIRED',
+        changedBy: userId,
+        notes: `Ops detached ${section}.${field}: ${reason}`,
+      });
+    }
+
+    await cwcRf.save();
+    return cwcRf;
+  }
+
+  /**
+   * Ops directly edits a minor field with change log
+   */
+  async opsEditField(cwcRfId, userId, { section, field, newValue, reason }) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    const allowedSections = ['buyerDetails', 'invoiceDetails', 'cwcRequest', 'interestPreference'];
+    if (!allowedSections.includes(section)) {
+      throw new Error(`Invalid section: ${section}`);
+    }
+
+    if (!field || newValue === undefined) {
+      throw new Error("field and newValue are required");
+    }
+
+    const oldValue = cwcRf[section]?.[field];
+
+    // Record the edit
+    if (!cwcRf.opsEditLog) cwcRf.opsEditLog = [];
+    cwcRf.opsEditLog.push({
+      section,
+      field,
+      oldValue,
+      newValue,
+      editedBy: userId,
+      editedAt: new Date(),
+      reason: reason || '',
+    });
+
+    // Apply the edit
+    if (!cwcRf[section]) cwcRf[section] = {};
+    cwcRf[section][field] = newValue;
+    cwcRf.markModified(section);
+
+    await cwcRf.save();
+    return cwcRf;
+  }
+
+  /**
+   * Ops sends a re-request message to SC via chat channel
+   */
+  async opsReRequest(cwcRfId, userId, { message, section }) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    if (!message || !message.trim()) {
+      throw new Error("Message is required for re-request");
+    }
+
+    // Create a chat message of type action_required
+    const chatMessage = new ChatMessage({
+      cwcRfId: cwcRf._id,
+      senderId: userId,
+      senderRole: 'ops',
+      messageType: 'action_required',
+      content: message.trim(),
+      actionType: 'REQUEST_DOCUMENT',
+      actionResolved: false,
+    });
+    await chatMessage.save();
+
+    // If status is SUBMITTED or OPS_REVIEW, move to ACTION_REQUIRED
+    if (['SUBMITTED', 'OPS_REVIEW'].includes(cwcRf.status)) {
+      cwcRf.status = 'ACTION_REQUIRED';
+      cwcRf.statusHistory.push({
+        status: 'ACTION_REQUIRED',
+        changedBy: userId,
+        notes: `Ops re-request: ${section ? `[${section}] ` : ''}${message.trim().substring(0, 100)}`,
+      });
+      await cwcRf.save();
+    }
+
+    return { cwcRf, chatMessage };
   }
 
   /**
@@ -823,6 +964,192 @@ class CwcRfService {
       .populate("epcId", "companyName")
       .populate("caseId")
       .sort({ createdAt: -1 });
+  }
+
+  // =========================================================
+  // PHASE 7.2 — PDF CASE DOWNLOAD
+  // =========================================================
+
+  /**
+   * Generate a formatted PDF document containing the full case data.
+   * Returns a pdfkit document stream that can be piped to the HTTP response.
+   */
+  async generateCasePdf(cwcRfId) {
+    const cwcRf = await this.getCwcRfById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    const sc = cwcRf.subContractorId || {};
+    const epc = cwcRf.epcId || {};
+    const bill = cwcRf.billId || {};
+    const buyer = cwcRf.buyerDetails || {};
+    const inv = cwcRf.invoiceDetails || {};
+    const req = cwcRf.cwcRequest || {};
+    const intPref = cwcRf.interestPreference || {};
+    const opsV = cwcRf.opsVerification || {};
+    const buyerV = cwcRf.buyerVerification || {};
+
+    const doc = new PDFDocument({ size: "A4", margin: 50, bufferPages: true });
+
+    // ── Helper functions ──
+    const COLORS = { primary: "#B45309", heading: "#1e293b", muted: "#6b7280", accent: "#059669", line: "#e2e8f0" };
+
+    const drawLine = () => {
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(COLORS.line);
+      doc.moveDown(0.5);
+    };
+
+    const sectionTitle = (title) => {
+      doc.moveDown(0.5);
+      doc.fontSize(13).font("Helvetica-Bold").fillColor(COLORS.primary).text(title);
+      doc.moveDown(0.3);
+      drawLine();
+    };
+
+    const row = (label, value) => {
+      const y = doc.y;
+      doc.fontSize(9).font("Helvetica-Bold").fillColor(COLORS.muted).text(label, 50, y, { width: 180 });
+      doc.fontSize(10).font("Helvetica").fillColor(COLORS.heading).text(String(value ?? "—"), 235, y, { width: 310 });
+      doc.moveDown(0.4);
+    };
+
+    const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+    const fmtCurrency = (n) => n != null ? `₹${Number(n).toLocaleString("en-IN")}` : "—";
+
+    // ── Header ──
+    doc.rect(0, 0, 595.28, 80).fill("#fffbeb");
+    doc.fontSize(22).font("Helvetica-Bold").fillColor(COLORS.primary).text("GRYORK", 50, 22);
+    doc.fontSize(9).font("Helvetica").fillColor(COLORS.muted).text("CWC Request Form — Full Case Report", 50, 48);
+    doc.fontSize(10).font("Helvetica-Bold").fillColor(COLORS.heading).text(cwcRf.cwcRfNumber || "—", 400, 22, { align: "right", width: 145 });
+    doc.fontSize(8).font("Helvetica").fillColor(COLORS.muted).text(`Status: ${(cwcRf.status || "").replace(/_/g, " ")}`, 400, 40, { align: "right", width: 145 });
+    doc.fontSize(8).text(`Generated: ${new Date().toLocaleDateString("en-IN")}`, 400, 52, { align: "right", width: 145 });
+
+    doc.y = 95;
+
+    // ── Sub-Contractor Profile ──
+    sectionTitle("Sub-Contractor (Seller) Profile");
+    row("Company Name", sc.companyName);
+    row("Owner / Proprietor", sc.ownerName);
+    row("PAN", sc.pan);
+    row("GSTIN", sc.gstin);
+    row("Email", sc.email || sc.userId?.email);
+    row("Phone", sc.phone);
+    row("Account Type", sc.accountType);
+
+    // ── Buyer / Project Details (Section A) ──
+    sectionTitle("Section A — Buyer & Project Details");
+    row("Buyer Name", buyer.buyerName || epc.companyName);
+    row("Buyer GSTIN", buyer.buyerGstin);
+    row("Project Name", buyer.projectName);
+    row("Project Location", buyer.projectLocation);
+
+    // ── Invoice Details (Section B) ──
+    sectionTitle("Section B — Invoice Details");
+    row("Invoice Number", inv.invoiceNumber);
+    row("Invoice Date", fmtDate(inv.invoiceDate));
+    row("Invoice Amount", fmtCurrency(inv.invoiceAmount));
+    row("GST Amount", fmtCurrency(inv.gstAmount));
+    row("Net Invoice Amount", fmtCurrency(inv.netInvoiceAmount));
+    row("Expected Payment Date", fmtDate(inv.expectedPaymentDate));
+    row("Work Description", inv.workDescription);
+    row("PO Number", inv.purchaseOrderNumber);
+    row("PO Date", fmtDate(inv.purchaseOrderDate));
+    row("Work Completion Date", fmtDate(inv.workCompletionDate));
+
+    // ── CWC Request (Section C) ──
+    sectionTitle("Section C — CWC Request");
+    row("Requested Amount", fmtCurrency(req.requestedAmount));
+    row("Requested Tenure", req.requestedTenure ? `${req.requestedTenure} days` : "—");
+    row("Urgency Level", req.urgencyLevel);
+    row("Reason for Funding", req.reasonForFunding);
+    row("Preferred Disbursement", fmtDate(req.preferredDisbursementDate));
+    row("Collateral Offered", req.collateralOffered);
+    row("Existing Loan Details", req.existingLoanDetails);
+
+    // ── Interest Preference (Section D) ──
+    sectionTitle("Section D — Interest Rate Preference");
+    row("Preference Type", intPref.preferenceType);
+    if (intPref.preferenceType === "RANGE") {
+      row("Rate Range", `${intPref.minRate || "—"}% – ${intPref.maxRate || "—"}% p.a.`);
+    } else {
+      row("Max Acceptable Rate", intPref.maxAcceptableRate ? `${intPref.maxAcceptableRate}% p.a.` : "—");
+    }
+    row("Repayment Frequency", intPref.preferredRepaymentFrequency);
+    row("Processing Fee Accepted", intPref.processingFeeAcceptance ? "Yes" : "No");
+    row("Max Processing Fee", intPref.maxProcessingFeePercent ? `${intPref.maxProcessingFeePercent}%` : "—");
+    row("Prepayment Preference", intPref.prepaymentPreference);
+
+    // ── Seller Declaration ──
+    sectionTitle("Seller Declaration");
+    row("Accepted", cwcRf.sellerDeclaration?.accepted ? "Yes" : "No");
+    row("Accepted At", fmtDate(cwcRf.sellerDeclaration?.acceptedAt));
+
+    // ── Ops Verification ──
+    doc.addPage();
+    sectionTitle("Ops Verification (Phase 6)");
+    const secs = ["sectionA", "sectionB", "sectionC", "sectionD"];
+    const secLabels = { sectionA: "Section A", sectionB: "Section B", sectionC: "Section C", sectionD: "Section D" };
+    secs.forEach((s) => {
+      const v = opsV[s] || {};
+      row(`${secLabels[s]} Verified`, v.verified ? "✓ Yes" : "✗ No");
+      if (v.notes) row(`${secLabels[s]} Notes`, v.notes);
+    });
+    row("RA Bill Verified", opsV.raBillVerified ? "✓ Yes" : "✗ No");
+    row("WCC Verified", opsV.wccVerified ? "✓ Yes" : "✗ No");
+    row("Meas. Sheet Verified", opsV.measurementSheetVerified ? "✓ Yes" : "✗ No");
+    if (opsV.opsNotes) row("Ops Notes", opsV.opsNotes);
+    row("Ops Verified At", fmtDate(opsV.opsVerifiedAt));
+
+    // ── EPC / Buyer Verification ──
+    sectionTitle("EPC Buyer Verification (Phase 9)");
+    row("Approved Amount", fmtCurrency(buyerV.approvedAmount));
+    row("Repayment Timeline", buyerV.repaymentTimeline ? `${buyerV.repaymentTimeline} days` : "—");
+    row("Repayment Source", buyerV.repaymentArrangement?.source?.replace(/_/g, " "));
+    if (buyerV.repaymentArrangement?.otherDetails) row("Other Details", buyerV.repaymentArrangement.otherDetails);
+    if (buyerV.repaymentArrangement?.remarks) row("Remarks", buyerV.repaymentArrangement.remarks);
+    row("Buyer Declaration", buyerV.buyerDeclaration?.accepted ? "Accepted" : "Not accepted");
+    row("Verified At", fmtDate(buyerV.verifiedAt));
+    if (buyerV.notes) row("Notes", buyerV.notes);
+
+    // ── NBFC Quotations (if any) ──
+    if (cwcRf.nbfcQuotations && cwcRf.nbfcQuotations.length > 0) {
+      sectionTitle("NBFC Quotations");
+      cwcRf.nbfcQuotations.forEach((q, i) => {
+        row(`NBFC ${i + 1}`, q.nbfcId?.companyName || q.nbfcId?.name || "—");
+        row(`  Interest Rate`, q.quotation?.interestRate ? `${q.quotation.interestRate}% p.a.` : "—");
+        row(`  Tenure`, q.quotation?.tenure ? `${q.quotation.tenure} days` : "—");
+        row(`  Status`, q.status);
+        if (q.quotation?.terms) row(`  Terms`, q.quotation.terms);
+        doc.moveDown(0.3);
+      });
+    }
+
+    // ── Selected NBFC ──
+    if (cwcRf.selectedNbfc?.nbfcId) {
+      sectionTitle("Selected NBFC");
+      row("NBFC", cwcRf.selectedNbfc.nbfcId?.companyName || "—");
+      row("Final Interest Rate", cwcRf.selectedNbfc.finalInterestRate ? `${cwcRf.selectedNbfc.finalInterestRate}% p.a.` : "—");
+      row("Final Tenure", cwcRf.selectedNbfc.finalTenure ? `${cwcRf.selectedNbfc.finalTenure} days` : "—");
+      row("Selected At", fmtDate(cwcRf.selectedNbfc.selectedAt));
+    }
+
+    // ── Status History ──
+    if (cwcRf.statusHistory && cwcRf.statusHistory.length > 0) {
+      sectionTitle("Status History");
+      cwcRf.statusHistory.forEach((h) => {
+        row(fmtDate(h.changedAt), `${(h.status || "").replace(/_/g, " ")}${h.notes ? " — " + h.notes : ""}`);
+      });
+    }
+
+    // ── Footer on every page ──
+    const pages = doc.bufferedPageRange();
+    for (let i = pages.start; i < pages.start + pages.count; i++) {
+      doc.switchToPage(i);
+      doc.fontSize(7).font("Helvetica").fillColor(COLORS.muted);
+      doc.text(`Gryork Platform — Confidential | Page ${i + 1} of ${pages.count}`, 50, 780, { width: 495, align: "center" });
+    }
+
+    doc.end();
+    return doc;
   }
 }
 

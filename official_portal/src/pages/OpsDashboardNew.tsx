@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { opsApi, casesApi, approvalApi, slaApi } from "../api";
+import { opsApi, casesApi, approvalApi, slaApi, cwcrfApi } from "../api";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import {
@@ -582,6 +582,33 @@ const OpsDashboardNew = () => {
               fetchData();
             } catch (err: any) {
               toast.error(err.response?.data?.error || "Failed to share CWCAF with NBFCs");
+            }
+          }}
+          onDetachField={async (id: string, section: string, field: string, reason: string) => {
+            try {
+              await opsApi.detachCwcrfField(id, { section, field, reason });
+              toast.success(`Field ${field} detached — SC must re-submit`);
+              fetchData();
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || "Failed to detach field");
+            }
+          }}
+          onEditField={async (id: string, section: string, field: string, newValue: string, reason: string) => {
+            try {
+              await opsApi.editCwcrfField(id, { section, field, newValue, reason });
+              toast.success(`Field ${field} updated`);
+              fetchData();
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || "Failed to edit field");
+            }
+          }}
+          onReRequest={async (id: string, message: string, section?: string) => {
+            try {
+              await opsApi.reRequestFromSc(id, { message, section });
+              toast.success("Re-request sent to Sub-Contractor");
+              fetchData();
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || "Failed to send re-request");
             }
           }}
         />
@@ -3526,6 +3553,9 @@ interface CwcrfOpsTabProps {
   onVerifySection: (id: string, section: string, verified: boolean, notes: string) => Promise<void>;
   onTriage: (id: string, action: string, notes: string) => Promise<void>;
   onShareWithNbfcs: (id: string, nbfcIds: string[]) => Promise<void>;
+  onDetachField: (id: string, section: string, field: string, reason: string) => Promise<void>;
+  onEditField: (id: string, section: string, field: string, newValue: string, reason: string) => Promise<void>;
+  onReRequest: (id: string, message: string, section?: string) => Promise<void>;
   formatDate: (date: string) => string;
   statusBadge: (status: string) => React.JSX.Element;
 }
@@ -3542,7 +3572,9 @@ const CWCRF_SECTIONS = [
 
 const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
   cwcrfs, triageCwcrfs, nbfcCwcrfs, forwardingId, verifyingSection, triageId,
-  onForwardToRmt, onVerifySection, onTriage, onShareWithNbfcs, formatDate, statusBadge,
+  onForwardToRmt, onVerifySection, onTriage, onShareWithNbfcs,
+  onDetachField, onEditField, onReRequest,
+  formatDate, statusBadge,
 }) => {
   const [subTab, setSubTab] = React.useState<"verify" | "triage" | "nbfc">("verify");
   const [expanded, setExpanded] = React.useState<string | null>(null);
@@ -3553,6 +3585,21 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
   const [nbfcLoading, setNbfcLoading] = React.useState<Record<string, boolean>>({});
   const [nbfcSelected, setNbfcSelected] = React.useState<Record<string, string[]>>({});
   const [nbfcSending, setNbfcSending] = React.useState<Record<string, boolean>>({});
+  // Phase 6.2: Super Access local state
+  const [superAccessMode, setSuperAccessMode] = React.useState<Record<string, 'detach' | 'edit' | 'rerequest' | null>>({});
+  const [superAccessData, setSuperAccessData] = React.useState<Record<string, { field?: string; value?: string; reason?: string; message?: string }>>({});
+  // Phase 10.1: CWCAF generation state
+  const [showCwcafModal, setShowCwcafModal] = React.useState<string | null>(null);
+  const [cwcafGenerating, setCwcafGenerating] = React.useState(false);
+  const [cwcafForm, setCwcafForm] = React.useState({
+    riskCategory: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
+    rmtRecommendation: 'PROCEED' as 'PROCEED' | 'REVIEW' | 'REJECT',
+    rmtNotes: '',
+    businessAge: 0,
+    totalTransactions: 0,
+    averageInvoiceValue: 0,
+    repaymentHistory: 'GOOD',
+  });
 
   return (
     <div style={{ padding: "0 0 32px" }}>
@@ -3731,10 +3778,114 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                     </button>
                                   )}
                                 </div>
+
+                                {/* Super Access Actions (Phase 6.2) */}
+                                {!isBool && (() => {
+                                  const saKey = `${cwcrf._id}-${sec.key}`;
+                                  const mode = superAccessMode[saKey];
+                                  const data = superAccessData[saKey] || {};
+                                  const sectionDataMap: Record<string, string> = { sectionA: 'buyerDetails', sectionB: 'invoiceDetails', sectionC: 'cwcRequest', sectionD: 'interestPreference' };
+                                  const backendSection = sectionDataMap[sec.key] || sec.key;
+                                  return (
+                                    <div style={{ marginTop: 8 }}>
+                                      {!mode && (
+                                        <div style={{ display: "flex", gap: 4 }}>
+                                          <button
+                                            onClick={() => setSuperAccessMode((p) => ({ ...p, [saKey]: 'detach' }))}
+                                            style={{ flex: 1, padding: "4px 0", background: "none", border: "1px solid #f59e0b", borderRadius: 4, color: "#d97706", fontSize: 10, fontWeight: 600, cursor: "pointer" }}
+                                          >Detach Field</button>
+                                          <button
+                                            onClick={() => setSuperAccessMode((p) => ({ ...p, [saKey]: 'edit' }))}
+                                            style={{ flex: 1, padding: "4px 0", background: "none", border: "1px solid #6366f1", borderRadius: 4, color: "#4f46e5", fontSize: 10, fontWeight: 600, cursor: "pointer" }}
+                                          >Edit Field</button>
+                                        </div>
+                                      )}
+                                      {mode === 'detach' && (
+                                        <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 6, padding: 8, marginTop: 4 }}>
+                                          <p style={{ fontSize: 11, fontWeight: 700, color: "#92400e", margin: "0 0 6px" }}>Detach Field</p>
+                                          <input placeholder="Field name (e.g. invoiceNumber)" value={data.field || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], field: e.target.value } }))}
+                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
+                                          <input placeholder="Reason" value={data.reason || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], reason: e.target.value } }))}
+                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
+                                          <div style={{ display: "flex", gap: 4 }}>
+                                            <button onClick={() => { onDetachField(cwcrf._id, backendSection, data.field || '', data.reason || ''); setSuperAccessMode((p) => ({ ...p, [saKey]: null })); setSuperAccessData((p) => ({ ...p, [saKey]: {} })); }}
+                                              disabled={!data.field?.trim()} style={{ flex: 1, padding: "4px 0", background: "#d97706", color: "#fff", border: "none", borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Detach</button>
+                                            <button onClick={() => { setSuperAccessMode((p) => ({ ...p, [saKey]: null })); setSuperAccessData((p) => ({ ...p, [saKey]: {} })); }}
+                                              style={{ padding: "4px 10px", background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Cancel</button>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {mode === 'edit' && (
+                                        <div style={{ background: "#eef2ff", border: "1px solid #c7d2fe", borderRadius: 6, padding: 8, marginTop: 4 }}>
+                                          <p style={{ fontSize: 11, fontWeight: 700, color: "#3730a3", margin: "0 0 6px" }}>Edit Field</p>
+                                          <input placeholder="Field name (e.g. invoiceNumber)" value={data.field || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], field: e.target.value } }))}
+                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
+                                          <input placeholder="New value" value={data.value || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], value: e.target.value } }))}
+                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
+                                          <input placeholder="Reason (optional)" value={data.reason || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], reason: e.target.value } }))}
+                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
+                                          <div style={{ display: "flex", gap: 4 }}>
+                                            <button onClick={() => { onEditField(cwcrf._id, backendSection, data.field || '', data.value || '', data.reason || ''); setSuperAccessMode((p) => ({ ...p, [saKey]: null })); setSuperAccessData((p) => ({ ...p, [saKey]: {} })); }}
+                                              disabled={!data.field?.trim() || !data.value?.trim()} style={{ flex: 1, padding: "4px 0", background: "#4f46e5", color: "#fff", border: "none", borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Save Edit</button>
+                                            <button onClick={() => { setSuperAccessMode((p) => ({ ...p, [saKey]: null })); setSuperAccessData((p) => ({ ...p, [saKey]: {} })); }}
+                                              style={{ padding: "4px 10px", background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Cancel</button>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             );
                           })}
                         </div>
+
+                        {/* Re-request from SC (Phase 6.2) */}
+                        {(() => {
+                          const rrKey = `rr-${cwcrf._id}`;
+                          const rrData = superAccessData[rrKey] || {};
+                          return (
+                            <div style={{ marginTop: 16, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 14 }}>
+                              <p style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>🔄 Re-request from Sub-Contractor</p>
+                              <textarea
+                                placeholder="Type a message requesting SC to re-upload or correct something..."
+                                value={rrData.message || ''}
+                                onChange={(e) => setSuperAccessData((p) => ({ ...p, [rrKey]: { ...p[rrKey], message: e.target.value } }))}
+                                rows={2}
+                                style={{ width: "100%", fontSize: 12, border: "1px solid #e2e8f0", borderRadius: 6, padding: "6px 8px", resize: "vertical", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }}
+                              />
+                              <button
+                                disabled={!rrData.message?.trim()}
+                                onClick={() => { onReRequest(cwcrf._id, rrData.message || ''); setSuperAccessData((p) => ({ ...p, [rrKey]: {} })); }}
+                                style={{ padding: "6px 16px", background: rrData.message?.trim() ? "#7c3aed" : "#cbd5e1", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: rrData.message?.trim() ? "pointer" : "not-allowed" }}
+                              >Send Re-request to SC</button>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Edit Log (if any) */}
+                        {cwcrf.opsEditLog?.length > 0 && (
+                          <div style={{ marginTop: 12, background: "#fefce8", border: "1px solid #fde68a", borderRadius: 8, padding: 10 }}>
+                            <p style={{ fontSize: 11, fontWeight: 700, color: "#92400e", marginBottom: 6 }}>Edit Log ({cwcrf.opsEditLog.length} changes)</p>
+                            {cwcrf.opsEditLog.map((log: any, i: number) => (
+                              <p key={i} style={{ fontSize: 11, color: "#78350f", margin: "2px 0" }}>
+                                <strong>{log.section}.{log.field}</strong>: "{String(log.oldValue)}" → "{String(log.newValue)}" {log.reason && `— ${log.reason}`}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Detached Fields (if any) */}
+                        {cwcrf.opsDetachedFields?.filter((d: any) => !d.resolved).length > 0 && (
+                          <div style={{ marginTop: 12, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: 10 }}>
+                            <p style={{ fontSize: 11, fontWeight: 700, color: "#991b1b", marginBottom: 6 }}>⚠ Detached Fields (pending SC re-upload)</p>
+                            {cwcrf.opsDetachedFields.filter((d: any) => !d.resolved).map((det: any, i: number) => (
+                              <p key={i} style={{ fontSize: 11, color: "#991b1b", margin: "2px 0" }}>
+                                <strong>{det.section}.{det.field}</strong> {det.reason && `— ${det.reason}`}
+                              </p>
+                            ))}
+                          </div>
+                        )}
 
                         <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 14, marginBottom: 0 }}>Submitted: {formatDate(cwcrf.createdAt)}</p>
                       </div>
@@ -3973,6 +4124,126 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                             <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.interestPreference?.maxAcceptableRate ? `${cwcrf.interestPreference.maxAcceptableRate}%` : "—"}</p>
                           </div>
                         </div>
+
+                        {/* Phase 10.1: CWCAF Generation (for BUYER_APPROVED CWCRFs) */}
+                        {cwcrf.status === "BUYER_APPROVED" && (
+                          <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                              <div>
+                                <p style={{ fontSize: 14, fontWeight: 700, color: "#1d4ed8", margin: 0 }}>Step 1: Generate CWCAF</p>
+                                <p style={{ fontSize: 12, color: "#64748b", margin: "4px 0 0" }}>Compile the Credit on Working Capital Analysis Form before sending to NBFCs</p>
+                              </div>
+                              <button
+                                onClick={() => setShowCwcafModal(cwcrf._id)}
+                                style={{ padding: "8px 18px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                              >📄 Generate CWCAF</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* CWCAF Generation Modal */}
+                        {showCwcafModal === cwcrf._id && (
+                          <div style={{ background: "#fff", border: "2px solid #3b82f6", borderRadius: 12, padding: 20, marginBottom: 20 }}>
+                            <p style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", margin: "0 0 16px" }}>Generate CWCAF — {cwcrf.cwcRfNumber}</p>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                              <div>
+                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Risk Category</label>
+                                <select value={cwcafForm.riskCategory} onChange={(e) => setCwcafForm((f) => ({ ...f, riskCategory: e.target.value as any }))}
+                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13 }}>
+                                  <option value="LOW">LOW</option>
+                                  <option value="MEDIUM">MEDIUM</option>
+                                  <option value="HIGH">HIGH</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Recommendation</label>
+                                <select value={cwcafForm.rmtRecommendation} onChange={(e) => setCwcafForm((f) => ({ ...f, rmtRecommendation: e.target.value as any }))}
+                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13 }}>
+                                  <option value="PROCEED">PROCEED</option>
+                                  <option value="REVIEW">REVIEW</option>
+                                  <option value="REJECT">REJECT</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Business Age (years)</label>
+                                <input type="number" value={cwcafForm.businessAge} onChange={(e) => setCwcafForm((f) => ({ ...f, businessAge: Number(e.target.value) }))}
+                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Total Transactions</label>
+                                <input type="number" value={cwcafForm.totalTransactions} onChange={(e) => setCwcafForm((f) => ({ ...f, totalTransactions: Number(e.target.value) }))}
+                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Avg Invoice Value (₹)</label>
+                                <input type="number" value={cwcafForm.averageInvoiceValue} onChange={(e) => setCwcafForm((f) => ({ ...f, averageInvoiceValue: Number(e.target.value) }))}
+                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Repayment History</label>
+                                <select value={cwcafForm.repaymentHistory} onChange={(e) => setCwcafForm((f) => ({ ...f, repaymentHistory: e.target.value }))}
+                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13 }}>
+                                  <option value="EXCELLENT">Excellent</option>
+                                  <option value="GOOD">Good</option>
+                                  <option value="AVERAGE">Average</option>
+                                  <option value="POOR">Poor</option>
+                                  <option value="NEW">New (No History)</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div style={{ marginBottom: 16 }}>
+                              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Notes</label>
+                              <textarea value={cwcafForm.rmtNotes} onChange={(e) => setCwcafForm((f) => ({ ...f, rmtNotes: e.target.value }))}
+                                rows={2} placeholder="Additional notes for CWCAF..."
+                                style={{ width: "100%", fontSize: 13, border: "1px solid #e2e8f0", borderRadius: 6, padding: "8px 10px", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
+                            </div>
+                            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                              <button onClick={() => setShowCwcafModal(null)}
+                                style={{ padding: "8px 18px", background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+                              <button
+                                disabled={cwcafGenerating}
+                                onClick={async () => {
+                                  setCwcafGenerating(true);
+                                  try {
+                                    await cwcrfApi.generateCwcaf(cwcrf._id, {
+                                      sellerProfileSummary: {
+                                        businessAge: cwcafForm.businessAge,
+                                        totalTransactions: cwcafForm.totalTransactions,
+                                        averageInvoiceValue: cwcafForm.averageInvoiceValue,
+                                        repaymentHistory: cwcafForm.repaymentHistory,
+                                      },
+                                      riskAssessmentDetails: {
+                                        invoiceAging: { score: 0, remarks: '' },
+                                        buyerCreditworthiness: { score: 0, remarks: '' },
+                                        sellerTrackRecord: { score: 0, remarks: '' },
+                                        collateralCoverage: { score: 0, remarks: '' },
+                                      },
+                                      riskCategory: cwcafForm.riskCategory,
+                                      rmtRecommendation: cwcafForm.rmtRecommendation,
+                                      rmtNotes: cwcafForm.rmtNotes,
+                                    });
+                                    toast.success("CWCAF generated successfully");
+                                    setShowCwcafModal(null);
+                                    // Refresh data would be handled by parent
+                                  } catch (err: any) {
+                                    toast.error(err.response?.data?.error || "Failed to generate CWCAF");
+                                  } finally {
+                                    setCwcafGenerating(false);
+                                  }
+                                }}
+                                style={{ padding: "8px 24px", background: cwcafGenerating ? "#93c5fd" : "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+                              >{cwcafGenerating ? "Generating..." : "✓ Generate CWCAF"}</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* CWCAF Ready badge */}
+                        {(cwcrf.status === "CWCAF_READY" || cwcrf.status === "SHARED_WITH_NBFC") && (
+                          <div style={{ background: "#d1fae5", border: "1px solid #86efac", borderRadius: 8, padding: "8px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 16 }}>✓</span>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: "#065f46" }}>CWCAF generated — ready for NBFC dispatch</span>
+                          </div>
+                        )}
 
                         <div style={{ marginBottom: 16 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>

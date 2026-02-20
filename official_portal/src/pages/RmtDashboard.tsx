@@ -569,6 +569,32 @@ const RmtDashboard: React.FC = () => {
                           {cwcrf.status === "RMT_APPROVED" && (
                             <span className="text-green-600 text-sm">✓ Sent to Ops</span>
                           )}
+                          <button
+                            onClick={async () => {
+                              try {
+                                toast.loading("Generating PDF...", { id: "pdf-gen" });
+                                const res = await cwcrfApi.downloadCasePdf(cwcrf._id);
+                                const blob = new Blob([res.data], { type: "application/pdf" });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = `${cwcrf.cwcRfNumber || cwcrf._id}-Case-Report.pdf`;
+                                document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                                window.URL.revokeObjectURL(url);
+                                toast.dismiss("pdf-gen");
+                                toast.success("PDF downloaded");
+                              } catch {
+                                toast.dismiss("pdf-gen");
+                                toast.error("Failed to download PDF");
+                              }
+                            }}
+                            className="text-gray-600 hover:text-gray-900 hover:underline text-sm"
+                            title="Download full case as PDF"
+                          >
+                            📄 PDF
+                          </button>
                         </div>
                       </td>
                     </tr>

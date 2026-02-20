@@ -39,7 +39,7 @@ const computeProfileCompletion = (sc) => {
 
 /** Step 3: Sales creates a company lead */
 const createCompanyLead = async (data, salesAgentId) => {
-  const { companyName, ownerName, email, phone, address } = data;
+  const { companyName, ownerName, email, phone, address, gstNumber, city, state, notes } = data;
 
   const existing = await Company.findOne({ email });
   if (existing) throw new Error('A company with this email already exists');
@@ -50,10 +50,18 @@ const createCompanyLead = async (data, salesAgentId) => {
     email,
     phone,
     address,
+    ...(gstNumber && { gstin: gstNumber.toUpperCase() }),
+    ...(city && { city }),
+    ...(state && { state }),
     salesAgentId,
     status: 'LEAD_CREATED',
     statusHistory: [{ status: 'LEAD_CREATED', changedBy: salesAgentId }],
   });
+
+  // Save initial sales notes if provided
+  if (notes && notes.trim()) {
+    company.salesNotes.push({ text: notes.trim(), addedBy: salesAgentId });
+  }
   await company.save();
 
   // Step 4: Generate GryLink + create EPC user

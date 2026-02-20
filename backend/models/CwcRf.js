@@ -143,6 +143,32 @@ const cwcRfSchema = new mongoose.Schema(
     },
 
     // ========================================
+    // OPS SUPER ACCESS — Edit Log & Detached Fields (Phase 6.2)
+    // ========================================
+    opsEditLog: [
+      {
+        section: { type: String },          // e.g. 'invoiceDetails', 'buyerDetails'
+        field: { type: String },             // e.g. 'invoiceNumber', 'projectName'
+        oldValue: { type: mongoose.Schema.Types.Mixed },
+        newValue: { type: mongoose.Schema.Types.Mixed },
+        editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        editedAt: { type: Date, default: Date.now },
+        reason: { type: String, trim: true },
+      },
+    ],
+    opsDetachedFields: [
+      {
+        section: { type: String },
+        field: { type: String },
+        detachedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        detachedAt: { type: Date, default: Date.now },
+        reason: { type: String, trim: true },
+        resolved: { type: Boolean, default: false },
+        resolvedAt: { type: Date },
+      },
+    ],
+
+    // ========================================
     // BUYER (EPC) VERIFICATION - Section A, B, C
     // ========================================
     buyerVerification: {

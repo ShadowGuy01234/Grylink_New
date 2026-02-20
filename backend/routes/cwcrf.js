@@ -223,6 +223,81 @@ router.post(
 );
 
 /**
+ * POST /api/cwcrf/:id/ops/detach-field - Ops detaches a document/field (Phase 6.2 Super Access)
+ */
+router.post(
+  "/:id/ops/detach-field",
+  authenticate,
+  authorize("ops", "admin"),
+  async (req, res) => {
+    try {
+      const { section, field, reason } = req.body;
+      if (!section || !field) {
+        return res.status(400).json({ error: "section and field are required" });
+      }
+      const cwcRf = await cwcrfService.opsDetachField(
+        req.params.id,
+        req.user._id,
+        { section, field, reason },
+      );
+      res.json({ message: `Field ${section}.${field} detached`, cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * PATCH /api/cwcrf/:id/ops/edit-field - Ops edits a field directly (Phase 6.2 Super Access)
+ */
+router.patch(
+  "/:id/ops/edit-field",
+  authenticate,
+  authorize("ops", "admin"),
+  async (req, res) => {
+    try {
+      const { section, field, newValue, reason } = req.body;
+      if (!section || !field || newValue === undefined) {
+        return res.status(400).json({ error: "section, field, and newValue are required" });
+      }
+      const cwcRf = await cwcrfService.opsEditField(
+        req.params.id,
+        req.user._id,
+        { section, field, newValue, reason },
+      );
+      res.json({ message: `Field ${section}.${field} updated`, cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/ops/re-request - Ops sends re-request to SC (Phase 6.2 Super Access)
+ */
+router.post(
+  "/:id/ops/re-request",
+  authenticate,
+  authorize("ops", "admin"),
+  async (req, res) => {
+    try {
+      const { message, section } = req.body;
+      if (!message || !message.trim()) {
+        return res.status(400).json({ error: "message is required" });
+      }
+      const result = await cwcrfService.opsReRequest(
+        req.params.id,
+        req.user._id,
+        { message, section },
+      );
+      res.json({ message: "Re-request sent to sub-contractor", ...result });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
  * POST /api/cwcrf/:id/ops/triage - Ops risk triage after RMT review (Phase 8)
  */
 router.post(
@@ -250,6 +325,28 @@ router.post(
 // ========================================
 // RMT ENDPOINTS
 // ========================================
+
+/**
+ * GET /api/cwcrf/:id/pdf - Download full case as PDF (Phase 7.2)
+ */
+router.get(
+  "/:id/pdf",
+  authenticate,
+  authorize("rmt", "ops", "admin", "founder"),
+  async (req, res) => {
+    try {
+      const pdfDoc = await cwcrfService.generateCasePdf(req.params.id);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="CWCRF-${req.params.id}-Case-Report.pdf"`,
+      );
+      pdfDoc.pipe(res);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
 
 /**
  * GET /api/cwcrf/rmt/queue - Get CWCRFs in RMT queue
