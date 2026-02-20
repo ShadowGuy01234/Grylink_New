@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { api, cwcrfApi } from "../api";
+import { api, cwcrfApi, opsApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 
 interface Cwcrf {
@@ -10,10 +10,24 @@ interface Cwcrf {
   subContractorId?: {
     _id: string;
     companyName: string;
+    ownerName?: string;
+  };
+  epcId?: {
+    _id: string;
+    companyName: string;
+  };
+  billId?: {
+    billNumber: string;
+    amount: number;
+    fileUrl?: string;
+    wcc?: { uploaded: boolean; fileUrl?: string };
+    measurementSheet?: { uploaded: boolean; fileUrl?: string };
   };
   buyerDetails?: {
     buyerName: string;
     buyerGstin: string;
+    projectName?: string;
+    projectLocation?: string;
   };
   invoiceDetails?: {
     invoiceNumber: string;
@@ -272,7 +286,7 @@ const RmtDashboard: React.FC = () => {
     }
 
     try {
-      await cwcrfApi.shareWithNbfcs(selectedCwcrf._id, selectedNbfcs);
+      await opsApi.shareWithNbfcs(selectedCwcrf._id, selectedNbfcs);
       toast.success(
         `Shared with ${selectedNbfcs.length} NBFC${selectedNbfcs.length > 1 ? "s" : ""}`,
       );
@@ -510,14 +524,14 @@ const RmtDashboard: React.FC = () => {
                         {cwcrf.subContractorId?.companyName}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {cwcrf.buyerDetails?.buyerName}
+                        {cwcrf.buyerDetails?.buyerName || cwcrf.epcId?.companyName || '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium">
+                        ₹{(cwcrf.buyerVerification?.approvedAmount || cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                        {cwcrf.buyerVerification?.approvedAmount ? <span className="ml-1 text-xs text-green-600">(approved)</span> : <span className="ml-1 text-xs text-gray-400">(requested)</span>}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        ₹
-                        {cwcrf.buyerVerification?.approvedAmount?.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {cwcrf.buyerVerification?.repaymentTimeline} days
+                        {cwcrf.buyerVerification?.repaymentTimeline || cwcrf.cwcRequest?.requestedTenure || '—'} days
                       </td>
                       <td className="px-6 py-4">{statusBadge(cwcrf.status)}</td>
                       <td className="px-6 py-4">
@@ -560,7 +574,7 @@ const RmtDashboard: React.FC = () => {
                                 onClick={async () => {
                                   try {
                                     setSelectedCwcrf(cwcrf);
-                                    const res = await cwcrfApi.getMatchingNbfcs(cwcrf._id);
+                                    const res = await opsApi.getMatchingNbfcs(cwcrf._id);
                                     setMatchingNbfcs(res.data?.nbfcs || res.data || []);
                                     setShowNbfcModal(true);
                                   } catch {

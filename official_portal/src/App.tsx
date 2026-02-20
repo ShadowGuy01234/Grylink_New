@@ -14,6 +14,7 @@ import OpsDashboard from "./pages/OpsDashboardNew";
 import CasesPage from "./pages/CasesPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import RmtDashboard from "./pages/RmtDashboard";
+import RmtCasesPage from "./pages/RmtCasesPage";
 import FounderDashboard from "./pages/FounderDashboard";
 import AuditLogPage from "./pages/AuditLogPage";
 // Ops dedicated pages
@@ -185,6 +186,16 @@ const AppRoutes = () => {
           element={
             ["rmt", "admin", "founder"].includes(user.role) ? (
               <RmtDashboard />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="rmt/cases"
+          element={
+            ["rmt", "admin", "founder"].includes(user.role) ? (
+              <RmtCasesPage />
             ) : (
               <Navigate to={homeRoute} replace />
             )
