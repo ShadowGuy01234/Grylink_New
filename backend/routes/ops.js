@@ -87,6 +87,22 @@ router.post(
         requestedAt: new Date(),
       });
       await sc.save();
+
+      // Send email notification to SC about the document request
+      if (sc.email) {
+        const { sendStatusUpdate } = require('../services/emailService');
+        try {
+          await sendStatusUpdate(
+            sc.email,
+            sc.contactName || sc.companyName || 'Sub-Contractor',
+            'Additional Document Requested',
+            `The Gryork operations team has requested an additional document from you:\n\nDocument: ${label}${description ? '\nInstructions: ' + description : ''}\n\nPlease log in to your portal and upload the requested document as soon as possible.`
+          );
+        } catch (emailErr) {
+          console.error('Failed to send additional doc request email:', emailErr);
+        }
+      }
+
       res.json({ success: true, message: 'Additional document requested', additionalDocuments: sc.additionalDocuments });
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -120,11 +136,11 @@ router.post(
   authorize('ops', 'admin'),
   async (req, res) => {
     try {
-      const { decision } = req.body;
+      const { decision, notes } = req.body;
       if (!decision || !['approve', 'reject'].includes(decision)) {
         return res.status(400).json({ error: 'Decision must be approve or reject' });
       }
-      const result = await opsService.verifyAdditionalDocument(req.params.id, req.params.docId, decision, req.user._id);
+      const result = await opsService.verifyAdditionalDocument(req.params.id, req.params.docId, decision, req.user._id, notes);
       res.json(result);
     } catch (error) {
       res.status(400).json({ error: error.message });

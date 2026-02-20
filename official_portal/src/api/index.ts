@@ -90,7 +90,7 @@ export const opsApi = {
     api.post(`/ops/kyc/${id}/verify-bank-details`, data),
   requestAdditionalDoc: (id: string, data: { label: string; description?: string }) =>
     api.post(`/ops/kyc/${id}/request-additional`, data),
-  verifyAdditionalDoc: (sellerId: string, docId: string, data: { decision: string }) =>
+  verifyAdditionalDoc: (sellerId: string, docId: string, data: { decision: string; notes?: string }) =>
     api.post(`/ops/kyc/${sellerId}/verify-additional/${docId}`, data),
 
   // SLA Tracking APIs

@@ -248,6 +248,7 @@ const KycVerificationPage = () => {
     try {
       await opsApi.verifyAdditionalDoc(selectedSeller._id, additionalVerifyModal.docId, {
         decision: decision.decision,
+        notes: decision.notes,
       });
       toast.success(decision.decision === "approve" ? "Document verified!" : "Document rejected");
       setAdditionalVerifyModal({ show: false, docId: null });

@@ -413,7 +413,7 @@ const verifyBankDetails = async (sellerId, decision, notes, opsUserId) => {
 };
 
 // Verify individual additional document
-const verifyAdditionalDocument = async (sellerId, docId, decision, opsUserId) => {
+const verifyAdditionalDocument = async (sellerId, docId, decision, opsUserId, notes) => {
   const seller = await SubContractor.findById(sellerId);
   if (!seller) throw new Error("Seller not found");
 
@@ -421,7 +421,27 @@ const verifyAdditionalDocument = async (sellerId, docId, decision, opsUserId) =>
   if (!doc) throw new Error("Additional document not found");
 
   doc.status = decision === "approve" ? "VERIFIED" : "REJECTED";
+  doc.verifiedBy = opsUserId;
+  doc.verifiedAt = new Date();
+  if (decision === "reject" && notes) {
+    doc.rejectionNotes = notes;
+  }
   await seller.save();
+
+  // Notify SC about rejection so they can re-upload
+  if (decision === "reject" && seller.email) {
+    try {
+      await sendStatusUpdate(
+        seller.email,
+        seller.contactName || seller.companyName || "Sub-Contractor",
+        "Document Rejected — Re-upload Required",
+        `Your uploaded document "${doc.label}" has been reviewed and requires re-submission.${notes ? "\n\nReason: " + notes : ""}\n\nPlease log in to your portal and upload a corrected version.`
+      );
+    } catch (emailErr) {
+      console.error("Failed to send additional doc rejection email:", emailErr);
+    }
+  }
+
   return { success: true, document: doc };
 };
 

@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import {
   FileText, CheckCircle2, ArrowRight, ArrowLeft, Send, Building2,
-  Receipt, Percent, AlertCircle, FileCheck, XCircle, Info, Target, CreditCard, Upload
+  Receipt, Percent, AlertCircle, FileCheck, XCircle, Info, Target, Upload
 } from 'lucide-react';
 
 interface CwcrfFormData {
@@ -82,8 +82,7 @@ const steps = [
   { id: 2, label: 'Buyer & Invoice', icon: Building2 },
   { id: 3, label: 'Request Details', icon: Target },
   { id: 4, label: 'Interest Preference', icon: Percent },
-  { id: 5, label: 'Platform Fee', icon: CreditCard },
-  { id: 6, label: 'Review & Submit', icon: Send }
+  { id: 5, label: 'Review & Submit', icon: Send }
 ];
 
 const CwcrfSubmissionPage = () => {
@@ -100,7 +99,6 @@ const CwcrfSubmissionPage = () => {
     reasons: string[];
   } | null>(null);
   const [billFiles, setBillFiles] = useState<{ raBill: File | null; wcc: File | null; measurementSheet: File | null }>({ raBill: null, wcc: null, measurementSheet: null });
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   useEffect(() => {
     checkEligibilityAndLoadData();
@@ -178,22 +176,19 @@ const CwcrfSubmissionPage = () => {
           toast.error('Minimum interest rate must be less than maximum'); return false;
         }
         return true;
-      case 5:
-        if (!paymentConfirmed) { toast.error('Please confirm the platform fee payment'); return false; }
-        return true;
       default:
         return true;
     }
   };
 
   const nextStep = () => {
-    if (validateStep(currentStep)) setCurrentStep(prev => Math.min(prev + 1, 6));
+    if (validateStep(currentStep)) setCurrentStep(prev => Math.min(prev + 1, 5));
   };
 
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   const handleSubmit = async () => {
-    if (!validateStep(5)) return;
+    if (!validateStep(4)) return;
     setSubmitting(true);
     try {
       const fd = new FormData();
@@ -602,63 +597,8 @@ const CwcrfSubmissionPage = () => {
           </motion.div>
         )}
 
-        {/* Step 5: Platform Fee Payment */}
+        {/* Step 5: Review & Submit */}
         {currentStep === 5 && (
-          <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-indigo-600" />Platform Fee Payment</CardTitle>
-                <CardDescription>A one-time non-refundable platform processing fee is required to submit your CWCRF</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Fee summary */}
-                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6 text-center">
-                  <p className="text-4xl font-bold text-indigo-700 mb-1">₹1,000</p>
-                  <p className="text-sm text-indigo-600 font-medium">Platform Processing Fee (incl. GST)</p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <Info className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-600">This fee covers platform processing, document verification coordination, and NBFC matchmaking services. It is non-refundable once the CWCRF is submitted.</p>
-                  </div>
-                </div>
-
-                {/* Payment button / stub */}
-                <div className="border border-gray-200 rounded-xl p-5 space-y-4">
-                  <h4 className="font-semibold text-gray-900">Pay via UPI / Net Banking</h4>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentConfirmed(true)}
-                    disabled={paymentConfirmed}
-                    className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-colors ${
-                      paymentConfirmed ? 'bg-green-500 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer'
-                    }`}
-                  >
-                    {paymentConfirmed ? '✓ Payment Confirmed' : 'Pay ₹1,000 Now'}
-                  </button>
-                  {!paymentConfirmed && (
-                    <p className="text-xs text-gray-400 text-center">You will be redirected to the payment gateway</p>
-                  )}
-                </div>
-
-                {/* Manual confirmation checkbox */}
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={paymentConfirmed}
-                    onChange={(e) => setPaymentConfirmed(e.target.checked)}
-                    className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="text-gray-700 text-sm">I confirm that I have paid the platform processing fee of <strong>₹1,000</strong></span>
-                </label>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Step 6: Review & Submit */}
-        {currentStep === 6 && (
           <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
             <Card>
               <CardHeader>
@@ -738,7 +678,7 @@ const CwcrfSubmissionPage = () => {
         ) : (
           <div />
         )}
-        {currentStep < 6 ? (
+        {currentStep < 5 ? (
           <Button onClick={nextStep}>
             Next<ArrowRight className="h-4 w-4 ml-2" />
           </Button>

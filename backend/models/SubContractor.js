@@ -113,6 +113,9 @@ const subContractorSchema = new mongoose.Schema(
           enum: ["REQUESTED", "UPLOADED", "VERIFIED", "REJECTED"],
           default: "REQUESTED",
         },
+        rejectionNotes: { type: String },
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        verifiedAt: { type: Date },
       },
     ],
 

@@ -31,6 +31,7 @@ interface AdditionalDocument {
   fileUrl?: string;
   uploadedAt?: string;
   status: 'REQUESTED' | 'UPLOADED' | 'VERIFIED' | 'REJECTED';
+  rejectionNotes?: string;
 }
 
 const KYC_DOCUMENTS: KycDocument[] = [
@@ -593,6 +594,12 @@ const KycUploadPage = () => {
                     <div>
                       <p className="font-medium text-gray-900">{doc.label}</p>
                       {doc.description && <p className="text-sm text-gray-500 mt-0.5">{doc.description}</p>}
+                      {doc.status === 'REJECTED' && doc.rejectionNotes && (
+                        <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                          <XCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span><strong>Reason:</strong> {doc.rejectionNotes}</span>
+                        </p>
+                      )}
                     </div>
                     <Badge variant={
                       doc.status === 'VERIFIED' ? 'success' :
