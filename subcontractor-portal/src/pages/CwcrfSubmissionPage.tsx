@@ -499,7 +499,7 @@ const CwcrfSubmissionPage = () => {
                   </div>
                   <div className="space-y-2">
                     <Label required>Invoice Amount (₹)</Label>
-                    <Input type="number" value={formData.sectionB.invoiceAmount} onChange={(e) => updateSection('sectionB', 'invoiceAmount', parseFloat(e.target.value))} />
+                    <Input type="number" placeholder="e.g. 500000" value={formData.sectionB.invoiceAmount || ''} onChange={(e) => updateSection('sectionB', 'invoiceAmount', e.target.value === '' ? 0 : (parseFloat(e.target.value) || 0))} />
                   </div>
                   <div className="space-y-2">
                     <Label>Due Date</Label>
@@ -535,12 +535,12 @@ const CwcrfSubmissionPage = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label required>Requested Amount (₹)</Label>
-                    <Input type="number" value={formData.sectionC.requestedAmount} onChange={(e) => updateSection('sectionC', 'requestedAmount', parseFloat(e.target.value))} />
+                    <Input type="number" placeholder="e.g. 400000" value={formData.sectionC.requestedAmount || ''} onChange={(e) => updateSection('sectionC', 'requestedAmount', e.target.value === '' ? 0 : (parseFloat(e.target.value) || 0))} />
                     <p className="text-xs text-gray-500">Max: ₹{formData.sectionB.invoiceAmount?.toLocaleString()}</p>
                   </div>
                   <div className="space-y-2">
                     <Label required>Requested Tenure (days)</Label>
-                    <Input type="number" value={formData.sectionC.requestedTenure} onChange={(e) => updateSection('sectionC', 'requestedTenure', parseInt(e.target.value))} min={7} max={180} />
+                    <Input type="number" placeholder="e.g. 90" value={formData.sectionC.requestedTenure || ''} onChange={(e) => updateSection('sectionC', 'requestedTenure', e.target.value === '' ? 0 : (parseInt(e.target.value) || 0))} min={7} max={180} />
                   </div>
                   <div className="space-y-2">
                     <Label>Urgency Level</Label>
@@ -580,11 +580,11 @@ const CwcrfSubmissionPage = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label required>Minimum Acceptable Rate (% p.a.)</Label>
-                    <Input type="number" value={formData.sectionD.acceptableInterestRateMin} onChange={(e) => updateSection('sectionD', 'acceptableInterestRateMin', parseFloat(e.target.value))} step="0.5" min={0} max={50} />
+                    <Input type="number" placeholder="e.g. 12" value={formData.sectionD.acceptableInterestRateMin || ''} onChange={(e) => updateSection('sectionD', 'acceptableInterestRateMin', e.target.value === '' ? 0 : (parseFloat(e.target.value) || 0))} step="0.5" min={0} max={50} />
                   </div>
                   <div className="space-y-2">
                     <Label required>Maximum Acceptable Rate (% p.a.)</Label>
-                    <Input type="number" value={formData.sectionD.acceptableInterestRateMax} onChange={(e) => updateSection('sectionD', 'acceptableInterestRateMax', parseFloat(e.target.value))} step="0.5" min={0} max={50} />
+                    <Input type="number" placeholder="e.g. 18" value={formData.sectionD.acceptableInterestRateMax || ''} onChange={(e) => updateSection('sectionD', 'acceptableInterestRateMax', e.target.value === '' ? 0 : (parseFloat(e.target.value) || 0))} step="0.5" min={0} max={50} />
                   </div>
                   <div className="space-y-2">
                     <Label>Repayment Frequency</Label>
@@ -610,7 +610,7 @@ const CwcrfSubmissionPage = () => {
                     {formData.sectionD.processingFeeAcceptance && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2 pl-8">
                         <Label>Maximum Processing Fee (%)</Label>
-                        <Input type="number" value={formData.sectionD.maxProcessingFeePercent} onChange={(e) => updateSection('sectionD', 'maxProcessingFeePercent', parseFloat(e.target.value))} step="0.5" min={0} max={5} className="max-w-xs" />
+                        <Input type="number" placeholder="e.g. 2" value={formData.sectionD.maxProcessingFeePercent || ''} onChange={(e) => updateSection('sectionD', 'maxProcessingFeePercent', e.target.value === '' ? 0 : (parseFloat(e.target.value) || 0))} step="0.5" min={0} max={5} className="max-w-xs" />
                       </motion.div>
                     )}
                   </div>

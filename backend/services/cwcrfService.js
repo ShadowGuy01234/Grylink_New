@@ -608,10 +608,22 @@ class CwcRfService {
 
     // Create a case if not exists
     if (!cwcRf.caseId) {
+      // epcId may be missing on older CWCRFs — fall back to SubContractor's linkedEpcId
+      let epcId = cwcRf.epcId;
+      if (!epcId) {
+        const SubContractor = require("../models/SubContractor");
+        const sc = await SubContractor.findById(cwcRf.subContractorId).select("linkedEpcId");
+        epcId = sc?.linkedEpcId;
+      }
+      if (!epcId) throw new Error("Cannot create case: EPC not found for this CWCRF. Please contact support.");
+
+      // Also patch cwcRf.epcId so it's correct going forward
+      if (!cwcRf.epcId) cwcRf.epcId = epcId;
+
       const newCase = new Case({
         billId: cwcRf.billId,
         subContractorId: cwcRf.subContractorId,
-        epcId: cwcRf.epcId,
+        epcId,
         cwcRfId: cwcRf._id,
         status: "RMT_QUEUE",
         dealValue: cwcRf.buyerVerification?.approvedAmount,
