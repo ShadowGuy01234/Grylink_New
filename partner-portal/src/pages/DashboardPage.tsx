@@ -58,9 +58,10 @@ const DashboardPage = () => {
     buyerDeclarationAccepted: false,
   });
   const [cwcrfDecisionLoading, setCwcrfDecisionLoading] = useState(false);
+  const [cwcrfReviewStep, setCwcrfReviewStep] = useState(1); // 1=SC Docs 2=Risk Report 3=Declaration 4=Bid Terms
 
   // UI State
-  const [activeTab, setActiveTab] = useState("documents");
+  const [activeTab, setActiveTab] = useState("overview");
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
   // Initial Data Fetch
@@ -313,6 +314,17 @@ const DashboardPage = () => {
             Menu
           </p>
 
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`nav-item ${activeTab === "overview" ? "active" : ""}`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Overview
+          </button>
+
           {isEpc && (
             <button
               onClick={() => setActiveTab("documents")}
@@ -493,19 +505,27 @@ const DashboardPage = () => {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-2xl font-bold text-slate-800">
-              {activeTab === "documents"
-                ? "Company Documents"
-                : activeTab === "subcontractors"
-                  ? "Sub-Contractors"
-                  : activeTab === "cases"
-                    ? "Cases & Bills"
-                    : activeTab === "billreview"
-                      ? "Invoice Review"
-                      : activeTab === "cwcrfverify"
-                        ? "CWC Request Forms"
-                        : "My Bids"}
+              {({
+                overview: "Overview",
+                documents: "Company Documents",
+                subcontractors: "Sub-Contractors",
+                cases: "Cases & Bills",
+                billreview: "Invoice Review",
+                cwcrfverify: "CWC Request Forms",
+                bids: "My Bids",
+              } as Record<string, string>)[activeTab] ?? "Dashboard"}
             </h2>
-            <p className="text-slate-500">Manage your partnership details</p>
+            <p className="text-slate-500">
+              {({
+                overview: "Your EPC partnership at a glance",
+                documents: "Upload and manage company documents",
+                subcontractors: "Manage your registered sub-contractors",
+                cases: "Active cases and bills",
+                billreview: "Review and approve invoices from sub-contractors",
+                cwcrfverify: "Review and respond to CWC Request Forms",
+                bids: "Track and manage your bid commitments",
+              } as Record<string, string>)[activeTab] ?? "Manage your partnership details"}
+            </p>
           </div>
           {profile?.company?.status && (
             <div
@@ -677,6 +697,96 @@ const DashboardPage = () => {
         )}
 
         <AnimatePresence mode="wait">
+          {activeTab === "overview" && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="space-y-6"
+            >
+              {/* Onboarding Progress */}
+              {isEpc && (
+                <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                  <h3 className="text-base font-semibold text-slate-800 mb-4">Onboarding Progress</h3>
+                  <div className="flex items-center gap-0 mb-4">
+                    {[
+                      { label: "Documents", done: uploadedDocsCount > 0 },
+                      { label: "Verified", done: areDocsVerified },
+                      { label: "SCs Added", done: subContractors.length > 0 },
+                      { label: "Cases Active", done: cases.length > 0 },
+                    ].map((step, i, arr) => (
+                      <div key={step.label} className="flex items-center">
+                        <div className={`flex flex-col items-center`}>
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
+                            step.done ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-300 text-gray-400"
+                          }`}>
+                            {step.done ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                            ) : i + 1}
+                          </div>
+                          <span className={`text-xs mt-1.5 font-medium ${
+                            step.done ? "text-emerald-600" : "text-gray-400"
+                          }`}>{step.label}</span>
+                        </div>
+                        {i < arr.length - 1 && (
+                          <div className={`h-0.5 w-16 mb-5 mx-1 ${
+                            step.done ? "bg-emerald-400" : "bg-gray-200"
+                          }`} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-3">Quick Actions</p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[
+                    { label: isEpc ? "Upload Documents" : "Manage Documents", desc: `${uploadedDocsCount} uploaded${areDocsVerified ? " (verified)" : ""}`, tab: "documents", color: "indigo", show: isEpc },
+                    { label: "Sub-Contractors", desc: `${subContractors.length} registered`, tab: "subcontractors", color: "blue", show: isEpc && areDocsVerified },
+                    { label: "Cases & Bills", desc: `${cases.length} active cases`, tab: "cases", color: "emerald", show: true },
+                    { label: "Invoice Review", desc: `${pendingBillsCount} pending`, tab: "billreview", color: "amber", show: isEpc && areDocsVerified && pendingBillsCount > 0 },
+                    { label: "CWC Requests", desc: `${pendingCwcrfsCount} to review`, tab: "cwcrfverify", color: "violet", show: isEpc && areDocsVerified && pendingCwcrfsCount > 0 },
+                    { label: "My Bids", desc: `${myBids.length} submitted bids`, tab: "bids", color: "sky", show: true },
+                  ].filter((a) => a.show).map((action) => {
+                    const colorMap: Record<string, string> = {
+                      indigo: "bg-indigo-50 text-indigo-600",
+                      blue: "bg-blue-50 text-blue-600",
+                      emerald: "bg-emerald-50 text-emerald-600",
+                      amber: "bg-amber-50 text-amber-600",
+                      violet: "bg-violet-50 text-violet-600",
+                      sky: "bg-sky-50 text-sky-600",
+                    };
+                    return (
+                      <button
+                        key={action.label}
+                        onClick={() => setActiveTab(action.tab)}
+                        className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div className={`${colorMap[action.color]} p-2.5 rounded-lg shrink-0`}>
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{action.label}</p>
+                          <p className="text-xs text-gray-500">{action.desc}</p>
+                        </div>
+                        <svg className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === "documents" && isEpc && (
             <DocumentsSection
               profile={profile}
@@ -986,6 +1096,7 @@ const DashboardPage = () => {
                                 onClick={() => {
                                   setSelectedCwcrf(cwcrf);
                                   setCwcrfActionMode(null);
+                                  setCwcrfReviewStep(1);
                                   setCwcrfVerifyForm({
                                     approvedAmount: cwcrf.cwcRequest?.requestedAmount || 0,
                                     repaymentTimeline: 30,
@@ -1047,285 +1158,314 @@ const DashboardPage = () => {
                       >×</button>
                     </div>
 
-                    {/* Modal Body */}
-                    <div className="p-6 space-y-6">
-                      {/* Section A: Buyer & Project */}
-                      <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Section A — Buyer & Project Details</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-slate-50 rounded-xl p-3">
-                            <p className="text-xs text-slate-400 mb-0.5">Buyer / EPC</p>
-                            <p className="font-semibold text-slate-800 text-sm">
-                              {selectedCwcrf.buyerDetails?.buyerName || "—"}
-                            </p>
-                          </div>
-                          <div className="bg-slate-50 rounded-xl p-3">
-                            <p className="text-xs text-slate-400 mb-0.5">Project Name</p>
-                            <p className="font-semibold text-slate-800 text-sm">
-                              {selectedCwcrf.buyerDetails?.projectName || "—"}
-                            </p>
-                          </div>
-                          <div className="bg-slate-50 rounded-xl p-3 col-span-2">
-                            <p className="text-xs text-slate-400 mb-0.5">Project Location</p>
-                            <p className="font-semibold text-slate-800 text-sm">
-                              {selectedCwcrf.buyerDetails?.projectLocation || "—"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Section B: Invoice Details */}
-                      <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Section B — Invoice Details</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-blue-50 rounded-xl p-3">
-                            <p className="text-xs text-slate-400 mb-0.5">Invoice Number</p>
-                            <p className="font-semibold text-slate-800 text-sm">
-                              {selectedCwcrf.invoiceDetails?.invoiceNumber || "—"}
-                            </p>
-                          </div>
-                          <div className="bg-blue-50 rounded-xl p-3">
-                            <p className="text-xs text-slate-400 mb-0.5">Invoice Date</p>
-                            <p className="font-semibold text-slate-800 text-sm">
-                              {selectedCwcrf.invoiceDetails?.invoiceDate
-                                ? new Date(selectedCwcrf.invoiceDetails.invoiceDate).toLocaleDateString("en-IN")
-                                : "—"}
-                            </p>
-                          </div>
-                          <div className="bg-emerald-50 rounded-xl p-3">
-                            <p className="text-xs text-slate-400 mb-0.5">Invoice Amount</p>
-                            <p className="text-xl font-bold text-emerald-700">
-                              {selectedCwcrf.invoiceDetails?.invoiceAmount
-                                ? `₹${Number(selectedCwcrf.invoiceDetails.invoiceAmount).toLocaleString()}`
-                                : "—"}
-                            </p>
-                          </div>
-                          <div className="bg-blue-50 rounded-xl p-3">
-                            <p className="text-xs text-slate-400 mb-0.5">Expected Payment Date</p>
-                            <p className="font-semibold text-slate-800 text-sm">
-                              {selectedCwcrf.invoiceDetails?.expectedPaymentDate
-                                ? new Date(selectedCwcrf.invoiceDetails.expectedPaymentDate).toLocaleDateString("en-IN")
-                                : "—"}
-                            </p>
-                          </div>
-                          {selectedCwcrf.invoiceDetails?.workDescription && (
-                            <div className="bg-slate-50 rounded-xl p-3 col-span-2">
-                              <p className="text-xs text-slate-400 mb-0.5">Work Description</p>
-                              <p className="text-slate-700 text-sm">{selectedCwcrf.invoiceDetails.workDescription}</p>
+                    {/* Step Indicator */}
+                    <div className="px-6 pt-5 pb-2 border-b border-slate-100">
+                      <div className="flex items-center">
+                        {["SC Documents", "Risk Report", "Declaration", "Bid Terms"].map((label, idx) => (
+                          <div key={idx} className="flex items-center flex-1 last:flex-none">
+                            <div className="flex flex-col items-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${cwcrfReviewStep > idx + 1 ? "bg-emerald-500 text-white" : cwcrfReviewStep === idx + 1 ? "bg-violet-600 text-white shadow-md shadow-violet-200" : "bg-slate-100 text-slate-400"}`}>
+                                {cwcrfReviewStep > idx + 1 ? "✓" : idx + 1}
+                              </div>
+                              <span className={`text-xs mt-1 whitespace-nowrap ${cwcrfReviewStep === idx + 1 ? "text-violet-600 font-semibold" : "text-slate-400"}`}>{label}</span>
                             </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Section C: CWC Request */}
-                      <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Section C — CWC Request</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-violet-50 rounded-xl p-3">
-                            <p className="text-xs text-slate-400 mb-0.5">Requested Amount</p>
-                            <p className="text-xl font-bold text-violet-700">
-                              {selectedCwcrf.cwcRequest?.requestedAmount
-                                ? `₹${Number(selectedCwcrf.cwcRequest.requestedAmount).toLocaleString()}`
-                                : "—"}
-                            </p>
+                            {idx < 3 && <div className={`h-0.5 flex-1 mx-1 mb-4 transition-colors ${cwcrfReviewStep > idx + 1 ? "bg-emerald-400" : "bg-slate-200"}`} />}
                           </div>
-                          <div className="bg-violet-50 rounded-xl p-3">
-                            <p className="text-xs text-slate-400 mb-0.5">Requested Tenure</p>
-                            <p className="font-semibold text-slate-800 text-sm">
-                              {selectedCwcrf.cwcRequest?.requestedTenure
-                                ? `${selectedCwcrf.cwcRequest.requestedTenure} days`
-                                : "—"}
-                            </p>
-                          </div>
-                        </div>
+                        ))}
                       </div>
+                    </div>
 
-                      {/* Action Selector */}
-                      {!cwcrfActionMode && (
-                        <div className="flex gap-3 pt-2">
-                          <button
-                            onClick={() => setCwcrfActionMode("approve")}
-                            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Approve CWCRF
-                          </button>
-                          <button
-                            onClick={() => setCwcrfActionMode("reject")}
-                            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-white border-2 border-red-300 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Reject
-                          </button>
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-4">
+
+                      {/* ── STEP 1: SC Documents ── */}
+                      {cwcrfReviewStep === 1 && (
+                        <div className="space-y-4">
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step 1 — Sub-Contractor Documents & Profile</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-400 mb-0.5">Company Name</p>
+                              <p className="font-semibold text-slate-800 text-sm">{selectedCwcrf.subContractorId?.companyName || "—"}</p>
+                            </div>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-400 mb-0.5">Email</p>
+                              <p className="font-semibold text-slate-800 text-sm">{selectedCwcrf.subContractorId?.email || "—"}</p>
+                            </div>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-400 mb-0.5">GSTIN</p>
+                              <p className="font-semibold text-slate-800 text-sm">{selectedCwcrf.subContractorId?.gstin || selectedCwcrf.subContractorId?.kycData?.gstin || "—"}</p>
+                            </div>
+                            <div className="bg-slate-50 rounded-xl p-3">
+                              <p className="text-xs text-slate-400 mb-0.5">PAN</p>
+                              <p className="font-semibold text-slate-800 text-sm">{selectedCwcrf.subContractorId?.pan || selectedCwcrf.subContractorId?.kycData?.pan || "—"}</p>
+                            </div>
+                          </div>
+                          {/* KYC & Bank Status Badges */}
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { label: "KYC Verified", ok: selectedCwcrf.subContractorId?.kycStatus === "VERIFIED" },
+                              { label: "Bank Verified", ok: selectedCwcrf.subContractorId?.bankDetailsVerified === true },
+                              { label: "Declaration Accepted", ok: selectedCwcrf.subContractorId?.declarationStatus === "ACCEPTED" },
+                            ].map((item) => (
+                              <span key={item.label} className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold ${item.ok ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
+                                {item.ok ? "✓" : "✗"} {item.label}
+                              </span>
+                            ))}
+                          </div>
+                          {/* Supporting docs */}
+                          <div>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Supporting Documents (from CWCRF)</p>
+                            <div className="grid grid-cols-3 gap-3">
+                              {[
+                                { label: "RA Bill", url: selectedCwcrf.documents?.raBill },
+                                { label: "WCC", url: selectedCwcrf.documents?.wcc },
+                                { label: "Meas. Sheet", url: selectedCwcrf.documents?.measurementSheet },
+                              ].map((doc) => (
+                                <div key={doc.label} className={`rounded-xl p-3 text-center ${doc.url ? "bg-blue-50 border border-blue-200" : "bg-slate-50 border border-slate-200"}`}>
+                                  <p className="text-xs text-slate-500 mb-1">{doc.label}</p>
+                                  {doc.url ? (
+                                    <a href={doc.url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-blue-600 hover:underline">View →</a>
+                                  ) : (
+                                    <p className="text-xs text-slate-400">Not uploaded</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Invoice summary */}
+                          <div className="bg-blue-50 rounded-xl p-4">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Invoice Summary</p>
+                            <div className="grid grid-cols-3 gap-3">
+                              <div><p className="text-xs text-slate-400">Invoice #</p><p className="font-semibold text-slate-800 text-sm">{selectedCwcrf.invoiceDetails?.invoiceNumber || "—"}</p></div>
+                              <div><p className="text-xs text-slate-400">Amount</p><p className="font-bold text-emerald-700">₹{Number(selectedCwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}</p></div>
+                              <div><p className="text-xs text-slate-400">Tenure Req.</p><p className="font-semibold text-slate-800 text-sm">{selectedCwcrf.cwcRequest?.requestedTenure} days</p></div>
+                            </div>
+                          </div>
                         </div>
                       )}
 
-                      {/* Approve Form */}
-                      {cwcrfActionMode === "approve" && (
-                        <div className="border-2 border-emerald-200 rounded-xl p-5 space-y-4 bg-emerald-50/30">
-                          <p className="text-sm font-bold text-emerald-800">Verification Details</p>
-
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                              Approved CWC Amount (₹) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="number"
-                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                              value={cwcrfVerifyForm.approvedAmount || ""}
-                              max={selectedCwcrf.cwcRequest?.requestedAmount}
-                              onChange={(e) => setCwcrfVerifyForm(prev => ({
-                                ...prev, approvedAmount: Number(e.target.value)
-                              }))}
-                              placeholder="Enter approved amount"
-                            />
-                            <p className="text-xs text-slate-400 mt-1">
-                              Max: ₹{Number(selectedCwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
-                            </p>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                              Repayment Timeline <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white"
-                              value={cwcrfVerifyForm.repaymentTimeline}
-                              onChange={(e) => setCwcrfVerifyForm(prev => ({
-                                ...prev, repaymentTimeline: Number(e.target.value) as 30 | 45 | 60 | 90
-                              }))}
-                            >
-                              <option value={30}>30 days</option>
-                              <option value={45}>45 days</option>
-                              <option value={60}>60 days</option>
-                              <option value={90}>90 days</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                              Repayment Source <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white"
-                              value={cwcrfVerifyForm.repaymentArrangement.source}
-                              onChange={(e) => setCwcrfVerifyForm(prev => ({
-                                ...prev,
-                                repaymentArrangement: { ...prev.repaymentArrangement, source: e.target.value }
-                              }))}
-                            >
-                              <option value="PAYMENT_FROM_RA_BILL">Payment from RA Bill</option>
-                              <option value="PAYMENT_FROM_CLIENT_RELEASE">Payment from Client Release</option>
-                              <option value="PAYMENT_FROM_INTERNAL_TREASURY">Payment from Internal Treasury</option>
-                              <option value="PAYMENT_FROM_RETENTION_RELEASE">Payment from Retention Release</option>
-                              <option value="OTHER">Other</option>
-                            </select>
-                          </div>
-
-                          {cwcrfVerifyForm.repaymentArrangement.source === "OTHER" && (
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Other Details</label>
-                              <input
-                                type="text"
-                                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                                value={cwcrfVerifyForm.repaymentArrangement.otherDetails}
-                                onChange={(e) => setCwcrfVerifyForm(prev => ({
-                                  ...prev,
-                                  repaymentArrangement: { ...prev.repaymentArrangement, otherDetails: e.target.value }
-                                }))}
-                                placeholder="Describe the repayment arrangement"
-                              />
+                      {/* ── STEP 2: RMT Risk Report ── */}
+                      {cwcrfReviewStep === 2 && (
+                        <div className="space-y-4">
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step 2 — RMT Risk Assessment Report</p>
+                          {selectedCwcrf.rmtAssessment || selectedCwcrf.cwcafData ? (
+                            <>
+                              {/* Risk Category Banner */}
+                              {(() => {
+                                const risk = selectedCwcrf.cwcafData?.riskCategory || selectedCwcrf.rmtAssessment?.riskCategory || "—";
+                                const colorMap: Record<string, string> = { LOW: "bg-emerald-50 border-emerald-200 text-emerald-800", MEDIUM: "bg-amber-50 border-amber-200 text-amber-800", HIGH: "bg-red-50 border-red-300 text-red-800" };
+                                return (
+                                  <div className={`rounded-xl p-4 border-2 ${colorMap[risk] || "bg-slate-50 border-slate-200 text-slate-700"}`}>
+                                    <p className="text-xs font-bold uppercase tracking-wider mb-1">Risk Category</p>
+                                    <p className="text-2xl font-black">{risk}</p>
+                                  </div>
+                                );
+                              })()}
+                              {/* Recommendation */}
+                              {(selectedCwcrf.cwcafData?.rmtRecommendation || selectedCwcrf.rmtAssessment?.recommendation) && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                  <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">RMT Recommendation</p>
+                                  <p className="font-semibold text-slate-800">{selectedCwcrf.cwcafData?.rmtRecommendation || selectedCwcrf.rmtAssessment?.recommendation}</p>
+                                  {(selectedCwcrf.cwcafData?.rmtNotes || selectedCwcrf.rmtAssessment?.notes) && (
+                                    <p className="text-sm text-slate-600 mt-2">{selectedCwcrf.cwcafData?.rmtNotes || selectedCwcrf.rmtAssessment?.notes}</p>
+                                  )}
+                                </div>
+                              )}
+                              {/* Risk Assessment Details (4-point checklist) */}
+                              {selectedCwcrf.cwcafData?.riskAssessmentDetails && (
+                                <div>
+                                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assessment Breakdown</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {Object.entries(selectedCwcrf.cwcafData.riskAssessmentDetails).map(([key, val]: [string, any]) => (
+                                      <div key={key} className="bg-slate-50 rounded-xl p-3">
+                                        <p className="text-xs text-slate-400 mb-1 capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</p>
+                                        <p className="font-bold text-lg text-slate-800">{val?.score ?? "—"}<span className="text-xs font-normal text-slate-400">/10</span></p>
+                                        {val?.remarks && <p className="text-xs text-slate-500 mt-1">{val.remarks}</p>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {/* Seller Profile Summary */}
+                              {selectedCwcrf.cwcafData?.sellerProfileSummary && (
+                                <div className="bg-slate-50 rounded-xl p-4">
+                                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Seller Profile Summary</p>
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    {[
+                                      { label: "Business Age", value: `${selectedCwcrf.cwcafData.sellerProfileSummary.businessAge} yrs` },
+                                      { label: "Total Transactions", value: selectedCwcrf.cwcafData.sellerProfileSummary.totalTransactions },
+                                      { label: "Avg. Invoice Value", value: `₹${Number(selectedCwcrf.cwcafData.sellerProfileSummary.averageInvoiceValue || 0).toLocaleString()}` },
+                                      { label: "Repayment History", value: selectedCwcrf.cwcafData.sellerProfileSummary.repaymentHistory },
+                                    ].map((item) => (
+                                      <div key={item.label}><p className="text-xs text-slate-400">{item.label}</p><p className="font-semibold text-slate-800">{item.value || "—"}</p></div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-center py-10 text-slate-400">
+                              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-3">
+                                <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                              </div>
+                              <p className="text-sm font-medium text-slate-600">RMT assessment not yet available</p>
+                              <p className="text-xs text-slate-400 mt-1">This CWCRF may still be awaiting RMT review. You can proceed to review the declaration and bid terms.</p>
                             </div>
                           )}
+                        </div>
+                      )}
 
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Remarks (optional)</label>
-                            <textarea
-                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
-                              rows={2}
-                              value={cwcrfVerifyForm.repaymentArrangement.remarks}
-                              onChange={(e) => setCwcrfVerifyForm(prev => ({
-                                ...prev,
-                                repaymentArrangement: { ...prev.repaymentArrangement, remarks: e.target.value }
-                              }))}
-                              placeholder="Any additional notes..."
-                            />
+                      {/* ── STEP 3: Buyer Declaration ── */}
+                      {cwcrfReviewStep === 3 && (
+                        <div className="space-y-4">
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step 3 — Buyer Declaration</p>
+                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 space-y-4">
+                            <p className="text-sm font-bold text-amber-900">Before confirming your bid terms, you must read and accept the following declaration:</p>
+                            <ul className="space-y-2 text-sm text-amber-800">
+                              {[
+                                "The sub-contractor named in this CWCRF is a registered and active vendor on our rolls.",
+                                "The invoice referenced is genuine and represents actual work executed and accepted.",
+                                "The work described has been completed or is in progress as per the contract terms.",
+                                "I authorise the disbursement of the approved amount to this vendor through the GryLink CWC facility.",
+                                "I understand that the EPC company (buyer) is responsible for repayment on the agreed timeline.",
+                                "All information I am about to enter as bid terms is accurate to the best of my knowledge.",
+                              ].map((text, i) => (
+                                <li key={i} className="flex items-start gap-2"><span className="text-amber-500 mt-0.5 flex-shrink-0">•</span>{text}</li>
+                              ))}
+                            </ul>
                           </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Verification Notes (optional)</label>
-                            <textarea
-                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"
-                              rows={2}
-                              value={cwcrfVerifyForm.notes}
-                              onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, notes: e.target.value }))}
-                              placeholder="Internal notes for Ops / RMT team..."
-                            />
-                          </div>
-
-                          {/* Buyer Declaration */}
-                          <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                          <label className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${cwcrfVerifyForm.buyerDeclarationAccepted ? "bg-emerald-50 border-emerald-400" : "bg-white border-slate-200 hover:border-violet-300"}`}>
                             <input
                               type="checkbox"
-                              id="buyerDeclaration"
                               checked={cwcrfVerifyForm.buyerDeclarationAccepted}
                               onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, buyerDeclarationAccepted: e.target.checked }))}
-                              className="mt-0.5 w-4 h-4 accent-emerald-600 cursor-pointer flex-shrink-0"
+                              className="mt-0.5 w-5 h-5 accent-emerald-600 cursor-pointer flex-shrink-0"
                             />
-                            <label htmlFor="buyerDeclaration" className="text-xs text-amber-900 cursor-pointer leading-relaxed">
-                              <span className="font-bold">Declaration: </span>
-                              I confirm that the sub-contractor named in this CWCRF is a registered vendor on our rolls, the invoice referenced is genuine, and the work described has been executed to satisfaction. I authorise the disbursement of the approved amount to this vendor through the GryLink CWC facility.
-                            </label>
-                          </div>
-
-                          <div className="flex gap-3 pt-1">
-                            <button
-                              onClick={() => setCwcrfActionMode(null)}
-                              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                            >Back</button>
-                            <button
-                              onClick={handleCwcrfApprove}
-                              disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.approvedAmount || !cwcrfVerifyForm.buyerDeclarationAccepted}
-                              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                            >
-                              {cwcrfDecisionLoading ? "Processing..." : "Confirm Approval"}
-                            </button>
-                          </div>
+                            <span className={`text-sm font-semibold leading-relaxed ${cwcrfVerifyForm.buyerDeclarationAccepted ? "text-emerald-800" : "text-slate-700"}`}>
+                              I have read and accept all the above terms and declare that the information in this CWCRF is accurate.
+                            </span>
+                          </label>
+                          {!cwcrfVerifyForm.buyerDeclarationAccepted && (
+                            <p className="text-xs text-amber-600 text-center">⚠ You must accept the declaration to proceed to bid terms</p>
+                          )}
                         </div>
                       )}
 
-                      {/* Reject Form */}
-                      {cwcrfActionMode === "reject" && (
-                        <div className="border-2 border-red-200 rounded-xl p-5 space-y-4 bg-red-50/30">
-                          <p className="text-sm font-bold text-red-800">Rejection Reason</p>
-                          <textarea
-                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
-                            rows={3}
-                            value={cwcrfVerifyForm.rejectionReason}
-                            onChange={(e) => setCwcrfVerifyForm(prev => ({
-                              ...prev, rejectionReason: e.target.value
-                            }))}
-                            placeholder="Explain why this CWCRF is being rejected..."
-                          />
+                      {/* ── STEP 4: Bid Terms ── */}
+                      {cwcrfReviewStep === 4 && (
+                        <div className="space-y-4">
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step 4 — Enter Bid Terms</p>
+
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Approved CWC Amount (₹) <span className="text-red-500">*</span></label>
+                              <input type="number" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                                value={cwcrfVerifyForm.approvedAmount || ""}
+                                max={selectedCwcrf.cwcRequest?.requestedAmount}
+                                onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, approvedAmount: Number(e.target.value) }))}
+                                placeholder="Enter approved amount" />
+                              <p className="text-xs text-slate-400 mt-1">Requested: ₹{Number(selectedCwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Repayment Timeline <span className="text-red-500">*</span></label>
+                              <select className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white"
+                                value={cwcrfVerifyForm.repaymentTimeline}
+                                onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, repaymentTimeline: Number(e.target.value) as 30 | 45 | 60 | 90 }))}>
+                                <option value={30}>30 days</option><option value={45}>45 days</option><option value={60}>60 days</option><option value={90}>90 days</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Repayment Source <span className="text-red-500">*</span></label>
+                              <select className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white"
+                                value={cwcrfVerifyForm.repaymentArrangement.source}
+                                onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, repaymentArrangement: { ...prev.repaymentArrangement, source: e.target.value } }))}>
+                                <option value="PAYMENT_FROM_RA_BILL">Payment from RA Bill</option>
+                                <option value="PAYMENT_FROM_CLIENT_RELEASE">Payment from Client Release</option>
+                                <option value="PAYMENT_FROM_INTERNAL_TREASURY">Payment from Internal Treasury</option>
+                                <option value="PAYMENT_FROM_RETENTION_RELEASE">Payment from Retention Release</option>
+                                <option value="OTHER">Other</option>
+                              </select>
+                            </div>
+                            {cwcrfVerifyForm.repaymentArrangement.source === "OTHER" && (
+                              <div>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Other Details</label>
+                                <input type="text" className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                                  value={cwcrfVerifyForm.repaymentArrangement.otherDetails}
+                                  onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, repaymentArrangement: { ...prev.repaymentArrangement, otherDetails: e.target.value } }))}
+                                  placeholder="Describe the repayment arrangement" />
+                              </div>
+                            )}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Remarks (optional)</label>
+                              <textarea className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none" rows={2}
+                                value={cwcrfVerifyForm.repaymentArrangement.remarks}
+                                onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, repaymentArrangement: { ...prev.repaymentArrangement, remarks: e.target.value } }))}
+                                placeholder="Any additional notes..." />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Internal Notes (optional)</label>
+                              <textarea className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none" rows={2}
+                                value={cwcrfVerifyForm.notes}
+                                onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, notes: e.target.value }))}
+                                placeholder="Internal notes for Ops / RMT..." />
+                            </div>
+                          </div>
+
+                          {/* Reject reason (visible only when reject mode shown) */}
+                          {cwcrfActionMode === "reject" && (
+                            <div className="border-2 border-red-200 rounded-xl p-4 bg-red-50/30 space-y-3">
+                              <p className="text-sm font-bold text-red-800">Rejection Reason <span className="text-red-500">*</span></p>
+                              <textarea className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none" rows={3}
+                                value={cwcrfVerifyForm.rejectionReason}
+                                onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, rejectionReason: e.target.value }))}
+                                placeholder="Explain why this CWCRF is being rejected..." />
+                            </div>
+                          )}
+
                           <div className="flex gap-3 pt-1">
-                            <button
-                              onClick={() => setCwcrfActionMode(null)}
-                              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                            >Back</button>
-                            <button
-                              onClick={handleCwcrfReject}
-                              disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.rejectionReason.trim()}
-                              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
-                            >
-                              {cwcrfDecisionLoading ? "Processing..." : "Confirm Rejection"}
-                            </button>
+                            {cwcrfActionMode !== "reject" ? (
+                              <>
+                                <button onClick={() => setCwcrfActionMode("reject")}
+                                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-red-300 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-colors">
+                                  ✗ Reject
+                                </button>
+                                <button onClick={handleCwcrfApprove}
+                                  disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.approvedAmount || !cwcrfVerifyForm.buyerDeclarationAccepted}
+                                  className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                                  {cwcrfDecisionLoading ? "Processing..." : "✓ Confirm Approval"}
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button onClick={() => setCwcrfActionMode(null)}
+                                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancel</button>
+                                <button onClick={handleCwcrfReject}
+                                  disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.rejectionReason.trim()}
+                                  className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors">
+                                  {cwcrfDecisionLoading ? "Processing..." : "Confirm Rejection"}
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* Step Navigation Footer */}
+                    <div className="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex justify-between items-center">
+                      <button
+                        onClick={() => { if (cwcrfReviewStep > 1) { setCwcrfReviewStep(prev => prev - 1); setCwcrfActionMode(null); } else { setSelectedCwcrf(null); setCwcrfActionMode(null); } }}
+                        className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      >{cwcrfReviewStep === 1 ? "Close" : "← Back"}</button>
+                      <span className="text-xs text-slate-400">Step {cwcrfReviewStep} of 4</span>
+                      {cwcrfReviewStep < 4 && (
+                        <button
+                          onClick={() => setCwcrfReviewStep(prev => prev + 1)}
+                          disabled={cwcrfReviewStep === 3 && !cwcrfVerifyForm.buyerDeclarationAccepted}
+                          className="px-5 py-2 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >Next →</button>
+                      )}
+                      {cwcrfReviewStep === 4 && <div />}
                     </div>
                   </motion.div>
                 </div>

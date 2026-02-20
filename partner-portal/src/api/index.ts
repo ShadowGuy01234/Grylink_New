@@ -100,6 +100,8 @@ export const cwcrfApi = {
         otherDetails?: string;
         remarks?: string;
       };
+      notes?: string;
+      buyerDeclaration?: { accepted: boolean };
     },
   ) => api.post(`/cwcrf/${cwcrfId}/buyer/verify`, verificationData),
   rejectCwcrf: (cwcrfId: string, data: { reason: string }) =>

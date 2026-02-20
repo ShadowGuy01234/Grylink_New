@@ -1,35 +1,35 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { api, cwcrfApi } from "../api";
+import { useAuth } from "../context/AuthContext";
 
 interface Cwcrf {
   _id: string;
-  cwcrfNumber: string;
+  cwcRfNumber: string;
   status: string;
-  seller: {
+  subContractorId?: {
     _id: string;
-    name: string;
     companyName: string;
   };
-  sectionA: {
+  buyerDetails?: {
     buyerName: string;
     buyerGstin: string;
   };
-  sectionB: {
+  invoiceDetails?: {
     invoiceNumber: string;
     invoiceAmount: number;
     invoiceDate: string;
   };
-  sectionC: {
+  cwcRequest?: {
     requestedAmount: number;
-    tenure: number;
+    requestedTenure: number;
     urgencyLevel: string;
-    reason: string;
+    reasonForFunding: string;
   };
-  sectionD: {
-    preferredRateMin: number;
-    preferredRateMax: number;
-    repaymentFrequency: string;
+  interestPreference?: {
+    minRate: number;
+    maxRate: number;
+    maxAcceptableRate: number;
   };
   buyerVerification?: {
     approvedAmount: number;
@@ -117,6 +117,8 @@ interface ApprovalRequest {
 }
 
 const RmtDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [lastRefreshed] = useState(() => new Date());
   const [assessments, setAssessments] = useState<RiskAssessment[]>([]);
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [cwcrfs, setCwcrfs] = useState<Cwcrf[]>([]);
@@ -262,17 +264,6 @@ const RmtDashboard: React.FC = () => {
     }
   };
 
-  const handleOpenNbfcModal = async (cwcrf: Cwcrf) => {
-    setSelectedCwcrf(cwcrf);
-    try {
-      const response = await cwcrfApi.getMatchingNbfcs(cwcrf._id);
-      setMatchingNbfcs(response.data.data || []);
-      setShowNbfcModal(true);
-    } catch {
-      toast.error("Failed to fetch matching NBFCs");
-    }
-  };
-
   const handleShareWithNbfcs = async () => {
     if (!selectedCwcrf || selectedNbfcs.length === 0) {
       toast.error("Please select at least one NBFC");
@@ -286,6 +277,7 @@ const RmtDashboard: React.FC = () => {
       );
       setShowNbfcModal(false);
       setSelectedNbfcs([]);
+      setMatchingNbfcs([]);
       fetchData();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -348,9 +340,38 @@ const RmtDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div style={{ padding: '0 0 40px' }}>
+      {/* ── Page Header ── */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: '#92400e', margin: 0 }}>
+              Risk Management
+            </h1>
+            <span style={{
+              background: 'linear-gradient(135deg,#B45309,#F59E0B)',
+              color: 'white',
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 20,
+              letterSpacing: '0.04em',
+              boxShadow: '0 1px 3px rgba(180,83,9,0.25)',
+            }}>RMT</span>
+          </div>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
+            Welcome back, {user?.name?.split(' ')[0] ?? 'Officer'} — Risk queue &amp; assessments
+          </p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Last refreshed</p>
+          <p style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', margin: 0 }}>
+            {lastRefreshed.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">RMT Dashboard</h1>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -482,13 +503,13 @@ const RmtDashboard: React.FC = () => {
                   cwcrfs.map((cwcrf) => (
                     <tr key={cwcrf._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium">
-                        {cwcrf.cwcrfNumber}
+                        {cwcrf.cwcRfNumber}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {cwcrf.seller?.companyName}
+                        {cwcrf.subContractorId?.companyName}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {cwcrf.sectionA?.buyerName}
+                        {cwcrf.buyerDetails?.buyerName}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         ₹
@@ -512,21 +533,38 @@ const RmtDashboard: React.FC = () => {
                             </button>
                           )}
                           {cwcrf.status === "CWCAF_READY" && (
-                            <button
-                              onClick={async () => {
-                                try {
-                                  await cwcrfApi.rmtForwardToOps(cwcrf._id, "Risk assessment complete");
-                                  toast.success("Forwarded to Ops for risk triage");
-                                  fetchData();
-                                } catch (err: unknown) {
-                                  const e = err as { response?: { data?: { message?: string } } };
-                                  toast.error(e.response?.data?.message || "Failed to forward");
-                                }
-                              }}
-                              className="text-orange-600 hover:underline text-sm font-medium"
-                            >
-                              Forward to Ops
-                            </button>
+                            <>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await cwcrfApi.rmtForwardToOps(cwcrf._id, "Risk assessment complete");
+                                    toast.success("Forwarded to Ops for risk triage");
+                                    fetchData();
+                                  } catch (err: unknown) {
+                                    const e = err as { response?: { data?: { message?: string } } };
+                                    toast.error(e.response?.data?.message || "Failed to forward");
+                                  }
+                                }}
+                                className="text-orange-600 hover:underline text-sm font-medium"
+                              >
+                                Forward to Ops
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    setSelectedCwcrf(cwcrf);
+                                    const res = await cwcrfApi.getMatchingNbfcs(cwcrf._id);
+                                    setMatchingNbfcs(res.data?.nbfcs || res.data || []);
+                                    setShowNbfcModal(true);
+                                  } catch {
+                                    toast.error("Failed to load matching NBFCs");
+                                  }
+                                }}
+                                className="text-purple-600 hover:underline text-sm"
+                              >
+                                Share w/ NBFCs
+                              </button>
+                            </>
                           )}
                           {cwcrf.status === "RMT_APPROVED" && (
                             <span className="text-green-600 text-sm">✓ Sent to Ops</span>
@@ -818,7 +856,7 @@ const RmtDashboard: React.FC = () => {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold">
-                    Generate CWCAF - {selectedCwcrf.cwcrfNumber}
+                    Generate CWCAF - {selectedCwcrf.cwcRfNumber}
                   </h2>
                   <button
                     onClick={() => setShowCwcafModal(false)}
@@ -834,15 +872,15 @@ const RmtDashboard: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Seller:</span>{" "}
-                      {selectedCwcrf.seller?.companyName}
+                      {selectedCwcrf.subContractorId?.companyName}
                     </div>
                     <div>
                       <span className="text-gray-600">Buyer:</span>{" "}
-                      {selectedCwcrf.sectionA?.buyerName}
+                      {selectedCwcrf.buyerDetails?.buyerName}
                     </div>
                     <div>
                       <span className="text-gray-600">Invoice Amount:</span> ₹
-                      {selectedCwcrf.sectionB?.invoiceAmount?.toLocaleString()}
+                      {selectedCwcrf.invoiceDetails?.invoiceAmount?.toLocaleString()}
                     </div>
                     <div>
                       <span className="text-gray-600">Approved Amount:</span> ₹
@@ -850,7 +888,7 @@ const RmtDashboard: React.FC = () => {
                     </div>
                     <div>
                       <span className="text-gray-600">Requested Tenure:</span>{" "}
-                      {selectedCwcrf.sectionC?.tenure} days
+                      {selectedCwcrf.cwcRequest?.requestedTenure} days
                     </div>
                     <div>
                       <span className="text-gray-600">Repayment Timeline:</span>{" "}
@@ -1174,7 +1212,7 @@ const RmtDashboard: React.FC = () => {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold">
-                    Share CWCRF with NBFCs - {selectedCwcrf.cwcrfNumber}
+                    Share CWCRF with NBFCs - {selectedCwcrf.cwcRfNumber}
                   </h2>
                   <button
                     onClick={() => {

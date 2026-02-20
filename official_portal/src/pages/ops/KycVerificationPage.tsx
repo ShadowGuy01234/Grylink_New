@@ -380,7 +380,7 @@ const KycVerificationPage = () => {
                     name: seller.name,
                     email: seller.email,
                     phone: seller.phone,
-                    company: seller.company,
+                    company: seller.company ?? undefined,
                     status: seller.kycStatus,
                     createdAt: seller.createdAt,
                   }}

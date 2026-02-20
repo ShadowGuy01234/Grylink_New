@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { scApi, cwcrfApi } from '@/api';
+import { scApi } from '@/api';
 import toast from 'react-hot-toast';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/select';
 import {
   FileText, CheckCircle2, ArrowRight, ArrowLeft, Send, Building2,
-  Receipt, Percent, AlertCircle, FileCheck, XCircle, Info, Target
+  Receipt, Percent, AlertCircle, FileCheck, XCircle, Info, Target, CreditCard, Upload
 } from 'lucide-react';
 
 interface CwcrfFormData {
@@ -79,11 +78,12 @@ const initialFormData: CwcrfFormData = {
 };
 
 const steps = [
-  { id: 1, label: 'Bill Selection', icon: FileText },
+  { id: 1, label: 'Upload Documents', icon: Upload },
   { id: 2, label: 'Buyer & Invoice', icon: Building2 },
   { id: 3, label: 'Request Details', icon: Target },
   { id: 4, label: 'Interest Preference', icon: Percent },
-  { id: 5, label: 'Review & Submit', icon: Send }
+  { id: 5, label: 'Platform Fee', icon: CreditCard },
+  { id: 6, label: 'Review & Submit', icon: Send }
 ];
 
 const CwcrfSubmissionPage = () => {
@@ -99,8 +99,8 @@ const CwcrfSubmissionPage = () => {
     bankDetailsVerified: boolean;
     reasons: string[];
   } | null>(null);
-  const [verifiedBills, setVerifiedBills] = useState<any[]>([]);
-  const [selectedBillId, setSelectedBillId] = useState('');
+  const [billFiles, setBillFiles] = useState<{ raBill: File | null; wcc: File | null; measurementSheet: File | null }>({ raBill: null, wcc: null, measurementSheet: null });
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   useEffect(() => {
     checkEligibilityAndLoadData();
@@ -113,7 +113,6 @@ const CwcrfSubmissionPage = () => {
       const profileRes = await scApi.getProfile();
 
       const sc = profileRes.data.subContractor;
-      const bills = profileRes.data.bills?.filter((b: any) => b.status === 'VERIFIED') || [];
 
       const eligibility = {
         canSubmit: false,
@@ -126,11 +125,9 @@ const CwcrfSubmissionPage = () => {
       if (!eligibility.declarationAccepted) eligibility.reasons.push('Seller Declaration not accepted');
       if (!eligibility.kycCompleted) eligibility.reasons.push('KYC verification pending');
       if (!eligibility.bankDetailsVerified) eligibility.reasons.push('Bank details not verified');
-      if (bills.length === 0) eligibility.reasons.push('No verified bills available');
 
       eligibility.canSubmit = eligibility.reasons.length === 0;
       setEligibilityStatus(eligibility);
-      setVerifiedBills(bills);
 
       if (sc?.company) {
         setFormData(prev => ({
@@ -154,31 +151,6 @@ const CwcrfSubmissionPage = () => {
     }
   };
 
-  const handleBillSelection = (billId: string) => {
-    setSelectedBillId(billId);
-    const bill = verifiedBills.find(b => b._id === billId);
-    if (bill) {
-      const gstAmount = bill.gstAmount || bill.amount * 0.18;
-      setFormData(prev => ({
-        ...prev,
-        sectionB: {
-          ...prev.sectionB,
-          invoiceNumber: bill.billNumber || '',
-          invoiceDate: bill.billDate ? bill.billDate.split('T')[0] : '',
-          invoiceAmount: bill.amount || 0,
-          invoiceDueDate: bill.dueDate ? bill.dueDate.split('T')[0] : '',
-          purchaseOrderNumber: bill.poNumber || '',
-          purchaseOrderDate: bill.poDate ? bill.poDate.split('T')[0] : '',
-          workDescription: bill.description || '',
-          workCompletionDate: bill.workCompletionDate ? bill.workCompletionDate.split('T')[0] : '',
-          gstAmount: gstAmount,
-          netInvoiceAmount: bill.amount - gstAmount
-        },
-        sectionC: { ...prev.sectionC, requestedAmount: bill.amount || 0 }
-      }));
-    }
-  };
-
   const updateSection = (section: keyof CwcrfFormData, field: string, value: any) => {
     setFormData(prev => ({ ...prev, [section]: { ...prev[section], [field]: value } }));
   };
@@ -186,7 +158,7 @@ const CwcrfSubmissionPage = () => {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        if (!selectedBillId) { toast.error('Please select a verified bill'); return false; }
+        if (!billFiles.raBill) { toast.error('Please upload the RA Bill (required)'); return false; }
         return true;
       case 2:
         if (!formData.sectionB.invoiceNumber || !formData.sectionB.invoiceAmount || !formData.sectionB.invoiceDate) {
@@ -206,27 +178,31 @@ const CwcrfSubmissionPage = () => {
           toast.error('Minimum interest rate must be less than maximum'); return false;
         }
         return true;
+      case 5:
+        if (!paymentConfirmed) { toast.error('Please confirm the platform fee payment'); return false; }
+        return true;
       default:
         return true;
     }
   };
 
   const nextStep = () => {
-    if (validateStep(currentStep)) setCurrentStep(prev => Math.min(prev + 1, 5));
+    if (validateStep(currentStep)) setCurrentStep(prev => Math.min(prev + 1, 6));
   };
 
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   const handleSubmit = async () => {
-    if (!validateStep(4)) return;
+    if (!validateStep(5)) return;
     setSubmitting(true);
     try {
-      const selectedBill = verifiedBills.find(b => b._id === selectedBillId);
-      await cwcrfApi.submit({
-        billId: selectedBillId,
+      const fd = new FormData();
+      if (billFiles.raBill) fd.append('raBill', billFiles.raBill);
+      if (billFiles.wcc) fd.append('wcc', billFiles.wcc);
+      if (billFiles.measurementSheet) fd.append('measurementSheet', billFiles.measurementSheet);
+      fd.append('cwcrfData', JSON.stringify({
         buyerDetails: {
-          buyerId: selectedBill?.epcCompany?._id,
-          projectName: selectedBill?.workOrderNumber || 'N/A',
+          projectName: formData.sectionA.buyerContactPerson || 'N/A',
           projectLocation: formData.sectionA.buyerAddress || 'N/A'
         },
         invoiceDetails: {
@@ -251,7 +227,7 @@ const CwcrfSubmissionPage = () => {
           existingLoanDetails: formData.sectionC.existingLoanDetails
         },
         interestPreference: {
-          preferenceType: 'RANGE' as const,
+          preferenceType: 'RANGE',
           minRate: formData.sectionD.acceptableInterestRateMin,
           maxRate: formData.sectionD.acceptableInterestRateMax,
           preferredRepaymentFrequency: formData.sectionD.preferredRepaymentFrequency,
@@ -259,7 +235,8 @@ const CwcrfSubmissionPage = () => {
           maxProcessingFeePercent: formData.sectionD.maxProcessingFeePercent,
           prepaymentPreference: formData.sectionD.prepaymentPreference
         }
-      });
+      }));
+      await scApi.submitBillWithCwcrf(fd);
       toast.success('CWCRF submitted successfully!');
       navigate('/');
     } catch (err: any) {
@@ -354,61 +331,98 @@ const CwcrfSubmissionPage = () => {
 
       {/* Step Content */}
       <AnimatePresence mode="wait">
-        {/* Step 1: Bill Selection */}
+        {/* Step 1: Upload Documents */}
         {currentStep === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-blue-600" />Select Verified Bill</CardTitle>
-                <CardDescription>Choose a verified bill to initiate the CWCRF submission</CardDescription>
+                <CardTitle className="flex items-center gap-2"><Upload className="h-5 w-5 text-blue-600" />Upload Supporting Documents</CardTitle>
+                <CardDescription>Upload your RA Bill and supporting documents to initiate the CWCRF submission</CardDescription>
               </CardHeader>
-              <CardContent>
-                {verifiedBills.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-4">No verified bills available</p>
-                    <Button variant="outline" onClick={() => navigate('/')}>Go to Dashboard</Button>
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {verifiedBills.map((bill: any) => (
-                      <motion.div
-                        key={bill._id}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleBillSelection(bill._id)}
-                        className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          selectedBillId === bill._id
-                            ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-100'
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        {selectedBillId === bill._id && (
-                          <div className="absolute top-2 right-2">
-                            <CheckCircle2 className="h-6 w-6 text-blue-600" />
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" />Verified</Badge>
-                        </div>
-                        <p className="font-semibold text-gray-900 mb-2">{bill.billNumber}</p>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Amount</span>
-                            <span className="font-medium text-green-600">₹{bill.amount?.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Date</span>
-                            <span className="text-gray-700">{bill.billDate ? new Date(bill.billDate).toLocaleDateString() : 'N/A'}</span>
-                          </div>
-                        </div>
-                        {bill.description && (
-                          <p className="text-xs text-gray-400 mt-2 truncate">{bill.description}</p>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+              <CardContent className="space-y-6">
+                {/* RA Bill — Required */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    RA Bill <span className="text-red-500">*</span>
+                    <span className="text-xs text-gray-400 ml-1">(Running Account Bill — required)</span>
+                  </Label>
+                  <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${billFiles.raBill ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      setBillFiles(prev => ({ ...prev, raBill: f }));
+                    }} />
+                    {billFiles.raBill ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <CheckCircle2 className="h-8 w-8 text-green-500" />
+                        <p className="text-sm font-medium text-green-700">{billFiles.raBill.name}</p>
+                        <p className="text-xs text-gray-400">{(billFiles.raBill.size / 1024).toFixed(1)} KB · Click to replace</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <FileText className="h-8 w-8 text-gray-400" />
+                        <p className="text-sm text-gray-600 font-medium">Click to upload RA Bill</p>
+                        <p className="text-xs text-gray-400">PDF, JPG or PNG</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                {/* WCC — Optional */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    Work Completion Certificate
+                    <span className="text-xs text-gray-400 ml-1">(optional)</span>
+                  </Label>
+                  <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${billFiles.wcc ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}`}>
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      setBillFiles(prev => ({ ...prev, wcc: f }));
+                    }} />
+                    {billFiles.wcc ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <CheckCircle2 className="h-6 w-6 text-blue-500" />
+                        <p className="text-sm font-medium text-blue-700">{billFiles.wcc.name}</p>
+                        <p className="text-xs text-gray-400">Click to replace</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1">
+                        <FileCheck className="h-6 w-6 text-gray-300" />
+                        <p className="text-sm text-gray-500">Click to upload WCC</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                {/* Measurement Sheet — Optional */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    Measurement Sheet
+                    <span className="text-xs text-gray-400 ml-1">(optional)</span>
+                  </Label>
+                  <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${billFiles.measurementSheet ? 'border-purple-400 bg-purple-50' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}`}>
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => {
+                      const f = e.target.files?.[0] || null;
+                      setBillFiles(prev => ({ ...prev, measurementSheet: f }));
+                    }} />
+                    {billFiles.measurementSheet ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <CheckCircle2 className="h-6 w-6 text-purple-500" />
+                        <p className="text-sm font-medium text-purple-700">{billFiles.measurementSheet.name}</p>
+                        <p className="text-xs text-gray-400">Click to replace</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1">
+                        <FileText className="h-6 w-6 text-gray-300" />
+                        <p className="text-sm text-gray-500">Click to upload Measurement Sheet</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                  <Info className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-800">Only the RA Bill is mandatory. WCC and Measurement Sheet strengthen your application and are recommended if available.</p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -588,8 +602,63 @@ const CwcrfSubmissionPage = () => {
           </motion.div>
         )}
 
-        {/* Step 5: Review & Submit */}
+        {/* Step 5: Platform Fee Payment */}
         {currentStep === 5 && (
+          <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-indigo-600" />Platform Fee Payment</CardTitle>
+                <CardDescription>A one-time non-refundable platform processing fee is required to submit your CWCRF</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Fee summary */}
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6 text-center">
+                  <p className="text-4xl font-bold text-indigo-700 mb-1">₹1,000</p>
+                  <p className="text-sm text-indigo-600 font-medium">Platform Processing Fee (incl. GST)</p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <Info className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-gray-600">This fee covers platform processing, document verification coordination, and NBFC matchmaking services. It is non-refundable once the CWCRF is submitted.</p>
+                  </div>
+                </div>
+
+                {/* Payment button / stub */}
+                <div className="border border-gray-200 rounded-xl p-5 space-y-4">
+                  <h4 className="font-semibold text-gray-900">Pay via UPI / Net Banking</h4>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentConfirmed(true)}
+                    disabled={paymentConfirmed}
+                    className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-colors ${
+                      paymentConfirmed ? 'bg-green-500 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer'
+                    }`}
+                  >
+                    {paymentConfirmed ? '✓ Payment Confirmed' : 'Pay ₹1,000 Now'}
+                  </button>
+                  {!paymentConfirmed && (
+                    <p className="text-xs text-gray-400 text-center">You will be redirected to the payment gateway</p>
+                  )}
+                </div>
+
+                {/* Manual confirmation checkbox */}
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={paymentConfirmed}
+                    onChange={(e) => setPaymentConfirmed(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-gray-700 text-sm">I confirm that I have paid the platform processing fee of <strong>₹1,000</strong></span>
+                </label>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Step 6: Review & Submit */}
+        {currentStep === 6 && (
           <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
             <Card>
               <CardHeader>
@@ -669,7 +738,7 @@ const CwcrfSubmissionPage = () => {
         ) : (
           <div />
         )}
-        {currentStep < 5 ? (
+        {currentStep < 6 ? (
           <Button onClick={nextStep}>
             Next<ArrowRight className="h-4 w-4 ml-2" />
           </Button>

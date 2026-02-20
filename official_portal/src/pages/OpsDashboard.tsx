@@ -165,17 +165,6 @@ const OpsDashboard = () => {
     }
   };
 
-  const handleCompleteKyc = async (id: string) => {
-    try {
-      await opsApi.completeKyc(id);
-      toast.success("KYC completed — Case created");
-      fetchData();
-    } catch (err) {
-      const axiosErr = err as AxiosError<{ error?: string }>;
-      toast.error(axiosErr.response?.data?.error || "Failed to complete KYC");
-    }
-  };
-
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
       DOCS_SUBMITTED: "badge-purple",
