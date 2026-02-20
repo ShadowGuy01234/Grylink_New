@@ -471,24 +471,29 @@ SC KYC status changes to `DOCUMENTS_PENDING`.
 
 ---
 
-### Step 4.5 — Ops KYC Review (via Chat)
+### Step 4.5 — Ops KYC Review (Document Request System)
 
 **Actor:** Ops Team ↔ Sub-Contractor  
-**Portal:** official_portal → Ops Dashboard → KYC Verification (Ops side)  
-**Portal:** subcontractor-portal → Chat Tab (SC side)
+**Portal:** official_portal → Ops Dashboard → KYC Verification (full detail page at `/ops/kyc`)  
+**Portal:** subcontractor-portal → KYC Upload Page (Additional Documents section)
 
-Ops receives the KYC review task. The KYC review is conducted via a **real-time chat system** that allows:
-- Ops to send text messages and file requests to the SC
-- SC to respond and upload additional documents within the chat
-- Ops to mark specific messages as "Action Required"
-- Both parties to reply to specific messages, add reactions
+Ops receives the KYC review task. The KYC review is conducted through a **professional document-request system** (not chat) that provides a clean, asynchronous workflow:
 
-**Ops actions during KYC chat:**
-- Request clarification on any document
-- Ask SC to re-upload a specific document if unclear/invalid
-- Verify individual documents:
-  - `POST /api/ops/kyc/documents/:id/verify` — approve or reject each document
-- Verify the overall KYC: `POST /api/ops/kyc/:id/verify`
+**Ops workflow on KYC Verification Page:**
+1. Review all uploaded documents (PAN, Aadhaar, GST Certificate, Cancelled Cheque, etc.) with inline viewer
+2. Verify or reject each document individually — `POST /api/ops/kyc/documents/:id/verify`
+3. Verify bank details — `POST /api/ops/subcontractors/:id/verify-bank`
+4. **Request Additional Documents** — Ops clicks "+ Request Additional Document", enters a label (document name) and optional description (instructions), then submits
+   - `POST /api/ops/kyc/:id/request-additional-document` — creates an entry in `additionalDocuments` array
+   - The SC sees a new **"Additional Documents Requested"** section automatically appear on their KYC Upload Page
+   - SC uploads the requested document; Ops can then verify or reject it
+5. Once all documents are verified, approve overall KYC: `POST /api/ops/kyc/:id/verify`
+
+**SC workflow for additional documents:**
+- A prominently highlighted "Additional Documents Required" card appears on the KYC page
+- Each requested document shows: label, description/instructions, current status (Requested → Uploaded → Verified/Rejected)
+- SC can upload the document directly from that card
+- If rejected, SC can re-upload
 
 **Result:** SC KYC status changes through:  
 `DOCUMENTS_PENDING → UNDER_REVIEW → COMPLETED` (or `REJECTED` if failed)
@@ -621,7 +626,7 @@ Ops has **super access** (elevated permissions) on each CWCRF. This means:
 
 1. **Detach Document / Field** — Remove a specific uploaded document or field value that is incorrect, forcing the SC to re-upload or re-fill only that item
 2. **Edit Field** — Directly correct minor data entry errors (e.g. wrong invoice number format, typo in GSTIN) with change log recorded
-3. **Re-request from SC** — Send a chat message to the SC requesting a specific correction or re-upload (using the KYC chat channel)
+3. **Re-request from SC** — Request a specific correction or additional document from the SC (using the Additional Document Request system — SC sees it on their KYC page)
 4. **Add Internal Notes** — Add notes visible only to Ops / RMT team members
 5. **Flag for Review** — Escalate any suspicious item to Admin/Founder for review
 
@@ -1056,8 +1061,9 @@ NOT_STARTED → DOCUMENTS_PENDING → UNDER_REVIEW → COMPLETED / REJECTED
 | 2.2 | Verify EPC company | `POST` | `/api/ops/companies/:id/verify` | ops |
 | 3.1 | EPC adds SC list | `POST` | `/api/company/subcontractors` | epc |
 | 4.4 | Accept declaration | `POST` | `/api/subcontractor/declaration` | subcontractor |
-| 4.5 | KYC chat (Ops) | `POST` | `/api/ops/kyc/:id/chat` | ops |
-| 4.5 | KYC chat (SC) | `POST` | `/api/ops/kyc/:id/chat` | subcontractor |
+| 4.5 | Request additional doc (Ops) | `POST` | `/api/ops/kyc/:id/request-additional-document` | ops |
+| 4.5 | Upload additional doc (SC) | `POST` | `/api/subcontractor/kyc/additional/:docId` | subcontractor |
+| 4.5 | Verify additional doc (Ops) | `POST` | `/api/ops/kyc/additional/:docId/verify` | ops |
 | 4.5 | Verify KYC document | `POST` | `/api/ops/kyc/documents/:id/verify` | ops |
 | 4.5 | Complete KYC | `POST` | `/api/ops/kyc/:id/complete` | ops |
 | 5.4 | Submit CWCRF | `POST` | `/api/cwcrf` | subcontractor |
