@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import {
-  FileText, CheckCircle2, ArrowRight, ArrowLeft, Send, Building2,
+  CheckCircle2, ArrowRight, ArrowLeft, Send, Building2,
   Receipt, Percent, AlertCircle, FileCheck, XCircle, Info, Target,
   Upload, IndianRupee, Calendar, Hash, Clock, PenLine, Zap, RotateCcw,
   ChevronRight, Shield,
