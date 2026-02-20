@@ -533,6 +533,30 @@ router.post(
 );
 
 // ========================================
+// NBFC ACTIVE PROCESS QUEUE (must be before /:id)
+// ========================================
+
+/**
+ * GET /api/cwcrf/nbfc/process - Get CWCRFs in NBFC active process
+ */
+router.get(
+  "/nbfc/process",
+  authenticate,
+  authorize("nbfc"),
+  async (req, res) => {
+    try {
+      if (!req.user.nbfcId) {
+        return res.status(400).json({ error: "No NBFC linked to this account" });
+      }
+      const cwcrfs = await cwcrfService.getCwcRfsInNbfcProcess(req.user.nbfcId);
+      res.json(cwcrfs);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+// ========================================
 // COMMON ENDPOINTS
 // ========================================
 
@@ -589,6 +613,160 @@ router.post(
         message: "CWCRF moved to NBFC process",
         cwcRf,
       });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+// ========================================
+// PLATFORM FEE PAYMENT (Phase 5.3)
+// ========================================
+
+/**
+ * POST /api/cwcrf/:id/payment - Record platform fee payment
+ */
+router.post(
+  "/:id/payment",
+  authenticate,
+  authorize("subcontractor"),
+  async (req, res) => {
+    try {
+      const { paymentReference, amount } = req.body;
+      const cwcRf = await cwcrfService.recordPlatformFee(
+        req.params.id,
+        req.user._id,
+        { paymentReference, amount },
+      );
+      res.json({ message: "Platform fee recorded", cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+// ========================================
+// NBFC POST-QUOTATION PROCESS (Phase 11.4)
+// ========================================
+
+/**
+ * POST /api/cwcrf/:id/nbfc/start-due-diligence - NBFC starts DD
+ */
+router.post(
+  "/:id/nbfc/start-due-diligence",
+  authenticate,
+  authorize("nbfc"),
+  async (req, res) => {
+    try {
+      const cwcRf = await cwcrfService.nbfcStartDueDiligence(
+        req.params.id,
+        req.user._id,
+      );
+      res.json({ message: "Due diligence started", cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/nbfc/complete-due-diligence - NBFC completes DD
+ */
+router.post(
+  "/:id/nbfc/complete-due-diligence",
+  authenticate,
+  authorize("nbfc"),
+  async (req, res) => {
+    try {
+      const cwcRf = await cwcrfService.nbfcCompleteDueDiligence(
+        req.params.id,
+        req.user._id,
+        req.body,
+      );
+      res.json({ message: "Due diligence completed", cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/nbfc/issue-sanction - NBFC issues sanction letter
+ */
+router.post(
+  "/:id/nbfc/issue-sanction",
+  authenticate,
+  authorize("nbfc"),
+  async (req, res) => {
+    try {
+      const cwcRf = await cwcrfService.nbfcIssueSanctionLetter(
+        req.params.id,
+        req.user._id,
+        req.body,
+      );
+      res.json({ message: "Sanction letter issued", cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/accept-sanction - SC accepts sanction letter
+ */
+router.post(
+  "/:id/accept-sanction",
+  authenticate,
+  authorize("subcontractor"),
+  async (req, res) => {
+    try {
+      const cwcRf = await cwcrfService.scAcceptSanctionLetter(
+        req.params.id,
+        req.user._id,
+      );
+      res.json({ message: "Sanction letter accepted", cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/nbfc/initiate-disbursement - NBFC initiates disbursement
+ */
+router.post(
+  "/:id/nbfc/initiate-disbursement",
+  authenticate,
+  authorize("nbfc"),
+  async (req, res) => {
+    try {
+      const cwcRf = await cwcrfService.nbfcInitiateDisbursement(
+        req.params.id,
+        req.user._id,
+        req.body,
+      );
+      res.json({ message: "Disbursement initiated", cwcRf });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+/**
+ * POST /api/cwcrf/:id/nbfc/confirm-disbursement - NBFC confirms disbursement
+ */
+router.post(
+  "/:id/nbfc/confirm-disbursement",
+  authenticate,
+  authorize("nbfc"),
+  async (req, res) => {
+    try {
+      const cwcRf = await cwcrfService.nbfcConfirmDisbursement(
+        req.params.id,
+        req.user._id,
+        req.body,
+      );
+      res.json({ message: "Disbursement confirmed — funds sent", cwcRf });
     } catch (error) {
       res.status(400).json({ error: error.message });
     }

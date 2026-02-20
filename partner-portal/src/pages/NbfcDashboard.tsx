@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, cwcrfApi } from '../api';
+import { api, cwcrfApi, nbfcApi } from '../api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,31 +43,90 @@ interface Dashboard {
   approvalRate: number;
 }
 
+interface ProcessCwcrf {
+  _id: string;
+  cwcRfNumber?: string;
+  status: string;
+  subContractorId?: { companyName: string; ownerName: string };
+  epcId?: { companyName: string };
+  buyerDetails?: { buyerName: string };
+  invoiceDetails?: { invoiceNumber: string; invoiceAmount: number };
+  cwcRequest?: { requestedAmount: number; requestedTenure: number };
+  selectedNbfc?: { finalInterestRate: number; finalTenure: number };
+  nbfcProcess?: {
+    dueDiligence?: {
+      started: boolean;
+      startedAt?: string;
+      checklist?: Record<string, boolean>;
+      notes?: string;
+      completedAt?: string;
+      result?: string;
+      conditions?: string;
+    };
+    sanctionLetter?: {
+      issued: boolean;
+      issuedAt?: string;
+      sanctionAmount?: number;
+      sanctionedInterestRate?: number;
+      sanctionedTenure?: number;
+      specialConditions?: string;
+      letterUrl?: string;
+      acceptedBySc?: boolean;
+      acceptedAt?: string;
+    };
+    disbursement?: {
+      initiated: boolean;
+      initiatedAt?: string;
+      amount?: number;
+      utrNumber?: string;
+      disbursedAt?: string;
+      disbursementMode?: string;
+      confirmed?: boolean;
+    };
+  };
+  updatedAt: string;
+}
+
 const NbfcDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [cases, setCases] = useState<NbfcCase[]>([]);
   const [availableCwcrfs, setAvailableCwcrfs] = useState<AvailableCwcrf[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [processCwcrfs, setProcessCwcrfs] = useState<ProcessCwcrf[]>([]);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [responseModal, setResponseModal] = useState<NbfcCase | null>(null);
+  const [processModal, setProcessModal] = useState<ProcessCwcrf | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [responseForm, setResponseForm] = useState({
     fundingPercentage: 65,
     interestRate: 12,
     tenorDays: 30,
     rejectionReason: '',
   });
+  const [sanctionForm, setSanctionForm] = useState({
+    sanctionAmount: 0,
+    sanctionedInterestRate: 12,
+    sanctionedTenure: 30,
+    specialConditions: '',
+  });
+  const [disbursementForm, setDisbursementForm] = useState({
+    amount: 0,
+    disbursementMode: 'NEFT',
+    utrNumber: '',
+  });
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [casesRes, dashboardRes, transactionsRes, cwcrfsRes] = await Promise.all([
+      const [casesRes, dashboardRes, transactionsRes, cwcrfsRes, processRes] = await Promise.all([
         api.get('/nbfc/cases').catch(() => ({ data: [] })),
         api.get('/nbfc/dashboard').catch(() => ({ data: null })),
         api.get('/transactions').catch(() => ({ data: [] })),
         cwcrfApi.getAvailableCwcrfs().catch(() => ({ data: { cwcrfs: [] } })),
+        nbfcApi.getProcessCwcrfs().catch(() => ({ data: [] })),
       ]);
       setCases(casesRes.data);
       setDashboard(dashboardRes.data);
@@ -77,6 +136,8 @@ const NbfcDashboard: React.FC = () => {
         Array.isArray(cwcrfsData) ? cwcrfsData :
         Array.isArray(cwcrfsData?.cwcrfs) ? cwcrfsData.cwcrfs : []
       );
+      const processData = processRes.data;
+      setProcessCwcrfs(Array.isArray(processData) ? processData : []);
     } catch {
       toast.error('Failed to load data');
     } finally {
@@ -118,6 +179,89 @@ const NbfcDashboard: React.FC = () => {
     }
   };
 
+  // ===== NBFC Process Handlers (Phase 11.4) =====
+  const handleStartDD = async (cwcrfId: string) => {
+    setActionLoading(true);
+    try {
+      await nbfcApi.startDueDiligence(cwcrfId);
+      toast.success('Due diligence started');
+      setProcessModal(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to start due diligence');
+    } finally { setActionLoading(false); }
+  };
+
+  const handleCompleteDD = async (cwcrfId: string, result: 'APPROVED' | 'REJECTED' | 'CONDITIONAL') => {
+    setActionLoading(true);
+    try {
+      await nbfcApi.completeDueDiligence(cwcrfId, { result, checklist: ddChecklist, notes: ddNotes });
+      toast.success(`Due diligence ${result.toLowerCase()}`);
+      setProcessModal(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to complete due diligence');
+    } finally { setActionLoading(false); }
+  };
+
+  const handleIssueSanction = async (cwcrfId: string) => {
+    if (!sanctionForm.sanctionAmount || !sanctionForm.sanctionedInterestRate) {
+      toast.error('Please fill all sanction fields');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await nbfcApi.issueSanctionLetter(cwcrfId, sanctionForm);
+      toast.success('Sanction letter issued');
+      setProcessModal(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to issue sanction');
+    } finally { setActionLoading(false); }
+  };
+
+  const handleInitiateDisbursement = async (cwcrfId: string) => {
+    if (!disbursementForm.amount) {
+      toast.error('Please enter disbursement amount');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await nbfcApi.initiateDisbursement(cwcrfId, disbursementForm);
+      toast.success('Disbursement initiated');
+      setProcessModal(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to initiate disbursement');
+    } finally { setActionLoading(false); }
+  };
+
+  const handleConfirmDisbursement = async (cwcrfId: string) => {
+    if (!disbursementForm.utrNumber) {
+      toast.error('Please enter UTR number');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await nbfcApi.confirmDisbursement(cwcrfId, { utrNumber: disbursementForm.utrNumber });
+      toast.success('Disbursement confirmed — funds sent!');
+      setProcessModal(null);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to confirm disbursement');
+    } finally { setActionLoading(false); }
+  };
+
+  const [ddChecklist, setDdChecklist] = useState<Record<string, boolean>>({
+    kycVerified: false,
+    bankStatementReviewed: false,
+    invoiceAuthenticated: false,
+    epcConfirmationReceived: false,
+    creditScoreChecked: false,
+    collateralAssessed: false,
+  });
+  const [ddNotes, setDdNotes] = useState('');
+
   const fmt = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
@@ -158,6 +302,7 @@ const NbfcDashboard: React.FC = () => {
   const tabTitles: Record<string, { heading: string; sub: string }> = {
     overview:     { heading: 'Overview',           sub: 'Your NBFC dashboard summary' },
     cwcafs:       { heading: 'Available CWCAFs',   sub: 'CWCAFs shared with your NBFC — submit quotes' },
+    process:      { heading: 'Active Process',     sub: 'Due diligence, sanction, and disbursement' },
     cases:        { heading: 'My Cases',            sub: 'Cases you have reviewed and responded to' },
     transactions: { heading: 'Transactions',        sub: 'Disbursed and active transactions' },
     history:      { heading: 'History',             sub: 'All past case responses' },
@@ -182,6 +327,18 @@ const NbfcDashboard: React.FC = () => {
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'process',
+      label: 'Active Process',
+      badge: processCwcrfs.filter(c => !['DISBURSED'].includes(c.status)).length > 0
+        ? processCwcrfs.filter(c => !['DISBURSED'].includes(c.status)).length : undefined,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+            d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
         </svg>
       ),
     },
@@ -566,6 +723,95 @@ const NbfcDashboard: React.FC = () => {
             </motion.div>
           )}
 
+          {/* ── Active Process Tab (Phase 11.4) ── */}
+          {activeTab === 'process' && (
+            <motion.div key="process" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+              {processCwcrfs.length === 0 ? (
+                <div className="text-center py-16 text-gray-400">
+                  <p className="text-lg font-medium text-gray-500">No active processes</p>
+                  <p className="text-sm mt-1">CWCRFs will appear here once sellers select you as their NBFC.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {processCwcrfs.map((item) => {
+                    const dd = item.nbfcProcess?.dueDiligence;
+                    const sl = item.nbfcProcess?.sanctionLetter;
+                    const disb = item.nbfcProcess?.disbursement;
+                    const currentStep =
+                      item.status === 'DISBURSED' ? 4 :
+                      item.status === 'DISBURSEMENT_INITIATED' ? 3 :
+                      item.status === 'NBFC_SANCTIONED' ? 2 :
+                      item.status === 'NBFC_DUE_DILIGENCE' ? 1 : 0;
+                    const stepsArr = ['Handoff', 'Due Diligence', 'Sanction', 'Disbursement', 'Completed'];
+
+                    return (
+                      <div key={item._id} className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900">{item.cwcRfNumber || item._id.slice(-8).toUpperCase()}</h4>
+                            <p className="text-xs text-gray-500">{item.subContractorId?.companyName} • {item.buyerDetails?.buyerName || item.epcId?.companyName}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">Invoice: {fmt(item.invoiceDetails?.invoiceAmount || 0)}</p>
+                          </div>
+                          {statusBadge(item.status)}
+                        </div>
+                        {/* Step progress */}
+                        <div className="flex items-center gap-1 mb-4">
+                          {stepsArr.map((s, i) => (
+                            <div key={s} className="flex-1">
+                              <div className={`h-1.5 rounded-full ${i <= currentStep ? 'bg-indigo-500' : 'bg-gray-200'}`} />
+                              <p className={`text-[10px] mt-0.5 ${i === currentStep ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>{s}</p>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Action button based on current step */}
+                        {item.status === 'MOVED_TO_NBFC_PROCESS' && (
+                          <button onClick={() => handleStartDD(item._id)} disabled={actionLoading}
+                            className="w-full py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                            Start Due Diligence
+                          </button>
+                        )}
+                        {item.status === 'NBFC_DUE_DILIGENCE' && !dd?.completedAt && (
+                          <button onClick={() => { setProcessModal(item); setDdChecklist(dd?.checklist || { kycVerified: false, bankStatementReviewed: false, invoiceAuthenticated: false, epcConfirmationReceived: false, creditScoreChecked: false, collateralAssessed: false }); setDdNotes(''); }}
+                            className="w-full py-2 text-sm font-medium bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
+                            Complete Due Diligence
+                          </button>
+                        )}
+                        {item.status === 'NBFC_DUE_DILIGENCE' && dd?.completedAt && dd?.result !== 'REJECTED' && (
+                          <button onClick={() => { setProcessModal(item); setSanctionForm({ sanctionAmount: item.cwcRequest?.requestedAmount || 0, sanctionedInterestRate: item.selectedNbfc?.finalInterestRate || 12, sanctionedTenure: item.selectedNbfc?.finalTenure || 30, specialConditions: '' }); }}
+                            className="w-full py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
+                            Issue Sanction Letter
+                          </button>
+                        )}
+                        {item.status === 'NBFC_SANCTIONED' && sl?.acceptedBySc && (
+                          <button onClick={() => { setProcessModal(item); setDisbursementForm({ amount: sl?.sanctionAmount || 0, disbursementMode: 'NEFT', utrNumber: '' }); }}
+                            className="w-full py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Initiate Disbursement
+                          </button>
+                        )}
+                        {item.status === 'NBFC_SANCTIONED' && !sl?.acceptedBySc && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
+                            <p className="text-xs text-amber-700 font-medium">Waiting for SC to accept sanction letter…</p>
+                          </div>
+                        )}
+                        {item.status === 'DISBURSEMENT_INITIATED' && !disb?.confirmed && (
+                          <button onClick={() => { setProcessModal(item); setDisbursementForm(prev => ({ ...prev, utrNumber: '' })); }}
+                            className="w-full py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                            Confirm Disbursement (Enter UTR)
+                          </button>
+                        )}
+                        {item.status === 'DISBURSED' && (
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
+                            <p className="text-xs text-emerald-700 font-medium">Disbursed — UTR: {disb?.utrNumber || '—'}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
+
           {/* ── History Tab ── */}
           {activeTab === 'history' && (
             <motion.div key="history" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
@@ -690,6 +936,187 @@ const NbfcDashboard: React.FC = () => {
                   ✕ Reject
                 </button>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ── Process Modal (Phase 11.4) ── */}
+      {processModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-xl w-full my-8"
+          >
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    {processModal.status === 'NBFC_DUE_DILIGENCE' && !processModal.nbfcProcess?.dueDiligence?.completedAt ? 'Complete Due Diligence' :
+                     processModal.status === 'NBFC_DUE_DILIGENCE' && processModal.nbfcProcess?.dueDiligence?.completedAt ? 'Issue Sanction Letter' :
+                     processModal.status === 'NBFC_SANCTIONED' ? 'Initiate Disbursement' :
+                     'Confirm Disbursement'}
+                  </h2>
+                  <p className="text-sm text-gray-500">{processModal.cwcRfNumber || processModal._id.slice(-8).toUpperCase()} — {processModal.subContractorId?.companyName}</p>
+                </div>
+                <button onClick={() => setProcessModal(null)} className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* ── DD Completion Form ── */}
+              {processModal.status === 'NBFC_DUE_DILIGENCE' && !processModal.nbfcProcess?.dueDiligence?.completedAt && (
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Due Diligence Checklist</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: 'kycVerified', label: 'KYC Verified' },
+                      { key: 'bankStatementReviewed', label: 'Bank Statement Reviewed' },
+                      { key: 'invoiceAuthenticated', label: 'Invoice Authenticated' },
+                      { key: 'epcConfirmationReceived', label: 'EPC Confirmation Received' },
+                      { key: 'creditScoreChecked', label: 'Credit Score Checked' },
+                      { key: 'collateralAssessed', label: 'Collateral Assessed' },
+                    ].map(({ key, label }) => (
+                      <label key={key} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
+                        <input type="checkbox" checked={ddChecklist[key] || false}
+                          onChange={(e) => setDdChecklist({ ...ddChecklist, [key]: e.target.checked })}
+                          className="w-4 h-4 text-indigo-600 rounded" />
+                        <span className="text-sm text-gray-700">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Notes</label>
+                    <textarea value={ddNotes} onChange={(e) => setDdNotes(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      rows={3} placeholder="Additional notes about due diligence findings…" />
+                  </div>
+                  <div className="flex gap-3 pt-4 border-t">
+                    <button onClick={() => handleCompleteDD(processModal._id, 'APPROVED')} disabled={actionLoading}
+                      className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                      Approve
+                    </button>
+                    <button onClick={() => handleCompleteDD(processModal._id, 'CONDITIONAL')} disabled={actionLoading}
+                      className="flex-1 px-4 py-2.5 bg-amber-600 text-white rounded-xl font-medium hover:bg-amber-700 disabled:opacity-50 transition-colors">
+                      Conditional
+                    </button>
+                    <button onClick={() => handleCompleteDD(processModal._id, 'REJECTED')} disabled={actionLoading}
+                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Sanction Letter Form ── */}
+              {processModal.status === 'NBFC_DUE_DILIGENCE' && processModal.nbfcProcess?.dueDiligence?.completedAt && (
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Sanction Letter Details</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Sanction Amount (₹)</label>
+                      <input type="number" value={sanctionForm.sanctionAmount}
+                        onChange={(e) => setSanctionForm({ ...sanctionForm, sanctionAmount: Number(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Interest Rate (% p.a.)</label>
+                      <input type="number" step="0.5" value={sanctionForm.sanctionedInterestRate}
+                        onChange={(e) => setSanctionForm({ ...sanctionForm, sanctionedInterestRate: Number(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tenure (days)</label>
+                      <input type="number" value={sanctionForm.sanctionedTenure}
+                        onChange={(e) => setSanctionForm({ ...sanctionForm, sanctionedTenure: Number(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Special Conditions</label>
+                      <input type="text" value={sanctionForm.specialConditions}
+                        onChange={(e) => setSanctionForm({ ...sanctionForm, specialConditions: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Optional conditions…" />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-4 border-t">
+                    <button onClick={() => handleIssueSanction(processModal._id)} disabled={actionLoading}
+                      className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                      Issue Sanction Letter
+                    </button>
+                    <button onClick={() => setProcessModal(null)}
+                      className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Disbursement Initiation Form ── */}
+              {processModal.status === 'NBFC_SANCTIONED' && (
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Disbursement Details</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Amount (₹)</label>
+                      <input type="number" value={disbursementForm.amount}
+                        onChange={(e) => setDisbursementForm({ ...disbursementForm, amount: Number(e.target.value) })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Mode</label>
+                      <select value={disbursementForm.disbursementMode}
+                        onChange={(e) => setDisbursementForm({ ...disbursementForm, disbursementMode: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="NEFT">NEFT</option>
+                        <option value="RTGS">RTGS</option>
+                        <option value="IMPS">IMPS</option>
+                        <option value="OTHER">OTHER</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-4 border-t">
+                    <button onClick={() => handleInitiateDisbursement(processModal._id)} disabled={actionLoading}
+                      className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                      Initiate Disbursement
+                    </button>
+                    <button onClick={() => setProcessModal(null)}
+                      className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Disbursement Confirmation Form ── */}
+              {processModal.status === 'DISBURSEMENT_INITIATED' && (
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Confirm Disbursement</p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-700">
+                    Amount: {fmt(processModal.nbfcProcess?.disbursement?.amount || 0)} • Mode: {processModal.nbfcProcess?.disbursement?.disbursementMode || 'NEFT'}
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">UTR Number</label>
+                    <input type="text" value={disbursementForm.utrNumber}
+                      onChange={(e) => setDisbursementForm({ ...disbursementForm, utrNumber: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Enter bank UTR number…" />
+                  </div>
+                  <div className="flex gap-3 pt-4 border-t">
+                    <button onClick={() => handleConfirmDisbursement(processModal._id)} disabled={actionLoading || !disbursementForm.utrNumber.trim()}
+                      className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 disabled:opacity-50 transition-colors">
+                      Confirm — Funds Sent
+                    </button>
+                    <button onClick={() => setProcessModal(null)}
+                      className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

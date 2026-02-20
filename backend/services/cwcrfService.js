@@ -5,8 +5,10 @@ const Bill = require("../models/Bill");
 const Case = require("../models/Case");
 const Nbfc = require("../models/Nbfc");
 const ChatMessage = require("../models/ChatMessage");
+const User = require("../models/User");
 const mongoose = require("mongoose");
 const PDFDocument = require("pdfkit");
+const emailService = require("./emailService");
 
 /**
  * CWCRF Service - Handles all CWC Request Form operations
@@ -122,6 +124,10 @@ class CwcRfService {
     });
 
     await cwcRf.save();
+
+    // Notify Ops about new CWCRF submission
+    this._notifyOpsTeam("New CWCRF Submitted", `CWCRF ${cwcRf.cwcRfNumber || cwcRf._id} has been submitted and needs review.`);
+
     return cwcRf;
   }
 
@@ -419,6 +425,16 @@ class CwcRfService {
     }
 
     await cwcRf.save();
+
+    // Notify EPC about buyer verification request
+    if (action === "forward_to_epc") {
+      this._notifyEpc(cwcRf, "A CWCRF requires your buyer verification");
+    }
+    // Notify SC about rejection
+    if (action === "reject") {
+      this._notifyStatusChange(cwcRf, "REJECTED", notes || "Your CWCRF was rejected after risk triage");
+    }
+
     return cwcRf;
   }
 
@@ -957,6 +973,10 @@ class CwcRfService {
           "QUOTES_RECEIVED",
           "NBFC_SELECTED",
           "MOVED_TO_NBFC_PROCESS",
+          "NBFC_DUE_DILIGENCE",
+          "NBFC_SANCTIONED",
+          "DISBURSEMENT_INITIATED",
+          "DISBURSED",
         ],
       },
     })
@@ -964,6 +984,394 @@ class CwcRfService {
       .populate("epcId", "companyName")
       .populate("caseId")
       .sort({ createdAt: -1 });
+  }
+
+  // =========================================================
+  // PHASE 5.3 — PLATFORM FEE PAYMENT
+  // =========================================================
+
+  /**
+   * Record platform fee payment for a CWCRF (standalone endpoint).
+   * Called when SC pays the ₹1,000 platform fee.
+   */
+  async recordPlatformFee(cwcRfId, userId, { paymentReference, amount }) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+    if (cwcRf.platformFeePaid) throw new Error("Platform fee already recorded");
+
+    cwcRf.platformFeePaid = true;
+    cwcRf.paymentReference = paymentReference || `PAY-${Date.now()}`;
+    cwcRf.platformFeeAmount = amount || 1000;
+    cwcRf.statusHistory.push({
+      status: cwcRf.status,
+      changedBy: userId,
+      notes: `Platform fee ₹${cwcRf.platformFeeAmount} paid. Ref: ${cwcRf.paymentReference}`,
+    });
+    await cwcRf.save();
+
+    return cwcRf;
+  }
+
+  // =========================================================
+  // PHASE 11.4 — NBFC POST-QUOTATION PROCESS
+  // =========================================================
+
+  /**
+   * NBFC starts due diligence on a CWCRF they were selected for.
+   */
+  async nbfcStartDueDiligence(cwcRfId, nbfcUserId) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    if (!["MOVED_TO_NBFC_PROCESS", "NBFC_SELECTED"].includes(cwcRf.status)) {
+      throw new Error("CWCRF must be in MOVED_TO_NBFC_PROCESS or NBFC_SELECTED status");
+    }
+
+    cwcRf.status = "NBFC_DUE_DILIGENCE";
+    if (!cwcRf.nbfcProcess) cwcRf.nbfcProcess = {};
+    cwcRf.nbfcProcess.dueDiligence = {
+      ...(cwcRf.nbfcProcess.dueDiligence || {}),
+      started: true,
+      startedAt: new Date(),
+      checklist: {
+        kycVerified: false,
+        bankStatementReviewed: false,
+        invoiceAuthenticated: false,
+        epcConfirmationReceived: false,
+        creditScoreChecked: false,
+        collateralAssessed: false,
+      },
+    };
+    cwcRf.statusHistory.push({
+      status: "NBFC_DUE_DILIGENCE",
+      changedBy: nbfcUserId,
+      notes: "NBFC started due diligence process",
+    });
+    cwcRf.markModified("nbfcProcess");
+    await cwcRf.save();
+
+    // Notify SC that due diligence has started
+    await this._notifyStatusChange(cwcRf, "NBFC_DUE_DILIGENCE", "NBFC has started due diligence on your CWCRF");
+
+    return cwcRf;
+  }
+
+  /**
+   * NBFC completes due diligence — approve, reject, or mark conditional.
+   */
+  async nbfcCompleteDueDiligence(cwcRfId, nbfcUserId, data) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+    if (cwcRf.status !== "NBFC_DUE_DILIGENCE") throw new Error("CWCRF is not in due diligence");
+
+    const { result, checklist, notes, conditions } = data;
+    if (!["APPROVED", "REJECTED", "CONDITIONAL"].includes(result)) {
+      throw new Error("result must be APPROVED, REJECTED, or CONDITIONAL");
+    }
+
+    if (!cwcRf.nbfcProcess) cwcRf.nbfcProcess = {};
+    cwcRf.nbfcProcess.dueDiligence = {
+      ...cwcRf.nbfcProcess.dueDiligence,
+      checklist: checklist || cwcRf.nbfcProcess.dueDiligence?.checklist || {},
+      notes: notes || "",
+      completedAt: new Date(),
+      completedBy: nbfcUserId,
+      result,
+      conditions: conditions || "",
+    };
+
+    if (result === "REJECTED") {
+      cwcRf.status = "REJECTED";
+      cwcRf.statusHistory.push({
+        status: "REJECTED",
+        changedBy: nbfcUserId,
+        notes: `NBFC due diligence rejected. ${notes || ""}`,
+      });
+    } else {
+      // APPROVED or CONDITIONAL — keep status, NBFC can now issue sanction
+      cwcRf.statusHistory.push({
+        status: "NBFC_DUE_DILIGENCE",
+        changedBy: nbfcUserId,
+        notes: `Due diligence completed: ${result}. ${notes || ""}`,
+      });
+    }
+
+    cwcRf.markModified("nbfcProcess");
+    await cwcRf.save();
+
+    await this._notifyStatusChange(cwcRf, result === "REJECTED" ? "REJECTED" : "DUE_DILIGENCE_COMPLETE",
+      result === "REJECTED" ? "NBFC due diligence was not successful" : "Due diligence completed successfully");
+
+    return cwcRf;
+  }
+
+  /**
+   * NBFC issues a sanction letter.
+   */
+  async nbfcIssueSanctionLetter(cwcRfId, nbfcUserId, data) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+
+    if (cwcRf.status !== "NBFC_DUE_DILIGENCE") {
+      throw new Error("Due diligence must be completed before issuing sanction");
+    }
+
+    const dd = cwcRf.nbfcProcess?.dueDiligence;
+    if (!dd || !dd.completedAt || dd.result === "REJECTED") {
+      throw new Error("Due diligence must be completed and approved/conditional");
+    }
+
+    const { sanctionAmount, sanctionedInterestRate, sanctionedTenure, specialConditions, letterUrl } = data;
+    if (!sanctionAmount || !sanctionedInterestRate || !sanctionedTenure) {
+      throw new Error("sanctionAmount, sanctionedInterestRate, and sanctionedTenure are required");
+    }
+
+    cwcRf.status = "NBFC_SANCTIONED";
+    if (!cwcRf.nbfcProcess) cwcRf.nbfcProcess = {};
+    cwcRf.nbfcProcess.sanctionLetter = {
+      issued: true,
+      issuedAt: new Date(),
+      issuedBy: nbfcUserId,
+      sanctionAmount,
+      sanctionedInterestRate,
+      sanctionedTenure,
+      specialConditions: specialConditions || "",
+      letterUrl: letterUrl || "",
+      acceptedBySc: false,
+    };
+
+    cwcRf.statusHistory.push({
+      status: "NBFC_SANCTIONED",
+      changedBy: nbfcUserId,
+      notes: `Sanction letter issued: ₹${sanctionAmount} at ${sanctionedInterestRate}% for ${sanctionedTenure} days`,
+    });
+
+    cwcRf.markModified("nbfcProcess");
+    await cwcRf.save();
+
+    // Update case status
+    await this._updateCaseStatus(cwcRf, "NBFC_SANCTIONED", nbfcUserId, "Sanction letter issued by NBFC");
+
+    // Notify SC about the sanction letter
+    await this._notifyStatusChange(cwcRf, "NBFC_SANCTIONED",
+      `Sanction letter issued: ₹${sanctionAmount} at ${sanctionedInterestRate}% p.a. for ${sanctionedTenure} days`);
+
+    return cwcRf;
+  }
+
+  /**
+   * SC accepts the sanction letter from NBFC.
+   */
+  async scAcceptSanctionLetter(cwcRfId, userId) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+    if (cwcRf.status !== "NBFC_SANCTIONED") throw new Error("No sanction letter to accept");
+
+    if (!cwcRf.nbfcProcess?.sanctionLetter?.issued) {
+      throw new Error("Sanction letter has not been issued");
+    }
+
+    cwcRf.nbfcProcess.sanctionLetter.acceptedBySc = true;
+    cwcRf.nbfcProcess.sanctionLetter.acceptedAt = new Date();
+
+    cwcRf.statusHistory.push({
+      status: "NBFC_SANCTIONED",
+      changedBy: userId,
+      notes: "Sub-contractor accepted the sanction letter",
+    });
+
+    cwcRf.markModified("nbfcProcess");
+    await cwcRf.save();
+
+    // Notify NBFC that SC accepted
+    const nbfc = await Nbfc.findById(cwcRf.selectedNbfc?.nbfcId);
+    if (nbfc) {
+      const nbfcUser = await User.findOne({ nbfcId: nbfc._id });
+      if (nbfcUser?.email) {
+        emailService.sendStatusUpdate(nbfcUser.email, nbfc.companyName || nbfc.name || "NBFC",
+          "CWCRF", "SANCTION_ACCEPTED", "The sub-contractor has accepted the sanction letter. You may proceed with disbursement.");
+      }
+    }
+
+    return cwcRf;
+  }
+
+  /**
+   * NBFC initiates disbursement.
+   */
+  async nbfcInitiateDisbursement(cwcRfId, nbfcUserId, data) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+    if (cwcRf.status !== "NBFC_SANCTIONED") throw new Error("Sanction letter must be issued first");
+
+    if (!cwcRf.nbfcProcess?.sanctionLetter?.acceptedBySc) {
+      throw new Error("Sub-contractor must accept the sanction letter before disbursement");
+    }
+
+    const { amount, disbursementMode, escrowAccountId } = data;
+    if (!amount) throw new Error("Disbursement amount is required");
+
+    cwcRf.status = "DISBURSEMENT_INITIATED";
+    if (!cwcRf.nbfcProcess) cwcRf.nbfcProcess = {};
+    cwcRf.nbfcProcess.disbursement = {
+      initiated: true,
+      initiatedAt: new Date(),
+      initiatedBy: nbfcUserId,
+      amount,
+      disbursementMode: disbursementMode || "NEFT",
+      escrowAccountId: escrowAccountId || "",
+      confirmed: false,
+    };
+
+    cwcRf.statusHistory.push({
+      status: "DISBURSEMENT_INITIATED",
+      changedBy: nbfcUserId,
+      notes: `Disbursement initiated: ₹${amount} via ${disbursementMode || "NEFT"}`,
+    });
+
+    cwcRf.markModified("nbfcProcess");
+    await cwcRf.save();
+
+    await this._updateCaseStatus(cwcRf, "DISBURSEMENT_INITIATED", nbfcUserId, "NBFC initiated disbursement");
+    await this._notifyStatusChange(cwcRf, "DISBURSEMENT_INITIATED", `Disbursement of ₹${amount} has been initiated`);
+
+    return cwcRf;
+  }
+
+  /**
+   * NBFC confirms disbursement is complete (funds sent).
+   */
+  async nbfcConfirmDisbursement(cwcRfId, nbfcUserId, data) {
+    const cwcRf = await CwcRf.findById(cwcRfId);
+    if (!cwcRf) throw new Error("CWCRF not found");
+    if (cwcRf.status !== "DISBURSEMENT_INITIATED") throw new Error("Disbursement must be initiated first");
+
+    const { utrNumber, disbursedAt } = data;
+    if (!utrNumber) throw new Error("UTR number is required");
+
+    cwcRf.status = "DISBURSED";
+    cwcRf.nbfcProcess.disbursement = {
+      ...cwcRf.nbfcProcess.disbursement,
+      utrNumber,
+      disbursedAt: disbursedAt ? new Date(disbursedAt) : new Date(),
+      confirmed: true,
+      confirmedAt: new Date(),
+    };
+
+    cwcRf.statusHistory.push({
+      status: "DISBURSED",
+      changedBy: nbfcUserId,
+      notes: `Funds disbursed. UTR: ${utrNumber}`,
+    });
+
+    cwcRf.markModified("nbfcProcess");
+    await cwcRf.save();
+
+    // Update case to COMPLETED
+    await this._updateCaseStatus(cwcRf, "COMPLETED", nbfcUserId, `Funds disbursed. UTR: ${utrNumber}`);
+
+    // Notify all parties
+    await this._notifyStatusChange(cwcRf, "DISBURSED", `Funds have been disbursed. UTR: ${utrNumber}`);
+
+    return cwcRf;
+  }
+
+  /**
+   * Get CWCRFs with NBFC process data for a specific NBFC.
+   * Includes all active NBFC processes (due diligence, sanction, disbursement).
+   */
+  async getCwcRfsInNbfcProcess(nbfcId) {
+    return CwcRf.find({
+      "selectedNbfc.nbfcId": nbfcId,
+      status: {
+        $in: [
+          "MOVED_TO_NBFC_PROCESS",
+          "NBFC_DUE_DILIGENCE",
+          "NBFC_SANCTIONED",
+          "DISBURSEMENT_INITIATED",
+          "DISBURSED",
+        ],
+      },
+    })
+      .populate("subContractorId", "companyName ownerName pan gstin phone")
+      .populate("epcId", "companyName")
+      .populate("billId", "billNumber amount")
+      .populate("caseId")
+      .sort({ updatedAt: -1 });
+  }
+
+  // =========================================================
+  // SHARED HELPERS — Email notifications & case updates
+  // =========================================================
+
+  /**
+   * Send email notification for CWCRF status changes.
+   * Non-blocking — failures are logged but don't break the flow.
+   */
+  async _notifyStatusChange(cwcRf, newStatus, notes) {
+    try {
+      // Notify Sub-Contractor (SC)
+      const sc = await SubContractor.findById(cwcRf.subContractorId);
+      if (sc) {
+        const scUser = await User.findOne({ subContractorId: sc._id });
+        if (scUser?.email) {
+          emailService.sendStatusUpdate(scUser.email, sc.companyName || sc.ownerName || "Seller",
+            "CWCRF", newStatus.replace(/_/g, " "), notes);
+        }
+      }
+    } catch (err) {
+      console.error("[EMAIL] Failed to send status notification:", err.message);
+    }
+  }
+
+  /**
+   * Notify Ops team users about important events.
+   */
+  async _notifyOpsTeam(subject, message) {
+    try {
+      const opsUsers = await User.find({ role: "ops", isActive: true }).select("email name").limit(10);
+      for (const u of opsUsers) {
+        if (u.email) {
+          emailService.sendSalesNotification(u.email, u.name || "Ops Team", message);
+        }
+      }
+    } catch (err) {
+      console.error("[EMAIL] Failed to notify ops team:", err.message);
+    }
+  }
+
+  /**
+   * Notify EPC company about a CWCRF that needs buyer verification.
+   */
+  async _notifyEpc(cwcRf, message) {
+    try {
+      if (!cwcRf.epcId) return;
+      const epcId = typeof cwcRf.epcId === "object" ? cwcRf.epcId._id : cwcRf.epcId;
+      const epcUsers = await User.find({ companyId: epcId, role: "epc", isActive: true }).select("email name").limit(5);
+      for (const u of epcUsers) {
+        if (u.email) {
+          emailService.sendStatusUpdate(u.email, u.name || "EPC", "CWCRF", "BUYER_VERIFICATION_PENDING", message);
+        }
+      }
+    } catch (err) {
+      console.error("[EMAIL] Failed to notify EPC:", err.message);
+    }
+  }
+
+  /**
+   * Update the associated case document status.
+   */
+  async _updateCaseStatus(cwcRf, status, userId, notes) {
+    try {
+      const caseDoc = await Case.findById(cwcRf.caseId);
+      if (caseDoc) {
+        caseDoc.status = status;
+        caseDoc.statusHistory.push({ status, changedBy: userId, notes });
+        await caseDoc.save();
+      }
+    } catch (err) {
+      console.error("[CASE] Failed to update case status:", err.message);
+    }
   }
 
   // =========================================================

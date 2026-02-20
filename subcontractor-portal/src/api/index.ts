@@ -158,6 +158,14 @@ export const cwcrfApi = {
   // Select NBFC (Workflow Step 10)
   selectNbfc: (cwcrfId: string, nbfcId: string) =>
     api.post(`/cwcrf/${cwcrfId}/select-nbfc`, { nbfcId }),
+
+  // Platform Fee Payment (Phase 5.3)
+  recordPayment: (cwcrfId: string, data: { paymentReference: string; amount?: number }) =>
+    api.post(`/cwcrf/${cwcrfId}/payment`, data),
+
+  // Accept Sanction Letter (Phase 11.4)
+  acceptSanctionLetter: (cwcrfId: string) =>
+    api.post(`/cwcrf/${cwcrfId}/accept-sanction`),
 };
 
 // KYC Chat APIs - for chat-based document exchange with Ops

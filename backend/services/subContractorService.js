@@ -79,7 +79,7 @@ const completeProfile = async (userId, data) => {
 };
 
 // Step 11: Upload bill with CWC RF (combined submission)
-const uploadBillWithCwcrf = async (userId, files, data) => {
+const uploadBillWithCwcrf = async (userId, files, cwcrfData) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
@@ -94,41 +94,64 @@ const uploadBillWithCwcrf = async (userId, files, data) => {
     throw new Error("Profile must be completed before uploading bills");
   }
 
-  if (!data.billNumber || !data.amount) {
-    throw new Error("Bill number and amount are required");
+  // files is { raBill, wcc?, measurementSheet? }
+  const raBill = files.raBill;
+  if (!raBill) throw new Error("RA Bill file is required");
+
+  // Upload RA Bill to Cloudinary
+  const raBillResult = await uploadToCloudinary(raBill.buffer, raBill.mimetype, { folder: "gryork/bills" });
+
+  // Upload optional WCC
+  let wccResult = null;
+  if (files.wcc) {
+    wccResult = await uploadToCloudinary(files.wcc.buffer, files.wcc.mimetype, { folder: "gryork/bills" });
+  }
+  // Upload optional Measurement Sheet
+  let measResult = null;
+  if (files.measurementSheet) {
+    measResult = await uploadToCloudinary(files.measurementSheet.buffer, files.measurementSheet.mimetype, { folder: "gryork/bills" });
   }
 
-  if (files.length === 0) throw new Error("At least one bill file is required");
-
-  // Upload the first file to Cloudinary
-  const file = files[0];
-  const cloudResult = await uploadToCloudinary(file.buffer, file.mimetype, {
-    folder: "gryork/bills",
-  });
+  // Derive bill number and amount from CWCRF invoice data
+  const inv = cwcrfData.invoiceDetails || {};
+  const billNumber = inv.invoiceNumber || `BILL-${Date.now()}`;
+  const amount = Number(inv.invoiceAmount) || 0;
 
   const bill = new Bill({
     subContractorId: subContractor._id,
     uploadedBy: userId,
     linkedEpcId: subContractor.linkedEpcId,
-    billNumber: data.billNumber,
-    amount: Number(data.amount),
-    description: data.description || "",
-    fileName: file.originalname,
-    fileUrl: cloudResult.secure_url,
-    cloudinaryPublicId: cloudResult.public_id,
-    fileSize: file.size,
-    mimeType: file.mimetype,
+    billNumber,
+    amount,
+    description: inv.workDescription || "",
+    fileName: raBill.originalname,
+    fileUrl: raBillResult.secure_url,
+    cloudinaryPublicId: raBillResult.public_id,
+    fileSize: raBill.size,
+    mimeType: raBill.mimetype,
     uploadMode: "image",
     status: "UPLOADED",
     statusHistory: [{ status: "UPLOADED", changedBy: userId }],
+    // Store supporting docs on the bill
+    ...(wccResult && { wccUrl: wccResult.secure_url, wccPublicId: wccResult.public_id }),
+    ...(measResult && { measurementSheetUrl: measResult.secure_url, measurementSheetPublicId: measResult.public_id }),
   });
   await bill.save();
 
-  // Auto-create a CWCRF tied to this bill (pending ops approval)
+  // Create the full CWCRF with all form sections
   const cwcRf = new CwcRf({
     subContractorId: subContractor._id,
     userId,
     billId: bill._id,
+    epcId: subContractor.linkedEpcId,
+    buyerDetails: cwcrfData.buyerDetails || {},
+    invoiceDetails: cwcrfData.invoiceDetails || {},
+    cwcRequest: cwcrfData.cwcRequest || {},
+    interestPreference: cwcrfData.interestPreference || {},
+    sellerDeclaration: { accepted: true, acceptedAt: new Date() },
+    platformFeePaid: !!cwcrfData.platformFeePaid,
+    paymentReference: cwcrfData.paymentReference || undefined,
+    platformFeeAmount: cwcrfData.platformFeeAmount || 1000,
     status: "SUBMITTED",
     statusHistory: [{ status: "SUBMITTED", changedBy: userId }],
   });
