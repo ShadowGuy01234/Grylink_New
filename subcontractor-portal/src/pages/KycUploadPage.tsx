@@ -298,7 +298,7 @@ const KycUploadPage = () => {
                 <Progress value={progress.verified} className="h-2" indicatorClassName="bg-green-500" />
               </div>
             </div>
-            {kycStatus?.overall === 'VERIFIED' && (
+            {kycStatus?.overall === 'COMPLETED' && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                 className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3"

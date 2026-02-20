@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -20,6 +21,7 @@ import {
 import HelpCenterTab from "../components/HelpCenterTab";
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const { logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<any>(null);
@@ -35,20 +37,6 @@ const DashboardPage = () => {
     gstin: "",
     address: "",
   });
-
-  // Bill upload
-  const [billFiles, setBillFiles] = useState<File[]>([]);
-  const [uploadingBill, setUploadingBill] = useState(false);
-  const [billData, setBillData] = useState({
-    billNumber: "",
-    amount: "",
-    description: "",
-  });
-
-  // Declaration dialog
-  const [showDeclarationDialog, setShowDeclarationDialog] = useState(false);
-  const [declarationAccepted, setDeclarationAccepted] = useState(false);
-  const [pendingBillForm, setPendingBillForm] = useState<FormData | null>(null);
 
   // Additional Documents
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
@@ -102,26 +90,6 @@ const DashboardPage = () => {
     }
   };
 
-  const handleBillFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!billFiles[0]) {
-      toast.error("Please select a bill file");
-      return;
-    }
-    if (!billData.billNumber || !billData.amount) {
-      toast.error("Please fill in Bill Number and Amount");
-      return;
-    }
-    const formData = new FormData();
-    formData.append("bill", billFiles[0]);
-    formData.append("billNumber", billData.billNumber);
-    formData.append("amount", billData.amount);
-    if (billData.description) formData.append("description", billData.description);
-    setPendingBillForm(formData);
-    setDeclarationAccepted(false);
-    setShowDeclarationDialog(true);
-  };
-
   const handleUploadAdditionalDoc = async (docId: string) => {
     if (!additionalDocFile) { toast.error("Please select a file"); return; }
     setUploadingDocId(docId);
@@ -137,24 +105,6 @@ const DashboardPage = () => {
       toast.error(err.response?.data?.error || "Upload failed");
     } finally {
       setUploadingDocId(null);
-    }
-  };
-
-  const handleConfirmBillSubmit = async () => {
-    if (!pendingBillForm || !declarationAccepted) return;
-    setUploadingBill(true);
-    setShowDeclarationDialog(false);
-    try {
-      await scApi.submitBillWithCwcrf(pendingBillForm);
-      toast.success("Bill & CWC RF submitted for verification!");
-      setBillFiles([]);
-      setBillData({ billNumber: "", amount: "", description: "" });
-      setPendingBillForm(null);
-      fetchDashboard();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Submission failed");
-    } finally {
-      setUploadingBill(false);
     }
   };
 
@@ -305,7 +255,7 @@ const DashboardPage = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => tab.id === 'bills' ? navigate('/cwcrf') : setActiveTab(tab.id)}
                 className={`nav-item ${activeTab === tab.id ? "active" : ""}`}
               >
                 <Icon className="w-5 h-5" />
@@ -422,7 +372,7 @@ const DashboardPage = () => {
                   return (
                     <button
                       key={action.id}
-                      onClick={() => setActiveTab(action.id)}
+                      onClick={() => action.id === 'bills' ? navigate('/cwcrf') : setActiveTab(action.id)}
                       className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-sm transition-all text-left group"
                     >
                       <div className={`${c.light} p-2.5 rounded-lg`}>
@@ -534,59 +484,21 @@ const DashboardPage = () => {
         {activeTab === "bills" && (
           <motion.div key="bills" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="space-y-4">
 
-            {/* Info Banner */}
-            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <Send className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-blue-900">Bill + CWC RF in one step</p>
-                <p className="text-xs text-blue-700 mt-0.5">
-                  Each bill submission automatically creates a linked CWC RF request. Both are sent to the operations team for verification.
-                </p>
-              </div>
-            </div>
-
-            <Card className="border border-gray-200 shadow-none">
-              <CardHeader>
-                <CardTitle className="text-base">Submit New Bill</CardTitle>
-                <CardDescription>Fill in the invoice details and upload the bill document</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleBillFormSubmit} className="space-y-4">
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="billNumber">Bill Number <span className="text-red-500">*</span></Label>
-                      <Input id="billNumber" value={billData.billNumber} onChange={(e) => setBillData({ ...billData, billNumber: e.target.value })} placeholder="INV-001" required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="amount">Amount (₹) <span className="text-red-500">*</span></Label>
-                      <Input id="amount" type="number" value={billData.amount} onChange={(e) => setBillData({ ...billData, amount: e.target.value })} placeholder="100000" required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="description">Description</Label>
-                      <Input id="description" value={billData.description} onChange={(e) => setBillData({ ...billData, description: e.target.value })} placeholder="Work description" />
-                    </div>
+            {/* CTA to full 4-section CWCRF form */}
+            <Card className="border border-blue-200 bg-blue-50/40 shadow-none">
+              <CardContent className="flex items-center justify-between gap-4 py-5">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                    <FilePlus2 className="h-5 w-5 text-blue-600" />
                   </div>
-                  <label
-                    htmlFor="billFile"
-                    className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-8 cursor-pointer transition-colors ${
-                      billFiles[0] ? "border-blue-300 bg-blue-50" : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
-                    }`}
-                  >
-                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setBillFiles(e.target.files ? [e.target.files[0]] : [])} className="hidden" id="billFile" />
-                    <Upload className={`h-8 w-8 ${billFiles[0] ? "text-blue-500" : "text-gray-300"}`} />
-                    <div className="text-center">
-                      <p className={`text-sm font-medium ${billFiles[0] ? "text-blue-700" : "text-gray-600"}`}>
-                        {billFiles[0] ? billFiles[0].name : "Click to upload bill document"}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">PDF, JPG, PNG up to 10MB</p>
-                    </div>
-                  </label>
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={uploadingBill}>
-                      {uploadingBill ? "Submitting..." : "Review & Submit"}
-                    </Button>
+                  <div>
+                    <p className="font-semibold text-gray-900">Submit New CWC RF</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Complete the 4-section form — Buyer details, Invoice, Funding request &amp; Interest preference</p>
                   </div>
-                </form>
+                </div>
+                <Button onClick={() => navigate('/cwcrf')} className="shrink-0">
+                  Start Form <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </CardContent>
             </Card>
 
@@ -635,59 +547,6 @@ const DashboardPage = () => {
               </CardContent>
             </Card>
 
-            {/* ── Seller Declaration Dialog ── */}
-            {showDeclarationDialog && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Seller Declaration</h3>
-                      <p className="text-xs text-gray-500">Required before bill submission</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4 mb-5 text-sm text-gray-700 leading-relaxed border border-gray-200">
-                    I hereby declare that the bill submitted is genuine, all work described has been completed as per the contract, and I authorize Gryork to process this invoice for working capital financing. I confirm that this bill has not been submitted elsewhere for financing and I am liable for any misrepresentation.
-                  </div>
-
-                  <label className="flex items-start gap-3 cursor-pointer mb-6">
-                    <input
-                      type="checkbox"
-                      checked={declarationAccepted}
-                      onChange={(e) => setDeclarationAccepted(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-blue-600"
-                    />
-                    <span className="text-sm text-gray-700">
-                      I have read and accept the terms of the <span className="font-medium text-blue-700">Seller Declaration</span>
-                    </span>
-                  </label>
-
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => { setShowDeclarationDialog(false); setPendingBillForm(null); }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      className="flex-1"
-                      disabled={!declarationAccepted || uploadingBill}
-                      onClick={handleConfirmBillSubmit}
-                    >
-                      {uploadingBill ? "Submitting..." : "Accept & Submit"}
-                    </Button>
-                  </div>
-                </motion.div>
-              </div>
-            )}
           </motion.div>
         )}
 

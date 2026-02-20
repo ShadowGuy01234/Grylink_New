@@ -115,7 +115,7 @@ const CwcrfSubmissionPage = () => {
       const eligibility = {
         canSubmit: false,
         declarationAccepted: declRes.data.declarationAccepted || false,
-        kycCompleted: kycRes.data.kycStatus === 'VERIFIED',
+        kycCompleted: kycRes.data.overall === 'COMPLETED',
         bankDetailsVerified: kycRes.data.bankDetailsVerified || false,
         reasons: [] as string[]
       };
