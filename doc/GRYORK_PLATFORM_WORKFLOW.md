@@ -119,7 +119,7 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
 | 4.2 | SC uploads KYC documents | `KycUploadPage.tsx` (685 lines) | `POST /api/subcontractor/kyc/upload` | ✅ |
 | 4.3 | SC submits bank details | `KycUploadPage.tsx` — bank details section | `PUT /api/subcontractor/bank-details` | ✅ |
 | 4.4 | SC accepts seller declaration | `SellerDeclarationPage.tsx` (249 lines) | `POST /api/subcontractor/declaration/accept` | ✅ |
-| 4.5 | Ops KYC review via chat | `OpsDashboardNew.tsx` → KYC tab + chat | `POST /api/ops/kyc/:id/chat`, `/complete`, `/documents/:id/verify` | ✅ |
+| 4.5 | Ops KYC review (document-request system) | `OpsDashboardNew.tsx` → KYC tab → `/ops/kyc` detail page | `POST /api/ops/kyc/:id/request-additional-document`, `/api/ops/kyc/documents/:id/verify`, `/api/ops/kyc/:id/complete` | ✅ |
 
 ---
 
@@ -792,7 +792,7 @@ If the RMT risk category is **LOW**:
 If the RMT risk category is **MEDIUM**:
 - Ops must conduct their own review of the risk assessment
 - Ops may:
-  - Request additional documents from SC via chat
+  - Request additional documents from SC via the **Additional Document Request system** (SC sees the request on their KYC page and uploads directly)
   - Discuss internally with team
   - Add internal notes and observations
 - Once satisfied, Ops makes the call to **Forward to EPC** or **Reject**
