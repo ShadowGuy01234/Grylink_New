@@ -122,11 +122,32 @@ const uploadBillWithCwcrf = async (userId, files, cwcrfData) => {
     uploadMode: "image",
     status: "UPLOADED",
     statusHistory: [{ status: "UPLOADED", changedBy: userId }],
-    // Store supporting docs on the bill
-    ...(wccResult && { wccUrl: wccResult.secure_url, wccPublicId: wccResult.public_id }),
-    ...(measResult && { measurementSheetUrl: measResult.secure_url, measurementSheetPublicId: measResult.public_id }),
+    // Store supporting docs on the bill using nested schema
+    ...(wccResult && {
+      wcc: {
+        uploaded: true,
+        fileName: files.wcc.originalname,
+        fileUrl: wccResult.secure_url,
+        cloudinaryPublicId: wccResult.public_id,
+        uploadedAt: new Date(),
+        uploadedBy: userId,
+      },
+    }),
+    ...(measResult && {
+      measurementSheet: {
+        uploaded: true,
+        fileName: files.measurementSheet.originalname,
+        fileUrl: measResult.secure_url,
+        cloudinaryPublicId: measResult.public_id,
+        uploadedAt: new Date(),
+        uploadedBy: userId,
+      },
+    }),
   });
   await bill.save();
+
+  // Fetch EPC company to auto-fill buyerDetails
+  const epcCompany = await Company.findById(subContractor.linkedEpcId);
 
   // Create the full CWCRF with all form sections
   const cwcRf = new CwcRf({
@@ -134,7 +155,13 @@ const uploadBillWithCwcrf = async (userId, files, cwcrfData) => {
     userId,
     billId: bill._id,
     epcId: subContractor.linkedEpcId,
-    buyerDetails: cwcrfData.buyerDetails || {},
+    buyerDetails: {
+      buyerId: subContractor.linkedEpcId,
+      buyerName: epcCompany?.companyName || '',
+      buyerGstin: epcCompany?.gstin || '',
+      projectName: cwcrfData.buyerDetails?.projectName || '',
+      projectLocation: cwcrfData.buyerDetails?.projectLocation || '',
+    },
     invoiceDetails: cwcrfData.invoiceDetails || {},
     cwcRequest: cwcrfData.cwcRequest || {},
     interestPreference: cwcrfData.interestPreference || {},
