@@ -72,7 +72,7 @@ INTERNAL ROLES          EXTERNAL ROLES
 | Verify Company Docs | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Verify Bills | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | KYC Verification | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| KYC Chat | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ |
+| KYC Doc Requests | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ |
 | Risk Assessments | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | Generate CWCAF | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Share with NBFCs | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -164,7 +164,7 @@ INTERNAL ROLES          EXTERNAL ROLES
 - ✅ Collect & verify documents
 - ✅ Coordinate EPC–Seller validations
 - ✅ Maintain platform data integrity
-- ⚠️ KYC verification with chat support
+- ✅ KYC verification with document-request system
 
 #### Backend API Access
 | Endpoint | Method | Purpose |
@@ -175,8 +175,8 @@ INTERNAL ROLES          EXTERNAL ROLES
 | `/api/ops/bills` | GET | List bills pending verification |
 | `/api/ops/bills/:id/verify` | POST | Verify bill documents |
 | `/api/ops/pending` | GET | Get all pending KYC items |
-| `/api/ops/kyc/:id/chat` | GET | Get KYC chat messages |
-| `/api/ops/kyc/:id/chat` | POST | Send KYC chat message |
+| `/api/ops/kyc/:id/request-additional-document` | POST | Request additional doc from SC |
+| `/api/ops/kyc/additional/:docId/verify` | POST | Verify additional document |
 | `/api/ops/companies/:id/documents` | GET | View company documents |
 | `/api/ops/subcontractors/:id/verify` | POST | Verify SC KYC |
 | `/api/ops/subcontractors/:id/reject` | POST | Reject SC KYC |
@@ -190,7 +190,7 @@ INTERNAL ROLES          EXTERNAL ROLES
 - ✅ **Overview Tab:** Workflow summary, stats overview
 - ✅ **EPC Verification Tab:** Company document review & approval
 - ✅ **Bill Verification Tab:** Invoice/WCC/Measurement verification
-- ✅ **Seller KYC Tab:** Split-panel layout with chat integration
+- ✅ **Seller KYC Tab:** Split-panel layout with document-request system (request additional docs, verify/reject each document inline)
 - ✅ **Cases Tab:** Case management
 - ✅ **NBFC Invite Tab:** NBFC management
 
@@ -199,7 +199,7 @@ INTERNAL ROLES          EXTERNAL ROLES
 |-----------------|--------|-------|
 | Execute onboarding | ✅ Implemented | Full verification flow |
 | Document verification | ✅ Implemented | With viewer & actions |
-| KYC chat support | ✅ Implemented | Real-time messaging |
+| KYC document-request system | ✅ Implemented | Ops requests docs; SC uploads from portal |
 | Data integrity | ⚠️ Partial | No audit logging UI |
 | SLA tracking | ⚠️ Missing | No visual SLA timers |
 
@@ -476,7 +476,7 @@ All routes with `authorize("admin")` - Full system access including:
 | `/api/cwcrf` | POST | Create CWCRF |
 | `/api/cwcrf/my` | GET | My CWCRFs |
 | `/api/cwcrf/:id/select-nbfc` | POST | Select NBFC offer |
-| `/api/ops/kyc/:id/chat` | GET/POST | KYC chat with ops |
+| `/api/subcontractor/kyc/additional/:docId` | POST | Upload additional requested doc |
 
 #### Frontend Features (Implemented)
 - ✅ **Overview Tab:** Profile status, stats
