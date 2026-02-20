@@ -18,7 +18,6 @@ import {
   HiOutlineBell,
   HiOutlineLightningBolt,
   HiOutlineScale,
-  HiOutlineSearch,
 } from "react-icons/hi";
 
 // Interfaces
@@ -153,13 +152,14 @@ const OpsDashboardNew = () => {
   const [overdueSlas, setOverdueSlas] = useState<SlaItem[]>([]);
   const [cwcrfQueue, setCwcrfQueue] = useState<any[]>([]);
   const [cwcrfTriageQueue, setCwcrfTriageQueue] = useState<any[]>([]);
+  const [cwcrfNbfcQueue, setCwcrfNbfcQueue] = useState<any[]>([]);
   const [cwcrfForwardingId, setCwcrfForwardingId] = useState<string | null>(null);
   const [cwcrfVerifyingSection, setCwcrfVerifyingSection] = useState<string | null>(null);
   const [cwcrfTriageId, setCwcrfTriageId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [pendingRes, casesRes, approvalRes, slaDashboardRes, activeSlaRes, overdueSlaRes, cwcrfRes, cwcrfTriageRes] = await Promise.all([
+      const [pendingRes, casesRes, approvalRes, slaDashboardRes, activeSlaRes, overdueSlaRes, cwcrfRes, cwcrfTriageRes, cwcrfNbfcRes] = await Promise.all([
         opsApi.getPending(),
         casesApi.getCases(),
         approvalApi.getPendingCount().catch(() => ({ data: { count: 0 } })),
@@ -168,6 +168,7 @@ const OpsDashboardNew = () => {
         slaApi.getOverdue().catch(() => ({ data: [] })),
         opsApi.getCwcrfQueue().catch(() => ({ data: { cwcrfs: [] } })),
         opsApi.getCwcrfTriageQueue().catch(() => ({ data: { cwcrfs: [] } })),
+        opsApi.getCwcrfNbfcQueue().catch(() => ({ data: { cwcrfs: [] } })),
       ]);
       setPending(pendingRes.data);
       setCases(casesRes.data);
@@ -177,6 +178,7 @@ const OpsDashboardNew = () => {
       setOverdueSlas(overdueSlaRes.data);
       setCwcrfQueue(cwcrfRes.data.cwcrfs || []);
       setCwcrfTriageQueue(cwcrfTriageRes.data.cwcrfs || []);
+      setCwcrfNbfcQueue(cwcrfNbfcRes.data.cwcrfs || []);
     } catch {
       toast.error("Failed to load data");
     } finally {
@@ -531,6 +533,7 @@ const OpsDashboardNew = () => {
         <CwcrfOpsTab
           cwcrfs={cwcrfQueue}
           triageCwcrfs={cwcrfTriageQueue}
+          nbfcCwcrfs={cwcrfNbfcQueue}
           forwardingId={cwcrfForwardingId}
           verifyingSection={cwcrfVerifyingSection}
           triageId={cwcrfTriageId}
@@ -561,7 +564,7 @@ const OpsDashboardNew = () => {
           onTriage={async (id: string, action: string, notes: string) => {
             setCwcrfTriageId(id);
             try {
-              await opsApi.triageCwcrf(id, { action, notes });
+              await opsApi.triageCwcrf(id, { action: action as 'forward_to_epc' | 'reject', notes });
               toast.success(action === "forward_to_epc" ? "CWCRF forwarded to EPC for buyer verification" : "CWCRF rejected");
               fetchData();
             } catch (err: any) {
@@ -572,6 +575,15 @@ const OpsDashboardNew = () => {
           }}
           formatDate={formatDate}
           statusBadge={statusBadge}
+          onShareWithNbfcs={async (id: string, nbfcIds: string[]) => {
+            try {
+              await opsApi.shareWithNbfcs(id, nbfcIds);
+              toast.success("CWCAF shared with selected NBFCs");
+              fetchData();
+            } catch (err: any) {
+              toast.error(err.response?.data?.error || "Failed to share CWCAF with NBFCs");
+            }
+          }}
         />
       )}
 
@@ -3506,14 +3518,16 @@ export default OpsDashboardNew;
 interface CwcrfOpsTabProps {
   cwcrfs: any[];        // Phase 6: SUBMITTED / OPS_REVIEW
   triageCwcrfs: any[]; // Phase 8: RMT_APPROVED
+  nbfcCwcrfs: any[];   // Phase 10: EPC_VERIFIED → NBFC dispatch
   forwardingId: string | null;
   verifyingSection: string | null;
   triageId: string | null;
   onForwardToRmt: (id: string) => Promise<void>;
   onVerifySection: (id: string, section: string, verified: boolean, notes: string) => Promise<void>;
   onTriage: (id: string, action: string, notes: string) => Promise<void>;
+  onShareWithNbfcs: (id: string, nbfcIds: string[]) => Promise<void>;
   formatDate: (date: string) => string;
-  statusBadge: (status: string) => JSX.Element;
+  statusBadge: (status: string) => React.JSX.Element;
 }
 
 const CWCRF_SECTIONS = [
@@ -3527,15 +3541,18 @@ const CWCRF_SECTIONS = [
 ];
 
 const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
-  cwcrfs, triageCwcrfs, forwardingId, verifyingSection, triageId,
-  onForwardToRmt, onVerifySection, onTriage, formatDate, statusBadge,
+  cwcrfs, triageCwcrfs, nbfcCwcrfs, forwardingId, verifyingSection, triageId,
+  onForwardToRmt, onVerifySection, onTriage, onShareWithNbfcs, formatDate, statusBadge,
 }) => {
-  const [subTab, setSubTab] = React.useState<"verify" | "triage">("verify");
+  const [subTab, setSubTab] = React.useState<"verify" | "triage" | "nbfc">("verify");
   const [expanded, setExpanded] = React.useState<string | null>(null);
   const [sectionNotes, setSectionNotes] = React.useState<Record<string, string>>({});
   const [triageNotes, setTriageNotes] = React.useState<Record<string, string>>({});
-
-  const totalBadge = cwcrfs.length + triageCwcrfs.length;
+  // Phase 10: NBFC dispatch local state
+  const [nbfcMatches, setNbfcMatches] = React.useState<Record<string, any[]>>({});
+  const [nbfcLoading, setNbfcLoading] = React.useState<Record<string, boolean>>({});
+  const [nbfcSelected, setNbfcSelected] = React.useState<Record<string, string[]>>({});
+  const [nbfcSending, setNbfcSending] = React.useState<Record<string, boolean>>({});
 
   return (
     <div style={{ padding: "0 0 32px" }}>
@@ -3554,6 +3571,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
         {([
           { key: "verify", label: "Section Verify (Phase 6)", count: cwcrfs.length },
           { key: "triage", label: "Risk Triage (Phase 8)", count: triageCwcrfs.length },
+          { key: "nbfc", label: "NBFC Dispatch (Phase 10)", count: nbfcCwcrfs.length },
         ] as const).map((t) => (
           <button
             key={t.key}
@@ -3854,6 +3872,210 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
           )}
         </div>
       )}
-    </div>
+
+      {/* ── Phase 10: NBFC Dispatch ── */}
+      {subTab === "nbfc" && (
+        <div>
+          {nbfcCwcrfs.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "64px 0", color: "#94a3b8" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🏦</div>
+              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>No CWCRFs pending NBFC dispatch</p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>EPC-verified CWCRFs will appear here for NBFC matching</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {nbfcCwcrfs.map((cwcrf) => {
+                const matches = nbfcMatches[cwcrf._id] || [];
+                const loading = nbfcLoading[cwcrf._id] || false;
+                const selected = nbfcSelected[cwcrf._id] || [];
+                const sending = nbfcSending[cwcrf._id] || false;
+                const isExpandedNbfc = expanded === `nbfc-${cwcrf._id}`;
+
+                const loadNbfcs = async () => {
+                  setNbfcLoading((prev) => ({ ...prev, [cwcrf._id]: true }));
+                  try {
+                    const res = await opsApi.getMatchingNbfcs(cwcrf._id);
+                    const list = res.data?.nbfcs || res.data || [];
+                    setNbfcMatches((prev) => ({ ...prev, [cwcrf._id]: list }));
+                  } catch {
+                    setNbfcMatches((prev) => ({ ...prev, [cwcrf._id]: [] }));
+                  } finally {
+                    setNbfcLoading((prev) => ({ ...prev, [cwcrf._id]: false }));
+                  }
+                };
+
+                const toggleNbfc = (nbfcId: string) => {
+                  setNbfcSelected((prev) => {
+                    const curr = prev[cwcrf._id] || [];
+                    return {
+                      ...prev,
+                      [cwcrf._id]: curr.includes(nbfcId)
+                        ? curr.filter((x) => x !== nbfcId)
+                        : [...curr, nbfcId],
+                    };
+                  });
+                };
+
+                const handleSend = async () => {
+                  setNbfcSending((prev) => ({ ...prev, [cwcrf._id]: true }));
+                  try {
+                    await onShareWithNbfcs(cwcrf._id, selected);
+                    setNbfcSelected((prev) => ({ ...prev, [cwcrf._id]: [] }));
+                    setNbfcMatches((prev) => ({ ...prev, [cwcrf._id]: [] }));
+                  } finally {
+                    setNbfcSending((prev) => ({ ...prev, [cwcrf._id]: false }));
+                  }
+                };
+
+                return (
+                  <div key={cwcrf._id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                    <div
+                      style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: 16, cursor: "pointer",
+                        background: isExpandedNbfc ? "#f8fafc" : "#fff",
+                        borderBottom: isExpandedNbfc ? "1px solid #e2e8f0" : "none" }}
+                      onClick={() => setExpanded(isExpandedNbfc ? null : `nbfc-${cwcrf._id}`)}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 700, color: "#6d28d9", fontSize: 14 }}>
+                            {cwcrf.cwcRfNumber || `#${cwcrf._id?.slice(-8).toUpperCase()}`}
+                          </span>
+                          {statusBadge(cwcrf.status)}
+                          <span style={{ fontSize: 11, background: "#dbeafe", color: "#1d4ed8", borderRadius: 999, padding: "2px 8px", fontWeight: 600 }}>✓ EPC Verified</span>
+                        </div>
+                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+                          Seller: <strong>{cwcrf.subContractorId?.companyName || "—"}</strong>
+                          {cwcrf.epcId?.companyName && (<> &bull; EPC: <strong>{cwcrf.epcId.companyName}</strong></>)}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0, marginRight: 12 }}>
+                        <p style={{ fontWeight: 700, color: "#059669", fontSize: 16, margin: 0 }}>
+                          ₹{Number(cwcrf.buyerVerification?.approvedAmount || cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                        </p>
+                        <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 0" }}>Approved</p>
+                      </div>
+                      <span style={{ fontSize: 18, color: "#94a3b8", transform: isExpandedNbfc ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
+                    </div>
+
+                    {isExpandedNbfc && (
+                      <div style={{ padding: "20px 20px 20px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Amount</p>
+                            <p style={{ fontWeight: 700, color: "#059669", fontSize: 15, margin: 0 }}>₹{Number(cwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}</p>
+                          </div>
+                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Tenure</p>
+                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}</p>
+                          </div>
+                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Max Interest</p>
+                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.interestPreference?.maxAcceptableRate ? `${cwcrf.interestPreference.maxAcceptableRate}%` : "—"}</p>
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                            <button
+                              onClick={loadNbfcs}
+                              disabled={loading}
+                              style={{ padding: "8px 18px", background: loading ? "#ede9fe" : "#7c3aed", color: loading ? "#7c3aed" : "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                            >
+                              {loading ? "Loading NBFCs..." : "🔍 Get Matching NBFCs"}
+                            </button>
+                            {matches.length > 0 && (
+                              <span style={{ fontSize: 13, color: "#6d28d9", fontWeight: 600 }}>{matches.length} NBFC{matches.length !== 1 ? "s" : ""} found</span>
+                            )}
+                          </div>
+
+                          {matches.length > 0 && (
+                            <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
+                              <div style={{ background: "#f8fafc", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #e2e8f0" }}>
+                                <input
+                                  type="checkbox"
+                                  id={`select-all-${cwcrf._id}`}
+                                  checked={selected.length === matches.length && matches.length > 0}
+                                  onChange={(e) => {
+                                    setNbfcSelected((prev) => ({
+                                      ...prev,
+                                      [cwcrf._id]: e.target.checked ? matches.map((n: any) => n._id || n.id) : [],
+                                    }));
+                                  }}
+                                  style={{ width: 15, height: 15, accentColor: "#7c3aed", cursor: "pointer" }}
+                                />
+                                <label htmlFor={`select-all-${cwcrf._id}`} style={{ fontSize: 12, fontWeight: 600, color: "#64748b", cursor: "pointer" }}>
+                                  Select All ({matches.length})
+                                </label>
+                              </div>
+                              {matches.map((nbfc: any) => {
+                                const nbfcId = nbfc._id || nbfc.id;
+                                const isChecked = selected.includes(nbfcId);
+                                return (
+                                  <div key={nbfcId} style={{
+                                    display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                                    borderBottom: "1px solid #f1f5f9",
+                                    background: isChecked ? "#faf5ff" : "#fff",
+                                    cursor: "pointer",
+                                  }} onClick={() => toggleNbfc(nbfcId)}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => toggleNbfc(nbfcId)}
+                                      onClick={(e) => e.stopPropagation()}
+                                      style={{ width: 15, height: 15, accentColor: "#7c3aed", cursor: "pointer", flexShrink: 0 }}
+                                    />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{nbfc.companyName || nbfc.name || "—"}</p>
+                                      <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0" }}>
+                                        {nbfc.email || ""}
+                                        {nbfc.phone && ` · ${nbfc.phone}`}
+                                      </p>
+                                    </div>
+                                    {nbfc.matchScore != null && (
+                                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                        <span style={{
+                                          fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999,
+                                          background: nbfc.matchScore >= 80 ? "#d1fae5" : nbfc.matchScore >= 50 ? "#fef9c3" : "#fee2e2",
+                                          color: nbfc.matchScore >= 80 ? "#065f46" : nbfc.matchScore >= 50 ? "#92400e" : "#b91c1c",
+                                        }}>
+                                          {nbfc.matchScore}% match
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                          <button
+                            disabled={selected.length === 0 || sending}
+                            onClick={handleSend}
+                            style={{
+                              padding: "10px 24px",
+                              background: selected.length === 0 || sending ? "#a5b4fc" : "#6d28d9",
+                              color: "#fff", border: "none", borderRadius: 8,
+                              fontWeight: 700, fontSize: 14, cursor: selected.length === 0 || sending ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            {sending ? "Sending..." : `📨 Send to ${selected.length > 0 ? `${selected.length} ` : ""}Selected NBFC${selected.length !== 1 ? "s" : ""}`}
+                          </button>
+                        </div>
+                        {matches.length === 0 && !loading && (
+                          <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 8, textAlign: "center" }}>
+                            Click "Get Matching NBFCs" to load eligible lenders for this CWCAF
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}    </div>
   );
 };

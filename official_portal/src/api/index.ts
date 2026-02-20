@@ -108,9 +108,10 @@ export const opsApi = {
   // NBFC
   inviteNbfc: (data: Record<string, unknown>) => api.post("/ops/nbfc/invite", data),
 
-  // CWCRF Queue — Phase 6 (SUBMITTED/OPS_REVIEW) + Phase 8 (RMT_APPROVED triage)
+  // CWCRF Queue — Phase 6 (SUBMITTED/OPS_REVIEW) + Phase 8 (RMT_APPROVED triage) + Phase 10 (EPC_VERIFIED → NBFC dispatch)
   getCwcrfQueue: () => api.get("/cwcrf/ops/queue"),
   getCwcrfTriageQueue: () => api.get("/cwcrf/ops/queue?phase=triage"),
+  getCwcrfNbfcQueue: () => api.get("/cwcrf/ops/queue?phase=epc_verified"),
   forwardCwcrfToRmt: (id: string, notes?: string) =>
     api.post(`/cwcrf/${id}/rmt/move-to-queue`, { notes }),
   verifyCwcrfSection: (id: string, data: { section: string; verified: boolean; notes?: string }) =>

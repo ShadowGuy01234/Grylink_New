@@ -37,9 +37,9 @@ const CwcrfVerificationPage: React.FC = () => {
     // Input A: Approved Amount
     approvedAmount: 0,
     // Input B: Repayment Timeline
-    repaymentTimeline: "30",
+    repaymentTimeline: 30 as number,
     // Input C: Repayment Arrangement
-    repaymentArrangement: "DIRECT_DEDUCTION",
+    repaymentArrangement: { source: "DIRECT_DEDUCTION", otherDetails: "", remarks: "" },
     notes: "",
   });
 
@@ -66,8 +66,8 @@ const CwcrfVerificationPage: React.FC = () => {
     setSelectedCwcrf(cwcrf);
     setVerificationForm({
       approvedAmount: cwcrf.cwcRequest.requestedAmount,
-      repaymentTimeline: cwcrf.cwcRequest.requestedTenure.toString(),
-      repaymentArrangement: "DIRECT_DEDUCTION",
+      repaymentTimeline: Number(cwcrf.cwcRequest.requestedTenure) || 30,
+      repaymentArrangement: { source: "DIRECT_DEDUCTION", otherDetails: "", remarks: "" },
       notes: "",
     });
   };
@@ -116,7 +116,7 @@ const CwcrfVerificationPage: React.FC = () => {
 
     setRejecting(true);
     try {
-      await cwcrfApi.rejectCwcrf(selectedCwcrf._id, rejectionReason);
+      await cwcrfApi.rejectCwcrf(selectedCwcrf._id, { reason: rejectionReason });
       toast.success("CWCRF rejected");
       setShowRejectModal(false);
       setSelectedCwcrf(null);
@@ -392,7 +392,7 @@ const CwcrfVerificationPage: React.FC = () => {
                         onChange={(e) =>
                           setVerificationForm((prev) => ({
                             ...prev,
-                            repaymentTimeline: e.target.value,
+                            repaymentTimeline: Number(e.target.value),
                           }))
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
@@ -415,11 +415,11 @@ const CwcrfVerificationPage: React.FC = () => {
                         Repayment Arrangement *
                       </label>
                       <select
-                        value={verificationForm.repaymentArrangement}
+                        value={verificationForm.repaymentArrangement.source}
                         onChange={(e) =>
                           setVerificationForm((prev) => ({
                             ...prev,
-                            repaymentArrangement: e.target.value,
+                            repaymentArrangement: { ...prev.repaymentArrangement, source: e.target.value },
                           }))
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
