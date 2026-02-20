@@ -249,16 +249,7 @@ router.post('/kyc/documents/:id/verify', authenticate, authorize('ops', 'admin')
   }
 });
 
-// GET /api/ops/sla - Get SLA tracking items
-router.get('/sla', authenticate, authorize('ops', 'admin'), async (req, res) => {
-  try {
-    const { type, status, priority } = req.query;
-    const items = await opsService.getSlaItems({ type, status, priority });
-    res.json({ items });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// SLA items route removed — getSlaItems not implemented
 
 // GET /api/ops/sla/stats - Get SLA statistics
 router.get('/sla/stats', authenticate, authorize('ops', 'admin'), async (req, res) => {
@@ -425,21 +416,7 @@ router.get(
   }
 );
 
-// GET /api/ops/kyc/:id/chat/search - Search messages
-router.get(
-  '/kyc/:id/chat/search',
-  authenticate,
-  authorize('ops', 'admin', 'subcontractor'),
-  async (req, res) => {
-    try {
-      const { q } = req.query;
-      const messages = await opsService.searchMessages(req.params.id, q);
-      res.json(messages);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  }
-);
+// Chat search route removed — searchMessages not implemented
 
 // GET /api/ops/companies/:id/documents - Get company documents
 router.get('/companies/:id/documents', authenticate, authorize('ops', 'admin'), async (req, res) => {

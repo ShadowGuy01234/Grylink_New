@@ -15,7 +15,6 @@ export const authApi = {
   login: (data: { email: string; password: string }) =>
     api.post("/auth/login", data),
   me: () => api.get("/auth/me"),
-  updateProfile: (data: any) => api.put("/auth/profile", data),
   checkEmail: (email: string) =>
     api.get(`/auth/check-email/${encodeURIComponent(email)}`),
   registerSubcontractor: (data: {
@@ -38,30 +37,10 @@ export const grylinkApi = {
 export const scApi = {
   getProfile: () => api.get("/subcontractor/profile"),
   updateProfile: (data: any) => api.put("/subcontractor/profile", data),
-  uploadDocuments: (formData: FormData) =>
-    api.post("/subcontractor/kyc", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  submitBill: (formData: FormData) =>
-    api.post("/subcontractor/bill", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
   submitBillWithCwcrf: (formData: FormData) =>
     api.post("/subcontractor/bill-with-cwcrf", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
-  // WCC and Measurement Sheet uploads (SOP Phase 6)
-  uploadWcc: (billId: string, formData: FormData) =>
-    api.post(`/subcontractor/bills/${billId}/wcc`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  uploadMeasurementSheet: (billId: string, formData: FormData) =>
-    api.post(`/subcontractor/bills/${billId}/measurement-sheet`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  getCases: () => api.get("/subcontractor/cases"),
-  getBills: () => api.get("/subcontractor/bills"),
-  getBids: () => api.get("/subcontractor/bids"),
   respondToBid: (
     bidId: string,
     data: {
@@ -71,11 +50,6 @@ export const scApi = {
       message?: string;
     },
   ) => api.post(`/subcontractor/bids/${bidId}/respond`, data),
-  submitCwc: (data: {
-    billId?: string;
-    paymentReference?: string;
-    amount?: number;
-  }) => api.post("/subcontractor/cwc", data),
   getDashboard: () => api.get("/subcontractor/dashboard"),
 
   // Seller Declaration (Workflow Step 4 - Hard Gate)
@@ -106,49 +80,6 @@ export const scApi = {
 
 // CWCRF APIs (Workflow Section 4 - Phase 2)
 export const cwcrfApi = {
-  // Submit new CWCRF
-  submit: (data: {
-    billId: string;
-    buyerDetails: {
-      buyerId?: string;
-      projectName: string;
-      projectLocation: string;
-    };
-    invoiceDetails: {
-      invoiceNumber: string;
-      invoiceDate: string;
-      invoiceAmount: number;
-      expectedPaymentDate: string;
-      workDescription?: string;
-      purchaseOrderNumber?: string;
-      purchaseOrderDate?: string;
-      workCompletionDate?: string;
-      gstAmount?: number;
-      netInvoiceAmount?: number;
-    };
-    cwcRequest: {
-      requestedAmount: number;
-      requestedTenure: number; // 30, 45, 60, 90 days
-      urgencyLevel?: 'NORMAL' | 'URGENT' | 'CRITICAL';
-      reasonForFunding?: string;
-      preferredDisbursementDate?: string;
-      collateralOffered?: string;
-      existingLoanDetails?: string;
-    };
-    interestPreference: {
-      preferenceType: "RANGE" | "MAX_ACCEPTABLE";
-      minRate?: number;
-      maxRate?: number;
-      maxAcceptableRate?: number;
-      preferredRepaymentFrequency?: 'ONE_TIME' | 'MONTHLY' | 'QUARTERLY';
-      processingFeeAcceptance?: boolean;
-      maxProcessingFeePercent?: number;
-      prepaymentPreference?: 'WITH_PENALTY' | 'WITHOUT_PENALTY' | 'NO_PREPAYMENT';
-    };
-    platformFeePaid?: boolean;
-    paymentReference?: string;
-  }) => api.post("/cwcrf", data),
-
   // Get all my CWCRFs
   getMyCwcrfs: () => api.get("/cwcrf/my"),
 
@@ -159,22 +90,9 @@ export const cwcrfApi = {
   selectNbfc: (cwcrfId: string, nbfcId: string) =>
     api.post(`/cwcrf/${cwcrfId}/select-nbfc`, { nbfcId }),
 
-  // Platform Fee Payment (Phase 5.3)
-  recordPayment: (cwcrfId: string, data: { paymentReference: string; amount?: number }) =>
-    api.post(`/cwcrf/${cwcrfId}/payment`, data),
-
   // Accept Sanction Letter (Phase 11.4)
   acceptSanctionLetter: (cwcrfId: string) =>
     api.post(`/cwcrf/${cwcrfId}/accept-sanction`),
-};
-
-// KYC Chat APIs - for chat-based document exchange with Ops
-export const kycApi = {
-  getMessages: (cwcRfId: string) => api.get(`/ops/kyc/${cwcRfId}/chat`),
-  sendMessage: (cwcRfId: string, data: FormData) =>
-    api.post(`/ops/kyc/${cwcRfId}/chat`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
 };
 
 export default api;

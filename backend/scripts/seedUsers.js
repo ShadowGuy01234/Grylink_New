@@ -6,6 +6,12 @@ const connectDB = require('../config/db');
 // Load env vars
 dotenv.config();
 
+// Safety guard: prevent accidental execution in production
+if (process.env.NODE_ENV === 'production') {
+  console.error('❌ Cannot run seed script in production environment');
+  process.exit(1);
+}
+
 // Connect to DB
 connectDB();
 
