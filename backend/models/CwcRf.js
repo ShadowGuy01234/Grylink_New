@@ -28,6 +28,10 @@ const cwcRfSchema = new mongoose.Schema(
     buyerDetails: {
       buyerId: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
       buyerName: { type: String, trim: true },
+      buyerGstin: { type: String, trim: true },
+      buyerContactPerson: { type: String, trim: true },
+      buyerContactPhone: { type: String, trim: true },
+      buyerAddress: { type: String, trim: true },
       projectName: { type: String, trim: true },
       projectLocation: { type: String, trim: true },
     },

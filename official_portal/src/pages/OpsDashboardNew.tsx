@@ -136,7 +136,7 @@ type TabType =
   | "sla"
   | "rekyc";
 
-const OpsDashboardNew = () => {
+const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
   const [pending, setPending] = useState<PendingData>({
     pendingCompanies: [],
     pendingBills: [],
@@ -144,7 +144,7 @@ const OpsDashboardNew = () => {
   });
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab || "overview");
   const [selectedKyc, setSelectedKyc] = useState<KycItem | null>(null);
   const [approvalCount, setApprovalCount] = useState(0);
   const [slaDashboard, setSlaDashboard] = useState<SlaDashboard | null>(null);
@@ -3561,10 +3561,10 @@ interface CwcrfOpsTabProps {
 }
 
 const CWCRF_SECTIONS = [
-  { key: "sectionA",             apiKey: "sectionA",         label: "Section A",   desc: "Seller / SC Details" },
-  { key: "sectionB",             apiKey: "sectionB",         label: "Section B",   desc: "Buyer / EPC Details" },
-  { key: "sectionC",             apiKey: "sectionC",         label: "Section C",   desc: "CWC Request & Invoice" },
-  { key: "sectionD",             apiKey: "sectionD",         label: "Section D",   desc: "Supporting Documents" },
+  { key: "sectionA",             apiKey: "sectionA",         label: "Section A",   desc: "Buyer & Project Details" },
+  { key: "sectionB",             apiKey: "sectionB",         label: "Section B",   desc: "Invoice Details" },
+  { key: "sectionC",             apiKey: "sectionC",         label: "Section C",   desc: "CWC Funding Request" },
+  { key: "sectionD",             apiKey: "sectionD",         label: "Section D",   desc: "Interest Rate Preference" },
   { key: "raBillVerified",       apiKey: "raBill",           label: "RA Bill",     desc: "Running Account Bill" },
   { key: "wccVerified",          apiKey: "wcc",              label: "WCC",         desc: "Work Completion Certificate" },
   { key: "measurementSheetVerified", apiKey: "measurementSheet", label: "Meas. Sheet", desc: "Measurement Sheet" },
@@ -3787,12 +3787,17 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
 
                                   if (sec.key === "sectionA") {
                                     const d = cwcrf.buyerDetails || {};
+                                    const epc = cwcrf.epcId || {} as any;
                                     return (
                                       <div style={panelStyle}>
                                         {[
-                                          ["Buyer Name", fmt(d.buyerName)],
-                                          ["Project", fmt(d.projectName)],
-                                          ["Location", fmt(d.projectLocation)],
+                                          ["Buyer / EPC", fmt(d.buyerName || epc.companyName)],
+                                          ["GSTIN", fmt(d.buyerGstin || epc.gstin)],
+                                          ["Contact Person", fmt(d.buyerContactPerson)],
+                                          ["Contact Phone", fmt(d.buyerContactPhone)],
+                                          ["Address", fmt(d.buyerAddress)],
+                                          ["Project Name", fmt(d.projectName)],
+                                          ["Project Location", fmt(d.projectLocation)],
                                         ].map(([l, v]) => (
                                           <div key={l} style={rowStyle}><span style={labelStyle}>{l}</span><span style={valStyle}>{v}</span></div>
                                         ))}
@@ -3826,7 +3831,10 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                         <div style={rowStyle}><span style={labelStyle}>Req. Amount</span><span style={{ ...valStyle, color: "#7c3aed" }}>{fmtAmt(d.requestedAmount)}</span></div>
                                         <div style={rowStyle}><span style={labelStyle}>Tenure</span><span style={valStyle}>{d.requestedTenure ? `${d.requestedTenure} days` : "—"}</span></div>
                                         <div style={rowStyle}><span style={labelStyle}>Urgency</span><span style={{ ...valStyle, color: urgColor }}>{fmt(d.urgencyLevel)}</span></div>
-                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Reason</span><span style={{ ...valStyle, fontWeight: 400, fontSize: 11 }}>{fmt(d.reasonForFunding)}</span></div>
+                                        <div style={rowStyle}><span style={labelStyle}>Reason</span><span style={{ ...valStyle, fontWeight: 400, fontSize: 11 }}>{fmt(d.reasonForFunding)}</span></div>
+                                        <div style={rowStyle}><span style={labelStyle}>Disbursement Date</span><span style={valStyle}>{d.preferredDisbursementDate ? fmtDate(d.preferredDisbursementDate) : "—"}</span></div>
+                                        <div style={rowStyle}><span style={labelStyle}>Collateral</span><span style={{ ...valStyle, fontWeight: 400, fontSize: 11 }}>{fmt(d.collateralOffered)}</span></div>
+                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Existing Loans</span><span style={{ ...valStyle, fontWeight: 400, fontSize: 11 }}>{fmt(d.existingLoanDetails)}</span></div>
                                       </div>
                                     );
                                   }
@@ -3838,12 +3846,15 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                         {d.preferenceType === "RANGE" ? (
                                           <>
                                             <div style={rowStyle}><span style={labelStyle}>Min Rate</span><span style={valStyle}>{fmtPct(d.minRate)}</span></div>
-                                            <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Max Rate</span><span style={valStyle}>{fmtPct(d.maxRate)}</span></div>
+                                            <div style={rowStyle}><span style={labelStyle}>Max Rate</span><span style={valStyle}>{fmtPct(d.maxRate)}</span></div>
                                           </>
                                         ) : (
-                                          <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Max Accept. Rate</span><span style={valStyle}>{fmtPct(d.maxAcceptableRate)}</span></div>
+                                          <div style={rowStyle}><span style={labelStyle}>Max Accept. Rate</span><span style={valStyle}>{fmtPct(d.maxAcceptableRate)}</span></div>
                                         )}
-                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Repayment</span><span style={valStyle}>{fmt(d.preferredRepaymentFrequency)?.replace("_", " ")}</span></div>
+                                        <div style={rowStyle}><span style={labelStyle}>Repayment</span><span style={valStyle}>{fmt(d.preferredRepaymentFrequency)?.replace("_", " ")}</span></div>
+                                        <div style={rowStyle}><span style={labelStyle}>Processing Fee</span><span style={{ ...valStyle, color: d.processingFeeAcceptance ? "#16a34a" : "#94a3b8" }}>{d.processingFeeAcceptance ? "Accepted" : "Not accepted"}</span></div>
+                                        {d.processingFeeAcceptance && <div style={rowStyle}><span style={labelStyle}>Max Fee %</span><span style={valStyle}>{d.maxProcessingFeePercent != null ? `${d.maxProcessingFeePercent}%` : "—"}</span></div>}
+                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Prepayment</span><span style={{ ...valStyle, fontSize: 11 }}>{fmt(d.prepaymentPreference)?.replace(/_/g, " ")}</span></div>
                                       </div>
                                     );
                                   }
@@ -4140,6 +4151,76 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                             <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{formatDate(cwcrf.createdAt)}</p>
                           </div>
                         </div>
+
+                        {/* Full CWCRF Form Sections A–D */}
+                        {(() => {
+                          const fmt = (v: unknown) => v != null && v !== "" ? String(v) : "—";
+                          const fmtAmt = (v: unknown) => v != null && Number(v) > 0 ? `₹${Number(v).toLocaleString()}` : "—";
+                          const fmtDate = (v: unknown) => v ? new Date(String(v)).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                          const fmtPct = (v: unknown) => v != null && Number(v) > 0 ? `${v}% p.a.` : "—";
+                          const labelSt: React.CSSProperties = { fontSize: 10, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em", minWidth: 110, flexShrink: 0 };
+                          const valSt: React.CSSProperties = { fontSize: 12, color: "#1e293b", fontWeight: 600, textAlign: "right" as const, wordBreak: "break-word" as const };
+                          const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #f1f5f9", gap: 8 };
+                          const box: React.CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 12px" };
+                          const hdr = (label: string, color: string) => (
+                            <p style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 8px" }}>{label}</p>
+                          );
+                          const ba = cwcrf.buyerDetails || {} as any;
+                          const inv = cwcrf.invoiceDetails || {} as any;
+                          const req = cwcrf.cwcRequest || {} as any;
+                          const ipr = cwcrf.interestPreference || {} as any;
+                          const epc = cwcrf.epcId || {} as any;
+                          const urgColor = req.urgencyLevel === "CRITICAL" ? "#dc2626" : req.urgencyLevel === "URGENT" ? "#d97706" : "#16a34a";
+                          return (
+                            <div style={{ marginBottom: 16 }}>
+                              <p style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 10 }}>Full CWCRF Details</p>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                                {/* Section A */}
+                                <div style={box}>
+                                  {hdr("Section A — Buyer & Project", "#7c3aed")}
+                                  {[["Buyer", fmt(ba.buyerName || epc.companyName)], ["GSTIN", fmt(ba.buyerGstin || epc.gstin)], ["Contact", fmt(ba.buyerContactPerson)], ["Phone", fmt(ba.buyerContactPhone)], ["Project", fmt(ba.projectName)], ["Location", fmt(ba.projectLocation)]].map(([l, v]) => (
+                                    <div key={l} style={row}><span style={labelSt}>{l}</span><span style={valSt}>{v}</span></div>
+                                  ))}
+                                </div>
+                                {/* Section B */}
+                                <div style={box}>
+                                  {hdr("Section B — Invoice Details", "#0284c7")}
+                                  {[["Invoice No.", fmt(inv.invoiceNumber)], ["Invoice Date", fmtDate(inv.invoiceDate)], ["Invoice Amount", fmtAmt(inv.invoiceAmount)], ["Net Amount", fmtAmt(inv.netInvoiceAmount)], ["GST Amount", fmtAmt(inv.gstAmount)], ["PO Number", fmt(inv.purchaseOrderNumber)], ["Work Complete", fmtDate(inv.workCompletionDate)], ["Description", fmt(inv.workDescription)]].map(([l, v]) => (
+                                    <div key={l} style={row}><span style={labelSt}>{l}</span><span style={valSt}>{v}</span></div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                                {/* Section C */}
+                                <div style={box}>
+                                  {hdr("Section C — CWC Request", "#d97706")}
+                                  <div style={row}><span style={labelSt}>Req. Amount</span><span style={{ ...valSt, color: "#7c3aed" }}>{fmtAmt(req.requestedAmount)}</span></div>
+                                  <div style={row}><span style={labelSt}>Tenure</span><span style={valSt}>{req.requestedTenure ? `${req.requestedTenure} days` : "—"}</span></div>
+                                  <div style={row}><span style={labelSt}>Urgency</span><span style={{ ...valSt, color: urgColor }}>{fmt(req.urgencyLevel)}</span></div>
+                                  <div style={row}><span style={labelSt}>Reason</span><span style={{ ...valSt, fontWeight: 400, fontSize: 11 }}>{fmt(req.reasonForFunding)}</span></div>
+                                  <div style={row}><span style={labelSt}>Disbursement</span><span style={valSt}>{req.preferredDisbursementDate ? fmtDate(req.preferredDisbursementDate) : "—"}</span></div>
+                                  <div style={row}><span style={labelSt}>Collateral</span><span style={{ ...valSt, fontWeight: 400, fontSize: 11 }}>{fmt(req.collateralOffered)}</span></div>
+                                  <div style={{ ...row, borderBottom: "none" }}><span style={labelSt}>Existing Loans</span><span style={{ ...valSt, fontWeight: 400, fontSize: 11 }}>{fmt(req.existingLoanDetails)}</span></div>
+                                </div>
+                                {/* Section D */}
+                                <div style={box}>
+                                  {hdr("Section D — Interest Preference", "#059669")}
+                                  <div style={row}><span style={labelSt}>Type</span><span style={valSt}>{fmt(ipr.preferenceType)?.replace("_", " ")}</span></div>
+                                  {ipr.preferenceType === "RANGE" ? (<>
+                                    <div style={row}><span style={labelSt}>Min Rate</span><span style={valSt}>{fmtPct(ipr.minRate)}</span></div>
+                                    <div style={row}><span style={labelSt}>Max Rate</span><span style={valSt}>{fmtPct(ipr.maxRate)}</span></div>
+                                  </>) : (
+                                    <div style={row}><span style={labelSt}>Max Rate</span><span style={valSt}>{fmtPct(ipr.maxAcceptableRate)}</span></div>
+                                  )}
+                                  <div style={row}><span style={labelSt}>Repayment</span><span style={valSt}>{fmt(ipr.preferredRepaymentFrequency)?.replace("_", " ")}</span></div>
+                                  <div style={row}><span style={labelSt}>Processing Fee</span><span style={{ ...valSt, color: ipr.processingFeeAcceptance ? "#16a34a" : "#94a3b8" }}>{ipr.processingFeeAcceptance ? "Accepted" : "Not accepted"}</span></div>
+                                  {ipr.processingFeeAcceptance && <div style={row}><span style={labelSt}>Max Fee %</span><span style={valSt}>{ipr.maxProcessingFeePercent != null ? `${ipr.maxProcessingFeePercent}%` : "—"}</span></div>}
+                                  <div style={{ ...row, borderBottom: "none" }}><span style={labelSt}>Prepayment</span><span style={{ ...valSt, fontSize: 11 }}>{fmt(ipr.prepaymentPreference)?.replace(/_/g, " ")}</span></div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         <div style={{ marginBottom: 16 }}>
                           <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Notes / Reason (required for rejection)</label>

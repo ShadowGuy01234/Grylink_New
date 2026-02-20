@@ -171,6 +171,16 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="ops/cwcrf"
+          element={
+            ["ops", "admin", "founder"].includes(user.role) ? (
+              <OpsDashboard defaultTab="cwcrf" />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
           path="rmt"
           element={
             ["rmt", "admin", "founder"].includes(user.role) ? (

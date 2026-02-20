@@ -27,6 +27,7 @@ const Ico = {
   audit:     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/><polyline points="14 2 14 8 20 8"/></svg>,
   epc:       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
   kyc:       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M3 20l4-4 2 2 4-5 5 7"/></svg>,
+  cwcrf:     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 8h10M7 12h6M7 16h4"/><circle cx="19" cy="19" r="4" fill="none"/><path d="M17 19l1.5 1.5L21 17"/></svg>,
   logout:    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
 };
 
@@ -157,11 +158,12 @@ const Layout = () => {
   ];
 
   const opsSubNav = [
-    { to: '/ops',       icon: Ico.grid,  label: 'Overview',   exact: true },
-    { to: '/ops/epc',   icon: Ico.epc,   label: 'EPC Review' },
-    { to: '/ops/bills', icon: Ico.bill,  label: 'Bills' },
-    { to: '/ops/kyc',   icon: Ico.kyc,   label: 'KYC' },
-    { to: '/ops/sla',   icon: Ico.sla,   label: 'SLA Tracker' },
+    { to: '/ops',        icon: Ico.grid,    label: 'Overview',      exact: true },
+    { to: '/ops/epc',    icon: Ico.epc,     label: 'EPC Review' },
+    { to: '/ops/bills',  icon: Ico.bill,    label: 'Bills' },
+    { to: '/ops/kyc',    icon: Ico.kyc,     label: 'KYC' },
+    { to: '/ops/cwcrf',  icon: Ico.cwcrf,   label: 'CWC Requests' },
+    { to: '/ops/sla',    icon: Ico.sla,     label: 'SLA Tracker' },
   ];
 
   return (

@@ -157,8 +157,11 @@ const uploadBillWithCwcrf = async (userId, files, cwcrfData) => {
     epcId: subContractor.linkedEpcId,
     buyerDetails: {
       buyerId: subContractor.linkedEpcId,
-      buyerName: epcCompany?.companyName || '',
-      buyerGstin: epcCompany?.gstin || '',
+      buyerName: epcCompany?.companyName || cwcrfData.buyerDetails?.buyerName || '',
+      buyerGstin: epcCompany?.gstin || cwcrfData.buyerDetails?.buyerGstin || '',
+      buyerContactPerson: cwcrfData.buyerDetails?.buyerContactPerson || '',
+      buyerContactPhone: cwcrfData.buyerDetails?.buyerContactPhone || '',
+      buyerAddress: cwcrfData.buyerDetails?.buyerAddress || '',
       projectName: cwcrfData.buyerDetails?.projectName || '',
       projectLocation: cwcrfData.buyerDetails?.projectLocation || '',
     },

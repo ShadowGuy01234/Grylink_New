@@ -21,6 +21,7 @@ interface CwcrfFormData {
     buyerName: string; buyerGstin: string; buyerAddress: string;
     buyerContactPerson: string; buyerContactPhone: string;
     buyerContactEmail: string; buyerCreditRating: string;
+    projectName: string; projectLocation: string;
   };
   sectionB: {
     invoiceNumber: string; invoiceDate: string; invoiceAmount: number;
@@ -43,7 +44,7 @@ interface CwcrfFormData {
 }
 
 const initialFormData: CwcrfFormData = {
-  sectionA: { buyerName: '', buyerGstin: '', buyerAddress: '', buyerContactPerson: '', buyerContactPhone: '', buyerContactEmail: '', buyerCreditRating: '' },
+  sectionA: { buyerName: '', buyerGstin: '', buyerAddress: '', buyerContactPerson: '', buyerContactPhone: '', buyerContactEmail: '', buyerCreditRating: '', projectName: '', projectLocation: '' },
   sectionB: { invoiceNumber: '', invoiceDate: '', invoiceAmount: 0, invoiceDueDate: '', purchaseOrderNumber: '', purchaseOrderDate: '', workDescription: '', workCompletionDate: '', gstAmount: 0, netInvoiceAmount: 0 },
   sectionC: { requestedAmount: 0, requestedTenure: 30, urgencyLevel: 'NORMAL', reasonForFunding: '', preferredDisbursementDate: '', collateralOffered: '', existingLoanDetails: '' },
   sectionD: { acceptableInterestRateMin: 12, acceptableInterestRateMax: 24, preferredRepaymentFrequency: 'ONE_TIME', processingFeeAcceptance: true, maxProcessingFeePercent: 2, prepaymentPreference: 'WITHOUT_PENALTY' },
@@ -213,8 +214,13 @@ const CwcrfSubmissionPage = () => {
     if (step === 1 && !billFiles.raBill) {
       toast.error('Please upload the RA Bill (required)'); return false;
     }
-    if (step === 2 && (!formData.sectionB.invoiceNumber || !formData.sectionB.invoiceAmount || !formData.sectionB.invoiceDate)) {
-      toast.error('Please fill all required invoice fields'); return false;
+    if (step === 2) {
+      if (!formData.sectionA.projectName || !formData.sectionA.projectLocation) {
+        toast.error('Please enter the project name and location (Section A)'); return false;
+      }
+      if (!formData.sectionB.invoiceNumber || !formData.sectionB.invoiceAmount || !formData.sectionB.invoiceDate) {
+        toast.error('Please fill all required invoice fields'); return false;
+      }
     }
     if (step === 3) {
       if (!formData.sectionC.requestedAmount || !formData.sectionC.requestedTenure || !formData.sectionC.reasonForFunding) {
@@ -242,7 +248,15 @@ const CwcrfSubmissionPage = () => {
       if (billFiles.wcc)             fd.append('wcc', billFiles.wcc);
       if (billFiles.measurementSheet) fd.append('measurementSheet', billFiles.measurementSheet);
       fd.append('cwcrfData', JSON.stringify({
-        buyerDetails: { projectName: formData.sectionA.buyerContactPerson || 'N/A', projectLocation: formData.sectionA.buyerAddress || 'N/A' },
+        buyerDetails: {
+          projectName: formData.sectionA.projectName || '',
+          projectLocation: formData.sectionA.projectLocation || '',
+          buyerName: formData.sectionA.buyerName,
+          buyerGstin: formData.sectionA.buyerGstin,
+          buyerContactPerson: formData.sectionA.buyerContactPerson,
+          buyerContactPhone: formData.sectionA.buyerContactPhone,
+          buyerAddress: formData.sectionA.buyerAddress,
+        },
         invoiceDetails: {
           invoiceNumber: formData.sectionB.invoiceNumber,
           invoiceDate: formData.sectionB.invoiceDate,
@@ -413,12 +427,14 @@ const CwcrfSubmissionPage = () => {
         {currentStep === 2 && (
           <motion.div key="s2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.18 }} className="space-y-4">
 
-            {/* Section A — Buyer */}
+            {/* Section A — Buyer & Project */}
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
               <SectionHead accent="bg-blue-50" iconColor="text-blue-600" icon={Building2}
-                title="Section A — Buyer Details"
-                subtitle="Auto-populated from your EPC mapping · Read-only" />
-              <div className="grid sm:grid-cols-2 gap-4">
+                title="Section A — Buyer & Project Details"
+                subtitle="EPC info is auto-filled · Enter project details below" />
+              {/* Read-only EPC info */}
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">EPC / Buyer (Auto-filled)</p>
+              <div className="grid sm:grid-cols-2 gap-4 mb-5">
                 <Field label="Buyer / EPC Company">
                   <Input value={formData.sectionA.buyerName} readOnly className="bg-gray-50 text-gray-500 cursor-default" />
                 </Field>
@@ -434,6 +450,26 @@ const CwcrfSubmissionPage = () => {
                 <Field label="Address" col2>
                   <Textarea value={formData.sectionA.buyerAddress} readOnly className="bg-gray-50 text-gray-500 cursor-default resize-none" rows={2} />
                 </Field>
+              </div>
+              {/* Editable project-specific fields */}
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Project Details (Fill in)</p>
+                <FieldRow>
+                  <Field label="Project / Work Name" required hint="Name of the construction project">
+                    <Input
+                      value={formData.sectionA.projectName}
+                      onChange={(e) => update('sectionA', 'projectName', e.target.value)}
+                      placeholder="e.g. NH-48 Flyover Construction"
+                    />
+                  </Field>
+                  <Field label="Project Location" required hint="Site / city where work was done">
+                    <Input
+                      value={formData.sectionA.projectLocation}
+                      onChange={(e) => update('sectionA', 'projectLocation', e.target.value)}
+                      placeholder="e.g. Bengaluru, Karnataka"
+                    />
+                  </Field>
+                </FieldRow>
               </div>
             </div>
 
@@ -647,10 +683,12 @@ const CwcrfSubmissionPage = () => {
               </div>
 
               <div className="space-y-3">
-                <ReviewBlock icon={Building2} title="Buyer Details" headerBg="bg-blue-50 text-blue-800">
+                <ReviewBlock icon={Building2} title="Buyer & Project Details" headerBg="bg-blue-50 text-blue-800">
                   <ReviewItem label="Company" value={formData.sectionA.buyerName} />
                   <ReviewItem label="GSTIN" value={formData.sectionA.buyerGstin} />
                   <ReviewItem label="Contact" value={formData.sectionA.buyerContactPerson} />
+                  <ReviewItem label="Project" value={formData.sectionA.projectName} />
+                  <ReviewItem label="Location" value={formData.sectionA.projectLocation} />
                 </ReviewBlock>
                 <ReviewBlock icon={Receipt} title="Invoice" headerBg="bg-green-50 text-green-800">
                   <ReviewItem label="Invoice #" value={formData.sectionB.invoiceNumber} />
