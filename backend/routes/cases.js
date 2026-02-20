@@ -106,4 +106,28 @@ router.post(
   },
 );
 
+// PATCH /api/cases/:id/status — Update case status (RMT / Ops workflow)
+router.patch(
+  "/:id/status",
+  authenticate,
+  authorize("rmt", "ops", "admin", "founder"),
+  async (req, res) => {
+    try {
+      const { status, notes } = req.body;
+      if (!status) {
+        return res.status(400).json({ error: "status is required" });
+      }
+      const caseDoc = await caseService.updateCaseStatus(
+        req.params.id,
+        status,
+        req.user._id,
+        notes,
+      );
+      res.json(caseDoc);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
 module.exports = router;

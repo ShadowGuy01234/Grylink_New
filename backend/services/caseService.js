@@ -91,9 +91,37 @@ const rmtRiskAssessment = async (caseId, assessmentData, userId) => {
   return caseDoc;
 };
 
+// Update case status (used by RMT / Ops for workflow transitions)
+const updateCaseStatus = async (caseId, status, userId, notes) => {
+  const caseDoc = await Case.findById(caseId);
+  if (!caseDoc) throw new Error("Case not found");
+
+  const validStatuses = [
+    "RMT_QUEUE", "RMT_DOCUMENT_REVIEW", "RMT_PENDING_DOCS",
+    "RMT_RISK_ANALYSIS", "RMT_APPROVED", "RMT_REJECTED", "RMT_NEEDS_REVIEW",
+    "CWCAF_READY", "SHARED_WITH_NBFC", "DISBURSED", "EPC_VERIFIED",
+    "READY_FOR_COMPANY_REVIEW", "EPC_REJECTED",
+  ];
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid status: ${status}`);
+  }
+
+  caseDoc.status = status;
+  caseDoc.statusHistory.push({
+    status,
+    changedBy: userId,
+    notes: notes || "",
+    changedAt: new Date(),
+  });
+  await caseDoc.save();
+
+  return caseDoc;
+};
+
 module.exports = {
   getCases,
   getCaseById,
   epcReviewCase,
   rmtRiskAssessment,
+  updateCaseStatus,
 };
