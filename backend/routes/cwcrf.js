@@ -358,7 +358,7 @@ router.get(
   async (req, res) => {
     try {
       const cwcrfs = await cwcrfService.getCwcRfsForRmt(req.query);
-      res.json(cwcrfs);
+      res.json({ data: cwcrfs });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

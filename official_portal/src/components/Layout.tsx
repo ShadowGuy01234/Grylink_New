@@ -296,6 +296,7 @@ const Layout = () => {
             <>
               <SidebarSection label="Risk Management" />
               <SidebarNavItem to="/rmt" icon={Ico.shield} label="Risk Dashboard" roleColor={rc} exact />
+              <SidebarNavItem to="/rmt/cases" icon={Ico.clipboard} label="RMT Cases" roleColor={rc} />
             </>
           )}
 
