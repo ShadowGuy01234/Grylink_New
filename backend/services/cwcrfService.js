@@ -183,9 +183,9 @@ class CwcRfService {
     if (query.phase === "epc_verified") filter.status = { $in: ["BUYER_APPROVED", "CWCAF_READY", "SHARED_WITH_NBFC"] };
 
     return CwcRf.find(filter)
-      .populate("subContractorId", "companyName ownerName")
-      .populate("epcId", "companyName")
-      .populate("billId", "billNumber amount")
+      .populate("subContractorId", "companyName ownerName email phone gstin")
+      .populate("epcId", "companyName gstin")
+      .populate("billId", "billNumber amount fileUrl wcc measurementSheet jointMeasurement")
       .sort({ createdAt: -1 });
   }
 
@@ -232,6 +232,8 @@ class CwcRfService {
       cwcRf.statusHistory.push({ status: 'OPS_REVIEW', changedBy: userId, notes: 'All sections verified by Ops' });
     }
 
+    // Must markModified so Mongoose tracks nested object changes
+    cwcRf.markModified('opsVerification');
     await cwcRf.save();
     return cwcRf;
   }
@@ -592,8 +594,9 @@ class CwcRfService {
       throw new Error("CWCRF not found");
     }
 
-    if (cwcRf.status !== "BUYER_APPROVED") {
-      throw new Error("CWCRF must be buyer-approved before moving to RMT");
+    const allowedStatuses = ["SUBMITTED", "OPS_REVIEW", "KYC_COMPLETED"];
+    if (!allowedStatuses.includes(cwcRf.status)) {
+      throw new Error(`CWCRF must be in SUBMITTED or OPS_REVIEW status to forward to RMT (current: ${cwcRf.status})`);
     }
 
     cwcRf.status = "UNDER_RISK_REVIEW";

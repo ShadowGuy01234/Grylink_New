@@ -23,6 +23,8 @@ interface CwcrfFormData {
     buyerContactPhone: string;
     buyerContactEmail: string;
     buyerCreditRating: string;
+    projectName: string;
+    projectLocation: string;
   };
   sectionB: {
     invoiceNumber: string;
@@ -58,7 +60,8 @@ interface CwcrfFormData {
 const initialFormData: CwcrfFormData = {
   sectionA: {
     buyerName: '', buyerGstin: '', buyerAddress: '', buyerContactPerson: '',
-    buyerContactPhone: '', buyerContactEmail: '', buyerCreditRating: ''
+    buyerContactPhone: '', buyerContactEmail: '', buyerCreditRating: '',
+    projectName: '', projectLocation: ''
   },
   sectionB: {
     invoiceNumber: '', invoiceDate: '', invoiceAmount: 0, invoiceDueDate: '',
@@ -115,7 +118,7 @@ const CwcrfSubmissionPage = () => {
       const eligibility = {
         canSubmit: false,
         declarationAccepted: declRes.data.declarationAccepted || false,
-        kycCompleted: kycRes.data.kycStatus === 'VERIFIED',
+        kycCompleted: ['COMPLETED', 'VERIFIED', 'KYC_COMPLETED'].includes(kycRes.data.overall || kycRes.data.kycStatus || ''),
         bankDetailsVerified: kycRes.data.bankDetailsVerified || false,
         reasons: [] as string[]
       };
@@ -127,18 +130,19 @@ const CwcrfSubmissionPage = () => {
       eligibility.canSubmit = eligibility.reasons.length === 0;
       setEligibilityStatus(eligibility);
 
-      if (sc?.company) {
+      if (sc?.linkedEpcId || sc?.company) {
+        const epc = sc.linkedEpcId || sc.company;
         setFormData(prev => ({
           ...prev,
           sectionA: {
             ...prev.sectionA,
-            buyerName: sc.company.name || '',
-            buyerGstin: sc.company.gstin || '',
-            buyerAddress: sc.company.address || '',
-            buyerContactPerson: sc.company.contactPerson || '',
-            buyerContactPhone: sc.company.contactPhone || '',
-            buyerContactEmail: sc.company.contactEmail || '',
-            buyerCreditRating: sc.company.creditRating || 'NOT_RATED'
+            buyerName: epc?.companyName || epc?.name || '',
+            buyerGstin: epc?.gstin || '',
+            buyerAddress: epc?.address || '',
+            buyerContactPerson: epc?.contactPerson || '',
+            buyerContactPhone: epc?.contactPhone || '',
+            buyerContactEmail: epc?.contactEmail || '',
+            buyerCreditRating: epc?.creditRating || 'NOT_RATED'
           }
         }));
       }
@@ -159,6 +163,9 @@ const CwcrfSubmissionPage = () => {
         if (!billFiles.raBill) { toast.error('Please upload the RA Bill (required)'); return false; }
         return true;
       case 2:
+        if (!formData.sectionA.projectName || !formData.sectionA.projectLocation) {
+          toast.error('Please enter Project Name and Project Location'); return false;
+        }
         if (!formData.sectionB.invoiceNumber || !formData.sectionB.invoiceAmount || !formData.sectionB.invoiceDate) {
           toast.error('Please fill all required invoice details'); return false;
         }
@@ -197,8 +204,8 @@ const CwcrfSubmissionPage = () => {
       if (billFiles.measurementSheet) fd.append('measurementSheet', billFiles.measurementSheet);
       fd.append('cwcrfData', JSON.stringify({
         buyerDetails: {
-          projectName: formData.sectionA.buyerContactPerson || 'N/A',
-          projectLocation: formData.sectionA.buyerAddress || 'N/A'
+          projectName: formData.sectionA.projectName || '',
+          projectLocation: formData.sectionA.projectLocation || ''
         },
         invoiceDetails: {
           invoiceNumber: formData.sectionB.invoiceNumber,
@@ -450,8 +457,24 @@ const CwcrfSubmissionPage = () => {
                     <Label>Contact Phone</Label>
                     <Input value={formData.sectionA.buyerContactPhone} readOnly className="bg-gray-50" />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Project Name <span className="text-red-500">*</span></Label>
+                    <Input
+                      placeholder="e.g. Solar Plant Phase 2 – Rajasthan"
+                      value={formData.sectionA.projectName}
+                      onChange={(e) => updateSection('sectionA', 'projectName', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Project Location <span className="text-red-500">*</span></Label>
+                    <Input
+                      placeholder="e.g. Jodhpur, Rajasthan"
+                      value={formData.sectionA.projectLocation}
+                      onChange={(e) => updateSection('sectionA', 'projectLocation', e.target.value)}
+                    />
+                  </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label>Address</Label>
+                    <Label>Buyer Address</Label>
                     <Textarea value={formData.sectionA.buyerAddress} readOnly className="bg-gray-50 resize-none" />
                   </div>
                 </div>
@@ -611,7 +634,8 @@ const CwcrfSubmissionPage = () => {
                   { title: 'Buyer Details', icon: Building2, items: [
                     { label: 'Buyer', value: formData.sectionA.buyerName },
                     { label: 'GSTIN', value: formData.sectionA.buyerGstin },
-                    { label: 'Contact', value: formData.sectionA.buyerContactPerson }
+                    { label: 'Project', value: formData.sectionA.projectName },
+                    { label: 'Location', value: formData.sectionA.projectLocation }
                   ]},
                   { title: 'Invoice Details', icon: Receipt, items: [
                     { label: 'Invoice #', value: formData.sectionB.invoiceNumber },

@@ -3561,13 +3561,13 @@ interface CwcrfOpsTabProps {
 }
 
 const CWCRF_SECTIONS = [
-  { key: "sectionA", label: "Section A", desc: "Seller / SC Details" },
-  { key: "sectionB", label: "Section B", desc: "Buyer / EPC Details" },
-  { key: "sectionC", label: "Section C", desc: "CWC Request & Invoice" },
-  { key: "sectionD", label: "Section D", desc: "Supporting Documents" },
-  { key: "raBillVerified", label: "RA Bill", desc: "Running Account Bill" },
-  { key: "wccVerified", label: "WCC", desc: "Work Completion Certificate" },
-  { key: "measurementSheetVerified", label: "Meas. Sheet", desc: "Measurement Sheet" },
+  { key: "sectionA",             apiKey: "sectionA",         label: "Section A",   desc: "Seller / SC Details" },
+  { key: "sectionB",             apiKey: "sectionB",         label: "Section B",   desc: "Buyer / EPC Details" },
+  { key: "sectionC",             apiKey: "sectionC",         label: "Section C",   desc: "CWC Request & Invoice" },
+  { key: "sectionD",             apiKey: "sectionD",         label: "Section D",   desc: "Supporting Documents" },
+  { key: "raBillVerified",       apiKey: "raBill",           label: "RA Bill",     desc: "Running Account Bill" },
+  { key: "wccVerified",          apiKey: "wcc",              label: "WCC",         desc: "Work Completion Certificate" },
+  { key: "measurementSheetVerified", apiKey: "measurementSheet", label: "Meas. Sheet", desc: "Measurement Sheet" },
 ];
 
 const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
@@ -3714,19 +3714,40 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                     {/* Expandable: section verify */}
                     {expanded === cwcrf._id && (
                       <div style={{ padding: 20, background: "#fafafa" }}>
-                        {/* Invoice summary */}
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
-                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice No.</p>
-                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.invoiceDetails?.invoiceNumber || "—"}</p>
+                        {/* ── Full Case Summary ── */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                          {/* SC / Seller */}
+                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 14 }}>
+                            <p style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Sub-Contractor (Seller)</p>
+                            {[
+                              ["Company", cwcrf.subContractorId?.companyName || "—"],
+                              ["Owner", cwcrf.subContractorId?.ownerName || "—"],
+                              ["Email", cwcrf.subContractorId?.email || "—"],
+                              ["Phone", cwcrf.subContractorId?.phone || "—"],
+                              ["GSTIN", cwcrf.subContractorId?.gstin || "—"],
+                            ].map(([l, v]) => (
+                              <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", borderBottom: "1px solid #f8fafc" }}>
+                                <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>{l}</span>
+                                <span style={{ fontSize: 12, color: "#1e293b", fontWeight: 600, maxWidth: "60%", textAlign: "right", wordBreak: "break-all" }}>{v}</span>
+                              </div>
+                            ))}
                           </div>
-                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Amount</p>
-                            <p style={{ fontWeight: 700, color: "#059669", fontSize: 15, margin: 0 }}>₹{Number(cwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}</p>
-                          </div>
-                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Tenure</p>
-                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}</p>
+                          {/* Invoice summary */}
+                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 14 }}>
+                            <p style={{ fontSize: 11, fontWeight: 700, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Invoice & Request</p>
+                            {[
+                              ["Invoice No.", cwcrf.invoiceDetails?.invoiceNumber || "—"],
+                              ["Invoice Amount", cwcrf.invoiceDetails?.invoiceAmount ? `₹${Number(cwcrf.invoiceDetails.invoiceAmount).toLocaleString()}` : "—"],
+                              ["Requested Amount", cwcrf.cwcRequest?.requestedAmount ? `₹${Number(cwcrf.cwcRequest.requestedAmount).toLocaleString()}` : "—"],
+                              ["Tenure", cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"],
+                              ["Urgency", cwcrf.cwcRequest?.urgencyLevel || "—"],
+                              ["Fee Paid", cwcrf.platformFeePaid ? "✅ Yes" : "⚠️ Pending"],
+                            ].map(([l, v]) => (
+                              <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", borderBottom: "1px solid #f8fafc" }}>
+                                <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>{l}</span>
+                                <span style={{ fontSize: 12, color: "#1e293b", fontWeight: 600 }}>{v}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
 
@@ -3736,7 +3757,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                           {CWCRF_SECTIONS.map((sec) => {
                             const isBool = sec.key.endsWith("Verified");
                             const isVerified = isBool ? ov[sec.key] === true : ov[sec.key]?.verified === true;
-                            const noteKey = `${cwcrf._id}-${sec.key}`;
+                            const noteKey = `${cwcrf._id}-${(sec as any).apiKey || sec.key}`;
                             const isVerifying = verifyingSection === noteKey;
                             return (
                               <div key={sec.key} style={{
@@ -3752,6 +3773,142 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   </div>
                                   {isVerified && <span style={{ fontSize: 18, color: "#22c55e" }}>✓</span>}
                                 </div>
+
+                                {/* ── Section Data Panel ── */}
+                                {(() => {
+                                  const fmt = (v: unknown) => v != null && v !== "" ? String(v) : "—";
+                                  const fmtAmt = (v: unknown) => v != null && Number(v) > 0 ? `₹${Number(v).toLocaleString()}` : "—";
+                                  const fmtDate = (v: unknown) => v ? new Date(String(v)).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                                  const fmtPct = (v: unknown) => v != null && Number(v) > 0 ? `${v}% p.a.` : "—";
+                                  const rowStyle: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "4px 0", borderBottom: "1px solid #f1f5f9", gap: 8 };
+                                  const labelStyle: React.CSSProperties = { fontSize: 10, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0, minWidth: 100 };
+                                  const valStyle: React.CSSProperties = { fontSize: 12, color: "#1e293b", fontWeight: 600, textAlign: "right", wordBreak: "break-word" };
+                                  const panelStyle: React.CSSProperties = { background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6, padding: "8px 10px", marginBottom: 8 };
+
+                                  if (sec.key === "sectionA") {
+                                    const d = cwcrf.buyerDetails || {};
+                                    return (
+                                      <div style={panelStyle}>
+                                        {[
+                                          ["Buyer Name", fmt(d.buyerName)],
+                                          ["Project", fmt(d.projectName)],
+                                          ["Location", fmt(d.projectLocation)],
+                                        ].map(([l, v]) => (
+                                          <div key={l} style={rowStyle}><span style={labelStyle}>{l}</span><span style={valStyle}>{v}</span></div>
+                                        ))}
+                                      </div>
+                                    );
+                                  }
+                                  if (sec.key === "sectionB") {
+                                    const d = cwcrf.invoiceDetails || {};
+                                    return (
+                                      <div style={panelStyle}>
+                                        {[
+                                          ["Invoice No.", fmt(d.invoiceNumber)],
+                                          ["Invoice Date", fmtDate(d.invoiceDate)],
+                                          ["Invoice Amount", fmtAmt(d.invoiceAmount)],
+                                          ["Net Amount", fmtAmt(d.netInvoiceAmount)],
+                                          ["GST Amount", fmtAmt(d.gstAmount)],
+                                          ["PO Number", fmt(d.purchaseOrderNumber)],
+                                          ["Work Complete", fmtDate(d.workCompletionDate)],
+                                          ["Description", fmt(d.workDescription)],
+                                        ].map(([l, v]) => (
+                                          <div key={l} style={rowStyle}><span style={labelStyle}>{l}</span><span style={valStyle}>{v}</span></div>
+                                        ))}
+                                      </div>
+                                    );
+                                  }
+                                  if (sec.key === "sectionC") {
+                                    const d = cwcrf.cwcRequest || {};
+                                    const urgColor = d.urgencyLevel === "CRITICAL" ? "#dc2626" : d.urgencyLevel === "URGENT" ? "#d97706" : "#16a34a";
+                                    return (
+                                      <div style={panelStyle}>
+                                        <div style={rowStyle}><span style={labelStyle}>Req. Amount</span><span style={{ ...valStyle, color: "#7c3aed" }}>{fmtAmt(d.requestedAmount)}</span></div>
+                                        <div style={rowStyle}><span style={labelStyle}>Tenure</span><span style={valStyle}>{d.requestedTenure ? `${d.requestedTenure} days` : "—"}</span></div>
+                                        <div style={rowStyle}><span style={labelStyle}>Urgency</span><span style={{ ...valStyle, color: urgColor }}>{fmt(d.urgencyLevel)}</span></div>
+                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Reason</span><span style={{ ...valStyle, fontWeight: 400, fontSize: 11 }}>{fmt(d.reasonForFunding)}</span></div>
+                                      </div>
+                                    );
+                                  }
+                                  if (sec.key === "sectionD") {
+                                    const d = cwcrf.interestPreference || {};
+                                    return (
+                                      <div style={panelStyle}>
+                                        <div style={rowStyle}><span style={labelStyle}>Type</span><span style={valStyle}>{fmt(d.preferenceType)?.replace("_", " ")}</span></div>
+                                        {d.preferenceType === "RANGE" ? (
+                                          <>
+                                            <div style={rowStyle}><span style={labelStyle}>Min Rate</span><span style={valStyle}>{fmtPct(d.minRate)}</span></div>
+                                            <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Max Rate</span><span style={valStyle}>{fmtPct(d.maxRate)}</span></div>
+                                          </>
+                                        ) : (
+                                          <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Max Accept. Rate</span><span style={valStyle}>{fmtPct(d.maxAcceptableRate)}</span></div>
+                                        )}
+                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Repayment</span><span style={valStyle}>{fmt(d.preferredRepaymentFrequency)?.replace("_", " ")}</span></div>
+                                      </div>
+                                    );
+                                  }
+                                  if (sec.key === "raBillVerified") {
+                                    const b = cwcrf.billId;
+                                    return (
+                                      <div style={panelStyle}>
+                                        <div style={rowStyle}><span style={labelStyle}>Bill No.</span><span style={valStyle}>{fmt(b?.billNumber)}</span></div>
+                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Amount</span><span style={{ ...valStyle, color: "#059669" }}>{fmtAmt(b?.amount)}</span></div>
+                                        {b?.fileUrl && (
+                                          <div style={{ marginTop: 6 }}>
+                                            <a href={b.fileUrl} target="_blank" rel="noopener noreferrer"
+                                              style={{ fontSize: 11, color: "#4f46e5", fontWeight: 600, textDecoration: "none", background: "#eef2ff", padding: "3px 8px", borderRadius: 4 }}>
+                                              📄 View RA Bill
+                                            </a>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                  if (sec.key === "wccVerified") {
+                                    const wcc = cwcrf.billId?.wcc;
+                                    return (
+                                      <div style={panelStyle}>
+                                        <div style={{ ...rowStyle, borderBottom: wcc?.fileUrl ? undefined : "none" }}>
+                                          <span style={labelStyle}>Status</span>
+                                          <span style={{ ...valStyle, color: wcc?.uploaded ? "#16a34a" : "#94a3b8" }}>
+                                            {wcc?.uploaded ? "Uploaded" : "Not uploaded"}
+                                          </span>
+                                        </div>
+                                        {wcc?.fileUrl && (
+                                          <div style={{ marginTop: 6 }}>
+                                            <a href={wcc.fileUrl} target="_blank" rel="noopener noreferrer"
+                                              style={{ fontSize: 11, color: "#4f46e5", fontWeight: 600, textDecoration: "none", background: "#eef2ff", padding: "3px 8px", borderRadius: 4 }}>
+                                              📄 View WCC
+                                            </a>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                  if (sec.key === "measurementSheetVerified") {
+                                    const ms = cwcrf.billId?.measurementSheet;
+                                    return (
+                                      <div style={panelStyle}>
+                                        <div style={{ ...rowStyle, borderBottom: ms?.fileUrl ? undefined : "none" }}>
+                                          <span style={labelStyle}>Status</span>
+                                          <span style={{ ...valStyle, color: ms?.uploaded ? "#16a34a" : "#94a3b8" }}>
+                                            {ms?.uploaded ? "Uploaded" : "Not uploaded"}
+                                          </span>
+                                        </div>
+                                        {ms?.fileUrl && (
+                                          <div style={{ marginTop: 6 }}>
+                                            <a href={ms.fileUrl} target="_blank" rel="noopener noreferrer"
+                                              style={{ fontSize: 11, color: "#4f46e5", fontWeight: 600, textDecoration: "none", background: "#eef2ff", padding: "3px 8px", borderRadius: 4 }}>
+                                              📄 View Measurement Sheet
+                                            </a>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+
                                 <textarea
                                   placeholder="Notes (optional)"
                                   value={sectionNotes[noteKey] || ""}
@@ -3763,7 +3920,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   {!isVerified ? (
                                     <button
                                       disabled={isVerifying}
-                                      onClick={() => onVerifySection(cwcrf._id, sec.key, true, sectionNotes[noteKey] || "")}
+                                      onClick={() => onVerifySection(cwcrf._id, (sec as any).apiKey || sec.key, true, sectionNotes[noteKey] || "")}
                                       style={{ flex: 1, padding: "6px 0", background: isVerifying ? "#a7f3d0" : "#10b981", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: "pointer" }}
                                     >
                                       {isVerifying ? "Saving..." : "Mark Verified"}
@@ -3771,7 +3928,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   ) : (
                                     <button
                                       disabled={isVerifying}
-                                      onClick={() => onVerifySection(cwcrf._id, sec.key, false, sectionNotes[noteKey] || "")}
+                                      onClick={() => onVerifySection(cwcrf._id, (sec as any).apiKey || sec.key, false, sectionNotes[noteKey] || "")}
                                       style={{ flex: 1, padding: "6px 0", background: isVerifying ? "#fca5a5" : "#ef4444", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: "pointer" }}
                                     >
                                       {isVerifying ? "Saving..." : "Unmark"}
