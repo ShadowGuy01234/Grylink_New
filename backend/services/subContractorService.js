@@ -3,18 +3,8 @@ const Company = require("../models/Company");
 const Bill = require("../models/Bill");
 const CwcRf = require("../models/CwcRf");
 const User = require("../models/User");
-const cloudinary = require("../config/cloudinary");
+const { uploadToCloudinary } = require("./cloudinaryService");
 const { sendSalesNotification } = require("./emailService");
-
-// Helper: upload buffer to Cloudinary via base64 data URI
-const uploadToCloudinary = async (fileBuffer, mimeType, options = {}) => {
-  const b64 = Buffer.from(fileBuffer).toString("base64");
-  const dataUri = `data:${mimeType || "application/octet-stream"};base64,${b64}`;
-  return cloudinary.uploader.upload(dataUri, {
-    folder: options.folder || "gryork/bills",
-    resource_type: "auto",
-  });
-};
 
 // Step 10: Sub-Contractor completes profile
 const completeProfile = async (userId, data) => {

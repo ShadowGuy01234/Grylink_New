@@ -32,7 +32,6 @@ api.interceptors.response.use(
 export const authApi = {
   login: (data: { email: string; password: string }) =>
     api.post("/auth/login", data),
-  register: (data: any) => api.post("/auth/register", data),
   getMe: () => api.get("/auth/me"),
 };
 
@@ -141,21 +140,6 @@ export const bidsApi = {
   getBidsForCase: (caseId: string) => api.get(`/bids/case/${caseId}`),
 };
 
-// RMT - Risk Management Team
-export const rmtApi = {
-  getPendingCases: () => api.get("/cases/rmt/pending"),
-  submitRiskAssessment: (
-    caseId: string,
-    data: {
-      riskScore: number;
-      riskLevel: "low" | "medium" | "high" | "critical";
-      assessment: string;
-      recommendation: "approve" | "reject" | "needs_review";
-      notes?: string;
-    },
-  ) => api.post(`/cases/${caseId}/risk-assessment`, data),
-};
-
 // CWCRF/CWCAF APIs for RMT
 export const cwcrfApi = {
   // Get CWCRFs in RMT queue
@@ -193,18 +177,6 @@ export const cwcrfApi = {
 
   // Get CWCAF details
   getCwcaf: (cwcrfId: string) => api.get(`/cwcrf/${cwcrfId}/cwcaf`),
-
-  // Share with NBFCs
-  shareWithNbfcs: (cwcrfId: string, nbfcIds: string[]) =>
-    api.post(`/cwcrf/${cwcrfId}/share-with-nbfcs`, { nbfcIds }),
-
-  // Get matching NBFCs for a CWCRF
-  getMatchingNbfcs: (cwcrfId: string) =>
-    api.get(`/cwcrf/${cwcrfId}/matching-nbfcs`),
-
-  // Move CWCRF to NBFC process
-  moveToNbfcProcess: (cwcrfId: string, nbfcId: string) =>
-    api.post(`/cwcrf/${cwcrfId}/move-to-nbfc-process`, { nbfcId }),
 };
 
 // Admin - User Management
@@ -235,22 +207,6 @@ export const adminApi = {
   getStats: () => api.get("/admin/stats"),
 };
 
-// Risk Assessment
-export const riskAssessmentApi = {
-  getDashboard: () => api.get("/risk-assessment/dashboard"),
-  getPending: () => api.get("/risk-assessment/pending"),
-  getById: (id: string) => api.get(`/risk-assessment/${id}`),
-  getBySeller: (sellerId: string) =>
-    api.get(`/risk-assessment/seller/${sellerId}`),
-  create: (sellerId: string) => api.post("/risk-assessment", { sellerId }),
-  updateChecklist: (
-    id: string,
-    item: string,
-    data: { verified: boolean; notes?: string },
-  ) => api.put(`/risk-assessment/${id}/checklist/${item}`, data),
-  complete: (id: string, decision: "APPROVE" | "REJECT", notes?: string) =>
-    api.post(`/risk-assessment/${id}/complete`, { decision, notes }),
-};
 
 // Approvals
 export const approvalApi = {
@@ -277,44 +233,9 @@ export const slaApi = {
     api.post(`/sla/${id}/milestone/${milestone}/complete`),
 };
 
-// Blacklist
-export const blacklistApi = {
-  check: (data: { pan?: string; gstin?: string; email?: string }) =>
-    api.post("/blacklist/check", data),
-  report: (data: any) => api.post("/blacklist/report", data),
-  getAll: (params?: { status?: string }) => api.get("/blacklist", { params }),
-  getPending: () => api.get("/blacklist/pending"),
-  approve: (id: string, notes?: string) =>
-    api.post(`/blacklist/${id}/approve`, { notes }),
-  reject: (id: string, notes?: string) =>
-    api.post(`/blacklist/${id}/reject`, { notes }),
-  revoke: (id: string, reason: string) =>
-    api.post(`/blacklist/${id}/revoke`, { reason }),
-};
-
 // Transactions
 export const transactionApi = {
-  getAll: (params?: { status?: string }) =>
-    api.get("/transactions", { params }),
-  getById: (id: string) => api.get(`/transactions/${id}`),
   getOverdue: () => api.get("/transactions/overdue"),
-  setupEscrow: (id: string, data: any) =>
-    api.post(`/transactions/${id}/escrow`, data),
-  disburse: (id: string, data: any) =>
-    api.post(`/transactions/${id}/disburse`, data),
-  trackRepayment: (id: string, data: any) =>
-    api.post(`/transactions/${id}/repayment`, data),
-};
-
-// NBFC Management (Admin)
-export const nbfcApi = {
-  getAll: () => api.get("/nbfc"),
-  getById: (id: string) => api.get(`/nbfc/${id}`),
-  create: (data: any) => api.post("/nbfc", data),
-  update: (id: string, data: any) => api.put(`/nbfc/${id}`, data),
-  matchForCase: (caseId: string) => api.get(`/nbfc/match/${caseId}`),
-  shareCase: (caseId: string, nbfcIds: string[]) =>
-    api.post(`/nbfc/share/${caseId}`, { nbfcIds }),
 };
 
 // Agent Management (SOP Section 11)

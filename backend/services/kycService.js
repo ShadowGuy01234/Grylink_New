@@ -4,17 +4,7 @@ const Bill = require("../models/Bill");
 const Case = require("../models/Case");
 const SubContractor = require("../models/SubContractor");
 const { sendKycRequest, sendStatusUpdate } = require("./emailService");
-const cloudinary = require("../config/cloudinary");
-
-// Helper: upload buffer to Cloudinary
-const uploadToCloudinary = async (fileBuffer, mimeType, options = {}) => {
-  const b64 = Buffer.from(fileBuffer).toString("base64");
-  const dataUri = `data:${mimeType || "application/octet-stream"};base64,${b64}`;
-  return cloudinary.uploader.upload(dataUri, {
-    folder: options.folder || "gryork/kyc",
-    resource_type: "auto",
-  });
-};
+const { uploadToCloudinary } = require("./cloudinaryService");
 
 const requestKycDocs = async (cwcRfId, message, opsUserId) => {
   const cwcRf = await CwcRf.findById(cwcRfId).populate({

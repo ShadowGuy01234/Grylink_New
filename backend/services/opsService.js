@@ -3,7 +3,6 @@ const Document = require("../models/Document");
 const Bill = require("../models/Bill");
 const CwcRf = require("../models/CwcRf");
 const ChatMessage = require("../models/ChatMessage");
-const GryLink = require("../models/GryLink");
 const SubContractor = require("../models/SubContractor");
 const User = require("../models/User");
 const authService = require("./authService");
@@ -16,7 +15,6 @@ const verificationService = require("./verificationService");
 // Delegate Verification methods
 const verifyCompanyDocs = verificationService.verifyCompanyDocs;
 const verifyBill = verificationService.verifyBill;
-const epcVerifyBill = verificationService.epcVerifyBill;
 const verifyDocument = verificationService.verifyDocument;
 const verifyKycDocument = verificationService.verifyKycDocument;
 

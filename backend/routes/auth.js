@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authService = require("../services/authService");
+const { authenticate } = require("../middleware/auth");
 
 // POST /api/auth/register - Register internal users (sales, ops, rmt, admin)
 router.post("/register", async (req, res) => {
@@ -49,22 +50,10 @@ router.post("/login", async (req, res) => {
 });
 
 // GET /api/auth/me - Get current user
-router.get("/me", async (req, res) => {
+router.get("/me", authenticate, async (req, res) => {
   try {
-    const { authenticate } = require("../middleware/auth");
-    // This is handled inline for simplicity since it's a single route
-    const jwt = require("jsonwebtoken");
     const User = require("../models/User");
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No token provided" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
-
+    const user = await User.findById(req.user._id).select("-password");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -133,20 +122,10 @@ router.get("/check-email/:email", async (req, res) => {
 });
 
 // PUT /api/auth/profile - Update user profile
-router.put("/profile", async (req, res) => {
+router.put("/profile", authenticate, async (req, res) => {
   try {
-    const { authenticate } = require("../middleware/auth");
-    const jwt = require("jsonwebtoken");
     const User = require("../models/User");
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No token provided" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(req.user._id);
 
     if (!user) return res.status(404).json({ error: "User not found" });
 
