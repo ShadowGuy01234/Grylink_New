@@ -40,7 +40,7 @@ const config: Config = {
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
       },
       backgroundImage: {
-        "gradient-hero": "linear-gradient(135deg, #0A2463 0%, #1E5AAF 50%, #3B82F6 100%)",
+        "gradient-hero": "linear-gradient(135deg, #040D24 0%, #0A2463 50%, #1A4AB0 100%)",
         "gradient-cta": "linear-gradient(90deg, #1E5AAF 0%, #22C55E 100%)",
         "gradient-accent": "linear-gradient(180deg, #86EFAC 0%, #15803D 100%)",
       },
