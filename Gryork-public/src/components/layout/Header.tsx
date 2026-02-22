@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown, IndianRupee } from "lucide-react";
-import { NAV_LINKS } from "@/lib/constants";
+import { NAV_LINKS, type NavLink } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useScroll } from "@/components/ui/use-scroll";
 import Logo from "./Logo";
@@ -15,17 +15,29 @@ const PORTALS = {
   admin: process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:5177",
 };
 
+// ── nav helpers ──────────────────────────────────────────────────────────────
+function isDropdown(link: NavLink): link is Extract<NavLink, { children: unknown[] }> {
+  return Array.isArray((link as { children?: unknown }).children);
+}
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginDropdownOpen, setIsLoginDropdownOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navDropdownRef = useRef<HTMLDivElement>(null);
   const scrolled = useScroll(20);
   const pathname = usePathname();
+  // track mobile expanded section
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsLoginDropdownOpen(false);
+      }
+      if (navDropdownRef.current && !navDropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -45,7 +57,7 @@ export default function Header() {
           "mx-auto max-w-7xl rounded-2xl transition-all duration-300 ease-in-out",
           scrolled
             ? "bg-white shadow-[0_8px_32px_rgba(10,36,99,0.12)] border border-gray-100/80"
-            : "bg-white/10 border border-white/20 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.18)]"
+            : "bg-primary-900/80 border border-white/15 backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.35)]"
         )}
       >
         <div className="flex items-center justify-between px-4 py-2.5">
@@ -64,13 +76,76 @@ export default function Header() {
           </Link>
 
           {/* ── Desktop nav ── */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1" ref={navDropdownRef}>
             {NAV_LINKS.map((link) => {
+              if (isDropdown(link)) {
+                const isChildActive = link.children.some((c) => pathname === c.href);
+                const isOpen = openDropdown === link.label;
+                return (
+                  <div key={link.label} className="relative">
+                    <button
+                      onClick={() => setOpenDropdown(isOpen ? null : link.label)}
+                      className={cn(
+                        "relative inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
+                        scrolled
+                          ? isChildActive
+                            ? "text-primary-700 bg-primary-50"
+                            : "text-gray-600 hover:text-primary-700 hover:bg-gray-50"
+                          : isChildActive
+                            ? "text-white bg-white/20"
+                            : "text-white hover:text-white hover:bg-white/15"
+                      )}
+                    >
+                      {link.label}
+                      <ChevronDown
+                        size={13}
+                        className={cn("transition-transform duration-200", isOpen && "rotate-180")}
+                      />
+                      {isChildActive && (
+                        <span
+                          className={cn(
+                            "absolute bottom-0.5 left-1/2 -translate-x-1/2 w-3/5 h-0.5 rounded-full",
+                            scrolled ? "bg-primary-500" : "bg-white/60"
+                          )}
+                        />
+                      )}
+                    </button>
+
+                    {isOpen && (
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-72 bg-white rounded-2xl shadow-2xl shadow-gray-900/15 border border-gray-100 py-2 z-50 overflow-hidden">
+                        <p className="px-4 pt-1 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                          Who We Serve
+                        </p>
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setOpenDropdown(null)}
+                            className={cn(
+                              "flex items-start gap-3 px-4 py-3 hover:bg-primary-50 transition-colors group mx-1 rounded-xl",
+                              pathname === child.href && "bg-primary-50"
+                            )}
+                          >
+                            <span className="mt-0.5 w-8 h-8 rounded-lg bg-primary-100 text-xl flex items-center justify-center shrink-0 group-hover:bg-primary-200 transition-colors">
+                              {child.emoji}
+                            </span>
+                            <span>
+                              <span className="font-semibold block text-sm text-gray-800">{child.label}</span>
+                              <span className="block text-xs text-gray-400 mt-0.5">{child.description}</span>
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={link.href!}
                   className={cn(
                     "relative px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
                     scrolled
@@ -78,8 +153,8 @@ export default function Header() {
                         ? "text-primary-700 bg-primary-50"
                         : "text-gray-600 hover:text-primary-700 hover:bg-gray-50"
                       : isActive
-                        ? "text-white bg-white/15"
-                        : "text-white/75 hover:text-white hover:bg-white/10"
+                        ? "text-white bg-white/20"
+                        : "text-white hover:text-white hover:bg-white/15"
                   )}
                 >
                   {link.label}
@@ -129,7 +204,7 @@ export default function Header() {
                   "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition-all duration-200 active:scale-95",
                   scrolled
                     ? "border-gray-200 text-gray-700 hover:border-primary-200 hover:bg-primary-50"
-                    : "border-white/30 text-white hover:bg-white/15 bg-white/8"
+                    : "border-white/40 text-white hover:bg-white/20 bg-white/10"
                 )}
               >
                 Login
@@ -202,17 +277,62 @@ export default function Header() {
         <div
           className={cn(
             "lg:hidden overflow-hidden transition-all duration-300",
-            isMenuOpen ? "max-h-[500px]" : "max-h-0"
+            isMenuOpen ? "max-h-[600px]" : "max-h-0"
           )}
         >
           <div className="px-3 pb-3 border-t border-white/10">
-            <nav className="flex flex-col mt-2">
+            <nav className="flex flex-col mt-2 gap-0.5">
               {NAV_LINKS.map((link) => {
+                if (isDropdown(link)) {
+                  const isOpen = mobileExpanded === link.label;
+                  return (
+                    <div key={link.label}>
+                      <button
+                        onClick={() => setMobileExpanded(isOpen ? null : link.label)}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                          scrolled ? "text-gray-700 hover:bg-gray-50" : "text-white/80 hover:bg-white/10 hover:text-white"
+                        )}
+                      >
+                        {link.label}
+                        <ChevronDown
+                          size={14}
+                          className={cn("transition-transform duration-200", isOpen && "rotate-180")}
+                        />
+                      </button>
+                      {isOpen && (
+                        <div className="pl-3 flex flex-col gap-0.5 mt-0.5">
+                          {link.children.map((child) => (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              onClick={() => { setIsMenuOpen(false); setMobileExpanded(null); }}
+                              className={cn(
+                                "flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors",
+                                scrolled
+                                  ? pathname === child.href
+                                    ? "text-primary-700 bg-primary-50"
+                                    : "text-gray-600 hover:bg-gray-50"
+                                  : pathname === child.href
+                                    ? "text-white bg-white/15"
+                                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                              )}
+                            >
+                              <span className="text-base">{child.emoji}</span>
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 const isActive = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
-                    href={link.href}
+                    href={link.href!}
                     className={cn(
                       "px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
                       scrolled

@@ -327,6 +327,17 @@ export const cronApi = {
   runAll: () => api.post("/cron/run/all"),
 };
 
+// Career Applications (Admin / Founder)
+export const careerApi = {
+  getApplications: (params?: { status?: string; role?: string; search?: string; page?: number; limit?: number }) =>
+    api.get("/careers/applications", { params }),
+  getStats: () => api.get("/careers/applications/stats"),
+  getApplication: (id: string) => api.get(`/careers/applications/${id}`),
+  updateApplication: (id: string, data: { status?: string; adminNotes?: string }) =>
+    api.patch(`/careers/applications/${id}`, data),
+  deleteApplication: (id: string) => api.delete(`/careers/applications/${id}`),
+};
+
 export { api };
 
 export default api;

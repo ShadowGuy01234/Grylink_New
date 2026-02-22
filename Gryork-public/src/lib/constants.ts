@@ -1,10 +1,36 @@
-export const NAV_LINKS = [
+export type NavChild = { href: string; label: string; description: string; emoji: string };
+export type NavLink =
+  | { href: string; label: string; children?: undefined }
+  | { href?: undefined; label: string; children: NavChild[] };
+
+export const NAV_LINKS: NavLink[] = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
   { href: "/how-it-works", label: "How It Works" },
-  { href: "/for-subcontractors", label: "For Sub-Contractors" },
-  { href: "/for-nbfc", label: "For NBFCs" },
-  { href: "/for-epc", label: "For EPCs" },
+  {
+    label: "Solutions",
+    children: [
+      {
+        href: "/for-subcontractors",
+        label: "For Sub-Contractors",
+        description: "Upload bills & get funded in 48 hours",
+        emoji: "🏗️",
+      },
+      {
+        href: "/for-nbfc",
+        label: "For NBFCs",
+        description: "Discover & fund verified infrastructure bills",
+        emoji: "🏦",
+      },
+      {
+        href: "/for-epc",
+        label: "For EPCs",
+        description: "Manage sub-contractor payments digitally",
+        emoji: "⚡",
+      },
+    ],
+  },
+  { href: "/community", label: "Community" },
+  { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -219,6 +245,7 @@ export const FOOTER_LINKS = {
   ],
   company: [
     { href: "/about", label: "About Us" },
+    { href: "/community", label: "Community" },
     { href: "/contact", label: "Contact" },
     { href: "/careers", label: "Careers" },
   ],

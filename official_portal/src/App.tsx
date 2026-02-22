@@ -13,6 +13,7 @@ import GryLinksPage from "./pages/sales/GryLinksPage";
 import OpsDashboard from "./pages/OpsDashboardNew";
 import CasesPage from "./pages/CasesPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import CareerApplicationsPage from "./pages/CareerApplicationsPage";
 import RmtDashboard from "./pages/RmtDashboard";
 import RmtCasesPage from "./pages/RmtCasesPage";
 import FounderDashboard from "./pages/FounderDashboard";
@@ -206,6 +207,16 @@ const AppRoutes = () => {
           element={
             ["admin", "founder"].includes(user.role) ? (
               <AdminDashboard />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="admin/careers"
+          element={
+            ["admin", "founder"].includes(user.role) ? (
+              <CareerApplicationsPage />
             ) : (
               <Navigate to={homeRoute} replace />
             )

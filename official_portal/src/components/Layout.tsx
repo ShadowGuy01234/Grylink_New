@@ -29,6 +29,7 @@ const Ico = {
   kyc:       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M3 20l4-4 2 2 4-5 5 7"/></svg>,
   cwcrf:     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 8h10M7 12h6M7 16h4"/><circle cx="19" cy="19" r="4" fill="none"/><path d="M17 19l1.5 1.5L21 17"/></svg>,
   logout:    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  briefcase: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>,
 };
 
 // ─── Reusable NavItem ─────────────────────────────────────────────────────────
@@ -241,14 +242,16 @@ const Layout = () => {
           {isFounder && (
             <>
               <SidebarSection label="Executive" />
-              <SidebarNavItem to="/founder" icon={Ico.star}      label="Founder Overview" roleColor={rc} exact />
+              <SidebarNavItem to="/founder"       icon={Ico.star}       label="Founder Overview"     roleColor={rc} exact />
+              <SidebarNavItem to="/admin/careers" icon={Ico.briefcase}  label="Career Applications"  roleColor={rc} />
             </>
           )}
 
           {isAdmin && (
             <>
               <SidebarSection label="Administration" />
-              <SidebarNavItem to="/admin"   icon={Ico.cog}       label="Admin Dashboard"  roleColor={rc} exact />
+              <SidebarNavItem to="/admin"         icon={Ico.cog}        label="Admin Dashboard"  roleColor={rc} exact />
+              <SidebarNavItem to="/admin/careers" icon={Ico.briefcase}  label="Career Applications" roleColor={rc} />
             </>
           )}
 
