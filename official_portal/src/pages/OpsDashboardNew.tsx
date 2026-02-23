@@ -89,7 +89,7 @@ interface PendingData {
 interface SlaMilestone {
   name: string;
   targetDate: string;
-  status: 'PENDING' | 'COMPLETED' | 'COMPLETED_LATE' | 'OVERDUE';
+  status: "PENDING" | "COMPLETED" | "COMPLETED_LATE" | "OVERDUE";
   completedAt?: string;
   completedBy?: string;
 }
@@ -105,7 +105,14 @@ interface SlaItem {
     day10: SlaMilestone;
     day14: SlaMilestone;
   };
-  status: 'ACTIVE' | 'REMINDER_1_SENT' | 'REMINDER_2_SENT' | 'ESCALATED' | 'DORMANT' | 'COMPLETED' | 'CANCELLED';
+  status:
+    | "ACTIVE"
+    | "REMINDER_1_SENT"
+    | "REMINDER_2_SENT"
+    | "ESCALATED"
+    | "DORMANT"
+    | "COMPLETED"
+    | "CANCELLED";
   createdAt: string;
   firstReminderDue?: string;
   secondReminderDue?: string;
@@ -153,17 +160,38 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
   const [cwcrfQueue, setCwcrfQueue] = useState<any[]>([]);
   const [cwcrfTriageQueue, setCwcrfTriageQueue] = useState<any[]>([]);
   const [cwcrfNbfcQueue, setCwcrfNbfcQueue] = useState<any[]>([]);
-  const [cwcrfForwardingId, setCwcrfForwardingId] = useState<string | null>(null);
-  const [cwcrfVerifyingSection, setCwcrfVerifyingSection] = useState<string | null>(null);
+  const [cwcrfForwardingId, setCwcrfForwardingId] = useState<string | null>(
+    null,
+  );
+  const [cwcrfVerifyingSection, setCwcrfVerifyingSection] = useState<
+    string | null
+  >(null);
   const [cwcrfTriageId, setCwcrfTriageId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [pendingRes, casesRes, approvalRes, slaDashboardRes, activeSlaRes, overdueSlaRes, cwcrfRes, cwcrfTriageRes, cwcrfNbfcRes] = await Promise.all([
+      const [
+        pendingRes,
+        casesRes,
+        approvalRes,
+        slaDashboardRes,
+        activeSlaRes,
+        overdueSlaRes,
+        cwcrfRes,
+        cwcrfTriageRes,
+        cwcrfNbfcRes,
+      ] = await Promise.all([
         opsApi.getPending(),
         casesApi.getCases(),
         approvalApi.getPendingCount().catch(() => ({ data: { count: 0 } })),
-        slaApi.getDashboard().catch(() => ({ data: { stats: { total: 0, active: 0, completed: 0, overdue: 0 }, recentOverdue: [] } })),
+        slaApi
+          .getDashboard()
+          .catch(() => ({
+            data: {
+              stats: { total: 0, active: 0, completed: 0, overdue: 0 },
+              recentOverdue: [],
+            },
+          })),
         slaApi.getActive().catch(() => ({ data: [] })),
         slaApi.getOverdue().catch(() => ({ data: [] })),
         opsApi.getCwcrfQueue().catch(() => ({ data: { cwcrfs: [] } })),
@@ -301,7 +329,7 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
           </div>
         )}
         {(slaDashboard?.stats.overdue || 0) > 0 && (
-          <div 
+          <div
             className="stat-card stat-danger clickable"
             onClick={() => setActiveTab("sla")}
           >
@@ -324,9 +352,12 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
           </div>
           <div className="escalation-content">
             <strong>⚠️ SLA Escalation Required</strong>
-            <span>{overdueSlas.length} task(s) have breached SLA deadlines and require immediate attention</span>
+            <span>
+              {overdueSlas.length} task(s) have breached SLA deadlines and
+              require immediate attention
+            </span>
           </div>
-          <button 
+          <button
             className="btn-escalation"
             onClick={() => setActiveTab("sla")}
           >
@@ -370,7 +401,9 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
                 <span className="tab-badge">{pending.pendingKyc.length}</span>
               )}
               {tab === "sla" && (slaDashboard?.stats.overdue || 0) > 0 && (
-                <span className="tab-badge danger">{slaDashboard?.stats.overdue}</span>
+                <span className="tab-badge danger">
+                  {slaDashboard?.stats.overdue}
+                </span>
               )}
               {tab === "companies" && pending.pendingCompanies.length > 0 && (
                 <span className="tab-badge">
@@ -443,7 +476,7 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
               {pending.pendingKyc.filter((k) => k.status === "ACTION_REQUIRED")
                 .length === 0 &&
                 pending.pendingCompanies.filter(
-                  (c) => getAgeInDays(c.createdAt) > 3
+                  (c) => getAgeInDays(c.createdAt) > 3,
                 ).length === 0 && (
                   <div className="empty-state">
                     <HiOutlineCheckCircle />
@@ -470,7 +503,6 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
               ))}
             </div>
           </div>
-
         </div>
       )}
 
@@ -544,19 +576,30 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
               toast.success("CWCRF forwarded to RMT queue");
               fetchData();
             } catch (err: any) {
-              toast.error(err.response?.data?.error || "Failed to forward CWCRF");
+              toast.error(
+                err.response?.data?.error || "Failed to forward CWCRF",
+              );
             } finally {
               setCwcrfForwardingId(null);
             }
           }}
-          onVerifySection={async (id: string, section: string, verified: boolean, notes: string) => {
+          onVerifySection={async (
+            id: string,
+            section: string,
+            verified: boolean,
+            notes: string,
+          ) => {
             setCwcrfVerifyingSection(`${id}-${section}`);
             try {
               await opsApi.verifyCwcrfSection(id, { section, verified, notes });
-              toast.success(`Section ${section.toUpperCase()} marked as ${verified ? "verified" : "unverified"}`);
+              toast.success(
+                `Section ${section.toUpperCase()} marked as ${verified ? "verified" : "unverified"}`,
+              );
               fetchData();
             } catch (err: any) {
-              toast.error(err.response?.data?.error || "Failed to verify section");
+              toast.error(
+                err.response?.data?.error || "Failed to verify section",
+              );
             } finally {
               setCwcrfVerifyingSection(null);
             }
@@ -564,11 +607,20 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
           onTriage={async (id: string, action: string, notes: string) => {
             setCwcrfTriageId(id);
             try {
-              await opsApi.triageCwcrf(id, { action: action as 'forward_to_epc' | 'reject', notes });
-              toast.success(action === "forward_to_epc" ? "CWCRF forwarded to EPC for buyer verification" : "CWCRF rejected");
+              await opsApi.triageCwcrf(id, {
+                action: action as "forward_to_epc" | "reject",
+                notes,
+              });
+              toast.success(
+                action === "forward_to_epc"
+                  ? "CWCRF forwarded to EPC for buyer verification"
+                  : "CWCRF rejected",
+              );
               fetchData();
             } catch (err: any) {
-              toast.error(err.response?.data?.error || "Failed to triage CWCRF");
+              toast.error(
+                err.response?.data?.error || "Failed to triage CWCRF",
+              );
             } finally {
               setCwcrfTriageId(null);
             }
@@ -581,34 +633,60 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
               toast.success("CWCAF shared with selected NBFCs");
               fetchData();
             } catch (err: any) {
-              toast.error(err.response?.data?.error || "Failed to share CWCAF with NBFCs");
+              toast.error(
+                err.response?.data?.error || "Failed to share CWCAF with NBFCs",
+              );
             }
           }}
-          onDetachField={async (id: string, section: string, field: string, reason: string) => {
+          onDetachField={async (
+            id: string,
+            section: string,
+            field: string,
+            reason: string,
+          ) => {
             try {
               await opsApi.detachCwcrfField(id, { section, field, reason });
               toast.success(`Field ${field} detached — SC must re-submit`);
               fetchData();
             } catch (err: any) {
-              toast.error(err.response?.data?.error || "Failed to detach field");
+              toast.error(
+                err.response?.data?.error || "Failed to detach field",
+              );
             }
           }}
-          onEditField={async (id: string, section: string, field: string, newValue: string, reason: string) => {
+          onEditField={async (
+            id: string,
+            section: string,
+            field: string,
+            newValue: string,
+            reason: string,
+          ) => {
             try {
-              await opsApi.editCwcrfField(id, { section, field, newValue, reason });
+              await opsApi.editCwcrfField(id, {
+                section,
+                field,
+                newValue,
+                reason,
+              });
               toast.success(`Field ${field} updated`);
               fetchData();
             } catch (err: any) {
               toast.error(err.response?.data?.error || "Failed to edit field");
             }
           }}
-          onReRequest={async (id: string, message: string, section?: string) => {
+          onReRequest={async (
+            id: string,
+            message: string,
+            section?: string,
+          ) => {
             try {
               await opsApi.reRequestFromSc(id, { message, section });
               toast.success("Re-request sent to Sub-Contractor");
               fetchData();
             } catch (err: any) {
-              toast.error(err.response?.data?.error || "Failed to send re-request");
+              toast.error(
+                err.response?.data?.error || "Failed to send re-request",
+              );
             }
           }}
         />
@@ -996,22 +1074,31 @@ const SlaTrackerTab = ({
   // Calculate time remaining until deadline
   const getTimeRemaining = (targetDate: string) => {
     const diff = new Date(targetDate).getTime() - currentTime;
-    if (diff <= 0) return { expired: true, display: 'OVERDUE', urgency: 'critical' };
+    if (diff <= 0)
+      return { expired: true, display: "OVERDUE", urgency: "critical" };
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    let urgency = 'normal';
-    if (days === 0 && hours < 4) urgency = 'critical';
-    else if (days === 0) urgency = 'warning';
-    else if (days === 1) urgency = 'attention';
+    let urgency = "normal";
+    if (days === 0 && hours < 4) urgency = "critical";
+    else if (days === 0) urgency = "warning";
+    else if (days === 1) urgency = "attention";
 
     if (days > 0) {
-      return { expired: false, display: `${days}d ${hours}h ${minutes}m`, urgency };
+      return {
+        expired: false,
+        display: `${days}d ${hours}h ${minutes}m`,
+        urgency,
+      };
     } else if (hours > 0) {
-      return { expired: false, display: `${hours}h ${minutes}m ${seconds}s`, urgency };
+      return {
+        expired: false,
+        display: `${hours}h ${minutes}m ${seconds}s`,
+        urgency,
+      };
     } else {
       return { expired: false, display: `${minutes}m ${seconds}s`, urgency };
     }
@@ -1021,20 +1108,22 @@ const SlaTrackerTab = ({
   const getNextMilestone = (sla: SlaItem) => {
     if (!sla.milestones) return null;
     const milestones = [
-      { key: 'day3', ...sla.milestones.day3 },
-      { key: 'day7', ...sla.milestones.day7 },
-      { key: 'day10', ...sla.milestones.day10 },
-      { key: 'day14', ...sla.milestones.day14 },
+      { key: "day3", ...sla.milestones.day3 },
+      { key: "day7", ...sla.milestones.day7 },
+      { key: "day10", ...sla.milestones.day10 },
+      { key: "day14", ...sla.milestones.day14 },
     ];
-    return milestones.find(m => m.status === 'PENDING' || m.status === 'OVERDUE');
+    return milestones.find(
+      (m) => m.status === "PENDING" || m.status === "OVERDUE",
+    );
   };
 
   // Workload distribution (simulated based on pending items)
   const workloadData = [
-    { label: 'EPC Verification', count: pendingCompanies, color: '#f59e0b' },
-    { label: 'Bill Verification', count: pendingBills, color: '#3b82f6' },
-    { label: 'Seller KYC', count: pendingKyc, color: '#ef4444' },
-    { label: 'Active SLAs', count: activeSlas.length, color: '#8b5cf6' },
+    { label: "EPC Verification", count: pendingCompanies, color: "#f59e0b" },
+    { label: "Bill Verification", count: pendingBills, color: "#3b82f6" },
+    { label: "Seller KYC", count: pendingKyc, color: "#ef4444" },
+    { label: "Active SLAs", count: activeSlas.length, color: "#8b5cf6" },
   ];
   const totalWorkload = workloadData.reduce((sum, item) => sum + item.count, 0);
 
@@ -1090,27 +1179,33 @@ const SlaTrackerTab = ({
 
       {/* Workload Distribution */}
       <div className="workload-section">
-        <h2><HiOutlineLightningBolt /> Workload Distribution</h2>
+        <h2>
+          <HiOutlineLightningBolt /> Workload Distribution
+        </h2>
         <div className="workload-container">
           <div className="workload-bar">
-            {workloadData.map((item, idx) => (
-              item.count > 0 && (
-                <div
-                  key={idx}
-                  className="workload-segment"
-                  style={{
-                    width: `${(item.count / totalWorkload) * 100}%`,
-                    backgroundColor: item.color,
-                  }}
-                  title={`${item.label}: ${item.count}`}
-                />
-              )
-            ))}
+            {workloadData.map(
+              (item, idx) =>
+                item.count > 0 && (
+                  <div
+                    key={idx}
+                    className="workload-segment"
+                    style={{
+                      width: `${(item.count / totalWorkload) * 100}%`,
+                      backgroundColor: item.color,
+                    }}
+                    title={`${item.label}: ${item.count}`}
+                  />
+                ),
+            )}
           </div>
           <div className="workload-legend">
             {workloadData.map((item, idx) => (
               <div key={idx} className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: item.color }} />
+                <span
+                  className="legend-color"
+                  style={{ backgroundColor: item.color }}
+                />
                 <span className="legend-label">{item.label}</span>
                 <span className="legend-count">{item.count}</span>
               </div>
@@ -1122,14 +1217,18 @@ const SlaTrackerTab = ({
       {/* Overdue SLAs - Priority Section */}
       {overdueSlas.length > 0 && (
         <div className="sla-section overdue">
-          <h2><HiOutlineExclamationCircle /> Overdue - Immediate Action Required</h2>
+          <h2>
+            <HiOutlineExclamationCircle /> Overdue - Immediate Action Required
+          </h2>
           <div className="sla-countdown-grid">
             {overdueSlas.map((sla) => {
               const milestone = getNextMilestone(sla);
               return (
                 <div key={sla._id} className="sla-countdown-card critical">
                   <div className="sla-card-header">
-                    <span className="case-number">{sla.case?.caseNumber || 'Unknown Case'}</span>
+                    <span className="case-number">
+                      {sla.case?.caseNumber || "Unknown Case"}
+                    </span>
                     <span className="sla-status overdue">OVERDUE</span>
                   </div>
                   <div className="sla-countdown-display critical">
@@ -1140,7 +1239,8 @@ const SlaTrackerTab = ({
                     <div className="sla-milestone">
                       <span className="milestone-name">{milestone.name}</span>
                       <span className="milestone-date">
-                        Due: {new Date(milestone.targetDate).toLocaleDateString()}
+                        Due:{" "}
+                        {new Date(milestone.targetDate).toLocaleDateString()}
                       </span>
                     </div>
                   )}
@@ -1160,7 +1260,9 @@ const SlaTrackerTab = ({
 
       {/* Active SLAs with Countdown Timers */}
       <div className="sla-section">
-        <h2><HiOutlineClock /> Active SLA Timers</h2>
+        <h2>
+          <HiOutlineClock /> Active SLA Timers
+        </h2>
         {activeSlas.length === 0 ? (
           <div className="empty-sla-state">
             <HiOutlineCheckCircle />
@@ -1170,47 +1272,63 @@ const SlaTrackerTab = ({
           <div className="sla-countdown-grid">
             {activeSlas.map((sla) => {
               const milestone = getNextMilestone(sla);
-              const timeInfo = milestone ? getTimeRemaining(milestone.targetDate) : null;
-              
+              const timeInfo = milestone
+                ? getTimeRemaining(milestone.targetDate)
+                : null;
+
               return (
-                <div key={sla._id} className={`sla-countdown-card ${timeInfo?.urgency || ''}`}>
+                <div
+                  key={sla._id}
+                  className={`sla-countdown-card ${timeInfo?.urgency || ""}`}
+                >
                   <div className="sla-card-header">
-                    <span className="case-number">{sla.case?.caseNumber || 'Unknown Case'}</span>
-                    <span className={`sla-status ${sla.status.toLowerCase()}`}>{sla.status.replace(/_/g, ' ')}</span>
+                    <span className="case-number">
+                      {sla.case?.caseNumber || "Unknown Case"}
+                    </span>
+                    <span className={`sla-status ${sla.status.toLowerCase()}`}>
+                      {sla.status.replace(/_/g, " ")}
+                    </span>
                   </div>
-                  
+
                   {timeInfo && (
-                    <div className={`sla-countdown-display ${timeInfo.urgency}`}>
+                    <div
+                      className={`sla-countdown-display ${timeInfo.urgency}`}
+                    >
                       <HiOutlineClock />
                       <span className="countdown-time">{timeInfo.display}</span>
                     </div>
                   )}
-                  
+
                   {milestone && (
                     <div className="sla-milestone">
                       <span className="milestone-name">{milestone.name}</span>
                       <span className="milestone-date">
-                        Due: {new Date(milestone.targetDate).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        Due:{" "}
+                        {new Date(milestone.targetDate).toLocaleDateString(
+                          "en-IN",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
                       </span>
                     </div>
                   )}
-                  
+
                   {/* Milestone Progress */}
                   <div className="milestone-progress">
-                    {sla.milestones && Object.entries(sla.milestones).map(([key, m]) => (
-                      <div
-                        key={key}
-                        className={`milestone-dot ${m.status.toLowerCase()}`}
-                        title={`${m.name}: ${m.status}`}
-                      />
-                    ))}
+                    {sla.milestones &&
+                      Object.entries(sla.milestones).map(([key, m]) => (
+                        <div
+                          key={key}
+                          className={`milestone-dot ${m.status.toLowerCase()}`}
+                          title={`${m.name}: ${m.status}`}
+                        />
+                      ))}
                   </div>
-                  
+
                   <div className="sla-card-actions">
                     <button className="btn-view">View Details</button>
                   </div>
@@ -1810,14 +1928,14 @@ const CompanyReviewModal = ({
     try {
       await opsApi.verifyDocument(docId, { decision, notes });
       toast.success(
-        `Document ${decision === "approve" ? "verified" : "rejected"}`
+        `Document ${decision === "approve" ? "verified" : "rejected"}`,
       );
       setDocuments((docs) =>
         docs.map((d) =>
           d._id === docId
             ? { ...d, status: decision === "approve" ? "verified" : "rejected" }
-            : d
-        )
+            : d,
+        ),
       );
     } catch {
       toast.error("Failed to update document");
@@ -1828,7 +1946,7 @@ const CompanyReviewModal = ({
     try {
       await opsApi.verifyCompany(company._id, { decision, notes });
       toast.success(
-        `Company ${decision === "approve" ? "approved" : "rejected"}`
+        `Company ${decision === "approve" ? "approved" : "rejected"}`,
       );
       onClose();
     } catch {
@@ -1901,9 +2019,7 @@ const CompanyReviewModal = ({
                   <div key={doc._id} className="doc-card">
                     <div className="doc-header">
                       <span className="doc-type">{doc.documentType}</span>
-                      <span
-                        className={`doc-status ${doc.status}`}
-                      >
+                      <span className={`doc-status ${doc.status}`}>
                         {doc.status}
                       </span>
                     </div>
@@ -2286,17 +2402,24 @@ const BillsTab = ({
 
       {/* Bill Review Modal */}
       {selectedBill && (
-        <div className="bill-modal-overlay" onClick={() => setSelectedBill(null)}>
+        <div
+          className="bill-modal-overlay"
+          onClick={() => setSelectedBill(null)}
+        >
           <div
             className="bill-modal-container"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bill-modal-header">
               <div className="bill-modal-title-group">
-                <span className="bill-modal-icon"><HiOutlineDocumentText /></span>
+                <span className="bill-modal-icon">
+                  <HiOutlineDocumentText />
+                </span>
                 <div>
                   <p className="bill-modal-label">Invoice Review</p>
-                  <h2 className="bill-modal-title">Bill #{selectedBill.billNumber || "N/A"}</h2>
+                  <h2 className="bill-modal-title">
+                    Bill #{selectedBill.billNumber || "N/A"}
+                  </h2>
                 </div>
               </div>
               <button
@@ -2314,7 +2437,9 @@ const BillsTab = ({
                   <HiOutlineUser />
                   <div>
                     <p className="party-label">Sub-Contractor</p>
-                    <p className="party-name">{selectedBill.subContractorId?.companyName || "—"}</p>
+                    <p className="party-name">
+                      {selectedBill.subContractorId?.companyName || "—"}
+                    </p>
                   </div>
                 </div>
                 <div className="bill-info-divider" />
@@ -2322,14 +2447,18 @@ const BillsTab = ({
                   <HiOutlineOfficeBuilding />
                   <div>
                     <p className="party-label">EPC Company</p>
-                    <p className="party-name">{selectedBill.linkedEpcId?.companyName || "—"}</p>
+                    <p className="party-name">
+                      {selectedBill.linkedEpcId?.companyName || "—"}
+                    </p>
                   </div>
                 </div>
                 <div className="bill-info-divider" />
                 <div className="bill-info-amount">
                   <p className="party-label">Invoice Amount</p>
                   <p className="amount-hero">
-                    {selectedBill.amount ? `₹${selectedBill.amount.toLocaleString()}` : "—"}
+                    {selectedBill.amount
+                      ? `₹${selectedBill.amount.toLocaleString()}`
+                      : "—"}
                   </p>
                 </div>
               </div>
@@ -2353,7 +2482,9 @@ const BillsTab = ({
                       rel="noopener noreferrer"
                       className="bill-doc-card primary"
                     >
-                      <span className="bill-doc-icon"><HiOutlineDocumentText /></span>
+                      <span className="bill-doc-icon">
+                        <HiOutlineDocumentText />
+                      </span>
                       <div className="bill-doc-info">
                         <span className="bill-doc-name">Bill Document</span>
                         <span className="bill-doc-action">Click to open →</span>
@@ -2367,14 +2498,20 @@ const BillsTab = ({
                       rel="noopener noreferrer"
                       className="bill-doc-card"
                     >
-                      <span className="bill-doc-icon"><HiOutlinePaperClip /></span>
+                      <span className="bill-doc-icon">
+                        <HiOutlinePaperClip />
+                      </span>
                       <div className="bill-doc-info">
                         <span className="bill-doc-name">WCC</span>
                         <span className="bill-doc-action">
-                          {selectedBill.wcc.verified ? "✓ Verified" : "Click to open →"}
+                          {selectedBill.wcc.verified
+                            ? "✓ Verified"
+                            : "Click to open →"}
                         </span>
                       </div>
-                      {selectedBill.wcc.verified && <span className="doc-verified-chip">Verified</span>}
+                      {selectedBill.wcc.verified && (
+                        <span className="doc-verified-chip">Verified</span>
+                      )}
                     </a>
                   )}
                   {selectedBill.measurementSheet?.uploaded && (
@@ -2384,25 +2521,35 @@ const BillsTab = ({
                       rel="noopener noreferrer"
                       className="bill-doc-card"
                     >
-                      <span className="bill-doc-icon"><HiOutlinePaperClip /></span>
+                      <span className="bill-doc-icon">
+                        <HiOutlinePaperClip />
+                      </span>
                       <div className="bill-doc-info">
                         <span className="bill-doc-name">Measurement Sheet</span>
                         <span className="bill-doc-action">
-                          {selectedBill.measurementSheet.certified ? "✓ Certified" : "Click to open →"}
+                          {selectedBill.measurementSheet.certified
+                            ? "✓ Certified"
+                            : "Click to open →"}
                         </span>
                       </div>
-                      {selectedBill.measurementSheet.certified && <span className="doc-verified-chip">Certified</span>}
+                      {selectedBill.measurementSheet.certified && (
+                        <span className="doc-verified-chip">Certified</span>
+                      )}
                     </a>
                   )}
-                  {!selectedBill.fileUrl && !selectedBill.wcc?.uploaded && !selectedBill.measurementSheet?.uploaded && (
-                    <p className="no-docs-note">No documents attached</p>
-                  )}
+                  {!selectedBill.fileUrl &&
+                    !selectedBill.wcc?.uploaded &&
+                    !selectedBill.measurementSheet?.uploaded && (
+                      <p className="no-docs-note">No documents attached</p>
+                    )}
                 </div>
               </div>
 
               {/* Notes */}
               <div className="bill-notes-section">
-                <label className="bill-notes-label">Verification Notes <span>(optional)</span></label>
+                <label className="bill-notes-label">
+                  Verification Notes <span>(optional)</span>
+                </label>
                 <textarea
                   className="bill-notes-textarea"
                   value={notes}
@@ -3207,9 +3354,24 @@ const KycDetailPanel = ({
   const color = statusColors[kyc.status] || "#64748b";
 
   return (
-    <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20, height: "100%", overflowY: "auto" }}>
+    <div
+      style={{
+        padding: 24,
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+        height: "100%",
+        overflowY: "auto",
+      }}
+    >
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
             {kyc.subContractorId?.companyName || "Unknown Company"}
@@ -3220,35 +3382,81 @@ const KycDetailPanel = ({
         </div>
         <button
           onClick={onClose}
-          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: "#64748b", lineHeight: 1, padding: 0 }}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: 22,
+            color: "#64748b",
+            lineHeight: 1,
+            padding: 0,
+          }}
         >
           ×
         </button>
       </div>
 
       {/* Status & Date */}
-      <div style={{ padding: 16, background: "#f8fafc", borderRadius: 8, fontSize: 13, display: "flex", flexDirection: "column", gap: 8, border: "1px solid #e2e8f0" }}>
+      <div
+        style={{
+          padding: 16,
+          background: "#f8fafc",
+          borderRadius: 8,
+          fontSize: 13,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          border: "1px solid #e2e8f0",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontWeight: 600, color: "#374151" }}>Status:</span>
-          <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 20, background: color + "20", color: color, fontWeight: 600, fontSize: 12 }}>
+          <span
+            style={{
+              display: "inline-block",
+              padding: "3px 10px",
+              borderRadius: 20,
+              background: color + "20",
+              color: color,
+              fontWeight: 600,
+              fontSize: 12,
+            }}
+          >
             {kyc.status}
           </span>
         </div>
         <div>
           <span style={{ fontWeight: 600, color: "#374151" }}>Submitted:</span>{" "}
-          <span style={{ color: "#64748b" }}>{new Date(kyc.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+          <span style={{ color: "#64748b" }}>
+            {new Date(kyc.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </span>
         </div>
         {kyc.requestedAmount && (
           <div>
-            <span style={{ fontWeight: 600, color: "#374151" }}>Requested Amount:</span>{" "}
-            <span style={{ color: "#64748b" }}>₹{kyc.requestedAmount.toLocaleString()}</span>
+            <span style={{ fontWeight: 600, color: "#374151" }}>
+              Requested Amount:
+            </span>{" "}
+            <span style={{ color: "#64748b" }}>
+              ₹{kyc.requestedAmount.toLocaleString()}
+            </span>
           </div>
         )}
       </div>
 
       {/* Open Full KYC Review Button */}
       <button
-        onClick={() => navigate("/ops/kyc", { state: { sellerId: kyc.subContractorId?._id, sellerName: kyc.subContractorId?.companyName } })}
+        onClick={() =>
+          navigate("/ops/kyc", {
+            state: {
+              sellerId: kyc.subContractorId?._id,
+              sellerName: kyc.subContractorId?.companyName,
+            },
+          })
+        }
         style={{
           padding: "14px 24px",
           background: "#2563eb",
@@ -3543,83 +3751,192 @@ export default OpsDashboardNew;
 // CWCRF Ops Tab Component
 // ========================================
 interface CwcrfOpsTabProps {
-  cwcrfs: any[];        // Phase 6: SUBMITTED / OPS_REVIEW
+  cwcrfs: any[]; // Phase 6: SUBMITTED / OPS_REVIEW
   triageCwcrfs: any[]; // Phase 8: RMT_APPROVED
-  nbfcCwcrfs: any[];   // Phase 10: EPC_VERIFIED → NBFC dispatch
+  nbfcCwcrfs: any[]; // Phase 10: EPC_VERIFIED → NBFC dispatch
   forwardingId: string | null;
   verifyingSection: string | null;
   triageId: string | null;
   onForwardToRmt: (id: string) => Promise<void>;
-  onVerifySection: (id: string, section: string, verified: boolean, notes: string) => Promise<void>;
+  onVerifySection: (
+    id: string,
+    section: string,
+    verified: boolean,
+    notes: string,
+  ) => Promise<void>;
   onTriage: (id: string, action: string, notes: string) => Promise<void>;
   onShareWithNbfcs: (id: string, nbfcIds: string[]) => Promise<void>;
-  onDetachField: (id: string, section: string, field: string, reason: string) => Promise<void>;
-  onEditField: (id: string, section: string, field: string, newValue: string, reason: string) => Promise<void>;
+  onDetachField: (
+    id: string,
+    section: string,
+    field: string,
+    reason: string,
+  ) => Promise<void>;
+  onEditField: (
+    id: string,
+    section: string,
+    field: string,
+    newValue: string,
+    reason: string,
+  ) => Promise<void>;
   onReRequest: (id: string, message: string, section?: string) => Promise<void>;
   formatDate: (date: string) => string;
   statusBadge: (status: string) => React.JSX.Element;
 }
 
 const CWCRF_SECTIONS = [
-  { key: "sectionA",             apiKey: "sectionA",         label: "Section A",   desc: "Buyer & Project Details" },
-  { key: "sectionB",             apiKey: "sectionB",         label: "Section B",   desc: "Invoice Details" },
-  { key: "sectionC",             apiKey: "sectionC",         label: "Section C",   desc: "CWC Funding Request" },
-  { key: "sectionD",             apiKey: "sectionD",         label: "Section D",   desc: "Interest Rate Preference" },
-  { key: "raBillVerified",       apiKey: "raBill",           label: "RA Bill",     desc: "Running Account Bill" },
-  { key: "wccVerified",          apiKey: "wcc",              label: "WCC",         desc: "Work Completion Certificate" },
-  { key: "measurementSheetVerified", apiKey: "measurementSheet", label: "Meas. Sheet", desc: "Measurement Sheet" },
+  {
+    key: "sectionA",
+    apiKey: "sectionA",
+    label: "Section A",
+    desc: "Buyer & Project Details",
+  },
+  {
+    key: "sectionB",
+    apiKey: "sectionB",
+    label: "Section B",
+    desc: "Invoice Details",
+  },
+  {
+    key: "sectionC",
+    apiKey: "sectionC",
+    label: "Section C",
+    desc: "CWC Funding Request",
+  },
+  {
+    key: "sectionD",
+    apiKey: "sectionD",
+    label: "Section D",
+    desc: "Interest Rate Preference",
+  },
+  {
+    key: "raBillVerified",
+    apiKey: "raBill",
+    label: "RA Bill",
+    desc: "Running Account Bill",
+  },
+  {
+    key: "wccVerified",
+    apiKey: "wcc",
+    label: "WCC",
+    desc: "Work Completion Certificate",
+  },
+  {
+    key: "measurementSheetVerified",
+    apiKey: "measurementSheet",
+    label: "Meas. Sheet",
+    desc: "Measurement Sheet",
+  },
 ];
 
 const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
-  cwcrfs, triageCwcrfs, nbfcCwcrfs, forwardingId, verifyingSection, triageId,
-  onForwardToRmt, onVerifySection, onTriage, onShareWithNbfcs,
-  onDetachField, onEditField, onReRequest,
-  formatDate, statusBadge,
+  cwcrfs,
+  triageCwcrfs,
+  nbfcCwcrfs,
+  forwardingId,
+  verifyingSection,
+  triageId,
+  onForwardToRmt,
+  onVerifySection,
+  onTriage,
+  onShareWithNbfcs,
+  onDetachField,
+  onEditField,
+  onReRequest,
+  formatDate,
+  statusBadge,
 }) => {
-  const [subTab, setSubTab] = React.useState<"verify" | "triage" | "nbfc">("verify");
+  const [subTab, setSubTab] = React.useState<"verify" | "triage" | "nbfc">(
+    "verify",
+  );
   const [expanded, setExpanded] = React.useState<string | null>(null);
-  const [sectionNotes, setSectionNotes] = React.useState<Record<string, string>>({});
-  const [triageNotes, setTriageNotes] = React.useState<Record<string, string>>({});
+  const [sectionNotes, setSectionNotes] = React.useState<
+    Record<string, string>
+  >({});
+  const [triageNotes, setTriageNotes] = React.useState<Record<string, string>>(
+    {},
+  );
   // Phase 10: NBFC dispatch local state
-  const [nbfcMatches, setNbfcMatches] = React.useState<Record<string, any[]>>({});
-  const [nbfcLoading, setNbfcLoading] = React.useState<Record<string, boolean>>({});
-  const [nbfcSelected, setNbfcSelected] = React.useState<Record<string, string[]>>({});
-  const [nbfcSending, setNbfcSending] = React.useState<Record<string, boolean>>({});
+  const [nbfcMatches, setNbfcMatches] = React.useState<Record<string, any[]>>(
+    {},
+  );
+  const [nbfcLoading, setNbfcLoading] = React.useState<Record<string, boolean>>(
+    {},
+  );
+  const [nbfcSelected, setNbfcSelected] = React.useState<
+    Record<string, string[]>
+  >({});
+  const [nbfcSending, setNbfcSending] = React.useState<Record<string, boolean>>(
+    {},
+  );
   // Phase 6.2: Super Access local state
-  const [superAccessMode, setSuperAccessMode] = React.useState<Record<string, 'detach' | 'edit' | 'rerequest' | null>>({});
-  const [superAccessData, setSuperAccessData] = React.useState<Record<string, { field?: string; value?: string; reason?: string; message?: string }>>({});
+  const [superAccessMode, setSuperAccessMode] = React.useState<
+    Record<string, "detach" | "edit" | "rerequest" | null>
+  >({});
+  const [superAccessData, setSuperAccessData] = React.useState<
+    Record<
+      string,
+      { field?: string; value?: string; reason?: string; message?: string }
+    >
+  >({});
   // Phase 10.1: CWCAF generation state
-  const [showCwcafModal, setShowCwcafModal] = React.useState<string | null>(null);
+  const [showCwcafModal, setShowCwcafModal] = React.useState<string | null>(
+    null,
+  );
   const [cwcafGenerating, setCwcafGenerating] = React.useState(false);
   const [cwcafForm, setCwcafForm] = React.useState({
-    riskCategory: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
-    rmtRecommendation: 'PROCEED' as 'PROCEED' | 'REVIEW' | 'REJECT',
-    rmtNotes: '',
+    riskCategory: "MEDIUM" as "LOW" | "MEDIUM" | "HIGH",
+    rmtRecommendation: "PROCEED" as "PROCEED" | "REVIEW" | "REJECT",
+    rmtNotes: "",
     businessAge: 0,
     totalTransactions: 0,
     averageInvoiceValue: 0,
-    repaymentHistory: 'GOOD',
+    repaymentHistory: "GOOD",
   });
 
   return (
     <div style={{ padding: "0 0 32px" }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1e293b", margin: 0 }}>
+        <h2
+          style={{ fontSize: 20, fontWeight: 700, color: "#1e293b", margin: 0 }}
+        >
           CWC Request Forms — Ops Dashboard
         </h2>
         <p style={{ fontSize: 14, color: "#64748b", marginTop: 4 }}>
-          Phase 6: Verify CWCRF sections &bull; Phase 8: Risk triage after RMT assessment
+          Phase 6: Verify CWCRF sections &bull; Phase 8: Risk triage after RMT
+          assessment
         </p>
       </div>
-
       {/* Sub-tab bar */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 24, borderBottom: "2px solid #e2e8f0", paddingBottom: 0 }}>
-        {([
-          { key: "verify", label: "Section Verify (Phase 6)", count: cwcrfs.length },
-          { key: "triage", label: "Risk Triage (Phase 8)", count: triageCwcrfs.length },
-          { key: "nbfc", label: "NBFC Dispatch (Phase 10)", count: nbfcCwcrfs.length },
-        ] as const).map((t) => (
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          marginBottom: 24,
+          borderBottom: "2px solid #e2e8f0",
+          paddingBottom: 0,
+        }}
+      >
+        {(
+          [
+            {
+              key: "verify",
+              label: "Section Verify (Phase 6)",
+              count: cwcrfs.length,
+            },
+            {
+              key: "triage",
+              label: "Risk Triage (Phase 8)",
+              count: triageCwcrfs.length,
+            },
+            {
+              key: "nbfc",
+              label: "NBFC Dispatch (Phase 10)",
+              count: nbfcCwcrfs.length,
+            },
+          ] as const
+        ).map((t) => (
           <button
             key={t.key}
             onClick={() => setSubTab(t.key)}
@@ -3630,7 +3947,10 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
               fontSize: 13,
               fontWeight: subTab === t.key ? 700 : 500,
               color: subTab === t.key ? "#7c3aed" : "#64748b",
-              borderBottom: subTab === t.key ? "2px solid #7c3aed" : "2px solid transparent",
+              borderBottom:
+                subTab === t.key
+                  ? "2px solid #7c3aed"
+                  : "2px solid transparent",
               cursor: "pointer",
               marginBottom: -2,
               display: "flex",
@@ -3640,166 +3960,531 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
           >
             {t.label}
             {t.count > 0 && (
-              <span style={{
-                background: subTab === t.key ? "#7c3aed" : "#94a3b8",
-                color: "#fff",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 700,
-                padding: "1px 7px",
-              }}>{t.count}</span>
+              <span
+                style={{
+                  background: subTab === t.key ? "#7c3aed" : "#94a3b8",
+                  color: "#fff",
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "1px 7px",
+                }}
+              >
+                {t.count}
+              </span>
             )}
           </button>
         ))}
       </div>
-
       {/* ── Phase 6: Section Verify ── */}
       {subTab === "verify" && (
         <div>
           {cwcrfs.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "64px 0", color: "#94a3b8" }}>
-              <HiOutlineCheckCircle style={{ width: 48, height: 48, margin: "0 auto 12px", display: "block", color: "#86efac" }} />
-              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>No CWCRFs pending section verification</p>
-              <p style={{ fontSize: 13, marginTop: 4 }}>Submitted CWCRFs will appear here</p>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "64px 0",
+                color: "#94a3b8",
+              }}
+            >
+              <HiOutlineCheckCircle
+                style={{
+                  width: 48,
+                  height: 48,
+                  margin: "0 auto 12px",
+                  display: "block",
+                  color: "#86efac",
+                }}
+              />
+              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>
+                No CWCRFs pending section verification
+              </p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>
+                Submitted CWCRFs will appear here
+              </p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {cwcrfs.map((cwcrf) => {
                 const ov = cwcrf.opsVerification || {};
-                const allSectionsVerified = ["sectionA","sectionB","sectionC","sectionD"].every(
-                  (s) => ov[s]?.verified
-                );
+                const allSectionsVerified = [
+                  "sectionA",
+                  "sectionB",
+                  "sectionC",
+                  "sectionD",
+                ].every((s) => ov[s]?.verified);
                 return (
-                  <div key={cwcrf._id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                  <div
+                    key={cwcrf._id}
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    }}
+                  >
                     {/* Row header */}
                     <div
-                      style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: 16, cursor: "pointer",
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "16px 20px",
+                        gap: 16,
+                        cursor: "pointer",
                         background: expanded === cwcrf._id ? "#f8fafc" : "#fff",
-                        borderBottom: expanded === cwcrf._id ? "1px solid #e2e8f0" : "none" }}
-                      onClick={() => setExpanded(expanded === cwcrf._id ? null : cwcrf._id)}
+                        borderBottom:
+                          expanded === cwcrf._id ? "1px solid #e2e8f0" : "none",
+                      }}
+                      onClick={() =>
+                        setExpanded(expanded === cwcrf._id ? null : cwcrf._id)
+                      }
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                          <span style={{ fontWeight: 700, color: "#6d28d9", fontSize: 14 }}>
-                            {cwcrf.cwcRfNumber || `#${cwcrf._id?.slice(-8).toUpperCase()}`}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              color: "#6d28d9",
+                              fontSize: 14,
+                            }}
+                          >
+                            {cwcrf.cwcRfNumber ||
+                              `#${cwcrf._id?.slice(-8).toUpperCase()}`}
                           </span>
                           {statusBadge(cwcrf.status)}
                           {allSectionsVerified && (
-                            <span style={{ fontSize: 11, background: "#d1fae5", color: "#065f46", borderRadius: 999, padding: "2px 8px", fontWeight: 600 }}>✓ All Sections Verified</span>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                background: "#d1fae5",
+                                color: "#065f46",
+                                borderRadius: 999,
+                                padding: "2px 8px",
+                                fontWeight: 600,
+                              }}
+                            >
+                              ✓ All Sections Verified
+                            </span>
                           )}
                         </div>
-                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
-                          Seller: <strong>{cwcrf.subContractorId?.companyName || "—"}</strong>
-                          {cwcrf.epcId?.companyName && (<> &bull; EPC: <strong>{cwcrf.epcId.companyName}</strong></>)}
+                        <p
+                          style={{
+                            margin: "4px 0 0",
+                            fontSize: 13,
+                            color: "#64748b",
+                          }}
+                        >
+                          Seller:{" "}
+                          <strong>
+                            {cwcrf.subContractorId?.companyName || "—"}
+                          </strong>
+                          {cwcrf.epcId?.companyName && (
+                            <>
+                              {" "}
+                              &bull; EPC:{" "}
+                              <strong>{cwcrf.epcId.companyName}</strong>
+                            </>
+                          )}
                         </p>
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <p style={{ fontWeight: 700, color: "#059669", fontSize: 16, margin: 0 }}>
-                          ₹{Number(cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                        <p
+                          style={{
+                            fontWeight: 700,
+                            color: "#059669",
+                            fontSize: 16,
+                            margin: 0,
+                          }}
+                        >
+                          ₹
+                          {Number(
+                            cwcrf.cwcRequest?.requestedAmount || 0,
+                          ).toLocaleString()}
                         </p>
-                        <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 0" }}>Requested</p>
+                        <p
+                          style={{
+                            fontSize: 12,
+                            color: "#94a3b8",
+                            margin: "2px 0 0",
+                          }}
+                        >
+                          Requested
+                        </p>
                       </div>
                       {allSectionsVerified && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); onForwardToRmt(cwcrf._id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onForwardToRmt(cwcrf._id);
+                          }}
                           disabled={forwardingId === cwcrf._id}
-                          style={{ padding: "8px 16px", background: forwardingId === cwcrf._id ? "#a78bfa" : "#7c3aed", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer", flexShrink: 0 }}
+                          style={{
+                            padding: "8px 16px",
+                            background:
+                              forwardingId === cwcrf._id
+                                ? "#a78bfa"
+                                : "#7c3aed",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            fontWeight: 600,
+                            fontSize: 13,
+                            cursor: "pointer",
+                            flexShrink: 0,
+                          }}
                         >
-                          {forwardingId === cwcrf._id ? "Forwarding..." : "Forward to RMT →"}
+                          {forwardingId === cwcrf._id
+                            ? "Forwarding..."
+                            : "Forward to RMT →"}
                         </button>
                       )}
-                      <HiOutlineChevronRight style={{ width: 20, height: 20, color: "#94a3b8", transform: expanded === cwcrf._id ? "rotate(90deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
+                      <HiOutlineChevronRight
+                        style={{
+                          width: 20,
+                          height: 20,
+                          color: "#94a3b8",
+                          transform:
+                            expanded === cwcrf._id ? "rotate(90deg)" : "none",
+                          transition: "transform 0.2s",
+                          flexShrink: 0,
+                        }}
+                      />
                     </div>
 
                     {/* Expandable: section verify */}
                     {expanded === cwcrf._id && (
                       <div style={{ padding: 20, background: "#fafafa" }}>
                         {/* ── Full Case Summary ── */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: 12,
+                            marginBottom: 16,
+                          }}
+                        >
                           {/* SC / Seller */}
-                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 14 }}>
-                            <p style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Sub-Contractor (Seller)</p>
+                          <div
+                            style={{
+                              background: "#fff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 10,
+                              padding: 14,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: "#7c3aed",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.06em",
+                                margin: "0 0 10px",
+                              }}
+                            >
+                              Sub-Contractor (Seller)
+                            </p>
                             {[
-                              ["Company", cwcrf.subContractorId?.companyName || "—"],
-                              ["Owner", cwcrf.subContractorId?.ownerName || "—"],
+                              [
+                                "Company",
+                                cwcrf.subContractorId?.companyName || "—",
+                              ],
+                              [
+                                "Owner",
+                                cwcrf.subContractorId?.ownerName || "—",
+                              ],
                               ["Email", cwcrf.subContractorId?.email || "—"],
                               ["Phone", cwcrf.subContractorId?.phone || "—"],
                               ["GSTIN", cwcrf.subContractorId?.gstin || "—"],
                             ].map(([l, v]) => (
-                              <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", borderBottom: "1px solid #f8fafc" }}>
-                                <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>{l}</span>
-                                <span style={{ fontSize: 12, color: "#1e293b", fontWeight: 600, maxWidth: "60%", textAlign: "right", wordBreak: "break-all" }}>{v}</span>
+                              <div
+                                key={l}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  padding: "3px 0",
+                                  borderBottom: "1px solid #f8fafc",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    color: "#94a3b8",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {l}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: 12,
+                                    color: "#1e293b",
+                                    fontWeight: 600,
+                                    maxWidth: "60%",
+                                    textAlign: "right",
+                                    wordBreak: "break-all",
+                                  }}
+                                >
+                                  {v}
+                                </span>
                               </div>
                             ))}
                           </div>
                           {/* Invoice summary */}
-                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 14 }}>
-                            <p style={{ fontSize: 11, fontWeight: 700, color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 10px" }}>Invoice & Request</p>
+                          <div
+                            style={{
+                              background: "#fff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 10,
+                              padding: 14,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: "#0284c7",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.06em",
+                                margin: "0 0 10px",
+                              }}
+                            >
+                              Invoice & Request
+                            </p>
                             {[
-                              ["Invoice No.", cwcrf.invoiceDetails?.invoiceNumber || "—"],
-                              ["Invoice Amount", cwcrf.invoiceDetails?.invoiceAmount ? `₹${Number(cwcrf.invoiceDetails.invoiceAmount).toLocaleString()}` : "—"],
-                              ["Requested Amount", cwcrf.cwcRequest?.requestedAmount ? `₹${Number(cwcrf.cwcRequest.requestedAmount).toLocaleString()}` : "—"],
-                              ["Tenure", cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"],
-                              ["Urgency", cwcrf.cwcRequest?.urgencyLevel || "—"],
-                              ["Fee Paid", cwcrf.platformFeePaid ? "✅ Yes" : "⚠️ Pending"],
+                              [
+                                "Invoice No.",
+                                cwcrf.invoiceDetails?.invoiceNumber || "—",
+                              ],
+                              [
+                                "Invoice Amount",
+                                cwcrf.invoiceDetails?.invoiceAmount
+                                  ? `₹${Number(cwcrf.invoiceDetails.invoiceAmount).toLocaleString()}`
+                                  : "—",
+                              ],
+                              [
+                                "Requested Amount",
+                                cwcrf.cwcRequest?.requestedAmount
+                                  ? `₹${Number(cwcrf.cwcRequest.requestedAmount).toLocaleString()}`
+                                  : "—",
+                              ],
+                              [
+                                "Tenure",
+                                cwcrf.cwcRequest?.requestedTenure
+                                  ? `${cwcrf.cwcRequest.requestedTenure} days`
+                                  : "—",
+                              ],
+                              [
+                                "Urgency",
+                                cwcrf.cwcRequest?.urgencyLevel || "—",
+                              ],
+                              [
+                                "Fee Paid",
+                                cwcrf.platformFeePaid ? "✅ Yes" : "⚠️ Pending",
+                              ],
                             ].map(([l, v]) => (
-                              <div key={l} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", borderBottom: "1px solid #f8fafc" }}>
-                                <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>{l}</span>
-                                <span style={{ fontSize: 12, color: "#1e293b", fontWeight: 600 }}>{v}</span>
+                              <div
+                                key={l}
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  padding: "3px 0",
+                                  borderBottom: "1px solid #f8fafc",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    color: "#94a3b8",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {l}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: 12,
+                                    color: "#1e293b",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {v}
+                                </span>
                               </div>
                             ))}
                           </div>
                         </div>
 
                         {/* Section verify grid */}
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 12 }}>Section Verification</p>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+                        <p
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: "#374151",
+                            marginBottom: 12,
+                          }}
+                        >
+                          Section Verification
+                        </p>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fill, minmax(280px, 1fr))",
+                            gap: 12,
+                          }}
+                        >
                           {CWCRF_SECTIONS.map((sec) => {
                             const isBool = sec.key.endsWith("Verified");
-                            const isVerified = isBool ? ov[sec.key] === true : ov[sec.key]?.verified === true;
+                            const isVerified = isBool
+                              ? ov[sec.key] === true
+                              : ov[sec.key]?.verified === true;
                             const noteKey = `${cwcrf._id}-${(sec as any).apiKey || sec.key}`;
                             const isVerifying = verifyingSection === noteKey;
                             return (
-                              <div key={sec.key} style={{
-                                background: isVerified ? "#f0fdf4" : "#fff",
-                                border: `1px solid ${isVerified ? "#86efac" : "#e2e8f0"}`,
-                                borderRadius: 10,
-                                padding: 14,
-                              }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                              <div
+                                key={sec.key}
+                                style={{
+                                  background: isVerified ? "#f0fdf4" : "#fff",
+                                  border: `1px solid ${isVerified ? "#86efac" : "#e2e8f0"}`,
+                                  borderRadius: 10,
+                                  padding: 14,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "flex-start",
+                                    marginBottom: 8,
+                                  }}
+                                >
                                   <div>
-                                    <p style={{ fontWeight: 700, fontSize: 13, color: "#1e293b", margin: 0 }}>{sec.label}</p>
-                                    <p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>{sec.desc}</p>
+                                    <p
+                                      style={{
+                                        fontWeight: 700,
+                                        fontSize: 13,
+                                        color: "#1e293b",
+                                        margin: 0,
+                                      }}
+                                    >
+                                      {sec.label}
+                                    </p>
+                                    <p
+                                      style={{
+                                        fontSize: 11,
+                                        color: "#94a3b8",
+                                        margin: "2px 0 0",
+                                      }}
+                                    >
+                                      {sec.desc}
+                                    </p>
                                   </div>
-                                  {isVerified && <span style={{ fontSize: 18, color: "#22c55e" }}>✓</span>}
+                                  {isVerified && (
+                                    <span
+                                      style={{ fontSize: 18, color: "#22c55e" }}
+                                    >
+                                      ✓
+                                    </span>
+                                  )}
                                 </div>
 
                                 {/* ── Section Data Panel ── */}
                                 {(() => {
-                                  const fmt = (v: unknown) => v != null && v !== "" ? String(v) : "—";
-                                  const fmtAmt = (v: unknown) => v != null && Number(v) > 0 ? `₹${Number(v).toLocaleString()}` : "—";
-                                  const fmtDate = (v: unknown) => v ? new Date(String(v)).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
-                                  const fmtPct = (v: unknown) => v != null && Number(v) > 0 ? `${v}% p.a.` : "—";
-                                  const rowStyle: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "4px 0", borderBottom: "1px solid #f1f5f9", gap: 8 };
-                                  const labelStyle: React.CSSProperties = { fontSize: 10, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", flexShrink: 0, minWidth: 100 };
-                                  const valStyle: React.CSSProperties = { fontSize: 12, color: "#1e293b", fontWeight: 600, textAlign: "right", wordBreak: "break-word" };
-                                  const panelStyle: React.CSSProperties = { background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6, padding: "8px 10px", marginBottom: 8 };
+                                  const fmt = (v: unknown) =>
+                                    v != null && v !== "" ? String(v) : "—";
+                                  const fmtAmt = (v: unknown) =>
+                                    v != null && Number(v) > 0
+                                      ? `₹${Number(v).toLocaleString()}`
+                                      : "—";
+                                  const fmtDate = (v: unknown) =>
+                                    v
+                                      ? new Date(String(v)).toLocaleDateString(
+                                          "en-IN",
+                                          {
+                                            day: "numeric",
+                                            month: "short",
+                                            year: "numeric",
+                                          },
+                                        )
+                                      : "—";
+                                  const fmtPct = (v: unknown) =>
+                                    v != null && Number(v) > 0
+                                      ? `${v}% p.a.`
+                                      : "—";
+                                  const rowStyle: React.CSSProperties = {
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "flex-start",
+                                    padding: "4px 0",
+                                    borderBottom: "1px solid #f1f5f9",
+                                    gap: 8,
+                                  };
+                                  const labelStyle: React.CSSProperties = {
+                                    fontSize: 10,
+                                    color: "#94a3b8",
+                                    fontWeight: 600,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.04em",
+                                    flexShrink: 0,
+                                    minWidth: 100,
+                                  };
+                                  const valStyle: React.CSSProperties = {
+                                    fontSize: 12,
+                                    color: "#1e293b",
+                                    fontWeight: 600,
+                                    textAlign: "right",
+                                    wordBreak: "break-word",
+                                  };
+                                  const panelStyle: React.CSSProperties = {
+                                    background: "#f8fafc",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 6,
+                                    padding: "8px 10px",
+                                    marginBottom: 8,
+                                  };
 
                                   if (sec.key === "sectionA") {
                                     const d = cwcrf.buyerDetails || {};
-                                    const epc = cwcrf.epcId || {} as any;
+                                    const epc = cwcrf.epcId || ({} as any);
                                     return (
                                       <div style={panelStyle}>
                                         {[
-                                          ["Buyer / EPC", fmt(d.buyerName || epc.companyName)],
-                                          ["GSTIN", fmt(d.buyerGstin || epc.gstin)],
-                                          ["Contact Person", fmt(d.buyerContactPerson)],
-                                          ["Contact Phone", fmt(d.buyerContactPhone)],
+                                          [
+                                            "Buyer / EPC",
+                                            fmt(d.buyerName || epc.companyName),
+                                          ],
+                                          [
+                                            "GSTIN",
+                                            fmt(d.buyerGstin || epc.gstin),
+                                          ],
+                                          [
+                                            "Contact Person",
+                                            fmt(d.buyerContactPerson),
+                                          ],
+                                          [
+                                            "Contact Phone",
+                                            fmt(d.buyerContactPhone),
+                                          ],
                                           ["Address", fmt(d.buyerAddress)],
                                           ["Project Name", fmt(d.projectName)],
-                                          ["Project Location", fmt(d.projectLocation)],
+                                          [
+                                            "Project Location",
+                                            fmt(d.projectLocation),
+                                          ],
                                         ].map(([l, v]) => (
-                                          <div key={l} style={rowStyle}><span style={labelStyle}>{l}</span><span style={valStyle}>{v}</span></div>
+                                          <div key={l} style={rowStyle}>
+                                            <span style={labelStyle}>{l}</span>
+                                            <span style={valStyle}>{v}</span>
+                                          </div>
                                         ))}
                                       </div>
                                     );
@@ -3810,31 +4495,141 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                       <div style={panelStyle}>
                                         {[
                                           ["Invoice No.", fmt(d.invoiceNumber)],
-                                          ["Invoice Date", fmtDate(d.invoiceDate)],
-                                          ["Invoice Amount", fmtAmt(d.invoiceAmount)],
-                                          ["Net Amount", fmtAmt(d.netInvoiceAmount)],
+                                          [
+                                            "Invoice Date",
+                                            fmtDate(d.invoiceDate),
+                                          ],
+                                          [
+                                            "Invoice Amount",
+                                            fmtAmt(d.invoiceAmount),
+                                          ],
+                                          [
+                                            "Net Amount",
+                                            fmtAmt(d.netInvoiceAmount),
+                                          ],
                                           ["GST Amount", fmtAmt(d.gstAmount)],
-                                          ["PO Number", fmt(d.purchaseOrderNumber)],
-                                          ["Work Complete", fmtDate(d.workCompletionDate)],
-                                          ["Description", fmt(d.workDescription)],
+                                          [
+                                            "PO Number",
+                                            fmt(d.purchaseOrderNumber),
+                                          ],
+                                          [
+                                            "Work Complete",
+                                            fmtDate(d.workCompletionDate),
+                                          ],
+                                          [
+                                            "Description",
+                                            fmt(d.workDescription),
+                                          ],
                                         ].map(([l, v]) => (
-                                          <div key={l} style={rowStyle}><span style={labelStyle}>{l}</span><span style={valStyle}>{v}</span></div>
+                                          <div key={l} style={rowStyle}>
+                                            <span style={labelStyle}>{l}</span>
+                                            <span style={valStyle}>{v}</span>
+                                          </div>
                                         ))}
                                       </div>
                                     );
                                   }
                                   if (sec.key === "sectionC") {
                                     const d = cwcrf.cwcRequest || {};
-                                    const urgColor = d.urgencyLevel === "CRITICAL" ? "#dc2626" : d.urgencyLevel === "URGENT" ? "#d97706" : "#16a34a";
+                                    const urgColor =
+                                      d.urgencyLevel === "CRITICAL"
+                                        ? "#dc2626"
+                                        : d.urgencyLevel === "URGENT"
+                                          ? "#d97706"
+                                          : "#16a34a";
                                     return (
                                       <div style={panelStyle}>
-                                        <div style={rowStyle}><span style={labelStyle}>Req. Amount</span><span style={{ ...valStyle, color: "#7c3aed" }}>{fmtAmt(d.requestedAmount)}</span></div>
-                                        <div style={rowStyle}><span style={labelStyle}>Tenure</span><span style={valStyle}>{d.requestedTenure ? `${d.requestedTenure} days` : "—"}</span></div>
-                                        <div style={rowStyle}><span style={labelStyle}>Urgency</span><span style={{ ...valStyle, color: urgColor }}>{fmt(d.urgencyLevel)}</span></div>
-                                        <div style={rowStyle}><span style={labelStyle}>Reason</span><span style={{ ...valStyle, fontWeight: 400, fontSize: 11 }}>{fmt(d.reasonForFunding)}</span></div>
-                                        <div style={rowStyle}><span style={labelStyle}>Disbursement Date</span><span style={valStyle}>{d.preferredDisbursementDate ? fmtDate(d.preferredDisbursementDate) : "—"}</span></div>
-                                        <div style={rowStyle}><span style={labelStyle}>Collateral</span><span style={{ ...valStyle, fontWeight: 400, fontSize: 11 }}>{fmt(d.collateralOffered)}</span></div>
-                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Existing Loans</span><span style={{ ...valStyle, fontWeight: 400, fontSize: 11 }}>{fmt(d.existingLoanDetails)}</span></div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>
+                                            Req. Amount
+                                          </span>
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              color: "#7c3aed",
+                                            }}
+                                          >
+                                            {fmtAmt(d.requestedAmount)}
+                                          </span>
+                                        </div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>Tenure</span>
+                                          <span style={valStyle}>
+                                            {d.requestedTenure
+                                              ? `${d.requestedTenure} days`
+                                              : "—"}
+                                          </span>
+                                        </div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>
+                                            Urgency
+                                          </span>
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              color: urgColor,
+                                            }}
+                                          >
+                                            {fmt(d.urgencyLevel)}
+                                          </span>
+                                        </div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>Reason</span>
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              fontWeight: 400,
+                                              fontSize: 11,
+                                            }}
+                                          >
+                                            {fmt(d.reasonForFunding)}
+                                          </span>
+                                        </div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>
+                                            Disbursement Date
+                                          </span>
+                                          <span style={valStyle}>
+                                            {d.preferredDisbursementDate
+                                              ? fmtDate(
+                                                  d.preferredDisbursementDate,
+                                                )
+                                              : "—"}
+                                          </span>
+                                        </div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>
+                                            Collateral
+                                          </span>
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              fontWeight: 400,
+                                              fontSize: 11,
+                                            }}
+                                          >
+                                            {fmt(d.collateralOffered)}
+                                          </span>
+                                        </div>
+                                        <div
+                                          style={{
+                                            ...rowStyle,
+                                            borderBottom: "none",
+                                          }}
+                                        >
+                                          <span style={labelStyle}>
+                                            Existing Loans
+                                          </span>
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              fontWeight: 400,
+                                              fontSize: 11,
+                                            }}
+                                          >
+                                            {fmt(d.existingLoanDetails)}
+                                          </span>
+                                        </div>
                                       </div>
                                     );
                                   }
@@ -3842,19 +4637,103 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                     const d = cwcrf.interestPreference || {};
                                     return (
                                       <div style={panelStyle}>
-                                        <div style={rowStyle}><span style={labelStyle}>Type</span><span style={valStyle}>{fmt(d.preferenceType)?.replace("_", " ")}</span></div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>Type</span>
+                                          <span style={valStyle}>
+                                            {fmt(d.preferenceType)?.replace(
+                                              "_",
+                                              " ",
+                                            )}
+                                          </span>
+                                        </div>
                                         {d.preferenceType === "RANGE" ? (
                                           <>
-                                            <div style={rowStyle}><span style={labelStyle}>Min Rate</span><span style={valStyle}>{fmtPct(d.minRate)}</span></div>
-                                            <div style={rowStyle}><span style={labelStyle}>Max Rate</span><span style={valStyle}>{fmtPct(d.maxRate)}</span></div>
+                                            <div style={rowStyle}>
+                                              <span style={labelStyle}>
+                                                Min Rate
+                                              </span>
+                                              <span style={valStyle}>
+                                                {fmtPct(d.minRate)}
+                                              </span>
+                                            </div>
+                                            <div style={rowStyle}>
+                                              <span style={labelStyle}>
+                                                Max Rate
+                                              </span>
+                                              <span style={valStyle}>
+                                                {fmtPct(d.maxRate)}
+                                              </span>
+                                            </div>
                                           </>
                                         ) : (
-                                          <div style={rowStyle}><span style={labelStyle}>Max Accept. Rate</span><span style={valStyle}>{fmtPct(d.maxAcceptableRate)}</span></div>
+                                          <div style={rowStyle}>
+                                            <span style={labelStyle}>
+                                              Max Accept. Rate
+                                            </span>
+                                            <span style={valStyle}>
+                                              {fmtPct(d.maxAcceptableRate)}
+                                            </span>
+                                          </div>
                                         )}
-                                        <div style={rowStyle}><span style={labelStyle}>Repayment</span><span style={valStyle}>{fmt(d.preferredRepaymentFrequency)?.replace("_", " ")}</span></div>
-                                        <div style={rowStyle}><span style={labelStyle}>Processing Fee</span><span style={{ ...valStyle, color: d.processingFeeAcceptance ? "#16a34a" : "#94a3b8" }}>{d.processingFeeAcceptance ? "Accepted" : "Not accepted"}</span></div>
-                                        {d.processingFeeAcceptance && <div style={rowStyle}><span style={labelStyle}>Max Fee %</span><span style={valStyle}>{d.maxProcessingFeePercent != null ? `${d.maxProcessingFeePercent}%` : "—"}</span></div>}
-                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Prepayment</span><span style={{ ...valStyle, fontSize: 11 }}>{fmt(d.prepaymentPreference)?.replace(/_/g, " ")}</span></div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>
+                                            Repayment
+                                          </span>
+                                          <span style={valStyle}>
+                                            {fmt(
+                                              d.preferredRepaymentFrequency,
+                                            )?.replace("_", " ")}
+                                          </span>
+                                        </div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>
+                                            Processing Fee
+                                          </span>
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              color: d.processingFeeAcceptance
+                                                ? "#16a34a"
+                                                : "#94a3b8",
+                                            }}
+                                          >
+                                            {d.processingFeeAcceptance
+                                              ? "Accepted"
+                                              : "Not accepted"}
+                                          </span>
+                                        </div>
+                                        {d.processingFeeAcceptance && (
+                                          <div style={rowStyle}>
+                                            <span style={labelStyle}>
+                                              Max Fee %
+                                            </span>
+                                            <span style={valStyle}>
+                                              {d.maxProcessingFeePercent != null
+                                                ? `${d.maxProcessingFeePercent}%`
+                                                : "—"}
+                                            </span>
+                                          </div>
+                                        )}
+                                        <div
+                                          style={{
+                                            ...rowStyle,
+                                            borderBottom: "none",
+                                          }}
+                                        >
+                                          <span style={labelStyle}>
+                                            Prepayment
+                                          </span>
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              fontSize: 11,
+                                            }}
+                                          >
+                                            {fmt(
+                                              d.prepaymentPreference,
+                                            )?.replace(/_/g, " ")}
+                                          </span>
+                                        </div>
                                       </div>
                                     );
                                   }
@@ -3862,12 +4741,46 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                     const b = cwcrf.billId;
                                     return (
                                       <div style={panelStyle}>
-                                        <div style={rowStyle}><span style={labelStyle}>Bill No.</span><span style={valStyle}>{fmt(b?.billNumber)}</span></div>
-                                        <div style={{ ...rowStyle, borderBottom: "none" }}><span style={labelStyle}>Amount</span><span style={{ ...valStyle, color: "#059669" }}>{fmtAmt(b?.amount)}</span></div>
+                                        <div style={rowStyle}>
+                                          <span style={labelStyle}>
+                                            Bill No.
+                                          </span>
+                                          <span style={valStyle}>
+                                            {fmt(b?.billNumber)}
+                                          </span>
+                                        </div>
+                                        <div
+                                          style={{
+                                            ...rowStyle,
+                                            borderBottom: "none",
+                                          }}
+                                        >
+                                          <span style={labelStyle}>Amount</span>
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              color: "#059669",
+                                            }}
+                                          >
+                                            {fmtAmt(b?.amount)}
+                                          </span>
+                                        </div>
                                         {b?.fileUrl && (
                                           <div style={{ marginTop: 6 }}>
-                                            <a href={b.fileUrl} target="_blank" rel="noopener noreferrer"
-                                              style={{ fontSize: 11, color: "#4f46e5", fontWeight: 600, textDecoration: "none", background: "#eef2ff", padding: "3px 8px", borderRadius: 4 }}>
+                                            <a
+                                              href={b.fileUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              style={{
+                                                fontSize: 11,
+                                                color: "#4f46e5",
+                                                fontWeight: 600,
+                                                textDecoration: "none",
+                                                background: "#eef2ff",
+                                                padding: "3px 8px",
+                                                borderRadius: 4,
+                                              }}
+                                            >
                                               📄 View RA Bill
                                             </a>
                                           </div>
@@ -3879,16 +4792,44 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                     const wcc = cwcrf.billId?.wcc;
                                     return (
                                       <div style={panelStyle}>
-                                        <div style={{ ...rowStyle, borderBottom: wcc?.fileUrl ? undefined : "none" }}>
+                                        <div
+                                          style={{
+                                            ...rowStyle,
+                                            borderBottom: wcc?.fileUrl
+                                              ? undefined
+                                              : "none",
+                                          }}
+                                        >
                                           <span style={labelStyle}>Status</span>
-                                          <span style={{ ...valStyle, color: wcc?.uploaded ? "#16a34a" : "#94a3b8" }}>
-                                            {wcc?.uploaded ? "Uploaded" : "Not uploaded"}
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              color: wcc?.uploaded
+                                                ? "#16a34a"
+                                                : "#94a3b8",
+                                            }}
+                                          >
+                                            {wcc?.uploaded
+                                              ? "Uploaded"
+                                              : "Not uploaded"}
                                           </span>
                                         </div>
                                         {wcc?.fileUrl && (
                                           <div style={{ marginTop: 6 }}>
-                                            <a href={wcc.fileUrl} target="_blank" rel="noopener noreferrer"
-                                              style={{ fontSize: 11, color: "#4f46e5", fontWeight: 600, textDecoration: "none", background: "#eef2ff", padding: "3px 8px", borderRadius: 4 }}>
+                                            <a
+                                              href={wcc.fileUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              style={{
+                                                fontSize: 11,
+                                                color: "#4f46e5",
+                                                fontWeight: 600,
+                                                textDecoration: "none",
+                                                background: "#eef2ff",
+                                                padding: "3px 8px",
+                                                borderRadius: 4,
+                                              }}
+                                            >
                                               📄 View WCC
                                             </a>
                                           </div>
@@ -3900,16 +4841,44 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                     const ms = cwcrf.billId?.measurementSheet;
                                     return (
                                       <div style={panelStyle}>
-                                        <div style={{ ...rowStyle, borderBottom: ms?.fileUrl ? undefined : "none" }}>
+                                        <div
+                                          style={{
+                                            ...rowStyle,
+                                            borderBottom: ms?.fileUrl
+                                              ? undefined
+                                              : "none",
+                                          }}
+                                        >
                                           <span style={labelStyle}>Status</span>
-                                          <span style={{ ...valStyle, color: ms?.uploaded ? "#16a34a" : "#94a3b8" }}>
-                                            {ms?.uploaded ? "Uploaded" : "Not uploaded"}
+                                          <span
+                                            style={{
+                                              ...valStyle,
+                                              color: ms?.uploaded
+                                                ? "#16a34a"
+                                                : "#94a3b8",
+                                            }}
+                                          >
+                                            {ms?.uploaded
+                                              ? "Uploaded"
+                                              : "Not uploaded"}
                                           </span>
                                         </div>
                                         {ms?.fileUrl && (
                                           <div style={{ marginTop: 6 }}>
-                                            <a href={ms.fileUrl} target="_blank" rel="noopener noreferrer"
-                                              style={{ fontSize: 11, color: "#4f46e5", fontWeight: 600, textDecoration: "none", background: "#eef2ff", padding: "3px 8px", borderRadius: 4 }}>
+                                            <a
+                                              href={ms.fileUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              style={{
+                                                fontSize: 11,
+                                                color: "#4f46e5",
+                                                fontWeight: 600,
+                                                textDecoration: "none",
+                                                background: "#eef2ff",
+                                                padding: "3px 8px",
+                                                borderRadius: 4,
+                                              }}
+                                            >
                                               📄 View Measurement Sheet
                                             </a>
                                           </div>
@@ -3923,24 +4892,79 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                 <textarea
                                   placeholder="Notes (optional)"
                                   value={sectionNotes[noteKey] || ""}
-                                  onChange={(e) => setSectionNotes((prev) => ({ ...prev, [noteKey]: e.target.value }))}
+                                  onChange={(e) =>
+                                    setSectionNotes((prev) => ({
+                                      ...prev,
+                                      [noteKey]: e.target.value,
+                                    }))
+                                  }
                                   rows={2}
-                                  style={{ width: "100%", fontSize: 12, border: "1px solid #e2e8f0", borderRadius: 6, padding: "6px 8px", resize: "vertical", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }}
+                                  style={{
+                                    width: "100%",
+                                    fontSize: 12,
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 6,
+                                    padding: "6px 8px",
+                                    resize: "vertical",
+                                    boxSizing: "border-box",
+                                    marginBottom: 8,
+                                    fontFamily: "inherit",
+                                  }}
                                 />
                                 <div style={{ display: "flex", gap: 6 }}>
                                   {!isVerified ? (
                                     <button
                                       disabled={isVerifying}
-                                      onClick={() => onVerifySection(cwcrf._id, (sec as any).apiKey || sec.key, true, sectionNotes[noteKey] || "")}
-                                      style={{ flex: 1, padding: "6px 0", background: isVerifying ? "#a7f3d0" : "#10b981", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+                                      onClick={() =>
+                                        onVerifySection(
+                                          cwcrf._id,
+                                          (sec as any).apiKey || sec.key,
+                                          true,
+                                          sectionNotes[noteKey] || "",
+                                        )
+                                      }
+                                      style={{
+                                        flex: 1,
+                                        padding: "6px 0",
+                                        background: isVerifying
+                                          ? "#a7f3d0"
+                                          : "#10b981",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: 6,
+                                        fontWeight: 600,
+                                        fontSize: 12,
+                                        cursor: "pointer",
+                                      }}
                                     >
-                                      {isVerifying ? "Saving..." : "Mark Verified"}
+                                      {isVerifying
+                                        ? "Saving..."
+                                        : "Mark Verified"}
                                     </button>
                                   ) : (
                                     <button
                                       disabled={isVerifying}
-                                      onClick={() => onVerifySection(cwcrf._id, (sec as any).apiKey || sec.key, false, sectionNotes[noteKey] || "")}
-                                      style={{ flex: 1, padding: "6px 0", background: isVerifying ? "#fca5a5" : "#ef4444", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+                                      onClick={() =>
+                                        onVerifySection(
+                                          cwcrf._id,
+                                          (sec as any).apiKey || sec.key,
+                                          false,
+                                          sectionNotes[noteKey] || "",
+                                        )
+                                      }
+                                      style={{
+                                        flex: 1,
+                                        padding: "6px 0",
+                                        background: isVerifying
+                                          ? "#fca5a5"
+                                          : "#ef4444",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: 6,
+                                        fontWeight: 600,
+                                        fontSize: 12,
+                                        cursor: "pointer",
+                                      }}
                                     >
                                       {isVerifying ? "Saving..." : "Unmark"}
                                     </button>
@@ -3948,61 +4972,357 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                 </div>
 
                                 {/* Super Access Actions (Phase 6.2) */}
-                                {!isBool && (() => {
-                                  const saKey = `${cwcrf._id}-${sec.key}`;
-                                  const mode = superAccessMode[saKey];
-                                  const data = superAccessData[saKey] || {};
-                                  const sectionDataMap: Record<string, string> = { sectionA: 'buyerDetails', sectionB: 'invoiceDetails', sectionC: 'cwcRequest', sectionD: 'interestPreference' };
-                                  const backendSection = sectionDataMap[sec.key] || sec.key;
-                                  return (
-                                    <div style={{ marginTop: 8 }}>
-                                      {!mode && (
-                                        <div style={{ display: "flex", gap: 4 }}>
-                                          <button
-                                            onClick={() => setSuperAccessMode((p) => ({ ...p, [saKey]: 'detach' }))}
-                                            style={{ flex: 1, padding: "4px 0", background: "none", border: "1px solid #f59e0b", borderRadius: 4, color: "#d97706", fontSize: 10, fontWeight: 600, cursor: "pointer" }}
-                                          >Detach Field</button>
-                                          <button
-                                            onClick={() => setSuperAccessMode((p) => ({ ...p, [saKey]: 'edit' }))}
-                                            style={{ flex: 1, padding: "4px 0", background: "none", border: "1px solid #6366f1", borderRadius: 4, color: "#4f46e5", fontSize: 10, fontWeight: 600, cursor: "pointer" }}
-                                          >Edit Field</button>
-                                        </div>
-                                      )}
-                                      {mode === 'detach' && (
-                                        <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 6, padding: 8, marginTop: 4 }}>
-                                          <p style={{ fontSize: 11, fontWeight: 700, color: "#92400e", margin: "0 0 6px" }}>Detach Field</p>
-                                          <input placeholder="Field name (e.g. invoiceNumber)" value={data.field || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], field: e.target.value } }))}
-                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
-                                          <input placeholder="Reason" value={data.reason || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], reason: e.target.value } }))}
-                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
-                                          <div style={{ display: "flex", gap: 4 }}>
-                                            <button onClick={() => { onDetachField(cwcrf._id, backendSection, data.field || '', data.reason || ''); setSuperAccessMode((p) => ({ ...p, [saKey]: null })); setSuperAccessData((p) => ({ ...p, [saKey]: {} })); }}
-                                              disabled={!data.field?.trim()} style={{ flex: 1, padding: "4px 0", background: "#d97706", color: "#fff", border: "none", borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Detach</button>
-                                            <button onClick={() => { setSuperAccessMode((p) => ({ ...p, [saKey]: null })); setSuperAccessData((p) => ({ ...p, [saKey]: {} })); }}
-                                              style={{ padding: "4px 10px", background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Cancel</button>
+                                {!isBool &&
+                                  (() => {
+                                    const saKey = `${cwcrf._id}-${sec.key}`;
+                                    const mode = superAccessMode[saKey];
+                                    const data = superAccessData[saKey] || {};
+                                    const sectionDataMap: Record<
+                                      string,
+                                      string
+                                    > = {
+                                      sectionA: "buyerDetails",
+                                      sectionB: "invoiceDetails",
+                                      sectionC: "cwcRequest",
+                                      sectionD: "interestPreference",
+                                    };
+                                    const backendSection =
+                                      sectionDataMap[sec.key] || sec.key;
+                                    return (
+                                      <div style={{ marginTop: 8 }}>
+                                        {!mode && (
+                                          <div
+                                            style={{ display: "flex", gap: 4 }}
+                                          >
+                                            <button
+                                              onClick={() =>
+                                                setSuperAccessMode((p) => ({
+                                                  ...p,
+                                                  [saKey]: "detach",
+                                                }))
+                                              }
+                                              style={{
+                                                flex: 1,
+                                                padding: "4px 0",
+                                                background: "none",
+                                                border: "1px solid #f59e0b",
+                                                borderRadius: 4,
+                                                color: "#d97706",
+                                                fontSize: 10,
+                                                fontWeight: 600,
+                                                cursor: "pointer",
+                                              }}
+                                            >
+                                              Detach Field
+                                            </button>
+                                            <button
+                                              onClick={() =>
+                                                setSuperAccessMode((p) => ({
+                                                  ...p,
+                                                  [saKey]: "edit",
+                                                }))
+                                              }
+                                              style={{
+                                                flex: 1,
+                                                padding: "4px 0",
+                                                background: "none",
+                                                border: "1px solid #6366f1",
+                                                borderRadius: 4,
+                                                color: "#4f46e5",
+                                                fontSize: 10,
+                                                fontWeight: 600,
+                                                cursor: "pointer",
+                                              }}
+                                            >
+                                              Edit Field
+                                            </button>
                                           </div>
-                                        </div>
-                                      )}
-                                      {mode === 'edit' && (
-                                        <div style={{ background: "#eef2ff", border: "1px solid #c7d2fe", borderRadius: 6, padding: 8, marginTop: 4 }}>
-                                          <p style={{ fontSize: 11, fontWeight: 700, color: "#3730a3", margin: "0 0 6px" }}>Edit Field</p>
-                                          <input placeholder="Field name (e.g. invoiceNumber)" value={data.field || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], field: e.target.value } }))}
-                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
-                                          <input placeholder="New value" value={data.value || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], value: e.target.value } }))}
-                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
-                                          <input placeholder="Reason (optional)" value={data.reason || ''} onChange={(e) => setSuperAccessData((p) => ({ ...p, [saKey]: { ...p[saKey], reason: e.target.value } }))}
-                                            style={{ width: "100%", fontSize: 11, border: "1px solid #e2e8f0", borderRadius: 4, padding: "4px 6px", marginBottom: 4, boxSizing: "border-box" }} />
-                                          <div style={{ display: "flex", gap: 4 }}>
-                                            <button onClick={() => { onEditField(cwcrf._id, backendSection, data.field || '', data.value || '', data.reason || ''); setSuperAccessMode((p) => ({ ...p, [saKey]: null })); setSuperAccessData((p) => ({ ...p, [saKey]: {} })); }}
-                                              disabled={!data.field?.trim() || !data.value?.trim()} style={{ flex: 1, padding: "4px 0", background: "#4f46e5", color: "#fff", border: "none", borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Save Edit</button>
-                                            <button onClick={() => { setSuperAccessMode((p) => ({ ...p, [saKey]: null })); setSuperAccessData((p) => ({ ...p, [saKey]: {} })); }}
-                                              style={{ padding: "4px 10px", background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Cancel</button>
+                                        )}
+                                        {mode === "detach" && (
+                                          <div
+                                            style={{
+                                              background: "#fffbeb",
+                                              border: "1px solid #fde68a",
+                                              borderRadius: 6,
+                                              padding: 8,
+                                              marginTop: 4,
+                                            }}
+                                          >
+                                            <p
+                                              style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                color: "#92400e",
+                                                margin: "0 0 6px",
+                                              }}
+                                            >
+                                              Detach Field
+                                            </p>
+                                            <input
+                                              placeholder="Field name (e.g. invoiceNumber)"
+                                              value={data.field || ""}
+                                              onChange={(e) =>
+                                                setSuperAccessData((p) => ({
+                                                  ...p,
+                                                  [saKey]: {
+                                                    ...p[saKey],
+                                                    field: e.target.value,
+                                                  },
+                                                }))
+                                              }
+                                              style={{
+                                                width: "100%",
+                                                fontSize: 11,
+                                                border: "1px solid #e2e8f0",
+                                                borderRadius: 4,
+                                                padding: "4px 6px",
+                                                marginBottom: 4,
+                                                boxSizing: "border-box",
+                                              }}
+                                            />
+                                            <input
+                                              placeholder="Reason"
+                                              value={data.reason || ""}
+                                              onChange={(e) =>
+                                                setSuperAccessData((p) => ({
+                                                  ...p,
+                                                  [saKey]: {
+                                                    ...p[saKey],
+                                                    reason: e.target.value,
+                                                  },
+                                                }))
+                                              }
+                                              style={{
+                                                width: "100%",
+                                                fontSize: 11,
+                                                border: "1px solid #e2e8f0",
+                                                borderRadius: 4,
+                                                padding: "4px 6px",
+                                                marginBottom: 4,
+                                                boxSizing: "border-box",
+                                              }}
+                                            />
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: 4,
+                                              }}
+                                            >
+                                              <button
+                                                onClick={() => {
+                                                  onDetachField(
+                                                    cwcrf._id,
+                                                    backendSection,
+                                                    data.field || "",
+                                                    data.reason || "",
+                                                  );
+                                                  setSuperAccessMode((p) => ({
+                                                    ...p,
+                                                    [saKey]: null,
+                                                  }));
+                                                  setSuperAccessData((p) => ({
+                                                    ...p,
+                                                    [saKey]: {},
+                                                  }));
+                                                }}
+                                                disabled={!data.field?.trim()}
+                                                style={{
+                                                  flex: 1,
+                                                  padding: "4px 0",
+                                                  background: "#d97706",
+                                                  color: "#fff",
+                                                  border: "none",
+                                                  borderRadius: 4,
+                                                  fontSize: 11,
+                                                  fontWeight: 600,
+                                                  cursor: "pointer",
+                                                }}
+                                              >
+                                                Detach
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  setSuperAccessMode((p) => ({
+                                                    ...p,
+                                                    [saKey]: null,
+                                                  }));
+                                                  setSuperAccessData((p) => ({
+                                                    ...p,
+                                                    [saKey]: {},
+                                                  }));
+                                                }}
+                                                style={{
+                                                  padding: "4px 10px",
+                                                  background: "#f1f5f9",
+                                                  color: "#64748b",
+                                                  border: "1px solid #e2e8f0",
+                                                  borderRadius: 4,
+                                                  fontSize: 11,
+                                                  cursor: "pointer",
+                                                }}
+                                              >
+                                                Cancel
+                                              </button>
+                                            </div>
                                           </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })()}
+                                        )}
+                                        {mode === "edit" && (
+                                          <div
+                                            style={{
+                                              background: "#eef2ff",
+                                              border: "1px solid #c7d2fe",
+                                              borderRadius: 6,
+                                              padding: 8,
+                                              marginTop: 4,
+                                            }}
+                                          >
+                                            <p
+                                              style={{
+                                                fontSize: 11,
+                                                fontWeight: 700,
+                                                color: "#3730a3",
+                                                margin: "0 0 6px",
+                                              }}
+                                            >
+                                              Edit Field
+                                            </p>
+                                            <input
+                                              placeholder="Field name (e.g. invoiceNumber)"
+                                              value={data.field || ""}
+                                              onChange={(e) =>
+                                                setSuperAccessData((p) => ({
+                                                  ...p,
+                                                  [saKey]: {
+                                                    ...p[saKey],
+                                                    field: e.target.value,
+                                                  },
+                                                }))
+                                              }
+                                              style={{
+                                                width: "100%",
+                                                fontSize: 11,
+                                                border: "1px solid #e2e8f0",
+                                                borderRadius: 4,
+                                                padding: "4px 6px",
+                                                marginBottom: 4,
+                                                boxSizing: "border-box",
+                                              }}
+                                            />
+                                            <input
+                                              placeholder="New value"
+                                              value={data.value || ""}
+                                              onChange={(e) =>
+                                                setSuperAccessData((p) => ({
+                                                  ...p,
+                                                  [saKey]: {
+                                                    ...p[saKey],
+                                                    value: e.target.value,
+                                                  },
+                                                }))
+                                              }
+                                              style={{
+                                                width: "100%",
+                                                fontSize: 11,
+                                                border: "1px solid #e2e8f0",
+                                                borderRadius: 4,
+                                                padding: "4px 6px",
+                                                marginBottom: 4,
+                                                boxSizing: "border-box",
+                                              }}
+                                            />
+                                            <input
+                                              placeholder="Reason (optional)"
+                                              value={data.reason || ""}
+                                              onChange={(e) =>
+                                                setSuperAccessData((p) => ({
+                                                  ...p,
+                                                  [saKey]: {
+                                                    ...p[saKey],
+                                                    reason: e.target.value,
+                                                  },
+                                                }))
+                                              }
+                                              style={{
+                                                width: "100%",
+                                                fontSize: 11,
+                                                border: "1px solid #e2e8f0",
+                                                borderRadius: 4,
+                                                padding: "4px 6px",
+                                                marginBottom: 4,
+                                                boxSizing: "border-box",
+                                              }}
+                                            />
+                                            <div
+                                              style={{
+                                                display: "flex",
+                                                gap: 4,
+                                              }}
+                                            >
+                                              <button
+                                                onClick={() => {
+                                                  onEditField(
+                                                    cwcrf._id,
+                                                    backendSection,
+                                                    data.field || "",
+                                                    data.value || "",
+                                                    data.reason || "",
+                                                  );
+                                                  setSuperAccessMode((p) => ({
+                                                    ...p,
+                                                    [saKey]: null,
+                                                  }));
+                                                  setSuperAccessData((p) => ({
+                                                    ...p,
+                                                    [saKey]: {},
+                                                  }));
+                                                }}
+                                                disabled={
+                                                  !data.field?.trim() ||
+                                                  !data.value?.trim()
+                                                }
+                                                style={{
+                                                  flex: 1,
+                                                  padding: "4px 0",
+                                                  background: "#4f46e5",
+                                                  color: "#fff",
+                                                  border: "none",
+                                                  borderRadius: 4,
+                                                  fontSize: 11,
+                                                  fontWeight: 600,
+                                                  cursor: "pointer",
+                                                }}
+                                              >
+                                                Save Edit
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  setSuperAccessMode((p) => ({
+                                                    ...p,
+                                                    [saKey]: null,
+                                                  }));
+                                                  setSuperAccessData((p) => ({
+                                                    ...p,
+                                                    [saKey]: {},
+                                                  }));
+                                                }}
+                                                style={{
+                                                  padding: "4px 10px",
+                                                  background: "#f1f5f9",
+                                                  color: "#64748b",
+                                                  border: "1px solid #e2e8f0",
+                                                  borderRadius: 4,
+                                                  fontSize: 11,
+                                                  cursor: "pointer",
+                                                }}
+                                              >
+                                                Cancel
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                               </div>
                             );
                           })}
@@ -4013,49 +5333,174 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                           const rrKey = `rr-${cwcrf._id}`;
                           const rrData = superAccessData[rrKey] || {};
                           return (
-                            <div style={{ marginTop: 16, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: 14 }}>
-                              <p style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 8 }}>🔄 Re-request from Sub-Contractor</p>
+                            <div
+                              style={{
+                                marginTop: 16,
+                                background: "#fff",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: 10,
+                                padding: 14,
+                              }}
+                            >
+                              <p
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: "#374151",
+                                  marginBottom: 8,
+                                }}
+                              >
+                                🔄 Re-request from Sub-Contractor
+                              </p>
                               <textarea
                                 placeholder="Type a message requesting SC to re-upload or correct something..."
-                                value={rrData.message || ''}
-                                onChange={(e) => setSuperAccessData((p) => ({ ...p, [rrKey]: { ...p[rrKey], message: e.target.value } }))}
+                                value={rrData.message || ""}
+                                onChange={(e) =>
+                                  setSuperAccessData((p) => ({
+                                    ...p,
+                                    [rrKey]: {
+                                      ...p[rrKey],
+                                      message: e.target.value,
+                                    },
+                                  }))
+                                }
                                 rows={2}
-                                style={{ width: "100%", fontSize: 12, border: "1px solid #e2e8f0", borderRadius: 6, padding: "6px 8px", resize: "vertical", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }}
+                                style={{
+                                  width: "100%",
+                                  fontSize: 12,
+                                  border: "1px solid #e2e8f0",
+                                  borderRadius: 6,
+                                  padding: "6px 8px",
+                                  resize: "vertical",
+                                  boxSizing: "border-box",
+                                  marginBottom: 8,
+                                  fontFamily: "inherit",
+                                }}
                               />
                               <button
                                 disabled={!rrData.message?.trim()}
-                                onClick={() => { onReRequest(cwcrf._id, rrData.message || ''); setSuperAccessData((p) => ({ ...p, [rrKey]: {} })); }}
-                                style={{ padding: "6px 16px", background: rrData.message?.trim() ? "#7c3aed" : "#cbd5e1", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 12, cursor: rrData.message?.trim() ? "pointer" : "not-allowed" }}
-                              >Send Re-request to SC</button>
+                                onClick={() => {
+                                  onReRequest(cwcrf._id, rrData.message || "");
+                                  setSuperAccessData((p) => ({
+                                    ...p,
+                                    [rrKey]: {},
+                                  }));
+                                }}
+                                style={{
+                                  padding: "6px 16px",
+                                  background: rrData.message?.trim()
+                                    ? "#7c3aed"
+                                    : "#cbd5e1",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: 6,
+                                  fontWeight: 600,
+                                  fontSize: 12,
+                                  cursor: rrData.message?.trim()
+                                    ? "pointer"
+                                    : "not-allowed",
+                                }}
+                              >
+                                Send Re-request to SC
+                              </button>
                             </div>
                           );
                         })()}
 
                         {/* Edit Log (if any) */}
                         {cwcrf.opsEditLog?.length > 0 && (
-                          <div style={{ marginTop: 12, background: "#fefce8", border: "1px solid #fde68a", borderRadius: 8, padding: 10 }}>
-                            <p style={{ fontSize: 11, fontWeight: 700, color: "#92400e", marginBottom: 6 }}>Edit Log ({cwcrf.opsEditLog.length} changes)</p>
+                          <div
+                            style={{
+                              marginTop: 12,
+                              background: "#fefce8",
+                              border: "1px solid #fde68a",
+                              borderRadius: 8,
+                              padding: 10,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: "#92400e",
+                                marginBottom: 6,
+                              }}
+                            >
+                              Edit Log ({cwcrf.opsEditLog.length} changes)
+                            </p>
                             {cwcrf.opsEditLog.map((log: any, i: number) => (
-                              <p key={i} style={{ fontSize: 11, color: "#78350f", margin: "2px 0" }}>
-                                <strong>{log.section}.{log.field}</strong>: "{String(log.oldValue)}" → "{String(log.newValue)}" {log.reason && `— ${log.reason}`}
+                              <p
+                                key={i}
+                                style={{
+                                  fontSize: 11,
+                                  color: "#78350f",
+                                  margin: "2px 0",
+                                }}
+                              >
+                                <strong>
+                                  {log.section}.{log.field}
+                                </strong>
+                                : "{String(log.oldValue)}" → "
+                                {String(log.newValue)}"{" "}
+                                {log.reason && `— ${log.reason}`}
                               </p>
                             ))}
                           </div>
                         )}
 
                         {/* Detached Fields (if any) */}
-                        {cwcrf.opsDetachedFields?.filter((d: any) => !d.resolved).length > 0 && (
-                          <div style={{ marginTop: 12, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: 10 }}>
-                            <p style={{ fontSize: 11, fontWeight: 700, color: "#991b1b", marginBottom: 6 }}>⚠ Detached Fields (pending SC re-upload)</p>
-                            {cwcrf.opsDetachedFields.filter((d: any) => !d.resolved).map((det: any, i: number) => (
-                              <p key={i} style={{ fontSize: 11, color: "#991b1b", margin: "2px 0" }}>
-                                <strong>{det.section}.{det.field}</strong> {det.reason && `— ${det.reason}`}
-                              </p>
-                            ))}
+                        {cwcrf.opsDetachedFields?.filter(
+                          (d: any) => !d.resolved,
+                        ).length > 0 && (
+                          <div
+                            style={{
+                              marginTop: 12,
+                              background: "#fef2f2",
+                              border: "1px solid #fecaca",
+                              borderRadius: 8,
+                              padding: 10,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: "#991b1b",
+                                marginBottom: 6,
+                              }}
+                            >
+                              ⚠ Detached Fields (pending SC re-upload)
+                            </p>
+                            {cwcrf.opsDetachedFields
+                              .filter((d: any) => !d.resolved)
+                              .map((det: any, i: number) => (
+                                <p
+                                  key={i}
+                                  style={{
+                                    fontSize: 11,
+                                    color: "#991b1b",
+                                    margin: "2px 0",
+                                  }}
+                                >
+                                  <strong>
+                                    {det.section}.{det.field}
+                                  </strong>{" "}
+                                  {det.reason && `— ${det.reason}`}
+                                </p>
+                              ))}
                           </div>
                         )}
 
-                        <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 14, marginBottom: 0 }}>Submitted: {formatDate(cwcrf.createdAt)}</p>
+                        <p
+                          style={{
+                            fontSize: 12,
+                            color: "#94a3b8",
+                            marginTop: 14,
+                            marginBottom: 0,
+                          }}
+                        >
+                          Submitted: {formatDate(cwcrf.createdAt)}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -4065,54 +5510,175 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
           )}
         </div>
       )}
-
       {/* ── Phase 8: Risk Triage ── */}
       {subTab === "triage" && (
         <div>
           {triageCwcrfs.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "64px 0", color: "#94a3b8" }}>
-              <HiOutlineCheckCircle style={{ width: 48, height: 48, margin: "0 auto 12px", display: "block", color: "#86efac" }} />
-              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>No CWCRFs in triage queue</p>
-              <p style={{ fontSize: 13, marginTop: 4 }}>RMT-assessed CWCRFs will appear here</p>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "64px 0",
+                color: "#94a3b8",
+              }}
+            >
+              <HiOutlineCheckCircle
+                style={{
+                  width: 48,
+                  height: 48,
+                  margin: "0 auto 12px",
+                  display: "block",
+                  color: "#86efac",
+                }}
+              />
+              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>
+                No CWCRFs in triage queue
+              </p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>
+                RMT-assessed CWCRFs will appear here
+              </p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {triageCwcrfs.map((cwcrf) => {
-                const risk = cwcrf.cwcafData?.riskCategory || cwcrf.rmtAssessment?.riskCategory || "—";
-                const riskColor = risk === "LOW" ? "#10b981" : risk === "MEDIUM" ? "#f59e0b" : risk === "HIGH" ? "#ef4444" : "#94a3b8";
+                const risk =
+                  cwcrf.cwcafData?.riskCategory ||
+                  cwcrf.rmtAssessment?.riskCategory ||
+                  "—";
+                const riskColor =
+                  risk === "LOW"
+                    ? "#10b981"
+                    : risk === "MEDIUM"
+                      ? "#f59e0b"
+                      : risk === "HIGH"
+                        ? "#ef4444"
+                        : "#94a3b8";
                 const noteKey = `triage-${cwcrf._id}`;
                 const isTriaging = triageId === cwcrf._id;
                 return (
-                  <div key={cwcrf._id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                  <div
+                    key={cwcrf._id}
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    }}
+                  >
                     {/* Row header */}
                     <div
-                      style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: 16, cursor: "pointer",
-                        background: expanded === `t-${cwcrf._id}` ? "#f8fafc" : "#fff",
-                        borderBottom: expanded === `t-${cwcrf._id}` ? "1px solid #e2e8f0" : "none" }}
-                      onClick={() => setExpanded(expanded === `t-${cwcrf._id}` ? null : `t-${cwcrf._id}`)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "16px 20px",
+                        gap: 16,
+                        cursor: "pointer",
+                        background:
+                          expanded === `t-${cwcrf._id}` ? "#f8fafc" : "#fff",
+                        borderBottom:
+                          expanded === `t-${cwcrf._id}`
+                            ? "1px solid #e2e8f0"
+                            : "none",
+                      }}
+                      onClick={() =>
+                        setExpanded(
+                          expanded === `t-${cwcrf._id}`
+                            ? null
+                            : `t-${cwcrf._id}`,
+                        )
+                      }
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                          <span style={{ fontWeight: 700, color: "#6d28d9", fontSize: 14 }}>
-                            {cwcrf.cwcRfNumber || `#${cwcrf._id?.slice(-8).toUpperCase()}`}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              color: "#6d28d9",
+                              fontSize: 14,
+                            }}
+                          >
+                            {cwcrf.cwcRfNumber ||
+                              `#${cwcrf._id?.slice(-8).toUpperCase()}`}
                           </span>
                           {statusBadge(cwcrf.status)}
-                          <span style={{ fontSize: 11, background: `${riskColor}20`, color: riskColor, borderRadius: 999, padding: "2px 8px", fontWeight: 700, border: `1px solid ${riskColor}40` }}>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              background: `${riskColor}20`,
+                              color: riskColor,
+                              borderRadius: 999,
+                              padding: "2px 8px",
+                              fontWeight: 700,
+                              border: `1px solid ${riskColor}40`,
+                            }}
+                          >
                             Risk: {risk}
                           </span>
                         </div>
-                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
-                          Seller: <strong>{cwcrf.subContractorId?.companyName || "—"}</strong>
-                          {cwcrf.epcId?.companyName && (<> &bull; EPC: <strong>{cwcrf.epcId.companyName}</strong></>)}
+                        <p
+                          style={{
+                            margin: "4px 0 0",
+                            fontSize: 13,
+                            color: "#64748b",
+                          }}
+                        >
+                          Seller:{" "}
+                          <strong>
+                            {cwcrf.subContractorId?.companyName || "—"}
+                          </strong>
+                          {cwcrf.epcId?.companyName && (
+                            <>
+                              {" "}
+                              &bull; EPC:{" "}
+                              <strong>{cwcrf.epcId.companyName}</strong>
+                            </>
+                          )}
                         </p>
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <p style={{ fontWeight: 700, color: "#059669", fontSize: 16, margin: 0 }}>
-                          ₹{Number(cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                        <p
+                          style={{
+                            fontWeight: 700,
+                            color: "#059669",
+                            fontSize: 16,
+                            margin: 0,
+                          }}
+                        >
+                          ₹
+                          {Number(
+                            cwcrf.cwcRequest?.requestedAmount || 0,
+                          ).toLocaleString()}
                         </p>
-                        <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 0" }}>Requested</p>
+                        <p
+                          style={{
+                            fontSize: 12,
+                            color: "#94a3b8",
+                            margin: "2px 0 0",
+                          }}
+                        >
+                          Requested
+                        </p>
                       </div>
-                      <HiOutlineChevronRight style={{ width: 20, height: 20, color: "#94a3b8", transform: expanded === `t-${cwcrf._id}` ? "rotate(90deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
+                      <HiOutlineChevronRight
+                        style={{
+                          width: 20,
+                          height: 20,
+                          color: "#94a3b8",
+                          transform:
+                            expanded === `t-${cwcrf._id}`
+                              ? "rotate(90deg)"
+                              : "none",
+                          transition: "transform 0.2s",
+                          flexShrink: 0,
+                        }}
+                      />
                     </div>
 
                     {/* Expandable: triage actions */}
@@ -4120,102 +5686,480 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                       <div style={{ padding: 20, background: "#fafafa" }}>
                         {/* RMT recommendation banner */}
                         {cwcrf.rmtAssessment?.recommendation && (
-                          <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: 14, marginBottom: 16 }}>
-                            <p style={{ fontSize: 12, fontWeight: 700, color: "#1d4ed8", marginBottom: 6 }}>RMT Recommendation</p>
-                            <p style={{ fontSize: 14, fontWeight: 700, color: "#1e293b", margin: 0 }}>
+                          <div
+                            style={{
+                              background: "#eff6ff",
+                              border: "1px solid #bfdbfe",
+                              borderRadius: 10,
+                              padding: 14,
+                              marginBottom: 16,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "#1d4ed8",
+                                marginBottom: 6,
+                              }}
+                            >
+                              RMT Recommendation
+                            </p>
+                            <p
+                              style={{
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: "#1e293b",
+                                margin: 0,
+                              }}
+                            >
                               {cwcrf.rmtAssessment.recommendation}
                             </p>
                             {cwcrf.rmtAssessment.notes && (
-                              <p style={{ fontSize: 13, color: "#374151", marginTop: 6, marginBottom: 0 }}>{cwcrf.rmtAssessment.notes}</p>
+                              <p
+                                style={{
+                                  fontSize: 13,
+                                  color: "#374151",
+                                  marginTop: 6,
+                                  marginBottom: 0,
+                                }}
+                              >
+                                {cwcrf.rmtAssessment.notes}
+                              </p>
                             )}
                           </div>
                         )}
 
                         {risk === "HIGH" && (
-                          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 13, color: "#b91c1c" }}>
-                            ⚠️ <strong>High-risk case:</strong> Ensure Founder / Senior Ops approval has been obtained before forwarding to EPC.
+                          <div
+                            style={{
+                              background: "#fef2f2",
+                              border: "1px solid #fecaca",
+                              borderRadius: 8,
+                              padding: 12,
+                              marginBottom: 16,
+                              fontSize: 13,
+                              color: "#b91c1c",
+                            }}
+                          >
+                            ⚠️ <strong>High-risk case:</strong> Ensure Founder /
+                            Senior Ops approval has been obtained before
+                            forwarding to EPC.
                           </div>
                         )}
 
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
-                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Amount</p>
-                            <p style={{ fontWeight: 700, color: "#059669", fontSize: 15, margin: 0 }}>₹{Number(cwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}</p>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(3, 1fr)",
+                            gap: 12,
+                            marginBottom: 16,
+                          }}
+                        >
+                          <div
+                            style={{
+                              background: "#fff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 8,
+                              padding: 12,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                color: "#94a3b8",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: 4,
+                              }}
+                            >
+                              Invoice Amount
+                            </p>
+                            <p
+                              style={{
+                                fontWeight: 700,
+                                color: "#059669",
+                                fontSize: 15,
+                                margin: 0,
+                              }}
+                            >
+                              ₹
+                              {Number(
+                                cwcrf.invoiceDetails?.invoiceAmount || 0,
+                              ).toLocaleString()}
+                            </p>
                           </div>
-                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Requested Tenure</p>
-                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}</p>
+                          <div
+                            style={{
+                              background: "#fff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 8,
+                              padding: 12,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                color: "#94a3b8",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: 4,
+                              }}
+                            >
+                              Requested Tenure
+                            </p>
+                            <p
+                              style={{
+                                fontWeight: 600,
+                                color: "#1e293b",
+                                fontSize: 14,
+                                margin: 0,
+                              }}
+                            >
+                              {cwcrf.cwcRequest?.requestedTenure
+                                ? `${cwcrf.cwcRequest.requestedTenure} days`
+                                : "—"}
+                            </p>
                           </div>
-                          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Submitted</p>
-                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{formatDate(cwcrf.createdAt)}</p>
+                          <div
+                            style={{
+                              background: "#fff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 8,
+                              padding: 12,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                color: "#94a3b8",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: 4,
+                              }}
+                            >
+                              Submitted
+                            </p>
+                            <p
+                              style={{
+                                fontWeight: 600,
+                                color: "#1e293b",
+                                fontSize: 14,
+                                margin: 0,
+                              }}
+                            >
+                              {formatDate(cwcrf.createdAt)}
+                            </p>
                           </div>
                         </div>
 
                         {/* Full CWCRF Form Sections A–D */}
                         {(() => {
-                          const fmt = (v: unknown) => v != null && v !== "" ? String(v) : "—";
-                          const fmtAmt = (v: unknown) => v != null && Number(v) > 0 ? `₹${Number(v).toLocaleString()}` : "—";
-                          const fmtDate = (v: unknown) => v ? new Date(String(v)).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
-                          const fmtPct = (v: unknown) => v != null && Number(v) > 0 ? `${v}% p.a.` : "—";
-                          const labelSt: React.CSSProperties = { fontSize: 10, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em", minWidth: 110, flexShrink: 0 };
-                          const valSt: React.CSSProperties = { fontSize: 12, color: "#1e293b", fontWeight: 600, textAlign: "right" as const, wordBreak: "break-word" as const };
-                          const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #f1f5f9", gap: 8 };
-                          const box: React.CSSProperties = { background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 12px" };
+                          const fmt = (v: unknown) =>
+                            v != null && v !== "" ? String(v) : "—";
+                          const fmtAmt = (v: unknown) =>
+                            v != null && Number(v) > 0
+                              ? `₹${Number(v).toLocaleString()}`
+                              : "—";
+                          const fmtDate = (v: unknown) =>
+                            v
+                              ? new Date(String(v)).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )
+                              : "—";
+                          const fmtPct = (v: unknown) =>
+                            v != null && Number(v) > 0 ? `${v}% p.a.` : "—";
+                          const labelSt: React.CSSProperties = {
+                            fontSize: 10,
+                            color: "#94a3b8",
+                            fontWeight: 600,
+                            textTransform: "uppercase" as const,
+                            letterSpacing: "0.04em",
+                            minWidth: 110,
+                            flexShrink: 0,
+                          };
+                          const valSt: React.CSSProperties = {
+                            fontSize: 12,
+                            color: "#1e293b",
+                            fontWeight: 600,
+                            textAlign: "right" as const,
+                            wordBreak: "break-word" as const,
+                          };
+                          const row: React.CSSProperties = {
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "4px 0",
+                            borderBottom: "1px solid #f1f5f9",
+                            gap: 8,
+                          };
+                          const box: React.CSSProperties = {
+                            background: "#fff",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: 8,
+                            padding: "10px 12px",
+                          };
                           const hdr = (label: string, color: string) => (
-                            <p style={{ fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 8px" }}>{label}</p>
+                            <p
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 700,
+                                color,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.06em",
+                                margin: "0 0 8px",
+                              }}
+                            >
+                              {label}
+                            </p>
                           );
-                          const ba = cwcrf.buyerDetails || {} as any;
-                          const inv = cwcrf.invoiceDetails || {} as any;
-                          const req = cwcrf.cwcRequest || {} as any;
-                          const ipr = cwcrf.interestPreference || {} as any;
-                          const epc = cwcrf.epcId || {} as any;
-                          const urgColor = req.urgencyLevel === "CRITICAL" ? "#dc2626" : req.urgencyLevel === "URGENT" ? "#d97706" : "#16a34a";
+                          const ba = cwcrf.buyerDetails || ({} as any);
+                          const inv = cwcrf.invoiceDetails || ({} as any);
+                          const req = cwcrf.cwcRequest || ({} as any);
+                          const ipr = cwcrf.interestPreference || ({} as any);
+                          const epc = cwcrf.epcId || ({} as any);
+                          const urgColor =
+                            req.urgencyLevel === "CRITICAL"
+                              ? "#dc2626"
+                              : req.urgencyLevel === "URGENT"
+                                ? "#d97706"
+                                : "#16a34a";
                           return (
                             <div style={{ marginBottom: 16 }}>
-                              <p style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 10 }}>Full CWCRF Details</p>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                              <p
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: "#374151",
+                                  marginBottom: 10,
+                                }}
+                              >
+                                Full CWCRF Details
+                              </p>
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns: "1fr 1fr",
+                                  gap: 10,
+                                  marginBottom: 10,
+                                }}
+                              >
                                 {/* Section A */}
                                 <div style={box}>
-                                  {hdr("Section A — Buyer & Project", "#7c3aed")}
-                                  {[["Buyer", fmt(ba.buyerName || epc.companyName)], ["GSTIN", fmt(ba.buyerGstin || epc.gstin)], ["Contact", fmt(ba.buyerContactPerson)], ["Phone", fmt(ba.buyerContactPhone)], ["Project", fmt(ba.projectName)], ["Location", fmt(ba.projectLocation)]].map(([l, v]) => (
-                                    <div key={l} style={row}><span style={labelSt}>{l}</span><span style={valSt}>{v}</span></div>
+                                  {hdr(
+                                    "Section A — Buyer & Project",
+                                    "#7c3aed",
+                                  )}
+                                  {[
+                                    [
+                                      "Buyer",
+                                      fmt(ba.buyerName || epc.companyName),
+                                    ],
+                                    ["GSTIN", fmt(ba.buyerGstin || epc.gstin)],
+                                    ["Contact", fmt(ba.buyerContactPerson)],
+                                    ["Phone", fmt(ba.buyerContactPhone)],
+                                    ["Project", fmt(ba.projectName)],
+                                    ["Location", fmt(ba.projectLocation)],
+                                  ].map(([l, v]) => (
+                                    <div key={l} style={row}>
+                                      <span style={labelSt}>{l}</span>
+                                      <span style={valSt}>{v}</span>
+                                    </div>
                                   ))}
                                 </div>
                                 {/* Section B */}
                                 <div style={box}>
-                                  {hdr("Section B — Invoice Details", "#0284c7")}
-                                  {[["Invoice No.", fmt(inv.invoiceNumber)], ["Invoice Date", fmtDate(inv.invoiceDate)], ["Invoice Amount", fmtAmt(inv.invoiceAmount)], ["Net Amount", fmtAmt(inv.netInvoiceAmount)], ["GST Amount", fmtAmt(inv.gstAmount)], ["PO Number", fmt(inv.purchaseOrderNumber)], ["Work Complete", fmtDate(inv.workCompletionDate)], ["Description", fmt(inv.workDescription)]].map(([l, v]) => (
-                                    <div key={l} style={row}><span style={labelSt}>{l}</span><span style={valSt}>{v}</span></div>
+                                  {hdr(
+                                    "Section B — Invoice Details",
+                                    "#0284c7",
+                                  )}
+                                  {[
+                                    ["Invoice No.", fmt(inv.invoiceNumber)],
+                                    ["Invoice Date", fmtDate(inv.invoiceDate)],
+                                    [
+                                      "Invoice Amount",
+                                      fmtAmt(inv.invoiceAmount),
+                                    ],
+                                    [
+                                      "Net Amount",
+                                      fmtAmt(inv.netInvoiceAmount),
+                                    ],
+                                    ["GST Amount", fmtAmt(inv.gstAmount)],
+                                    ["PO Number", fmt(inv.purchaseOrderNumber)],
+                                    [
+                                      "Work Complete",
+                                      fmtDate(inv.workCompletionDate),
+                                    ],
+                                    ["Description", fmt(inv.workDescription)],
+                                  ].map(([l, v]) => (
+                                    <div key={l} style={row}>
+                                      <span style={labelSt}>{l}</span>
+                                      <span style={valSt}>{v}</span>
+                                    </div>
                                   ))}
                                 </div>
                               </div>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns: "1fr 1fr",
+                                  gap: 10,
+                                }}
+                              >
                                 {/* Section C */}
                                 <div style={box}>
                                   {hdr("Section C — CWC Request", "#d97706")}
-                                  <div style={row}><span style={labelSt}>Req. Amount</span><span style={{ ...valSt, color: "#7c3aed" }}>{fmtAmt(req.requestedAmount)}</span></div>
-                                  <div style={row}><span style={labelSt}>Tenure</span><span style={valSt}>{req.requestedTenure ? `${req.requestedTenure} days` : "—"}</span></div>
-                                  <div style={row}><span style={labelSt}>Urgency</span><span style={{ ...valSt, color: urgColor }}>{fmt(req.urgencyLevel)}</span></div>
-                                  <div style={row}><span style={labelSt}>Reason</span><span style={{ ...valSt, fontWeight: 400, fontSize: 11 }}>{fmt(req.reasonForFunding)}</span></div>
-                                  <div style={row}><span style={labelSt}>Disbursement</span><span style={valSt}>{req.preferredDisbursementDate ? fmtDate(req.preferredDisbursementDate) : "—"}</span></div>
-                                  <div style={row}><span style={labelSt}>Collateral</span><span style={{ ...valSt, fontWeight: 400, fontSize: 11 }}>{fmt(req.collateralOffered)}</span></div>
-                                  <div style={{ ...row, borderBottom: "none" }}><span style={labelSt}>Existing Loans</span><span style={{ ...valSt, fontWeight: 400, fontSize: 11 }}>{fmt(req.existingLoanDetails)}</span></div>
+                                  <div style={row}>
+                                    <span style={labelSt}>Req. Amount</span>
+                                    <span
+                                      style={{ ...valSt, color: "#7c3aed" }}
+                                    >
+                                      {fmtAmt(req.requestedAmount)}
+                                    </span>
+                                  </div>
+                                  <div style={row}>
+                                    <span style={labelSt}>Tenure</span>
+                                    <span style={valSt}>
+                                      {req.requestedTenure
+                                        ? `${req.requestedTenure} days`
+                                        : "—"}
+                                    </span>
+                                  </div>
+                                  <div style={row}>
+                                    <span style={labelSt}>Urgency</span>
+                                    <span style={{ ...valSt, color: urgColor }}>
+                                      {fmt(req.urgencyLevel)}
+                                    </span>
+                                  </div>
+                                  <div style={row}>
+                                    <span style={labelSt}>Reason</span>
+                                    <span
+                                      style={{
+                                        ...valSt,
+                                        fontWeight: 400,
+                                        fontSize: 11,
+                                      }}
+                                    >
+                                      {fmt(req.reasonForFunding)}
+                                    </span>
+                                  </div>
+                                  <div style={row}>
+                                    <span style={labelSt}>Disbursement</span>
+                                    <span style={valSt}>
+                                      {req.preferredDisbursementDate
+                                        ? fmtDate(req.preferredDisbursementDate)
+                                        : "—"}
+                                    </span>
+                                  </div>
+                                  <div style={row}>
+                                    <span style={labelSt}>Collateral</span>
+                                    <span
+                                      style={{
+                                        ...valSt,
+                                        fontWeight: 400,
+                                        fontSize: 11,
+                                      }}
+                                    >
+                                      {fmt(req.collateralOffered)}
+                                    </span>
+                                  </div>
+                                  <div style={{ ...row, borderBottom: "none" }}>
+                                    <span style={labelSt}>Existing Loans</span>
+                                    <span
+                                      style={{
+                                        ...valSt,
+                                        fontWeight: 400,
+                                        fontSize: 11,
+                                      }}
+                                    >
+                                      {fmt(req.existingLoanDetails)}
+                                    </span>
+                                  </div>
                                 </div>
                                 {/* Section D */}
                                 <div style={box}>
-                                  {hdr("Section D — Interest Preference", "#059669")}
-                                  <div style={row}><span style={labelSt}>Type</span><span style={valSt}>{fmt(ipr.preferenceType)?.replace("_", " ")}</span></div>
-                                  {ipr.preferenceType === "RANGE" ? (<>
-                                    <div style={row}><span style={labelSt}>Min Rate</span><span style={valSt}>{fmtPct(ipr.minRate)}</span></div>
-                                    <div style={row}><span style={labelSt}>Max Rate</span><span style={valSt}>{fmtPct(ipr.maxRate)}</span></div>
-                                  </>) : (
-                                    <div style={row}><span style={labelSt}>Max Rate</span><span style={valSt}>{fmtPct(ipr.maxAcceptableRate)}</span></div>
+                                  {hdr(
+                                    "Section D — Interest Preference",
+                                    "#059669",
                                   )}
-                                  <div style={row}><span style={labelSt}>Repayment</span><span style={valSt}>{fmt(ipr.preferredRepaymentFrequency)?.replace("_", " ")}</span></div>
-                                  <div style={row}><span style={labelSt}>Processing Fee</span><span style={{ ...valSt, color: ipr.processingFeeAcceptance ? "#16a34a" : "#94a3b8" }}>{ipr.processingFeeAcceptance ? "Accepted" : "Not accepted"}</span></div>
-                                  {ipr.processingFeeAcceptance && <div style={row}><span style={labelSt}>Max Fee %</span><span style={valSt}>{ipr.maxProcessingFeePercent != null ? `${ipr.maxProcessingFeePercent}%` : "—"}</span></div>}
-                                  <div style={{ ...row, borderBottom: "none" }}><span style={labelSt}>Prepayment</span><span style={{ ...valSt, fontSize: 11 }}>{fmt(ipr.prepaymentPreference)?.replace(/_/g, " ")}</span></div>
+                                  <div style={row}>
+                                    <span style={labelSt}>Type</span>
+                                    <span style={valSt}>
+                                      {fmt(ipr.preferenceType)?.replace(
+                                        "_",
+                                        " ",
+                                      )}
+                                    </span>
+                                  </div>
+                                  {ipr.preferenceType === "RANGE" ? (
+                                    <>
+                                      <div style={row}>
+                                        <span style={labelSt}>Min Rate</span>
+                                        <span style={valSt}>
+                                          {fmtPct(ipr.minRate)}
+                                        </span>
+                                      </div>
+                                      <div style={row}>
+                                        <span style={labelSt}>Max Rate</span>
+                                        <span style={valSt}>
+                                          {fmtPct(ipr.maxRate)}
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <div style={row}>
+                                      <span style={labelSt}>Max Rate</span>
+                                      <span style={valSt}>
+                                        {fmtPct(ipr.maxAcceptableRate)}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div style={row}>
+                                    <span style={labelSt}>Repayment</span>
+                                    <span style={valSt}>
+                                      {fmt(
+                                        ipr.preferredRepaymentFrequency,
+                                      )?.replace("_", " ")}
+                                    </span>
+                                  </div>
+                                  <div style={row}>
+                                    <span style={labelSt}>Processing Fee</span>
+                                    <span
+                                      style={{
+                                        ...valSt,
+                                        color: ipr.processingFeeAcceptance
+                                          ? "#16a34a"
+                                          : "#94a3b8",
+                                      }}
+                                    >
+                                      {ipr.processingFeeAcceptance
+                                        ? "Accepted"
+                                        : "Not accepted"}
+                                    </span>
+                                  </div>
+                                  {ipr.processingFeeAcceptance && (
+                                    <div style={row}>
+                                      <span style={labelSt}>Max Fee %</span>
+                                      <span style={valSt}>
+                                        {ipr.maxProcessingFeePercent != null
+                                          ? `${ipr.maxProcessingFeePercent}%`
+                                          : "—"}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div style={{ ...row, borderBottom: "none" }}>
+                                    <span style={labelSt}>Prepayment</span>
+                                    <span style={{ ...valSt, fontSize: 11 }}>
+                                      {fmt(ipr.prepaymentPreference)?.replace(
+                                        /_/g,
+                                        " ",
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -4223,34 +6167,103 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                         })()}
 
                         <div style={{ marginBottom: 16 }}>
-                          <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Notes / Reason (required for rejection)</label>
+                          <label
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 600,
+                              color: "#374151",
+                              display: "block",
+                              marginBottom: 6,
+                            }}
+                          >
+                            Notes / Reason (required for rejection)
+                          </label>
                           <textarea
                             value={triageNotes[noteKey] || ""}
-                            onChange={(e) => setTriageNotes((prev) => ({ ...prev, [noteKey]: e.target.value }))}
+                            onChange={(e) =>
+                              setTriageNotes((prev) => ({
+                                ...prev,
+                                [noteKey]: e.target.value,
+                              }))
+                            }
                             rows={3}
                             placeholder="Add notes for this triage decision..."
-                            style={{ width: "100%", fontSize: 13, border: "1px solid #e2e8f0", borderRadius: 8, padding: "8px 10px", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }}
+                            style={{
+                              width: "100%",
+                              fontSize: 13,
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 8,
+                              padding: "8px 10px",
+                              resize: "vertical",
+                              boxSizing: "border-box",
+                              fontFamily: "inherit",
+                            }}
                           />
                         </div>
 
                         <div style={{ display: "flex", gap: 10 }}>
                           <button
                             disabled={isTriaging}
-                            onClick={() => onTriage(cwcrf._id, "forward_to_epc", triageNotes[noteKey] || "")}
-                            style={{ flex: 1, padding: "10px 0", background: isTriaging ? "#a7f3d0" : "#10b981", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+                            onClick={() =>
+                              onTriage(
+                                cwcrf._id,
+                                "forward_to_epc",
+                                triageNotes[noteKey] || "",
+                              )
+                            }
+                            style={{
+                              flex: 1,
+                              padding: "10px 0",
+                              background: isTriaging ? "#a7f3d0" : "#10b981",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 8,
+                              fontWeight: 700,
+                              fontSize: 14,
+                              cursor: "pointer",
+                            }}
                           >
                             {isTriaging ? "Processing..." : "✓ Forward to EPC"}
                           </button>
                           <button
-                            disabled={isTriaging || !triageNotes[noteKey]?.trim()}
-                            onClick={() => onTriage(cwcrf._id, "reject", triageNotes[noteKey] || "")}
-                            style={{ flex: 1, padding: "10px 0", background: isTriaging || !triageNotes[noteKey]?.trim() ? "#fca5a5" : "#ef4444", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+                            disabled={
+                              isTriaging || !triageNotes[noteKey]?.trim()
+                            }
+                            onClick={() =>
+                              onTriage(
+                                cwcrf._id,
+                                "reject",
+                                triageNotes[noteKey] || "",
+                              )
+                            }
+                            style={{
+                              flex: 1,
+                              padding: "10px 0",
+                              background:
+                                isTriaging || !triageNotes[noteKey]?.trim()
+                                  ? "#fca5a5"
+                                  : "#ef4444",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 8,
+                              fontWeight: 700,
+                              fontSize: 14,
+                              cursor: "pointer",
+                            }}
                           >
                             {isTriaging ? "Processing..." : "✕ Reject"}
                           </button>
                         </div>
                         {!triageNotes[noteKey]?.trim() && (
-                          <p style={{ fontSize: 11, color: "#f59e0b", marginTop: 6 }}>* Notes are required to reject a CWCRF</p>
+                          <p
+                            style={{
+                              fontSize: 11,
+                              color: "#f59e0b",
+                              marginTop: 6,
+                            }}
+                          >
+                            * Notes are required to reject a CWCRF
+                          </p>
                         )}
                       </div>
                     )}
@@ -4261,15 +6274,24 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
           )}
         </div>
       )}
-
       {/* ── Phase 10: NBFC Dispatch ── */}
       {subTab === "nbfc" && (
         <div>
           {nbfcCwcrfs.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "64px 0", color: "#94a3b8" }}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "64px 0",
+                color: "#94a3b8",
+              }}
+            >
               <div style={{ fontSize: 40, marginBottom: 12 }}>🏦</div>
-              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>No CWCRFs pending NBFC dispatch</p>
-              <p style={{ fontSize: 13, marginTop: 4 }}>EPC-verified CWCRFs will appear here for NBFC matching</p>
+              <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>
+                No CWCRFs pending NBFC dispatch
+              </p>
+              <p style={{ fontSize: 13, marginTop: 4 }}>
+                EPC-verified CWCRFs will appear here for NBFC matching
+              </p>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -4284,7 +6306,8 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                   setNbfcLoading((prev) => ({ ...prev, [cwcrf._id]: true }));
                   try {
                     const res = await opsApi.getMatchingNbfcs(cwcrf._id);
-                    const list = res.data?.nbfcs || res.data || [];
+                    const list =
+                      res.data?.matchingNbfcs || res.data?.nbfcs || [];
                     setNbfcMatches((prev) => ({ ...prev, [cwcrf._id]: list }));
                   } catch {
                     setNbfcMatches((prev) => ({ ...prev, [cwcrf._id]: [] }));
@@ -4317,110 +6340,516 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                 };
 
                 return (
-                  <div key={cwcrf._id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                  <div
+                    key={cwcrf._id}
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    }}
+                  >
                     <div
-                      style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: 16, cursor: "pointer",
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "16px 20px",
+                        gap: 16,
+                        cursor: "pointer",
                         background: isExpandedNbfc ? "#f8fafc" : "#fff",
-                        borderBottom: isExpandedNbfc ? "1px solid #e2e8f0" : "none" }}
-                      onClick={() => setExpanded(isExpandedNbfc ? null : `nbfc-${cwcrf._id}`)}
+                        borderBottom: isExpandedNbfc
+                          ? "1px solid #e2e8f0"
+                          : "none",
+                      }}
+                      onClick={() =>
+                        setExpanded(isExpandedNbfc ? null : `nbfc-${cwcrf._id}`)
+                      }
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                          <span style={{ fontWeight: 700, color: "#6d28d9", fontSize: 14 }}>
-                            {cwcrf.cwcRfNumber || `#${cwcrf._id?.slice(-8).toUpperCase()}`}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              color: "#6d28d9",
+                              fontSize: 14,
+                            }}
+                          >
+                            {cwcrf.cwcRfNumber ||
+                              `#${cwcrf._id?.slice(-8).toUpperCase()}`}
                           </span>
                           {statusBadge(cwcrf.status)}
-                          <span style={{ fontSize: 11, background: "#dbeafe", color: "#1d4ed8", borderRadius: 999, padding: "2px 8px", fontWeight: 600 }}>✓ EPC Verified</span>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              background: "#dbeafe",
+                              color: "#1d4ed8",
+                              borderRadius: 999,
+                              padding: "2px 8px",
+                              fontWeight: 600,
+                            }}
+                          >
+                            ✓ EPC Verified
+                          </span>
                         </div>
-                        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
-                          Seller: <strong>{cwcrf.subContractorId?.companyName || "—"}</strong>
-                          {cwcrf.epcId?.companyName && (<> &bull; EPC: <strong>{cwcrf.epcId.companyName}</strong></>)}
+                        <p
+                          style={{
+                            margin: "4px 0 0",
+                            fontSize: 13,
+                            color: "#64748b",
+                          }}
+                        >
+                          Seller:{" "}
+                          <strong>
+                            {cwcrf.subContractorId?.companyName || "—"}
+                          </strong>
+                          {cwcrf.epcId?.companyName && (
+                            <>
+                              {" "}
+                              &bull; EPC:{" "}
+                              <strong>{cwcrf.epcId.companyName}</strong>
+                            </>
+                          )}
                         </p>
                       </div>
-                      <div style={{ textAlign: "right", flexShrink: 0, marginRight: 12 }}>
-                        <p style={{ fontWeight: 700, color: "#059669", fontSize: 16, margin: 0 }}>
-                          ₹{Number(cwcrf.buyerVerification?.approvedAmount || cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
+                      <div
+                        style={{
+                          textAlign: "right",
+                          flexShrink: 0,
+                          marginRight: 12,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontWeight: 700,
+                            color: "#059669",
+                            fontSize: 16,
+                            margin: 0,
+                          }}
+                        >
+                          ₹
+                          {Number(
+                            cwcrf.buyerVerification?.approvedAmount ||
+                              cwcrf.cwcRequest?.requestedAmount ||
+                              0,
+                          ).toLocaleString()}
                         </p>
-                        <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 0" }}>Approved</p>
+                        <p
+                          style={{
+                            fontSize: 12,
+                            color: "#94a3b8",
+                            margin: "2px 0 0",
+                          }}
+                        >
+                          Approved
+                        </p>
                       </div>
-                      <span style={{ fontSize: 18, color: "#94a3b8", transform: isExpandedNbfc ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
+                      <span
+                        style={{
+                          fontSize: 18,
+                          color: "#94a3b8",
+                          transform: isExpandedNbfc ? "rotate(180deg)" : "none",
+                          transition: "transform 0.2s",
+                        }}
+                      >
+                        ▾
+                      </span>
                     </div>
 
                     {isExpandedNbfc && (
                       <div style={{ padding: "20px 20px 20px" }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
-                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Invoice Amount</p>
-                            <p style={{ fontWeight: 700, color: "#059669", fontSize: 15, margin: 0 }}>₹{Number(cwcrf.invoiceDetails?.invoiceAmount || 0).toLocaleString()}</p>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(3, 1fr)",
+                            gap: 12,
+                            marginBottom: 20,
+                          }}
+                        >
+                          <div
+                            style={{
+                              background: "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 8,
+                              padding: 12,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                color: "#94a3b8",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: 4,
+                              }}
+                            >
+                              Invoice Amount
+                            </p>
+                            <p
+                              style={{
+                                fontWeight: 700,
+                                color: "#059669",
+                                fontSize: 15,
+                                margin: 0,
+                              }}
+                            >
+                              ₹
+                              {Number(
+                                cwcrf.invoiceDetails?.invoiceAmount || 0,
+                              ).toLocaleString()}
+                            </p>
                           </div>
-                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Tenure</p>
-                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.cwcRequest?.requestedTenure ? `${cwcrf.cwcRequest.requestedTenure} days` : "—"}</p>
+                          <div
+                            style={{
+                              background: "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 8,
+                              padding: 12,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                color: "#94a3b8",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: 4,
+                              }}
+                            >
+                              Tenure
+                            </p>
+                            <p
+                              style={{
+                                fontWeight: 600,
+                                color: "#1e293b",
+                                fontSize: 14,
+                                margin: 0,
+                              }}
+                            >
+                              {cwcrf.cwcRequest?.requestedTenure
+                                ? `${cwcrf.cwcRequest.requestedTenure} days`
+                                : "—"}
+                            </p>
                           </div>
-                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
-                            <p style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Max Interest</p>
-                            <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{cwcrf.interestPreference?.maxAcceptableRate ? `${cwcrf.interestPreference.maxAcceptableRate}%` : "—"}</p>
+                          <div
+                            style={{
+                              background: "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 8,
+                              padding: 12,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 11,
+                                color: "#94a3b8",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                marginBottom: 4,
+                              }}
+                            >
+                              Max Interest
+                            </p>
+                            <p
+                              style={{
+                                fontWeight: 600,
+                                color: "#1e293b",
+                                fontSize: 14,
+                                margin: 0,
+                              }}
+                            >
+                              {cwcrf.interestPreference?.maxAcceptableRate
+                                ? `${cwcrf.interestPreference.maxAcceptableRate}%`
+                                : "—"}
+                            </p>
                           </div>
                         </div>
 
                         {/* Phase 10.1: CWCAF Generation (for BUYER_APPROVED CWCRFs) */}
                         {cwcrf.status === "BUYER_APPROVED" && (
-                          <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: 16, marginBottom: 20 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          <div
+                            style={{
+                              background: "#eff6ff",
+                              border: "1px solid #bfdbfe",
+                              borderRadius: 10,
+                              padding: 16,
+                              marginBottom: 20,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: 8,
+                              }}
+                            >
                               <div>
-                                <p style={{ fontSize: 14, fontWeight: 700, color: "#1d4ed8", margin: 0 }}>Step 1: Generate CWCAF</p>
-                                <p style={{ fontSize: 12, color: "#64748b", margin: "4px 0 0" }}>Compile the Credit on Working Capital Analysis Form before sending to NBFCs</p>
+                                <p
+                                  style={{
+                                    fontSize: 14,
+                                    fontWeight: 700,
+                                    color: "#1d4ed8",
+                                    margin: 0,
+                                  }}
+                                >
+                                  Step 1: Generate CWCAF
+                                </p>
+                                <p
+                                  style={{
+                                    fontSize: 12,
+                                    color: "#64748b",
+                                    margin: "4px 0 0",
+                                  }}
+                                >
+                                  Compile the Credit on Working Capital Analysis
+                                  Form before sending to NBFCs
+                                </p>
                               </div>
                               <button
                                 onClick={() => setShowCwcafModal(cwcrf._id)}
-                                style={{ padding: "8px 18px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-                              >📄 Generate CWCAF</button>
+                                style={{
+                                  padding: "8px 18px",
+                                  background: "#3b82f6",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: 8,
+                                  fontWeight: 600,
+                                  fontSize: 13,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                📄 Generate CWCAF
+                              </button>
                             </div>
                           </div>
                         )}
 
                         {/* CWCAF Generation Modal */}
                         {showCwcafModal === cwcrf._id && (
-                          <div style={{ background: "#fff", border: "2px solid #3b82f6", borderRadius: 12, padding: 20, marginBottom: 20 }}>
-                            <p style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", margin: "0 0 16px" }}>Generate CWCAF — {cwcrf.cwcRfNumber}</p>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                          <div
+                            style={{
+                              background: "#fff",
+                              border: "2px solid #3b82f6",
+                              borderRadius: 12,
+                              padding: 20,
+                              marginBottom: 20,
+                            }}
+                          >
+                            <p
+                              style={{
+                                fontSize: 16,
+                                fontWeight: 700,
+                                color: "#1e293b",
+                                margin: "0 0 16px",
+                              }}
+                            >
+                              Generate CWCAF — {cwcrf.cwcRfNumber}
+                            </p>
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
+                                gap: 12,
+                                marginBottom: 16,
+                              }}
+                            >
                               <div>
-                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Risk Category</label>
-                                <select value={cwcafForm.riskCategory} onChange={(e) => setCwcafForm((f) => ({ ...f, riskCategory: e.target.value as any }))}
-                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13 }}>
+                                <label
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#374151",
+                                    display: "block",
+                                    marginBottom: 4,
+                                  }}
+                                >
+                                  Risk Category
+                                </label>
+                                <select
+                                  value={cwcafForm.riskCategory}
+                                  onChange={(e) =>
+                                    setCwcafForm((f) => ({
+                                      ...f,
+                                      riskCategory: e.target.value as any,
+                                    }))
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 10px",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 6,
+                                    fontSize: 13,
+                                  }}
+                                >
                                   <option value="LOW">LOW</option>
                                   <option value="MEDIUM">MEDIUM</option>
                                   <option value="HIGH">HIGH</option>
                                 </select>
                               </div>
                               <div>
-                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Recommendation</label>
-                                <select value={cwcafForm.rmtRecommendation} onChange={(e) => setCwcafForm((f) => ({ ...f, rmtRecommendation: e.target.value as any }))}
-                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13 }}>
+                                <label
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#374151",
+                                    display: "block",
+                                    marginBottom: 4,
+                                  }}
+                                >
+                                  Recommendation
+                                </label>
+                                <select
+                                  value={cwcafForm.rmtRecommendation}
+                                  onChange={(e) =>
+                                    setCwcafForm((f) => ({
+                                      ...f,
+                                      rmtRecommendation: e.target.value as any,
+                                    }))
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 10px",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 6,
+                                    fontSize: 13,
+                                  }}
+                                >
                                   <option value="PROCEED">PROCEED</option>
                                   <option value="REVIEW">REVIEW</option>
                                   <option value="REJECT">REJECT</option>
                                 </select>
                               </div>
                               <div>
-                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Business Age (years)</label>
-                                <input type="number" value={cwcafForm.businessAge} onChange={(e) => setCwcafForm((f) => ({ ...f, businessAge: Number(e.target.value) }))}
-                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                                <label
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#374151",
+                                    display: "block",
+                                    marginBottom: 4,
+                                  }}
+                                >
+                                  Business Age (years)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={cwcafForm.businessAge}
+                                  onChange={(e) =>
+                                    setCwcafForm((f) => ({
+                                      ...f,
+                                      businessAge: Number(e.target.value),
+                                    }))
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 10px",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 6,
+                                    fontSize: 13,
+                                    boxSizing: "border-box",
+                                  }}
+                                />
                               </div>
                               <div>
-                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Total Transactions</label>
-                                <input type="number" value={cwcafForm.totalTransactions} onChange={(e) => setCwcafForm((f) => ({ ...f, totalTransactions: Number(e.target.value) }))}
-                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                                <label
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#374151",
+                                    display: "block",
+                                    marginBottom: 4,
+                                  }}
+                                >
+                                  Total Transactions
+                                </label>
+                                <input
+                                  type="number"
+                                  value={cwcafForm.totalTransactions}
+                                  onChange={(e) =>
+                                    setCwcafForm((f) => ({
+                                      ...f,
+                                      totalTransactions: Number(e.target.value),
+                                    }))
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 10px",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 6,
+                                    fontSize: 13,
+                                    boxSizing: "border-box",
+                                  }}
+                                />
                               </div>
                               <div>
-                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Avg Invoice Value (₹)</label>
-                                <input type="number" value={cwcafForm.averageInvoiceValue} onChange={(e) => setCwcafForm((f) => ({ ...f, averageInvoiceValue: Number(e.target.value) }))}
-                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+                                <label
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#374151",
+                                    display: "block",
+                                    marginBottom: 4,
+                                  }}
+                                >
+                                  Avg Invoice Value (₹)
+                                </label>
+                                <input
+                                  type="number"
+                                  value={cwcafForm.averageInvoiceValue}
+                                  onChange={(e) =>
+                                    setCwcafForm((f) => ({
+                                      ...f,
+                                      averageInvoiceValue: Number(
+                                        e.target.value,
+                                      ),
+                                    }))
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 10px",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 6,
+                                    fontSize: 13,
+                                    boxSizing: "border-box",
+                                  }}
+                                />
                               </div>
                               <div>
-                                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Repayment History</label>
-                                <select value={cwcafForm.repaymentHistory} onChange={(e) => setCwcafForm((f) => ({ ...f, repaymentHistory: e.target.value }))}
-                                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13 }}>
+                                <label
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#374151",
+                                    display: "block",
+                                    marginBottom: 4,
+                                  }}
+                                >
+                                  Repayment History
+                                </label>
+                                <select
+                                  value={cwcafForm.repaymentHistory}
+                                  onChange={(e) =>
+                                    setCwcafForm((f) => ({
+                                      ...f,
+                                      repaymentHistory: e.target.value,
+                                    }))
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 10px",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 6,
+                                    fontSize: 13,
+                                  }}
+                                >
                                   <option value="EXCELLENT">Excellent</option>
                                   <option value="GOOD">Good</option>
                                   <option value="AVERAGE">Average</option>
@@ -4430,14 +6859,60 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               </div>
                             </div>
                             <div style={{ marginBottom: 16 }}>
-                              <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Notes</label>
-                              <textarea value={cwcafForm.rmtNotes} onChange={(e) => setCwcafForm((f) => ({ ...f, rmtNotes: e.target.value }))}
-                                rows={2} placeholder="Additional notes for CWCAF..."
-                                style={{ width: "100%", fontSize: 13, border: "1px solid #e2e8f0", borderRadius: 6, padding: "8px 10px", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
+                              <label
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  color: "#374151",
+                                  display: "block",
+                                  marginBottom: 4,
+                                }}
+                              >
+                                Notes
+                              </label>
+                              <textarea
+                                value={cwcafForm.rmtNotes}
+                                onChange={(e) =>
+                                  setCwcafForm((f) => ({
+                                    ...f,
+                                    rmtNotes: e.target.value,
+                                  }))
+                                }
+                                rows={2}
+                                placeholder="Additional notes for CWCAF..."
+                                style={{
+                                  width: "100%",
+                                  fontSize: 13,
+                                  border: "1px solid #e2e8f0",
+                                  borderRadius: 6,
+                                  padding: "8px 10px",
+                                  resize: "vertical",
+                                  boxSizing: "border-box",
+                                  fontFamily: "inherit",
+                                }}
+                              />
                             </div>
-                            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                              <button onClick={() => setShowCwcafModal(null)}
-                                style={{ padding: "8px 18px", background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: 10,
+                                justifyContent: "flex-end",
+                              }}
+                            >
+                              <button
+                                onClick={() => setShowCwcafModal(null)}
+                                style={{
+                                  padding: "8px 18px",
+                                  background: "#f1f5f9",
+                                  color: "#64748b",
+                                  border: "1px solid #e2e8f0",
+                                  borderRadius: 8,
+                                  fontSize: 13,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Cancel
+                              </button>
                               <button
                                 disabled={cwcafGenerating}
                                 onClick={async () => {
@@ -4446,73 +6921,186 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                     await cwcrfApi.generateCwcaf(cwcrf._id, {
                                       sellerProfileSummary: {
                                         businessAge: cwcafForm.businessAge,
-                                        totalTransactions: cwcafForm.totalTransactions,
-                                        averageInvoiceValue: cwcafForm.averageInvoiceValue,
-                                        repaymentHistory: cwcafForm.repaymentHistory,
+                                        totalTransactions:
+                                          cwcafForm.totalTransactions,
+                                        averageInvoiceValue:
+                                          cwcafForm.averageInvoiceValue,
+                                        repaymentHistory:
+                                          cwcafForm.repaymentHistory,
                                       },
                                       riskAssessmentDetails: {
-                                        invoiceAging: { score: 0, remarks: '' },
-                                        buyerCreditworthiness: { score: 0, remarks: '' },
-                                        sellerTrackRecord: { score: 0, remarks: '' },
-                                        collateralCoverage: { score: 0, remarks: '' },
+                                        invoiceAging: { score: 0, remarks: "" },
+                                        buyerCreditworthiness: {
+                                          score: 0,
+                                          remarks: "",
+                                        },
+                                        sellerTrackRecord: {
+                                          score: 0,
+                                          remarks: "",
+                                        },
+                                        collateralCoverage: {
+                                          score: 0,
+                                          remarks: "",
+                                        },
                                       },
                                       riskCategory: cwcafForm.riskCategory,
-                                      rmtRecommendation: cwcafForm.rmtRecommendation,
+                                      rmtRecommendation:
+                                        cwcafForm.rmtRecommendation,
                                       rmtNotes: cwcafForm.rmtNotes,
                                     });
-                                    toast.success("CWCAF generated successfully");
+                                    toast.success(
+                                      "CWCAF generated successfully",
+                                    );
                                     setShowCwcafModal(null);
                                     // Refresh data would be handled by parent
                                   } catch (err: any) {
-                                    toast.error(err.response?.data?.error || "Failed to generate CWCAF");
+                                    toast.error(
+                                      err.response?.data?.error ||
+                                        "Failed to generate CWCAF",
+                                    );
                                   } finally {
                                     setCwcafGenerating(false);
                                   }
                                 }}
-                                style={{ padding: "8px 24px", background: cwcafGenerating ? "#93c5fd" : "#3b82f6", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer" }}
-                              >{cwcafGenerating ? "Generating..." : "✓ Generate CWCAF"}</button>
+                                style={{
+                                  padding: "8px 24px",
+                                  background: cwcafGenerating
+                                    ? "#93c5fd"
+                                    : "#3b82f6",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: 8,
+                                  fontWeight: 700,
+                                  fontSize: 13,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                {cwcafGenerating
+                                  ? "Generating..."
+                                  : "✓ Generate CWCAF"}
+                              </button>
                             </div>
                           </div>
                         )}
 
                         {/* CWCAF Ready badge */}
-                        {(cwcrf.status === "CWCAF_READY" || cwcrf.status === "SHARED_WITH_NBFC") && (
-                          <div style={{ background: "#d1fae5", border: "1px solid #86efac", borderRadius: 8, padding: "8px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                        {(cwcrf.status === "CWCAF_READY" ||
+                          cwcrf.status === "SHARED_WITH_NBFC") && (
+                          <div
+                            style={{
+                              background: "#d1fae5",
+                              border: "1px solid #86efac",
+                              borderRadius: 8,
+                              padding: "8px 14px",
+                              marginBottom: 16,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                            }}
+                          >
                             <span style={{ fontSize: 16 }}>✓</span>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: "#065f46" }}>CWCAF generated — ready for NBFC dispatch</span>
+                            <span
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: "#065f46",
+                              }}
+                            >
+                              CWCAF generated — ready for NBFC dispatch
+                            </span>
                           </div>
                         )}
 
                         <div style={{ marginBottom: 16 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
+                              marginBottom: 12,
+                            }}
+                          >
                             <button
                               onClick={loadNbfcs}
                               disabled={loading}
-                              style={{ padding: "8px 18px", background: loading ? "#ede9fe" : "#7c3aed", color: loading ? "#7c3aed" : "#fff", border: "none", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                              style={{
+                                padding: "8px 18px",
+                                background: loading ? "#ede9fe" : "#7c3aed",
+                                color: loading ? "#7c3aed" : "#fff",
+                                border: "none",
+                                borderRadius: 8,
+                                fontWeight: 600,
+                                fontSize: 13,
+                                cursor: "pointer",
+                              }}
                             >
-                              {loading ? "Loading NBFCs..." : "🔍 Get Matching NBFCs"}
+                              {loading
+                                ? "Loading NBFCs..."
+                                : "🔍 Get Matching NBFCs"}
                             </button>
                             {matches.length > 0 && (
-                              <span style={{ fontSize: 13, color: "#6d28d9", fontWeight: 600 }}>{matches.length} NBFC{matches.length !== 1 ? "s" : ""} found</span>
+                              <span
+                                style={{
+                                  fontSize: 13,
+                                  color: "#6d28d9",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {matches.length} NBFC
+                                {matches.length !== 1 ? "s" : ""} found
+                              </span>
                             )}
                           </div>
 
                           {matches.length > 0 && (
-                            <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
-                              <div style={{ background: "#f8fafc", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #e2e8f0" }}>
+                            <div
+                              style={{
+                                border: "1px solid #e2e8f0",
+                                borderRadius: 10,
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  background: "#f8fafc",
+                                  padding: "8px 16px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 8,
+                                  borderBottom: "1px solid #e2e8f0",
+                                }}
+                              >
                                 <input
                                   type="checkbox"
                                   id={`select-all-${cwcrf._id}`}
-                                  checked={selected.length === matches.length && matches.length > 0}
+                                  checked={
+                                    selected.length === matches.length &&
+                                    matches.length > 0
+                                  }
                                   onChange={(e) => {
                                     setNbfcSelected((prev) => ({
                                       ...prev,
-                                      [cwcrf._id]: e.target.checked ? matches.map((n: any) => n._id || n.id) : [],
+                                      [cwcrf._id]: e.target.checked
+                                        ? matches.map((n: any) => n._id || n.id)
+                                        : [],
                                     }));
                                   }}
-                                  style={{ width: 15, height: 15, accentColor: "#7c3aed", cursor: "pointer" }}
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    accentColor: "#7c3aed",
+                                    cursor: "pointer",
+                                  }}
                                 />
-                                <label htmlFor={`select-all-${cwcrf._id}`} style={{ fontSize: 12, fontWeight: 600, color: "#64748b", cursor: "pointer" }}>
+                                <label
+                                  htmlFor={`select-all-${cwcrf._id}`}
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    color: "#64748b",
+                                    cursor: "pointer",
+                                  }}
+                                >
                                   Select All ({matches.length})
                                 </label>
                               </div>
@@ -4520,33 +7108,83 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                 const nbfcId = nbfc._id || nbfc.id;
                                 const isChecked = selected.includes(nbfcId);
                                 return (
-                                  <div key={nbfcId} style={{
-                                    display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
-                                    borderBottom: "1px solid #f1f5f9",
-                                    background: isChecked ? "#faf5ff" : "#fff",
-                                    cursor: "pointer",
-                                  }} onClick={() => toggleNbfc(nbfcId)}>
+                                  <div
+                                    key={nbfcId}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 12,
+                                      padding: "12px 16px",
+                                      borderBottom: "1px solid #f1f5f9",
+                                      background: isChecked
+                                        ? "#faf5ff"
+                                        : "#fff",
+                                      cursor: "pointer",
+                                    }}
+                                    onClick={() => toggleNbfc(nbfcId)}
+                                  >
                                     <input
                                       type="checkbox"
                                       checked={isChecked}
                                       onChange={() => toggleNbfc(nbfcId)}
                                       onClick={(e) => e.stopPropagation()}
-                                      style={{ width: 15, height: 15, accentColor: "#7c3aed", cursor: "pointer", flexShrink: 0 }}
+                                      style={{
+                                        width: 15,
+                                        height: 15,
+                                        accentColor: "#7c3aed",
+                                        cursor: "pointer",
+                                        flexShrink: 0,
+                                      }}
                                     />
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                      <p style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, margin: 0 }}>{nbfc.companyName || nbfc.name || "—"}</p>
-                                      <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0" }}>
+                                      <p
+                                        style={{
+                                          fontWeight: 600,
+                                          color: "#1e293b",
+                                          fontSize: 14,
+                                          margin: 0,
+                                        }}
+                                      >
+                                        {nbfc.companyName || nbfc.name || "—"}
+                                      </p>
+                                      <p
+                                        style={{
+                                          fontSize: 12,
+                                          color: "#64748b",
+                                          margin: "2px 0 0",
+                                        }}
+                                      >
                                         {nbfc.email || ""}
                                         {nbfc.phone && ` · ${nbfc.phone}`}
                                       </p>
                                     </div>
                                     {nbfc.matchScore != null && (
-                                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                        <span style={{
-                                          fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999,
-                                          background: nbfc.matchScore >= 80 ? "#d1fae5" : nbfc.matchScore >= 50 ? "#fef9c3" : "#fee2e2",
-                                          color: nbfc.matchScore >= 80 ? "#065f46" : nbfc.matchScore >= 50 ? "#92400e" : "#b91c1c",
-                                        }}>
+                                      <div
+                                        style={{
+                                          textAlign: "right",
+                                          flexShrink: 0,
+                                        }}
+                                      >
+                                        <span
+                                          style={{
+                                            fontSize: 12,
+                                            fontWeight: 700,
+                                            padding: "3px 10px",
+                                            borderRadius: 999,
+                                            background:
+                                              nbfc.matchScore >= 80
+                                                ? "#d1fae5"
+                                                : nbfc.matchScore >= 50
+                                                  ? "#fef9c3"
+                                                  : "#fee2e2",
+                                            color:
+                                              nbfc.matchScore >= 80
+                                                ? "#065f46"
+                                                : nbfc.matchScore >= 50
+                                                  ? "#92400e"
+                                                  : "#b91c1c",
+                                          }}
+                                        >
                                           {nbfc.matchScore}% match
                                         </span>
                                       </div>
@@ -4558,23 +7196,49 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                           )}
                         </div>
 
-                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: 10,
+                          }}
+                        >
                           <button
                             disabled={selected.length === 0 || sending}
                             onClick={handleSend}
                             style={{
                               padding: "10px 24px",
-                              background: selected.length === 0 || sending ? "#a5b4fc" : "#6d28d9",
-                              color: "#fff", border: "none", borderRadius: 8,
-                              fontWeight: 700, fontSize: 14, cursor: selected.length === 0 || sending ? "not-allowed" : "pointer",
+                              background:
+                                selected.length === 0 || sending
+                                  ? "#a5b4fc"
+                                  : "#6d28d9",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 8,
+                              fontWeight: 700,
+                              fontSize: 14,
+                              cursor:
+                                selected.length === 0 || sending
+                                  ? "not-allowed"
+                                  : "pointer",
                             }}
                           >
-                            {sending ? "Sending..." : `📨 Send to ${selected.length > 0 ? `${selected.length} ` : ""}Selected NBFC${selected.length !== 1 ? "s" : ""}`}
+                            {sending
+                              ? "Sending..."
+                              : `📨 Send to ${selected.length > 0 ? `${selected.length} ` : ""}Selected NBFC${selected.length !== 1 ? "s" : ""}`}
                           </button>
                         </div>
                         {matches.length === 0 && !loading && (
-                          <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 8, textAlign: "center" }}>
-                            Click "Get Matching NBFCs" to load eligible lenders for this CWCAF
+                          <p
+                            style={{
+                              fontSize: 12,
+                              color: "#94a3b8",
+                              marginTop: 8,
+                              textAlign: "center",
+                            }}
+                          >
+                            Click "Get Matching NBFCs" to load eligible lenders
+                            for this CWCAF
                           </p>
                         )}
                       </div>
@@ -4585,6 +7249,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
             </div>
           )}
         </div>
-      )}    </div>
+      )}{" "}
+    </div>
   );
 };

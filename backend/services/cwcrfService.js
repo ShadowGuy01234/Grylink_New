@@ -89,7 +89,7 @@ class CwcRfService {
         invoiceAmount: data.invoiceDetails?.invoiceAmount || bill.amount,
         requestedAmount: data.cwcRequest?.requestedAmount,
         requestedTenure: data.cwcRequest?.requestedTenure,
-        urgencyLevel: data.cwcRequest?.urgencyLevel || 'NORMAL',
+        urgencyLevel: data.cwcRequest?.urgencyLevel || "NORMAL",
         reasonForFunding: data.cwcRequest?.reasonForFunding,
         preferredDisbursementDate: data.cwcRequest?.preferredDisbursementDate,
         collateralOffered: data.cwcRequest?.collateralOffered,
@@ -102,10 +102,14 @@ class CwcRfService {
         minRate: data.interestPreference?.minRate,
         maxRate: data.interestPreference?.maxRate,
         maxAcceptableRate: data.interestPreference?.maxAcceptableRate,
-        preferredRepaymentFrequency: data.interestPreference?.preferredRepaymentFrequency || 'ONE_TIME',
-        processingFeeAcceptance: data.interestPreference?.processingFeeAcceptance ?? true,
-        maxProcessingFeePercent: data.interestPreference?.maxProcessingFeePercent,
-        prepaymentPreference: data.interestPreference?.prepaymentPreference || 'WITHOUT_PENALTY',
+        preferredRepaymentFrequency:
+          data.interestPreference?.preferredRepaymentFrequency || "ONE_TIME",
+        processingFeeAcceptance:
+          data.interestPreference?.processingFeeAcceptance ?? true,
+        maxProcessingFeePercent:
+          data.interestPreference?.maxProcessingFeePercent,
+        prepaymentPreference:
+          data.interestPreference?.prepaymentPreference || "WITHOUT_PENALTY",
       },
 
       // Copy seller declaration
@@ -126,7 +130,10 @@ class CwcRfService {
     await cwcRf.save();
 
     // Notify Ops about new CWCRF submission
-    this._notifyOpsTeam("New CWCRF Submitted", `CWCRF ${cwcRf.cwcRfNumber || cwcRf._id} has been submitted and needs review.`);
+    this._notifyOpsTeam(
+      "New CWCRF Submitted",
+      `CWCRF ${cwcRf.cwcRfNumber || cwcRf._id} has been submitted and needs review.`,
+    );
 
     return cwcRf;
   }
@@ -180,12 +187,18 @@ class CwcRfService {
     };
     if (query.status) filter.status = query.status;
     if (query.phase === "triage") filter.status = { $in: ["RMT_APPROVED"] };
-    if (query.phase === "epc_verified") filter.status = { $in: ["BUYER_APPROVED", "CWCAF_READY", "SHARED_WITH_NBFC"] };
+    if (query.phase === "epc_verified")
+      filter.status = {
+        $in: ["BUYER_APPROVED", "CWCAF_READY", "SHARED_WITH_NBFC"],
+      };
 
     return CwcRf.find(filter)
       .populate("subContractorId", "companyName ownerName email phone gstin")
       .populate("epcId", "companyName gstin")
-      .populate("billId", "billNumber amount fileUrl wcc measurementSheet jointMeasurement")
+      .populate(
+        "billId",
+        "billNumber amount fileUrl wcc measurementSheet jointMeasurement",
+      )
       .sort({ createdAt: -1 });
   }
 
@@ -200,10 +213,10 @@ class CwcRfService {
     if (!cwcRf.opsVerification) cwcRf.opsVerification = {};
 
     const sectionMap = {
-      sectionA: 'sectionA',
-      sectionB: 'sectionB',
-      sectionC: 'sectionC',
-      sectionD: 'sectionD',
+      sectionA: "sectionA",
+      sectionB: "sectionB",
+      sectionC: "sectionC",
+      sectionD: "sectionD",
       raBill: null,
       wcc: null,
       measurementSheet: null,
@@ -213,27 +226,36 @@ class CwcRfService {
       throw new Error(`Invalid section: ${section}`);
     }
 
-    if (['sectionA', 'sectionB', 'sectionC', 'sectionD'].includes(section)) {
-      cwcRf.opsVerification[section] = { verified, notes, verifiedBy: userId, verifiedAt: new Date() };
-    } else if (section === 'raBill') {
+    if (["sectionA", "sectionB", "sectionC", "sectionD"].includes(section)) {
+      cwcRf.opsVerification[section] = {
+        verified,
+        notes,
+        verifiedBy: userId,
+        verifiedAt: new Date(),
+      };
+    } else if (section === "raBill") {
       cwcRf.opsVerification.raBillVerified = verified;
-    } else if (section === 'wcc') {
+    } else if (section === "wcc") {
       cwcRf.opsVerification.wccVerified = verified;
-    } else if (section === 'measurementSheet') {
+    } else if (section === "measurementSheet") {
       cwcRf.opsVerification.measurementSheetVerified = verified;
     }
 
     // If all 4 sections verified, advance status to OPS_REVIEW
-    const allSections = ['sectionA', 'sectionB', 'sectionC', 'sectionD'].every(
-      (s) => cwcRf.opsVerification[s]?.verified
+    const allSections = ["sectionA", "sectionB", "sectionC", "sectionD"].every(
+      (s) => cwcRf.opsVerification[s]?.verified,
     );
-    if (allSections && cwcRf.status === 'SUBMITTED') {
-      cwcRf.status = 'OPS_REVIEW';
-      cwcRf.statusHistory.push({ status: 'OPS_REVIEW', changedBy: userId, notes: 'All sections verified by Ops' });
+    if (allSections && cwcRf.status === "SUBMITTED") {
+      cwcRf.status = "OPS_REVIEW";
+      cwcRf.statusHistory.push({
+        status: "OPS_REVIEW",
+        changedBy: userId,
+        notes: "All sections verified by Ops",
+      });
     }
 
     // Must markModified so Mongoose tracks nested object changes
-    cwcRf.markModified('opsVerification');
+    cwcRf.markModified("opsVerification");
     await cwcRf.save();
     return cwcRf;
   }
@@ -250,9 +272,16 @@ class CwcRfService {
     if (!cwcRf) throw new Error("CWCRF not found");
 
     // Validate section/field path exists
-    const allowedSections = ['buyerDetails', 'invoiceDetails', 'cwcRequest', 'interestPreference'];
+    const allowedSections = [
+      "buyerDetails",
+      "invoiceDetails",
+      "cwcRequest",
+      "interestPreference",
+    ];
     if (!allowedSections.includes(section)) {
-      throw new Error(`Invalid section: ${section}. Allowed: ${allowedSections.join(', ')}`);
+      throw new Error(
+        `Invalid section: ${section}. Allowed: ${allowedSections.join(", ")}`,
+      );
     }
 
     // Record the detachment
@@ -262,7 +291,7 @@ class CwcRfService {
       field,
       detachedBy: userId,
       detachedAt: new Date(),
-      reason: reason || '',
+      reason: reason || "",
       resolved: false,
     });
 
@@ -274,23 +303,23 @@ class CwcRfService {
 
     // If a section was verified, un-verify it
     const sectionKeyMap = {
-      buyerDetails: 'sectionA',
-      invoiceDetails: 'sectionB',
-      cwcRequest: 'sectionC',
-      interestPreference: 'sectionD',
+      buyerDetails: "sectionA",
+      invoiceDetails: "sectionB",
+      cwcRequest: "sectionC",
+      interestPreference: "sectionD",
     };
     const verifyKey = sectionKeyMap[section];
     if (verifyKey && cwcRf.opsVerification?.[verifyKey]?.verified) {
       cwcRf.opsVerification[verifyKey].verified = false;
       cwcRf.opsVerification[verifyKey].notes = `Detached: ${field} — ${reason}`;
-      cwcRf.markModified('opsVerification');
+      cwcRf.markModified("opsVerification");
     }
 
     // Set status to ACTION_REQUIRED so SC knows to fix
-    if (cwcRf.status === 'SUBMITTED' || cwcRf.status === 'OPS_REVIEW') {
-      cwcRf.status = 'ACTION_REQUIRED';
+    if (cwcRf.status === "SUBMITTED" || cwcRf.status === "OPS_REVIEW") {
+      cwcRf.status = "ACTION_REQUIRED";
       cwcRf.statusHistory.push({
-        status: 'ACTION_REQUIRED',
+        status: "ACTION_REQUIRED",
         changedBy: userId,
         notes: `Ops detached ${section}.${field}: ${reason}`,
       });
@@ -307,7 +336,12 @@ class CwcRfService {
     const cwcRf = await CwcRf.findById(cwcRfId);
     if (!cwcRf) throw new Error("CWCRF not found");
 
-    const allowedSections = ['buyerDetails', 'invoiceDetails', 'cwcRequest', 'interestPreference'];
+    const allowedSections = [
+      "buyerDetails",
+      "invoiceDetails",
+      "cwcRequest",
+      "interestPreference",
+    ];
     if (!allowedSections.includes(section)) {
       throw new Error(`Invalid section: ${section}`);
     }
@@ -327,7 +361,7 @@ class CwcRfService {
       newValue,
       editedBy: userId,
       editedAt: new Date(),
-      reason: reason || '',
+      reason: reason || "",
     });
 
     // Apply the edit
@@ -354,21 +388,21 @@ class CwcRfService {
     const chatMessage = new ChatMessage({
       cwcRfId: cwcRf._id,
       senderId: userId,
-      senderRole: 'ops',
-      messageType: 'action_required',
+      senderRole: "ops",
+      messageType: "action_required",
       content: message.trim(),
-      actionType: 'REQUEST_DOCUMENT',
+      actionType: "REQUEST_DOCUMENT",
       actionResolved: false,
     });
     await chatMessage.save();
 
     // If status is SUBMITTED or OPS_REVIEW, move to ACTION_REQUIRED
-    if (['SUBMITTED', 'OPS_REVIEW'].includes(cwcRf.status)) {
-      cwcRf.status = 'ACTION_REQUIRED';
+    if (["SUBMITTED", "OPS_REVIEW"].includes(cwcRf.status)) {
+      cwcRf.status = "ACTION_REQUIRED";
       cwcRf.statusHistory.push({
-        status: 'ACTION_REQUIRED',
+        status: "ACTION_REQUIRED",
         changedBy: userId,
-        notes: `Ops re-request: ${section ? `[${section}] ` : ''}${message.trim().substring(0, 100)}`,
+        notes: `Ops re-request: ${section ? `[${section}] ` : ""}${message.trim().substring(0, 100)}`,
       });
       await cwcRf.save();
     }
@@ -383,7 +417,7 @@ class CwcRfService {
     const cwcRf = await CwcRf.findById(cwcRfId);
     if (!cwcRf) throw new Error("CWCRF not found");
 
-    if (!['UNDER_RISK_REVIEW', 'CWCAF_READY'].includes(cwcRf.status)) {
+    if (!["UNDER_RISK_REVIEW", "CWCAF_READY"].includes(cwcRf.status)) {
       throw new Error("CWCRF must be under risk review or have CWCAF ready");
     }
 
@@ -391,7 +425,9 @@ class CwcRfService {
     cwcRf.statusHistory.push({
       status: "RMT_APPROVED",
       changedBy: rmtUserId,
-      notes: data?.notes || "RMT assessment complete — forwarded to Ops for risk triage",
+      notes:
+        data?.notes ||
+        "RMT assessment complete — forwarded to Ops for risk triage",
     });
 
     await cwcRf.save();
@@ -434,7 +470,11 @@ class CwcRfService {
     }
     // Notify SC about rejection
     if (action === "reject") {
-      this._notifyStatusChange(cwcRf, "REJECTED", notes || "Your CWCRF was rejected after risk triage");
+      this._notifyStatusChange(
+        cwcRf,
+        "REJECTED",
+        notes || "Your CWCRF was rejected after risk triage",
+      );
     }
 
     return cwcRf;
@@ -448,56 +488,87 @@ class CwcRfService {
     const cwcRf = await this.getCwcRfById(cwcRfId);
     if (!cwcRf) throw new Error("CWCRF not found");
 
-    const requestedAmount = cwcRf.buyerVerification?.approvedAmount || cwcRf.cwcRequest?.requestedAmount || 0;
-    const tenure = cwcRf.buyerVerification?.repaymentTimeline || cwcRf.cwcRequest?.requestedTenure || 30;
+    const requestedAmount =
+      cwcRf.buyerVerification?.approvedAmount ||
+      cwcRf.cwcRequest?.requestedAmount ||
+      0;
+    const tenure =
+      cwcRf.buyerVerification?.repaymentTimeline ||
+      cwcRf.cwcRequest?.requestedTenure ||
+      30;
 
     // Get risk category from CWCAF (via case) if available
     const caseDoc = cwcRf.caseId ? await Case.findById(cwcRf.caseId) : null;
     const riskCategory = caseDoc?.cwcaf?.riskCategory || "MEDIUM";
 
-    const nbfcs = await Nbfc.find({ status: "ACTIVE", activeLendingStatus: true });
+    // Return ALL active NBFCs so ops can pick; score each on LPS criteria
+    const nbfcs = await Nbfc.find({ status: "ACTIVE" });
 
     const results = [];
     for (const nbfc of nbfcs) {
       const lps = nbfc.lendingPreferenceSheet;
-      if (!lps) continue;
-
       let score = 0;
-      let reasons = [];
+      const matchDetails = [];
 
-      // Check ticket size
-      const minTicket = lps.ticketSize?.minimum || 0;
-      const maxTicket = lps.ticketSize?.maximum || Infinity;
-      if (requestedAmount < minTicket || requestedAmount > maxTicket) { reasons.push('ticket_size'); continue; }
-      score += 25;
+      if (lps) {
+        // Check ticket size (25 pts)
+        const minTicket = lps.ticketSize?.minimum || 0;
+        const maxTicket = lps.ticketSize?.maximum || Infinity;
+        if (requestedAmount >= minTicket && requestedAmount <= maxTicket) {
+          score += 25;
+          matchDetails.push("ticket_size");
+        }
 
-      // Check risk appetite
-      const accepted = lps.riskAppetite?.acceptedCategories || [];
-      if (!accepted.includes(riskCategory)) { reasons.push('risk_appetite'); continue; }
-      score += 25;
+        // Check risk appetite (25 pts)
+        const accepted = lps.riskAppetite?.acceptedCategories || [];
+        const riskEnum = lps.riskAppetite;
+        const riskMatch =
+          accepted.includes(riskCategory) ||
+          riskEnum === "ALL_CATEGORIES" ||
+          (riskEnum === "LOW_MEDIUM" &&
+            ["LOW", "MEDIUM"].includes(riskCategory)) ||
+          (riskEnum === "LOW_ONLY" && riskCategory === "LOW");
+        if (riskMatch) {
+          score += 25;
+          matchDetails.push("risk_appetite");
+        }
 
-      // Check tenure
-      const minDays = lps.tenurePreference?.minDays || 0;
-      const maxDays = lps.tenurePreference?.maxDays || 365;
-      if (tenure < minDays || tenure > maxDays) { reasons.push('tenure'); continue; }
-      score += 25;
+        // Check tenure (25 pts)
+        const minDays = lps.tenurePreference?.minDays || 0;
+        const maxDays = lps.tenurePreference?.maxDays || 365;
+        if (tenure >= minDays && tenure <= maxDays) {
+          score += 25;
+          matchDetails.push("tenure");
+        }
 
-      // Check available monthly capacity
-      const available = (lps.monthlyCapacity?.totalLimit || 0) - (lps.monthlyCapacity?.utilized || 0);
-      if (available < requestedAmount) { reasons.push('capacity'); continue; }
-      score += 25;
+        // Check available monthly capacity (25 pts)
+        const available =
+          (lps.monthlyCapacity?.totalLimit || 0) -
+          (lps.monthlyCapacity?.utilized || 0);
+        if (available >= requestedAmount || !lps.monthlyCapacity?.totalLimit) {
+          score += 25;
+          matchDetails.push("capacity");
+        }
+      }
 
       results.push({
+        _id: nbfc._id,
         nbfcId: nbfc._id,
         name: nbfc.name,
-        companyName: nbfc.companyName,
+        companyName: nbfc.companyName || nbfc.name,
+        email: nbfc.email,
+        phone: nbfc.phone,
         matchScore: score,
-        lps: {
-          interestRatePolicy: lps.interestRatePolicy,
-          riskAppetite: { acceptedCategories: lps.riskAppetite?.acceptedCategories },
-          ticketSize: lps.ticketSize,
-          tenurePreference: lps.tenurePreference,
-        },
+        matchDetails,
+        activeLending: nbfc.activeLendingStatus || false,
+        lps: lps
+          ? {
+              interestRatePolicy: lps.interestRatePolicy,
+              riskAppetite: lps.riskAppetite,
+              ticketSize: lps.ticketSize,
+              tenurePreference: lps.tenurePreference,
+            }
+          : null,
       });
     }
 
@@ -596,7 +667,9 @@ class CwcRfService {
 
     const allowedStatuses = ["SUBMITTED", "OPS_REVIEW", "KYC_COMPLETED"];
     if (!allowedStatuses.includes(cwcRf.status)) {
-      throw new Error(`CWCRF must be in SUBMITTED or OPS_REVIEW status to forward to RMT (current: ${cwcRf.status})`);
+      throw new Error(
+        `CWCRF must be in SUBMITTED or OPS_REVIEW status to forward to RMT (current: ${cwcRf.status})`,
+      );
     }
 
     cwcRf.status = "UNDER_RISK_REVIEW";
@@ -612,10 +685,15 @@ class CwcRfService {
       let epcId = cwcRf.epcId;
       if (!epcId) {
         const SubContractor = require("../models/SubContractor");
-        const sc = await SubContractor.findById(cwcRf.subContractorId).select("linkedEpcId");
+        const sc = await SubContractor.findById(cwcRf.subContractorId).select(
+          "linkedEpcId",
+        );
         epcId = sc?.linkedEpcId;
       }
-      if (!epcId) throw new Error("Cannot create case: EPC not found for this CWCRF. Please contact support.");
+      if (!epcId)
+        throw new Error(
+          "Cannot create case: EPC not found for this CWCRF. Please contact support.",
+        );
 
       // Also patch cwcRf.epcId so it's correct going forward
       if (!cwcRf.epcId) cwcRf.epcId = epcId;
@@ -737,7 +815,7 @@ class CwcRfService {
   /**
    * Share CWCAF with matching NBFCs (based on LPS criteria)
    */
-  async shareWithNbfcs(cwcRfId, rmtUserId) {
+  async shareWithNbfcs(cwcRfId, rmtUserId, nbfcIds = []) {
     const cwcRf = await this.getCwcRfById(cwcRfId);
     if (!cwcRf) {
       throw new Error("CWCRF not found");
@@ -748,42 +826,35 @@ class CwcRfService {
       throw new Error("CWCAF must be ready before sharing with NBFCs");
     }
 
-    // Find matching NBFCs based on LPS criteria
-    const nbfcs = await Nbfc.find({
-      status: "ACTIVE",
-      activeLendingStatus: true,
-    });
+    if (!nbfcIds || nbfcIds.length === 0) {
+      throw new Error("Please select at least one NBFC to share with");
+    }
 
-    const cwcafData = {
-      riskCategory: caseDoc.cwcaf?.riskCategory,
-      approvedAmount: cwcRf.buyerVerification?.approvedAmount,
-      interestPreference: cwcRf.interestPreference,
-    };
+    // Fetch only the selected NBFCs
+    const nbfcs = await Nbfc.find({ _id: { $in: nbfcIds }, status: "ACTIVE" });
 
-    const matchingNbfcs = [];
+    if (nbfcs.length === 0) {
+      throw new Error("No valid active NBFCs found for the given selection");
+    }
+
+    const selectedNbfcIds = [];
     const nbfcQuotations = [];
 
     for (const nbfc of nbfcs) {
-      if (nbfc.matchesLps && nbfc.matchesLps(cwcafData)) {
-        matchingNbfcs.push(nbfc._id);
-        nbfcQuotations.push({
-          nbfcId: nbfc._id,
-          sharedAt: new Date(),
-          status: "PENDING",
-        });
+      selectedNbfcIds.push(nbfc._id);
+      nbfcQuotations.push({
+        nbfcId: nbfc._id,
+        sharedAt: new Date(),
+        status: "PENDING",
+      });
 
-        // Add to case nbfcSharing
-        caseDoc.nbfcSharing.push({
-          nbfc: nbfc._id,
-          sharedAt: new Date(),
-          sharedBy: rmtUserId,
-          status: "PENDING",
-        });
-      }
-    }
-
-    if (matchingNbfcs.length === 0) {
-      throw new Error("No NBFCs match the LPS criteria for this CWCAF");
+      // Add to case nbfcSharing
+      caseDoc.nbfcSharing.push({
+        nbfc: nbfc._id,
+        sharedAt: new Date(),
+        sharedBy: rmtUserId,
+        status: "PENDING",
+      });
     }
 
     // Update CWCRF
@@ -792,7 +863,7 @@ class CwcRfService {
     cwcRf.statusHistory.push({
       status: "SHARED_WITH_NBFC",
       changedBy: rmtUserId,
-      notes: `Shared with ${matchingNbfcs.length} NBFCs`,
+      notes: `Shared with ${selectedNbfcIds.length} NBFCs`,
     });
 
     await cwcRf.save();
@@ -802,12 +873,12 @@ class CwcRfService {
     caseDoc.statusHistory.push({
       status: "SHARED_WITH_NBFC",
       changedBy: rmtUserId,
-      notes: `CWCAF shared with ${matchingNbfcs.length} NBFCs`,
+      notes: `CWCAF shared with ${selectedNbfcIds.length} NBFCs`,
     });
 
     await caseDoc.save();
 
-    return { cwcRf, matchingNbfcs: matchingNbfcs.length };
+    return { cwcRf, matchingNbfcs: selectedNbfcIds.length };
   }
 
   /**
@@ -1039,7 +1110,9 @@ class CwcRfService {
     if (!cwcRf) throw new Error("CWCRF not found");
 
     if (!["MOVED_TO_NBFC_PROCESS", "NBFC_SELECTED"].includes(cwcRf.status)) {
-      throw new Error("CWCRF must be in MOVED_TO_NBFC_PROCESS or NBFC_SELECTED status");
+      throw new Error(
+        "CWCRF must be in MOVED_TO_NBFC_PROCESS or NBFC_SELECTED status",
+      );
     }
 
     cwcRf.status = "NBFC_DUE_DILIGENCE";
@@ -1066,7 +1139,11 @@ class CwcRfService {
     await cwcRf.save();
 
     // Notify SC that due diligence has started
-    await this._notifyStatusChange(cwcRf, "NBFC_DUE_DILIGENCE", "NBFC has started due diligence on your CWCRF");
+    await this._notifyStatusChange(
+      cwcRf,
+      "NBFC_DUE_DILIGENCE",
+      "NBFC has started due diligence on your CWCRF",
+    );
 
     return cwcRf;
   }
@@ -1077,7 +1154,8 @@ class CwcRfService {
   async nbfcCompleteDueDiligence(cwcRfId, nbfcUserId, data) {
     const cwcRf = await CwcRf.findById(cwcRfId);
     if (!cwcRf) throw new Error("CWCRF not found");
-    if (cwcRf.status !== "NBFC_DUE_DILIGENCE") throw new Error("CWCRF is not in due diligence");
+    if (cwcRf.status !== "NBFC_DUE_DILIGENCE")
+      throw new Error("CWCRF is not in due diligence");
 
     const { result, checklist, notes, conditions } = data;
     if (!["APPROVED", "REJECTED", "CONDITIONAL"].includes(result)) {
@@ -1114,8 +1192,13 @@ class CwcRfService {
     cwcRf.markModified("nbfcProcess");
     await cwcRf.save();
 
-    await this._notifyStatusChange(cwcRf, result === "REJECTED" ? "REJECTED" : "DUE_DILIGENCE_COMPLETE",
-      result === "REJECTED" ? "NBFC due diligence was not successful" : "Due diligence completed successfully");
+    await this._notifyStatusChange(
+      cwcRf,
+      result === "REJECTED" ? "REJECTED" : "DUE_DILIGENCE_COMPLETE",
+      result === "REJECTED"
+        ? "NBFC due diligence was not successful"
+        : "Due diligence completed successfully",
+    );
 
     return cwcRf;
   }
@@ -1128,17 +1211,29 @@ class CwcRfService {
     if (!cwcRf) throw new Error("CWCRF not found");
 
     if (cwcRf.status !== "NBFC_DUE_DILIGENCE") {
-      throw new Error("Due diligence must be completed before issuing sanction");
+      throw new Error(
+        "Due diligence must be completed before issuing sanction",
+      );
     }
 
     const dd = cwcRf.nbfcProcess?.dueDiligence;
     if (!dd || !dd.completedAt || dd.result === "REJECTED") {
-      throw new Error("Due diligence must be completed and approved/conditional");
+      throw new Error(
+        "Due diligence must be completed and approved/conditional",
+      );
     }
 
-    const { sanctionAmount, sanctionedInterestRate, sanctionedTenure, specialConditions, letterUrl } = data;
+    const {
+      sanctionAmount,
+      sanctionedInterestRate,
+      sanctionedTenure,
+      specialConditions,
+      letterUrl,
+    } = data;
     if (!sanctionAmount || !sanctionedInterestRate || !sanctionedTenure) {
-      throw new Error("sanctionAmount, sanctionedInterestRate, and sanctionedTenure are required");
+      throw new Error(
+        "sanctionAmount, sanctionedInterestRate, and sanctionedTenure are required",
+      );
     }
 
     cwcRf.status = "NBFC_SANCTIONED";
@@ -1165,11 +1260,19 @@ class CwcRfService {
     await cwcRf.save();
 
     // Update case status
-    await this._updateCaseStatus(cwcRf, "NBFC_SANCTIONED", nbfcUserId, "Sanction letter issued by NBFC");
+    await this._updateCaseStatus(
+      cwcRf,
+      "NBFC_SANCTIONED",
+      nbfcUserId,
+      "Sanction letter issued by NBFC",
+    );
 
     // Notify SC about the sanction letter
-    await this._notifyStatusChange(cwcRf, "NBFC_SANCTIONED",
-      `Sanction letter issued: ₹${sanctionAmount} at ${sanctionedInterestRate}% p.a. for ${sanctionedTenure} days`);
+    await this._notifyStatusChange(
+      cwcRf,
+      "NBFC_SANCTIONED",
+      `Sanction letter issued: ₹${sanctionAmount} at ${sanctionedInterestRate}% p.a. for ${sanctionedTenure} days`,
+    );
 
     return cwcRf;
   }
@@ -1180,7 +1283,8 @@ class CwcRfService {
   async scAcceptSanctionLetter(cwcRfId, userId) {
     const cwcRf = await CwcRf.findById(cwcRfId);
     if (!cwcRf) throw new Error("CWCRF not found");
-    if (cwcRf.status !== "NBFC_SANCTIONED") throw new Error("No sanction letter to accept");
+    if (cwcRf.status !== "NBFC_SANCTIONED")
+      throw new Error("No sanction letter to accept");
 
     if (!cwcRf.nbfcProcess?.sanctionLetter?.issued) {
       throw new Error("Sanction letter has not been issued");
@@ -1203,8 +1307,13 @@ class CwcRfService {
     if (nbfc) {
       const nbfcUser = await User.findOne({ nbfcId: nbfc._id });
       if (nbfcUser?.email) {
-        emailService.sendStatusUpdate(nbfcUser.email, nbfc.companyName || nbfc.name || "NBFC",
-          "CWCRF", "SANCTION_ACCEPTED", "The sub-contractor has accepted the sanction letter. You may proceed with disbursement.");
+        emailService.sendStatusUpdate(
+          nbfcUser.email,
+          nbfc.companyName || nbfc.name || "NBFC",
+          "CWCRF",
+          "SANCTION_ACCEPTED",
+          "The sub-contractor has accepted the sanction letter. You may proceed with disbursement.",
+        );
       }
     }
 
@@ -1217,10 +1326,13 @@ class CwcRfService {
   async nbfcInitiateDisbursement(cwcRfId, nbfcUserId, data) {
     const cwcRf = await CwcRf.findById(cwcRfId);
     if (!cwcRf) throw new Error("CWCRF not found");
-    if (cwcRf.status !== "NBFC_SANCTIONED") throw new Error("Sanction letter must be issued first");
+    if (cwcRf.status !== "NBFC_SANCTIONED")
+      throw new Error("Sanction letter must be issued first");
 
     if (!cwcRf.nbfcProcess?.sanctionLetter?.acceptedBySc) {
-      throw new Error("Sub-contractor must accept the sanction letter before disbursement");
+      throw new Error(
+        "Sub-contractor must accept the sanction letter before disbursement",
+      );
     }
 
     const { amount, disbursementMode, escrowAccountId } = data;
@@ -1247,8 +1359,17 @@ class CwcRfService {
     cwcRf.markModified("nbfcProcess");
     await cwcRf.save();
 
-    await this._updateCaseStatus(cwcRf, "DISBURSEMENT_INITIATED", nbfcUserId, "NBFC initiated disbursement");
-    await this._notifyStatusChange(cwcRf, "DISBURSEMENT_INITIATED", `Disbursement of ₹${amount} has been initiated`);
+    await this._updateCaseStatus(
+      cwcRf,
+      "DISBURSEMENT_INITIATED",
+      nbfcUserId,
+      "NBFC initiated disbursement",
+    );
+    await this._notifyStatusChange(
+      cwcRf,
+      "DISBURSEMENT_INITIATED",
+      `Disbursement of ₹${amount} has been initiated`,
+    );
 
     return cwcRf;
   }
@@ -1259,7 +1380,8 @@ class CwcRfService {
   async nbfcConfirmDisbursement(cwcRfId, nbfcUserId, data) {
     const cwcRf = await CwcRf.findById(cwcRfId);
     if (!cwcRf) throw new Error("CWCRF not found");
-    if (cwcRf.status !== "DISBURSEMENT_INITIATED") throw new Error("Disbursement must be initiated first");
+    if (cwcRf.status !== "DISBURSEMENT_INITIATED")
+      throw new Error("Disbursement must be initiated first");
 
     const { utrNumber, disbursedAt } = data;
     if (!utrNumber) throw new Error("UTR number is required");
@@ -1283,10 +1405,19 @@ class CwcRfService {
     await cwcRf.save();
 
     // Update case to COMPLETED
-    await this._updateCaseStatus(cwcRf, "COMPLETED", nbfcUserId, `Funds disbursed. UTR: ${utrNumber}`);
+    await this._updateCaseStatus(
+      cwcRf,
+      "COMPLETED",
+      nbfcUserId,
+      `Funds disbursed. UTR: ${utrNumber}`,
+    );
 
     // Notify all parties
-    await this._notifyStatusChange(cwcRf, "DISBURSED", `Funds have been disbursed. UTR: ${utrNumber}`);
+    await this._notifyStatusChange(
+      cwcRf,
+      "DISBURSED",
+      `Funds have been disbursed. UTR: ${utrNumber}`,
+    );
 
     return cwcRf;
   }
@@ -1330,8 +1461,13 @@ class CwcRfService {
       if (sc) {
         const scUser = await User.findOne({ subContractorId: sc._id });
         if (scUser?.email) {
-          emailService.sendStatusUpdate(scUser.email, sc.companyName || sc.ownerName || "Seller",
-            "CWCRF", newStatus.replace(/_/g, " "), notes);
+          emailService.sendStatusUpdate(
+            scUser.email,
+            sc.companyName || sc.ownerName || "Seller",
+            "CWCRF",
+            newStatus.replace(/_/g, " "),
+            notes,
+          );
         }
       }
     } catch (err) {
@@ -1344,10 +1480,16 @@ class CwcRfService {
    */
   async _notifyOpsTeam(subject, message) {
     try {
-      const opsUsers = await User.find({ role: "ops", isActive: true }).select("email name").limit(10);
+      const opsUsers = await User.find({ role: "ops", isActive: true })
+        .select("email name")
+        .limit(10);
       for (const u of opsUsers) {
         if (u.email) {
-          emailService.sendSalesNotification(u.email, u.name || "Ops Team", message);
+          emailService.sendSalesNotification(
+            u.email,
+            u.name || "Ops Team",
+            message,
+          );
         }
       }
     } catch (err) {
@@ -1361,11 +1503,24 @@ class CwcRfService {
   async _notifyEpc(cwcRf, message) {
     try {
       if (!cwcRf.epcId) return;
-      const epcId = typeof cwcRf.epcId === "object" ? cwcRf.epcId._id : cwcRf.epcId;
-      const epcUsers = await User.find({ companyId: epcId, role: "epc", isActive: true }).select("email name").limit(5);
+      const epcId =
+        typeof cwcRf.epcId === "object" ? cwcRf.epcId._id : cwcRf.epcId;
+      const epcUsers = await User.find({
+        companyId: epcId,
+        role: "epc",
+        isActive: true,
+      })
+        .select("email name")
+        .limit(5);
       for (const u of epcUsers) {
         if (u.email) {
-          emailService.sendStatusUpdate(u.email, u.name || "EPC", "CWCRF", "BUYER_VERIFICATION_PENDING", message);
+          emailService.sendStatusUpdate(
+            u.email,
+            u.name || "EPC",
+            "CWCRF",
+            "BUYER_VERIFICATION_PENDING",
+            message,
+          );
         }
       }
     } catch (err) {
@@ -1414,7 +1569,13 @@ class CwcRfService {
     const doc = new PDFDocument({ size: "A4", margin: 50, bufferPages: true });
 
     // ── Helper functions ──
-    const COLORS = { primary: "#B45309", heading: "#1e293b", muted: "#6b7280", accent: "#059669", line: "#e2e8f0" };
+    const COLORS = {
+      primary: "#B45309",
+      heading: "#1e293b",
+      muted: "#6b7280",
+      accent: "#059669",
+      line: "#e2e8f0",
+    };
 
     const drawLine = () => {
       doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(COLORS.line);
@@ -1423,28 +1584,72 @@ class CwcRfService {
 
     const sectionTitle = (title) => {
       doc.moveDown(0.5);
-      doc.fontSize(13).font("Helvetica-Bold").fillColor(COLORS.primary).text(title);
+      doc
+        .fontSize(13)
+        .font("Helvetica-Bold")
+        .fillColor(COLORS.primary)
+        .text(title);
       doc.moveDown(0.3);
       drawLine();
     };
 
     const row = (label, value) => {
       const y = doc.y;
-      doc.fontSize(9).font("Helvetica-Bold").fillColor(COLORS.muted).text(label, 50, y, { width: 180 });
-      doc.fontSize(10).font("Helvetica").fillColor(COLORS.heading).text(String(value ?? "—"), 235, y, { width: 310 });
+      doc
+        .fontSize(9)
+        .font("Helvetica-Bold")
+        .fillColor(COLORS.muted)
+        .text(label, 50, y, { width: 180 });
+      doc
+        .fontSize(10)
+        .font("Helvetica")
+        .fillColor(COLORS.heading)
+        .text(String(value ?? "—"), 235, y, { width: 310 });
       doc.moveDown(0.4);
     };
 
-    const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
-    const fmtCurrency = (n) => n != null ? `₹${Number(n).toLocaleString("en-IN")}` : "—";
+    const fmtDate = (d) =>
+      d
+        ? new Date(d).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : "—";
+    const fmtCurrency = (n) =>
+      n != null ? `₹${Number(n).toLocaleString("en-IN")}` : "—";
 
     // ── Header ──
     doc.rect(0, 0, 595.28, 80).fill("#fffbeb");
-    doc.fontSize(22).font("Helvetica-Bold").fillColor(COLORS.primary).text("GRYORK", 50, 22);
-    doc.fontSize(9).font("Helvetica").fillColor(COLORS.muted).text("CWC Request Form — Full Case Report", 50, 48);
-    doc.fontSize(10).font("Helvetica-Bold").fillColor(COLORS.heading).text(cwcRf.cwcRfNumber || "—", 400, 22, { align: "right", width: 145 });
-    doc.fontSize(8).font("Helvetica").fillColor(COLORS.muted).text(`Status: ${(cwcRf.status || "").replace(/_/g, " ")}`, 400, 40, { align: "right", width: 145 });
-    doc.fontSize(8).text(`Generated: ${new Date().toLocaleDateString("en-IN")}`, 400, 52, { align: "right", width: 145 });
+    doc
+      .fontSize(22)
+      .font("Helvetica-Bold")
+      .fillColor(COLORS.primary)
+      .text("GRYORK", 50, 22);
+    doc
+      .fontSize(9)
+      .font("Helvetica")
+      .fillColor(COLORS.muted)
+      .text("CWC Request Form — Full Case Report", 50, 48);
+    doc
+      .fontSize(10)
+      .font("Helvetica-Bold")
+      .fillColor(COLORS.heading)
+      .text(cwcRf.cwcRfNumber || "—", 400, 22, { align: "right", width: 145 });
+    doc
+      .fontSize(8)
+      .font("Helvetica")
+      .fillColor(COLORS.muted)
+      .text(`Status: ${(cwcRf.status || "").replace(/_/g, " ")}`, 400, 40, {
+        align: "right",
+        width: 145,
+      });
+    doc
+      .fontSize(8)
+      .text(`Generated: ${new Date().toLocaleDateString("en-IN")}`, 400, 52, {
+        align: "right",
+        width: 145,
+      });
 
     doc.y = 95;
 
@@ -1481,7 +1686,10 @@ class CwcRfService {
     // ── CWC Request (Section C) ──
     sectionTitle("Section C — CWC Request");
     row("Requested Amount", fmtCurrency(req.requestedAmount));
-    row("Requested Tenure", req.requestedTenure ? `${req.requestedTenure} days` : "—");
+    row(
+      "Requested Tenure",
+      req.requestedTenure ? `${req.requestedTenure} days` : "—",
+    );
     row("Urgency Level", req.urgencyLevel);
     row("Reason for Funding", req.reasonForFunding);
     row("Preferred Disbursement", fmtDate(req.preferredDisbursementDate));
@@ -1492,13 +1700,27 @@ class CwcRfService {
     sectionTitle("Section D — Interest Rate Preference");
     row("Preference Type", intPref.preferenceType);
     if (intPref.preferenceType === "RANGE") {
-      row("Rate Range", `${intPref.minRate || "—"}% – ${intPref.maxRate || "—"}% p.a.`);
+      row(
+        "Rate Range",
+        `${intPref.minRate || "—"}% – ${intPref.maxRate || "—"}% p.a.`,
+      );
     } else {
-      row("Max Acceptable Rate", intPref.maxAcceptableRate ? `${intPref.maxAcceptableRate}% p.a.` : "—");
+      row(
+        "Max Acceptable Rate",
+        intPref.maxAcceptableRate ? `${intPref.maxAcceptableRate}% p.a.` : "—",
+      );
     }
     row("Repayment Frequency", intPref.preferredRepaymentFrequency);
-    row("Processing Fee Accepted", intPref.processingFeeAcceptance ? "Yes" : "No");
-    row("Max Processing Fee", intPref.maxProcessingFeePercent ? `${intPref.maxProcessingFeePercent}%` : "—");
+    row(
+      "Processing Fee Accepted",
+      intPref.processingFeeAcceptance ? "Yes" : "No",
+    );
+    row(
+      "Max Processing Fee",
+      intPref.maxProcessingFeePercent
+        ? `${intPref.maxProcessingFeePercent}%`
+        : "—",
+    );
     row("Prepayment Preference", intPref.prepaymentPreference);
 
     // ── Seller Declaration ──
@@ -1510,7 +1732,12 @@ class CwcRfService {
     doc.addPage();
     sectionTitle("Ops Verification (Phase 6)");
     const secs = ["sectionA", "sectionB", "sectionC", "sectionD"];
-    const secLabels = { sectionA: "Section A", sectionB: "Section B", sectionC: "Section C", sectionD: "Section D" };
+    const secLabels = {
+      sectionA: "Section A",
+      sectionB: "Section B",
+      sectionC: "Section C",
+      sectionD: "Section D",
+    };
     secs.forEach((s) => {
       const v = opsV[s] || {};
       row(`${secLabels[s]} Verified`, v.verified ? "✓ Yes" : "✗ No");
@@ -1518,18 +1745,32 @@ class CwcRfService {
     });
     row("RA Bill Verified", opsV.raBillVerified ? "✓ Yes" : "✗ No");
     row("WCC Verified", opsV.wccVerified ? "✓ Yes" : "✗ No");
-    row("Meas. Sheet Verified", opsV.measurementSheetVerified ? "✓ Yes" : "✗ No");
+    row(
+      "Meas. Sheet Verified",
+      opsV.measurementSheetVerified ? "✓ Yes" : "✗ No",
+    );
     if (opsV.opsNotes) row("Ops Notes", opsV.opsNotes);
     row("Ops Verified At", fmtDate(opsV.opsVerifiedAt));
 
     // ── EPC / Buyer Verification ──
     sectionTitle("EPC Buyer Verification (Phase 9)");
     row("Approved Amount", fmtCurrency(buyerV.approvedAmount));
-    row("Repayment Timeline", buyerV.repaymentTimeline ? `${buyerV.repaymentTimeline} days` : "—");
-    row("Repayment Source", buyerV.repaymentArrangement?.source?.replace(/_/g, " "));
-    if (buyerV.repaymentArrangement?.otherDetails) row("Other Details", buyerV.repaymentArrangement.otherDetails);
-    if (buyerV.repaymentArrangement?.remarks) row("Remarks", buyerV.repaymentArrangement.remarks);
-    row("Buyer Declaration", buyerV.buyerDeclaration?.accepted ? "Accepted" : "Not accepted");
+    row(
+      "Repayment Timeline",
+      buyerV.repaymentTimeline ? `${buyerV.repaymentTimeline} days` : "—",
+    );
+    row(
+      "Repayment Source",
+      buyerV.repaymentArrangement?.source?.replace(/_/g, " "),
+    );
+    if (buyerV.repaymentArrangement?.otherDetails)
+      row("Other Details", buyerV.repaymentArrangement.otherDetails);
+    if (buyerV.repaymentArrangement?.remarks)
+      row("Remarks", buyerV.repaymentArrangement.remarks);
+    row(
+      "Buyer Declaration",
+      buyerV.buyerDeclaration?.accepted ? "Accepted" : "Not accepted",
+    );
     row("Verified At", fmtDate(buyerV.verifiedAt));
     if (buyerV.notes) row("Notes", buyerV.notes);
 
@@ -1538,8 +1779,14 @@ class CwcRfService {
       sectionTitle("NBFC Quotations");
       cwcRf.nbfcQuotations.forEach((q, i) => {
         row(`NBFC ${i + 1}`, q.nbfcId?.companyName || q.nbfcId?.name || "—");
-        row(`  Interest Rate`, q.quotation?.interestRate ? `${q.quotation.interestRate}% p.a.` : "—");
-        row(`  Tenure`, q.quotation?.tenure ? `${q.quotation.tenure} days` : "—");
+        row(
+          `  Interest Rate`,
+          q.quotation?.interestRate ? `${q.quotation.interestRate}% p.a.` : "—",
+        );
+        row(
+          `  Tenure`,
+          q.quotation?.tenure ? `${q.quotation.tenure} days` : "—",
+        );
         row(`  Status`, q.status);
         if (q.quotation?.terms) row(`  Terms`, q.quotation.terms);
         doc.moveDown(0.3);
@@ -1550,8 +1797,18 @@ class CwcRfService {
     if (cwcRf.selectedNbfc?.nbfcId) {
       sectionTitle("Selected NBFC");
       row("NBFC", cwcRf.selectedNbfc.nbfcId?.companyName || "—");
-      row("Final Interest Rate", cwcRf.selectedNbfc.finalInterestRate ? `${cwcRf.selectedNbfc.finalInterestRate}% p.a.` : "—");
-      row("Final Tenure", cwcRf.selectedNbfc.finalTenure ? `${cwcRf.selectedNbfc.finalTenure} days` : "—");
+      row(
+        "Final Interest Rate",
+        cwcRf.selectedNbfc.finalInterestRate
+          ? `${cwcRf.selectedNbfc.finalInterestRate}% p.a.`
+          : "—",
+      );
+      row(
+        "Final Tenure",
+        cwcRf.selectedNbfc.finalTenure
+          ? `${cwcRf.selectedNbfc.finalTenure} days`
+          : "—",
+      );
       row("Selected At", fmtDate(cwcRf.selectedNbfc.selectedAt));
     }
 
@@ -1559,7 +1816,10 @@ class CwcRfService {
     if (cwcRf.statusHistory && cwcRf.statusHistory.length > 0) {
       sectionTitle("Status History");
       cwcRf.statusHistory.forEach((h) => {
-        row(fmtDate(h.changedAt), `${(h.status || "").replace(/_/g, " ")}${h.notes ? " — " + h.notes : ""}`);
+        row(
+          fmtDate(h.changedAt),
+          `${(h.status || "").replace(/_/g, " ")}${h.notes ? " — " + h.notes : ""}`,
+        );
       });
     }
 
@@ -1568,7 +1828,12 @@ class CwcRfService {
     for (let i = pages.start; i < pages.start + pages.count; i++) {
       doc.switchToPage(i);
       doc.fontSize(7).font("Helvetica").fillColor(COLORS.muted);
-      doc.text(`Gryork Platform — Confidential | Page ${i + 1} of ${pages.count}`, 50, 780, { width: 495, align: "center" });
+      doc.text(
+        `Gryork Platform — Confidential | Page ${i + 1} of ${pages.count}`,
+        50,
+        780,
+        { width: 495, align: "center" },
+      );
     }
 
     doc.end();

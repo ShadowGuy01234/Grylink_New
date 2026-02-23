@@ -208,7 +208,12 @@ router.post(
     try {
       const { section, verified, notes } = req.body;
       if (!section) {
-        return res.status(400).json({ error: "section is required (sectionA, sectionB, sectionC, sectionD, raBill, wcc, measurementSheet)" });
+        return res
+          .status(400)
+          .json({
+            error:
+              "section is required (sectionA, sectionB, sectionC, sectionD, raBill, wcc, measurementSheet)",
+          });
       }
       const cwcRf = await cwcrfService.opsVerifySection(
         req.params.id,
@@ -233,7 +238,9 @@ router.post(
     try {
       const { section, field, reason } = req.body;
       if (!section || !field) {
-        return res.status(400).json({ error: "section and field are required" });
+        return res
+          .status(400)
+          .json({ error: "section and field are required" });
       }
       const cwcRf = await cwcrfService.opsDetachField(
         req.params.id,
@@ -258,7 +265,9 @@ router.patch(
     try {
       const { section, field, newValue, reason } = req.body;
       if (!section || !field || newValue === undefined) {
-        return res.status(400).json({ error: "section, field, and newValue are required" });
+        return res
+          .status(400)
+          .json({ error: "section, field, and newValue are required" });
       }
       const cwcRf = await cwcrfService.opsEditField(
         req.params.id,
@@ -308,14 +317,19 @@ router.post(
     try {
       const { action, notes } = req.body;
       if (!action || !["forward_to_epc", "reject"].includes(action)) {
-        return res.status(400).json({ error: "action must be 'forward_to_epc' or 'reject'" });
+        return res
+          .status(400)
+          .json({ error: "action must be 'forward_to_epc' or 'reject'" });
       }
-      const cwcRf = await cwcrfService.opsTriage(
-        req.params.id,
-        req.user._id,
-        { action, notes },
-      );
-      res.json({ message: action === "forward_to_epc" ? "Forwarded to EPC" : "CWCRF rejected", cwcRf });
+      const cwcRf = await cwcrfService.opsTriage(req.params.id, req.user._id, {
+        action,
+        notes,
+      });
+      res.json({
+        message:
+          action === "forward_to_epc" ? "Forwarded to EPC" : "CWCRF rejected",
+        cwcRf,
+      });
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
@@ -459,9 +473,11 @@ router.post(
   authorize("ops", "rmt", "admin"),
   async (req, res) => {
     try {
+      const { nbfcIds } = req.body;
       const result = await cwcrfService.shareWithNbfcs(
         req.params.id,
         req.user._id,
+        nbfcIds,
       );
       res.json({
         message: `CWCAF shared with ${result.matchingNbfcs} NBFCs`,
@@ -546,7 +562,9 @@ router.get(
   async (req, res) => {
     try {
       if (!req.user.nbfcId) {
-        return res.status(400).json({ error: "No NBFC linked to this account" });
+        return res
+          .status(400)
+          .json({ error: "No NBFC linked to this account" });
       }
       const cwcrfs = await cwcrfService.getCwcRfsInNbfcProcess(req.user.nbfcId);
       res.json(cwcrfs);
