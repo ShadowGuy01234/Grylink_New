@@ -42,23 +42,33 @@ export const salesApi = {
 
   // Company Leads
   createLead: (data: any) => api.post("/sales/leads", data),
-  getLeads: (params?: { search?: string; status?: string }) => api.get("/sales/leads", { params }),
+  getLeads: (params?: { search?: string; status?: string }) =>
+    api.get("/sales/leads", { params }),
   getLeadDetail: (id: string) => api.get(`/sales/leads/${id}`),
-  getLeadSubContractors: (id: string) => api.get(`/sales/leads/${id}/subcontractors`),
-  addCompanyNote: (id: string, note: string) => api.post(`/sales/leads/${id}/notes`, { note }),
+  getLeadSubContractors: (id: string) =>
+    api.get(`/sales/leads/${id}/subcontractors`),
+  addCompanyNote: (id: string, note: string) =>
+    api.post(`/sales/leads/${id}/notes`, { note }),
   resendCompanyLink: (id: string) => api.post(`/sales/leads/${id}/resend-link`),
 
   // Sub-Contractors
-  getSubContractors: (params?: { search?: string; status?: string; kycStatus?: string }) =>
-    api.get("/sales/subcontractors", { params }),
-  getSubContractorDetail: (id: string) => api.get(`/sales/subcontractors/${id}`),
+  getSubContractors: (params?: {
+    search?: string;
+    status?: string;
+    kycStatus?: string;
+  }) => api.get("/sales/subcontractors", { params }),
+  getSubContractorDetail: (id: string) =>
+    api.get(`/sales/subcontractors/${id}`),
   markContacted: (id: string, notes?: string) =>
     api.patch(`/sales/subcontractors/${id}/contacted`, { notes }),
-  addContactLog: (id: string, data: { method: string; outcome?: string; notes?: string }) =>
-    api.post(`/sales/subcontractors/${id}/contact-log`, data),
+  addContactLog: (
+    id: string,
+    data: { method: string; outcome?: string; notes?: string },
+  ) => api.post(`/sales/subcontractors/${id}/contact-log`, data),
 
   // GryLinks
-  getGryLinks: (params?: { status?: string; linkType?: string }) => api.get("/sales/grylinks", { params }),
+  getGryLinks: (params?: { status?: string; linkType?: string }) =>
+    api.get("/sales/grylinks", { params }),
   resendGryLink: (id: string) => api.post(`/sales/grylinks/${id}/resend`),
 };
 
@@ -71,13 +81,13 @@ export const opsApi = {
   verifyBill: (id: string, data: { decision: string; notes?: string }) =>
     api.post(`/ops/bills/${id}/verify`, data),
   completeKyc: (id: string) => api.post(`/ops/kyc/${id}/complete`),
-  
+
   // Bill Verification APIs
   getPendingBills: () => api.get("/ops/bills/pending"),
   getBillDetails: (id: string) => api.get(`/ops/bills/${id}`),
-  addBillNote: (id: string, data: { text: string }) => 
+  addBillNote: (id: string, data: { text: string }) =>
     api.post(`/ops/bills/${id}/notes`, data),
-  
+
   // KYC Verification APIs
   getPendingKyc: () => api.get("/ops/kyc/pending"),
   getSellerKyc: (id: string) => api.get(`/ops/kyc/${id}`),
@@ -87,14 +97,22 @@ export const opsApi = {
     api.post(`/ops/kyc/documents/${id}/verify`, data),
   verifyBankDetails: (id: string, data: { decision: string; notes?: string }) =>
     api.post(`/ops/kyc/${id}/verify-bank-details`, data),
-  requestAdditionalDoc: (id: string, data: { label: string; description?: string }) =>
-    api.post(`/ops/kyc/${id}/request-additional`, data),
-  verifyAdditionalDoc: (sellerId: string, docId: string, data: { decision: string; notes?: string }) =>
-    api.post(`/ops/kyc/${sellerId}/verify-additional/${docId}`, data),
+  requestAdditionalDoc: (
+    id: string,
+    data: { label: string; description?: string },
+  ) => api.post(`/ops/kyc/${id}/request-additional`, data),
+  verifyAdditionalDoc: (
+    sellerId: string,
+    docId: string,
+    data: { decision: string; notes?: string },
+  ) => api.post(`/ops/kyc/${sellerId}/verify-additional/${docId}`, data),
 
   // SLA Tracking APIs
-  getSlaItems: (params?: { type?: string; status?: string; priority?: string }) =>
-    api.get("/ops/sla", { params }),
+  getSlaItems: (params?: {
+    type?: string;
+    status?: string;
+    priority?: string;
+  }) => api.get("/ops/sla", { params }),
   getSlaStats: () => api.get("/ops/sla/stats"),
   getTeamWorkload: () => api.get("/ops/team/workload"),
 
@@ -105,7 +123,9 @@ export const opsApi = {
     api.post(`/ops/documents/${id}/verify`, data),
 
   // NBFC
-  inviteNbfc: (data: Record<string, unknown>) => api.post("/ops/nbfc/invite", data),
+  inviteNbfc: (data: Record<string, unknown>) =>
+    api.post("/ops/nbfc/invite", data),
+  getNbfcs: () => api.get("/nbfc"),
 
   // CWCRF Queue — Phase 6 (SUBMITTED/OPS_REVIEW) + Phase 8 (RMT_APPROVED triage) + Phase 10 (EPC_VERIFIED → NBFC dispatch)
   getCwcrfQueue: () => api.get("/cwcrf/ops/queue"),
@@ -113,16 +133,29 @@ export const opsApi = {
   getCwcrfNbfcQueue: () => api.get("/cwcrf/ops/queue?phase=epc_verified"),
   forwardCwcrfToRmt: (id: string, notes?: string) =>
     api.post(`/cwcrf/${id}/rmt/move-to-queue`, { notes }),
-  verifyCwcrfSection: (id: string, data: { section: string; verified: boolean; notes?: string }) =>
-    api.post(`/cwcrf/${id}/ops/verify-section`, data),
-  detachCwcrfField: (id: string, data: { section: string; field: string; reason?: string }) =>
-    api.post(`/cwcrf/${id}/ops/detach-field`, data),
-  editCwcrfField: (id: string, data: { section: string; field: string; newValue: unknown; reason?: string }) =>
-    api.patch(`/cwcrf/${id}/ops/edit-field`, data),
+  verifyCwcrfSection: (
+    id: string,
+    data: { section: string; verified: boolean; notes?: string },
+  ) => api.post(`/cwcrf/${id}/ops/verify-section`, data),
+  detachCwcrfField: (
+    id: string,
+    data: { section: string; field: string; reason?: string },
+  ) => api.post(`/cwcrf/${id}/ops/detach-field`, data),
+  editCwcrfField: (
+    id: string,
+    data: {
+      section: string;
+      field: string;
+      newValue: unknown;
+      reason?: string;
+    },
+  ) => api.patch(`/cwcrf/${id}/ops/edit-field`, data),
   reRequestFromSc: (id: string, data: { message: string; section?: string }) =>
     api.post(`/cwcrf/${id}/ops/re-request`, data),
-  triageCwcrf: (id: string, data: { action: 'forward_to_epc' | 'reject'; notes?: string }) =>
-    api.post(`/cwcrf/${id}/ops/triage`, data),
+  triageCwcrf: (
+    id: string,
+    data: { action: "forward_to_epc" | "reject"; notes?: string },
+  ) => api.post(`/cwcrf/${id}/ops/triage`, data),
   getMatchingNbfcs: (cwcrfId: string) =>
     api.get(`/cwcrf/${cwcrfId}/matching-nbfcs`),
   shareWithNbfcs: (cwcrfId: string, nbfcIds?: string[]) =>
@@ -206,7 +239,6 @@ export const adminApi = {
   restoreUser: (id: string) => api.post(`/admin/users/${id}/restore`),
   getStats: () => api.get("/admin/stats"),
 };
-
 
 // Approvals
 export const approvalApi = {
@@ -308,12 +340,21 @@ export const auditApi = {
   }) => api.get("/audit", { params }),
   getStats: (days?: number) => api.get("/audit/stats", { params: { days } }),
   getById: (id: string) => api.get(`/audit/${id}`),
-  getEntityLogs: (entityType: string, entityId: string, params?: { page?: number; limit?: number }) =>
-    api.get(`/audit/entity/${entityType}/${entityId}`, { params }),
-  getUserTimeline: (userId: string, params?: { page?: number; limit?: number }) =>
-    api.get(`/audit/user/${userId}/timeline`, { params }),
-  exportLogs: (params?: { startDate?: string; endDate?: string; category?: string; format?: string }) =>
-    api.get("/audit/export", { params }),
+  getEntityLogs: (
+    entityType: string,
+    entityId: string,
+    params?: { page?: number; limit?: number },
+  ) => api.get(`/audit/entity/${entityType}/${entityId}`, { params }),
+  getUserTimeline: (
+    userId: string,
+    params?: { page?: number; limit?: number },
+  ) => api.get(`/audit/user/${userId}/timeline`, { params }),
+  exportLogs: (params?: {
+    startDate?: string;
+    endDate?: string;
+    category?: string;
+    format?: string;
+  }) => api.get("/audit/export", { params }),
 };
 
 // Cron Jobs (Admin)
@@ -329,12 +370,19 @@ export const cronApi = {
 
 // Career Applications (Admin / Founder)
 export const careerApi = {
-  getApplications: (params?: { status?: string; role?: string; search?: string; page?: number; limit?: number }) =>
-    api.get("/careers/applications", { params }),
+  getApplications: (params?: {
+    status?: string;
+    role?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => api.get("/careers/applications", { params }),
   getStats: () => api.get("/careers/applications/stats"),
   getApplication: (id: string) => api.get(`/careers/applications/${id}`),
-  updateApplication: (id: string, data: { status?: string; adminNotes?: string }) =>
-    api.patch(`/careers/applications/${id}`, data),
+  updateApplication: (
+    id: string,
+    data: { status?: string; adminNotes?: string },
+  ) => api.patch(`/careers/applications/${id}`, data),
   deleteApplication: (id: string) => api.delete(`/careers/applications/${id}`),
 };
 

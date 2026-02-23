@@ -45,6 +45,7 @@ const login = async (email, password) => {
       role: user.role,
       companyId: user.companyId,
       subContractorId: user.subContractorId,
+      nbfcId: user.nbfcId,
     },
     token,
   };
@@ -79,7 +80,7 @@ const createEpcUser = async ({ name, email, phone, companyId }) => {
 };
 
 // Create NBFC user (no password - set later via GryLink)
-const createNbfcUser = async ({ name, email, phone, companyId }) => {
+const createNbfcUser = async ({ name, email, phone, nbfcId }) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new Error("User with this email already exists");
@@ -90,7 +91,7 @@ const createNbfcUser = async ({ name, email, phone, companyId }) => {
     email,
     phone,
     role: "nbfc",
-    companyId,
+    nbfcId,
   });
   await user.save();
   return user;

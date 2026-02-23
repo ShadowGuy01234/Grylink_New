@@ -4,9 +4,15 @@ const Bill = require("../models/Bill");
 const CwcRf = require("../models/CwcRf");
 const ChatMessage = require("../models/ChatMessage");
 const SubContractor = require("../models/SubContractor");
+const Nbfc = require("../models/Nbfc");
+const GryLink = require("../models/GryLink");
 const User = require("../models/User");
 const authService = require("./authService");
-const { sendOnboardingLink, sendStatusUpdate } = require("./emailService");
+const {
+  sendOnboardingLink,
+  sendNbfcOnboardingLink,
+  sendStatusUpdate,
+} = require("./emailService");
 
 // Import new services
 const kycService = require("./kycService");
@@ -167,45 +173,90 @@ const getCompanyDocuments = async (companyId) => {
 
 // Invite NBFC (Ops onboarding)
 const inviteNbfc = async (data, opsUserId) => {
-  const { companyName, ownerName, email, phone, address } = data;
+  const { name, ownerName, email, phone, address } = data;
 
-  const existing = await Company.findOne({ email });
-  if (existing) throw new Error("A company with this email already exists");
+  // Check if NBFC with this email already exists
+  const existingNbfc = await Nbfc.findOne({ email });
+  if (existingNbfc) throw new Error("An NBFC with this email already exists");
 
-  const company = new Company({
-    companyName,
-    ownerName,
+  // Check if user with this email already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) throw new Error("A user with this email already exists");
+
+  // Generate a short code from the name (e.g., "HDFC Finance" -> "HDFC_FIN")
+  const code = name
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, "")
+    .split(/\s+/)
+    .map((w) => w.substring(0, 4))
+    .join("_")
+    .substring(0, 12);
+
+  // Ensure code uniqueness
+  let uniqueCode = code;
+  let counter = 1;
+  while (await Nbfc.findOne({ code: uniqueCode })) {
+    uniqueCode = `${code}_${counter}`;
+    counter++;
+  }
+
+  // Create NBFC record
+  const nbfc = new Nbfc({
+    name,
+    code: uniqueCode,
     email,
     phone,
     address,
-    salesAgentId: opsUserId,
-    role: "NBFC",
-    status: "LEAD_CREATED",
-    statusHistory: [{ status: "LEAD_CREATED", changedBy: opsUserId }],
+    status: "INACTIVE",
+    contacts: [
+      {
+        name: ownerName,
+        email,
+        phone,
+        isPrimary: true,
+      },
+    ],
+    statusHistory: [
+      {
+        status: "INACTIVE",
+        changedBy: opsUserId,
+        notes: "Onboarding initiated by ops",
+      },
+    ],
   });
-  await company.save();
+  await nbfc.save();
 
+  // Create NBFC user (no password yet - set via GryLink)
   const user = await authService.createNbfcUser({
     name: ownerName,
     email,
     phone,
-    companyId: company._id,
+    nbfcId: nbfc._id,
   });
-  company.userId = user._id;
-  await company.save();
 
+  // Link user to NBFC
+  nbfc.userId = user._id;
+  await nbfc.save();
+
+  // Create GryLink with nbfc type
   const gryLink = new GryLink({
-    companyId: company._id,
+    nbfcId: nbfc._id,
     salesAgentId: opsUserId,
     email,
+    linkType: "nbfc",
   });
   await gryLink.save();
 
+  // Send onboarding email
   const baseUrl = process.env.GRYLINK_FRONTEND_URL || "http://localhost:5174";
   const link = `${baseUrl}/onboarding/${gryLink.token}`;
-  await sendOnboardingLink(email, ownerName, link);
+  await sendNbfcOnboardingLink(email, ownerName, name, link);
 
-  return { company, gryLink };
+  return {
+    nbfc,
+    gryLink,
+    user: { id: user._id, name: user.name, email: user.email },
+  };
 };
 
 // Get pending bills
@@ -284,7 +335,11 @@ const getPendingKyc = async () => {
           type: docType,
           fileName: doc.fileName || docType,
           fileUrl: doc.fileUrl,
-          status: doc.verified ? "verified" : (doc.verifiedAt ? "rejected" : "pending"),
+          status: doc.verified
+            ? "verified"
+            : doc.verifiedAt
+              ? "rejected"
+              : "pending",
           uploadedAt: doc.uploadedAt,
         });
       }
@@ -340,7 +395,11 @@ const getSellerKyc = async (sellerId) => {
         type: docType,
         fileName: doc.fileName || docType,
         fileUrl: doc.fileUrl,
-        status: doc.verified ? "verified" : (doc.verifiedAt ? "rejected" : "pending"),
+        status: doc.verified
+          ? "verified"
+          : doc.verifiedAt
+            ? "rejected"
+            : "pending",
         uploadedAt: doc.uploadedAt,
       });
     }
@@ -402,7 +461,8 @@ const verifyBankDetails = async (sellerId, decision, notes, opsUserId) => {
     throw new Error("No bank details found for this seller");
   }
 
-  seller.bankDetails.verificationStatus = decision === "approve" ? "VERIFIED" : "FAILED";
+  seller.bankDetails.verificationStatus =
+    decision === "approve" ? "VERIFIED" : "FAILED";
   seller.bankDetails.verifiedAt = new Date();
   if (notes) seller.bankDetails.rejectionReason = notes;
 
@@ -411,7 +471,13 @@ const verifyBankDetails = async (sellerId, decision, notes, opsUserId) => {
 };
 
 // Verify individual additional document
-const verifyAdditionalDocument = async (sellerId, docId, decision, opsUserId, notes) => {
+const verifyAdditionalDocument = async (
+  sellerId,
+  docId,
+  decision,
+  opsUserId,
+  notes,
+) => {
   const seller = await SubContractor.findById(sellerId);
   if (!seller) throw new Error("Seller not found");
 
@@ -433,7 +499,7 @@ const verifyAdditionalDocument = async (sellerId, docId, decision, opsUserId, no
         seller.email,
         seller.contactName || seller.companyName || "Sub-Contractor",
         "Document Rejected — Re-upload Required",
-        `Your uploaded document "${doc.label}" has been reviewed and requires re-submission.${notes ? "\n\nReason: " + notes : ""}\n\nPlease log in to your portal and upload a corrected version.`
+        `Your uploaded document "${doc.label}" has been reviewed and requires re-submission.${notes ? "\n\nReason: " + notes : ""}\n\nPlease log in to your portal and upload a corrected version.`,
       );
     } catch (emailErr) {
       console.error("Failed to send additional doc rejection email:", emailErr);
