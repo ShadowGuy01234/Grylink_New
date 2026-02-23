@@ -1,1 +1,4 @@
 node_modules
+
+.env
+grylink-portal/.env
