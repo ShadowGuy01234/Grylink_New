@@ -184,14 +184,12 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
         opsApi.getPending(),
         casesApi.getCases(),
         approvalApi.getPendingCount().catch(() => ({ data: { count: 0 } })),
-        slaApi
-          .getDashboard()
-          .catch(() => ({
-            data: {
-              stats: { total: 0, active: 0, completed: 0, overdue: 0 },
-              recentOverdue: [],
-            },
-          })),
+        slaApi.getDashboard().catch(() => ({
+          data: {
+            stats: { total: 0, active: 0, completed: 0, overdue: 0 },
+            recentOverdue: [],
+          },
+        })),
         slaApi.getActive().catch(() => ({ data: [] })),
         slaApi.getOverdue().catch(() => ({ data: [] })),
         opsApi.getCwcrfQueue().catch(() => ({ data: { cwcrfs: [] } })),
@@ -3860,6 +3858,9 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
   const [nbfcMatches, setNbfcMatches] = React.useState<Record<string, any[]>>(
     {},
   );
+  const [nbfcAlreadyShared, setNbfcAlreadyShared] = React.useState<
+    Record<string, string[]>
+  >({});
   const [nbfcLoading, setNbfcLoading] = React.useState<Record<string, boolean>>(
     {},
   );
@@ -6300,6 +6301,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                 const loading = nbfcLoading[cwcrf._id] || false;
                 const selected = nbfcSelected[cwcrf._id] || [];
                 const sending = nbfcSending[cwcrf._id] || false;
+                const alreadyShared = nbfcAlreadyShared[cwcrf._id] || [];
                 const isExpandedNbfc = expanded === `nbfc-${cwcrf._id}`;
 
                 const loadNbfcs = async () => {
@@ -6308,7 +6310,12 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                     const res = await opsApi.getMatchingNbfcs(cwcrf._id);
                     const list =
                       res.data?.matchingNbfcs || res.data?.nbfcs || [];
+                    const shared = res.data?.alreadySharedNbfcIds || [];
                     setNbfcMatches((prev) => ({ ...prev, [cwcrf._id]: list }));
+                    setNbfcAlreadyShared((prev) => ({
+                      ...prev,
+                      [cwcrf._id]: shared,
+                    }));
                   } catch {
                     setNbfcMatches((prev) => ({ ...prev, [cwcrf._id]: [] }));
                   } finally {
@@ -6317,6 +6324,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                 };
 
                 const toggleNbfc = (nbfcId: string) => {
+                  if (alreadyShared.includes(nbfcId)) return;
                   setNbfcSelected((prev) => {
                     const curr = prev[cwcrf._id] || [];
                     return {
@@ -7074,14 +7082,30 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   type="checkbox"
                                   id={`select-all-${cwcrf._id}`}
                                   checked={
-                                    selected.length === matches.length &&
-                                    matches.length > 0
+                                    selected.length ===
+                                      matches.filter(
+                                        (n: any) =>
+                                          !alreadyShared.includes(
+                                            n._id || n.id,
+                                          ),
+                                      ).length &&
+                                    matches.filter(
+                                      (n: any) =>
+                                        !alreadyShared.includes(n._id || n.id),
+                                    ).length > 0
                                   }
                                   onChange={(e) => {
                                     setNbfcSelected((prev) => ({
                                       ...prev,
                                       [cwcrf._id]: e.target.checked
-                                        ? matches.map((n: any) => n._id || n.id)
+                                        ? matches
+                                            .filter(
+                                              (n: any) =>
+                                                !alreadyShared.includes(
+                                                  n._id || n.id,
+                                                ),
+                                            )
+                                            .map((n: any) => n._id || n.id)
                                         : [],
                                     }));
                                   }}
@@ -7107,6 +7131,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               {matches.map((nbfc: any) => {
                                 const nbfcId = nbfc._id || nbfc.id;
                                 const isChecked = selected.includes(nbfcId);
+                                const isShared = alreadyShared.includes(nbfcId);
                                 return (
                                   <div
                                     key={nbfcId}
@@ -7116,17 +7141,27 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                       gap: 12,
                                       padding: "12px 16px",
                                       borderBottom: "1px solid #f1f5f9",
-                                      background: isChecked
-                                        ? "#faf5ff"
-                                        : "#fff",
-                                      cursor: "pointer",
+                                      background: isShared
+                                        ? "#f1f5f9"
+                                        : isChecked
+                                          ? "#faf5ff"
+                                          : "#fff",
+                                      cursor: isShared
+                                        ? "not-allowed"
+                                        : "pointer",
+                                      opacity: isShared ? 0.6 : 1,
                                     }}
-                                    onClick={() => toggleNbfc(nbfcId)}
+                                    onClick={() =>
+                                      !isShared && toggleNbfc(nbfcId)
+                                    }
                                   >
                                     <input
                                       type="checkbox"
                                       checked={isChecked}
-                                      onChange={() => toggleNbfc(nbfcId)}
+                                      disabled={isShared}
+                                      onChange={() =>
+                                        !isShared && toggleNbfc(nbfcId)
+                                      }
                                       onClick={(e) => e.stopPropagation()}
                                       style={{
                                         width: 15,
@@ -7158,6 +7193,27 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                         {nbfc.phone && ` · ${nbfc.phone}`}
                                       </p>
                                     </div>
+                                    {isShared && (
+                                      <div
+                                        style={{
+                                          textAlign: "right",
+                                          flexShrink: 0,
+                                        }}
+                                      >
+                                        <span
+                                          style={{
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            padding: "3px 10px",
+                                            borderRadius: 999,
+                                            background: "#e2e8f0",
+                                            color: "#64748b",
+                                          }}
+                                        >
+                                          Already Shared
+                                        </span>
+                                      </div>
+                                    )}
                                     {nbfc.matchScore != null && (
                                       <div
                                         style={{

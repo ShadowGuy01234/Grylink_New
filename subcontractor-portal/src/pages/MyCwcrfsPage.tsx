@@ -33,17 +33,21 @@ interface Cwcrf {
     urgencyLevel: string;
   };
   nbfcQuotations: Array<{
-    nbfc: { _id: string; name: string };
-    offeredAmount: number;
-    interestRate: number;
-    tenure: number;
-    processingFee: number;
+    nbfcId: { _id: string; name: string; companyName?: string };
+    quotation?: {
+      offeredAmount: number;
+      interestRate: number;
+      tenure: number;
+      processingFee: number;
+    };
+    status: string;
     quotedAt: string;
+    sharedAt: string;
   }>;
   selectedNbfc?: {
-    nbfc: { name: string };
-    offeredAmount: number;
-    interestRate: number;
+    nbfcId: { _id: string; name: string; companyName?: string };
+    finalInterestRate: number;
+    finalTenure: number;
   };
   createdAt: string;
 }
@@ -319,13 +323,13 @@ const MyCwcrfsPage = () => {
                                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
                                 <div className="flex-1">
                                   <p className="font-medium text-green-800">
-                                    {cwcrf.selectedNbfc.nbfc?.name}
+                                    {cwcrf.selectedNbfc.nbfcId?.name ||
+                                      cwcrf.selectedNbfc.nbfcId?.companyName ||
+                                      "Selected NBFC"}
                                   </p>
                                   <p className="text-sm text-green-700">
-                                    {formatCurrency(
-                                      cwcrf.selectedNbfc.offeredAmount,
-                                    )}{" "}
-                                    @ {cwcrf.selectedNbfc.interestRate}% p.a.
+                                    {cwcrf.selectedNbfc.finalInterestRate}% p.a.
+                                    · {cwcrf.selectedNbfc.finalTenure} days
                                   </p>
                                 </div>
                                 <Badge variant="success">Selected</Badge>
@@ -333,7 +337,7 @@ const MyCwcrfsPage = () => {
                             ) : (
                               <div className="flex flex-wrap gap-2">
                                 {cwcrf.nbfcQuotations
-                                  .slice(0, 3)
+                                  .filter((q) => q.status === "QUOTED")
                                   .map((quote, qIdx) => (
                                     <motion.div
                                       key={qIdx}
@@ -343,18 +347,31 @@ const MyCwcrfsPage = () => {
                                       className="flex-1 min-w-[200px] border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
                                     >
                                       <p className="font-medium text-gray-900 text-sm mb-1">
-                                        {quote.nbfc?.name || `NBFC ${qIdx + 1}`}
+                                        {quote.nbfcId?.name ||
+                                          quote.nbfcId?.companyName ||
+                                          `NBFC ${qIdx + 1}`}
                                       </p>
-                                      <div className="flex items-center justify-between text-xs">
+                                      <div className="flex items-center justify-between text-xs mb-1">
                                         <span className="text-green-600 font-medium">
-                                          {formatCurrency(quote.offeredAmount)}
+                                          {formatCurrency(
+                                            quote.quotation?.offeredAmount || 0,
+                                          )}
                                         </span>
                                         <span className="text-gray-500">
-                                          {quote.interestRate}% p.a.
+                                          {quote.quotation?.interestRate}% p.a.
                                         </span>
                                       </div>
-                                      {cwcrf.status ===
-                                        "QUOTATIONS_RECEIVED" && (
+                                      <div className="flex items-center justify-between text-xs text-gray-400">
+                                        <span>
+                                          {quote.quotation?.tenure} days
+                                        </span>
+                                        <span>
+                                          Fee: {quote.quotation?.processingFee}%
+                                        </span>
+                                      </div>
+                                      {(cwcrf.status === "QUOTES_RECEIVED" ||
+                                        cwcrf.status ===
+                                          "SHARED_WITH_NBFC") && (
                                         <Button
                                           size="sm"
                                           variant="outline"
@@ -362,18 +379,32 @@ const MyCwcrfsPage = () => {
                                           onClick={() =>
                                             handleSelectNbfc(
                                               cwcrf._id,
-                                              quote.nbfc?._id,
+                                              quote.nbfcId?._id,
                                             )
                                           }
                                           isLoading={
-                                            selectingNbfc === quote.nbfc?._id
+                                            selectingNbfc === quote.nbfcId?._id
                                           }
                                         >
-                                          Select
+                                          Select This NBFC
                                         </Button>
                                       )}
                                     </motion.div>
                                   ))}
+                                {cwcrf.nbfcQuotations.filter(
+                                  (q) => q.status === "PENDING",
+                                ).length > 0 && (
+                                  <div className="flex-1 min-w-[200px] border border-dashed border-gray-300 rounded-lg p-3 flex items-center justify-center">
+                                    <p className="text-xs text-gray-400 text-center">
+                                      {
+                                        cwcrf.nbfcQuotations.filter(
+                                          (q) => q.status === "PENDING",
+                                        ).length
+                                      }{" "}
+                                      NBFC(s) yet to respond
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

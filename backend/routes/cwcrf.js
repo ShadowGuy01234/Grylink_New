@@ -57,7 +57,7 @@ router.get(
       const cwcrfs = await cwcrfService.getCwcRfsForSubContractor(
         req.user.subContractorId,
       );
-      res.json(cwcrfs);
+      res.json({ cwcrfs });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
@@ -208,12 +208,10 @@ router.post(
     try {
       const { section, verified, notes } = req.body;
       if (!section) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "section is required (sectionA, sectionB, sectionC, sectionD, raBill, wcc, measurementSheet)",
-          });
+        return res.status(400).json({
+          error:
+            "section is required (sectionA, sectionB, sectionC, sectionD, raBill, wcc, measurementSheet)",
+        });
       }
       const cwcRf = await cwcrfService.opsVerifySection(
         req.params.id,
@@ -509,7 +507,7 @@ router.get(
       }
 
       const cwcrfs = await cwcrfService.getCwcRfsForNbfc(req.user.nbfcId);
-      res.json(cwcrfs);
+      res.json({ cwcrfs });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

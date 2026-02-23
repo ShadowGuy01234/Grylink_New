@@ -61,8 +61,8 @@ const cwcRfSchema = new mongoose.Schema(
       requestedTenure: { type: Number }, // In days (30/45/60/90)
       urgencyLevel: {
         type: String,
-        enum: ['NORMAL', 'URGENT', 'CRITICAL'],
-        default: 'NORMAL',
+        enum: ["NORMAL", "URGENT", "CRITICAL"],
+        default: "NORMAL",
       },
       reasonForFunding: { type: String, trim: true },
       preferredDisbursementDate: { type: Date },
@@ -84,15 +84,15 @@ const cwcRfSchema = new mongoose.Schema(
       maxAcceptableRate: { type: Number }, // Alternative: "Up to X% p.a."
       preferredRepaymentFrequency: {
         type: String,
-        enum: ['ONE_TIME', 'MONTHLY', 'QUARTERLY'],
-        default: 'ONE_TIME',
+        enum: ["ONE_TIME", "MONTHLY", "QUARTERLY"],
+        default: "ONE_TIME",
       },
       processingFeeAcceptance: { type: Boolean, default: true },
       maxProcessingFeePercent: { type: Number },
       prepaymentPreference: {
         type: String,
-        enum: ['WITH_PENALTY', 'WITHOUT_PENALTY', 'NO_PREPAYMENT'],
-        default: 'WITHOUT_PENALTY',
+        enum: ["WITH_PENALTY", "WITHOUT_PENALTY", "NO_PREPAYMENT"],
+        default: "WITHOUT_PENALTY",
       },
     },
 
@@ -117,32 +117,32 @@ const cwcRfSchema = new mongoose.Schema(
       sectionA: {
         verified: { type: Boolean, default: false },
         notes: { type: String, trim: true },
-        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         verifiedAt: { type: Date },
       },
       sectionB: {
         verified: { type: Boolean, default: false },
         notes: { type: String, trim: true },
-        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         verifiedAt: { type: Date },
       },
       sectionC: {
         verified: { type: Boolean, default: false },
         notes: { type: String, trim: true },
-        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         verifiedAt: { type: Date },
       },
       sectionD: {
         verified: { type: Boolean, default: false },
         notes: { type: String, trim: true },
-        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         verifiedAt: { type: Date },
       },
       raBillVerified: { type: Boolean, default: false },
       wccVerified: { type: Boolean, default: false },
       measurementSheetVerified: { type: Boolean, default: false },
       opsNotes: { type: String, trim: true },
-      opsVerifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      opsVerifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       opsVerifiedAt: { type: Date },
     },
 
@@ -151,11 +151,11 @@ const cwcRfSchema = new mongoose.Schema(
     // ========================================
     opsEditLog: [
       {
-        section: { type: String },          // e.g. 'invoiceDetails', 'buyerDetails'
-        field: { type: String },             // e.g. 'invoiceNumber', 'projectName'
+        section: { type: String }, // e.g. 'invoiceDetails', 'buyerDetails'
+        field: { type: String }, // e.g. 'invoiceNumber', 'projectName'
         oldValue: { type: mongoose.Schema.Types.Mixed },
         newValue: { type: mongoose.Schema.Types.Mixed },
-        editedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        editedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         editedAt: { type: Date, default: Date.now },
         reason: { type: String, trim: true },
       },
@@ -164,7 +164,7 @@ const cwcRfSchema = new mongoose.Schema(
       {
         section: { type: String },
         field: { type: String },
-        detachedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        detachedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         detachedAt: { type: Date, default: Date.now },
         reason: { type: String, trim: true },
         resolved: { type: Boolean, default: false },
@@ -220,28 +220,28 @@ const cwcRfSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
-        "SUBMITTED",                   // SC submitted CWCRF
-        "KYC_REQUIRED",                  // KYC needs completion
-        "KYC_IN_PROGRESS",               // KYC chat ongoing
-        "KYC_COMPLETED",                 // KYC verified
-        "OPS_REVIEW",                    // Ops super-access review (Phase 6)
-        "UNDER_RISK_REVIEW",             // RMT reviewing (Phase 7)
-        "RMT_APPROVED",                  // RMT forwarded back to Ops (Phase 7.5)
-        "BUYER_VERIFICATION_PENDING",    // Ops triaged → waiting for EPC (Phase 8)
-        "BUYER_APPROVED",                // EPC verified with A, B, C, D (Phase 9)
-        "BUYER_REJECTED",                // EPC rejected
-        "CWCAF_READY",                   // CWCAF generated (Phase 10.1)
-        "SHARED_WITH_NBFC",              // Sent to matching NBFCs (Phase 10.3)
-        "QUOTES_RECEIVED",               // NBFCs submitted quotes
-        "NBFC_SELECTED",                 // Seller picked an NBFC
-        "MOVED_TO_NBFC_PROCESS",         // Handed off to NBFC
-        "NBFC_DUE_DILIGENCE",            // NBFC running due diligence (Phase 11.4)
-        "NBFC_SANCTIONED",               // NBFC issued sanction letter (Phase 11.4)
-        "DISBURSEMENT_INITIATED",        // Disbursement process started (Phase 11.4)
-        "DISBURSED",                     // Funds disbursed to SC (Phase 11.4)
-        "ACTION_REQUIRED",               // Issues need resolution
-        "REJECTED",                      // Final rejection
-        "COMPLETED",                     // Successfully funded
+        "SUBMITTED", // SC submitted CWCRF
+        "KYC_REQUIRED", // KYC needs completion
+        "KYC_IN_PROGRESS", // KYC chat ongoing
+        "KYC_COMPLETED", // KYC verified
+        "OPS_REVIEW", // Ops super-access review (Phase 6)
+        "UNDER_RISK_REVIEW", // RMT reviewing (Phase 7)
+        "RMT_APPROVED", // RMT forwarded back to Ops (Phase 7.5)
+        "BUYER_VERIFICATION_PENDING", // Ops triaged → waiting for EPC (Phase 8)
+        "BUYER_APPROVED", // EPC verified with A, B, C, D (Phase 9)
+        "BUYER_REJECTED", // EPC rejected
+        "CWCAF_READY", // CWCAF generated (Phase 10.1)
+        "SHARED_WITH_NBFC", // Sent to matching NBFCs (Phase 10.3)
+        "QUOTES_RECEIVED", // NBFCs submitted quotes
+        "NBFC_SELECTED", // Seller picked an NBFC
+        "MOVED_TO_NBFC_PROCESS", // Handed off to NBFC
+        "NBFC_DUE_DILIGENCE", // NBFC running due diligence (Phase 11.4)
+        "NBFC_SANCTIONED", // NBFC issued sanction letter (Phase 11.4)
+        "DISBURSEMENT_INITIATED", // Disbursement process started (Phase 11.4)
+        "DISBURSED", // Funds disbursed to SC (Phase 11.4)
+        "ACTION_REQUIRED", // Issues need resolution
+        "REJECTED", // Final rejection
+        "COMPLETED", // Successfully funded
       ],
       default: "SUBMITTED",
     },
@@ -254,15 +254,24 @@ const cwcRfSchema = new mongoose.Schema(
         nbfcId: { type: mongoose.Schema.Types.ObjectId, ref: "Nbfc" },
         sharedAt: { type: Date },
         quotation: {
+          offeredAmount: { type: Number }, // Amount offered by NBFC
           interestRate: { type: Number }, // Annual %
           tenure: { type: Number }, // Days
+          processingFee: { type: Number }, // Processing fee %
           terms: { type: String, trim: true },
           remarks: { type: String, trim: true },
         },
         quotedAt: { type: Date },
         status: {
           type: String,
-          enum: ["PENDING", "QUOTED", "SELECTED", "NOT_SELECTED", "WITHDRAWN", "REJECTED"],
+          enum: [
+            "PENDING",
+            "QUOTED",
+            "SELECTED",
+            "NOT_SELECTED",
+            "WITHDRAWN",
+            "REJECTED",
+          ],
           default: "PENDING",
         },
       },
@@ -295,7 +304,7 @@ const cwcRfSchema = new mongoose.Schema(
         notes: { type: String, trim: true },
         completedAt: { type: Date },
         completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        result: { type: String, enum: ["APPROVED", "REJECTED", "CONDITIONAL"], },
+        result: { type: String, enum: ["APPROVED", "REJECTED", "CONDITIONAL"] },
         conditions: { type: String, trim: true },
       },
       // Sanction Letter
@@ -307,7 +316,7 @@ const cwcRfSchema = new mongoose.Schema(
         sanctionedInterestRate: { type: Number },
         sanctionedTenure: { type: Number },
         specialConditions: { type: String, trim: true },
-        letterUrl: { type: String },                   // Uploaded sanction letter PDF
+        letterUrl: { type: String }, // Uploaded sanction letter PDF
         acceptedBySc: { type: Boolean, default: false },
         acceptedAt: { type: Date },
       },
@@ -317,9 +326,13 @@ const cwcRfSchema = new mongoose.Schema(
         initiatedAt: { type: Date },
         initiatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         amount: { type: Number },
-        utrNumber: { type: String, trim: true },       // Bank UTR
+        utrNumber: { type: String, trim: true }, // Bank UTR
         disbursedAt: { type: Date },
-        disbursementMode: { type: String, enum: ["NEFT", "RTGS", "IMPS", "OTHER"], default: "NEFT" },
+        disbursementMode: {
+          type: String,
+          enum: ["NEFT", "RTGS", "IMPS", "OTHER"],
+          default: "NEFT",
+        },
         escrowAccountId: { type: String, trim: true },
         confirmed: { type: Boolean, default: false },
         confirmedAt: { type: Date },

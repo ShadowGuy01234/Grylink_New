@@ -51,6 +51,30 @@ interface Cwcrf {
     repaymentArrangement: string;
     verifiedAt: string;
   };
+  nbfcQuotations?: Array<{
+    nbfcId?: {
+      _id: string;
+      name: string;
+      companyName?: string;
+      email?: string;
+    };
+    quotation?: {
+      offeredAmount?: number;
+      interestRate?: number;
+      tenure?: number;
+      processingFee?: number;
+      terms?: string;
+    };
+    status: string;
+    sharedAt?: string;
+    quotedAt?: string;
+  }>;
+  selectedNbfc?: {
+    nbfcId?: { _id: string; name: string; companyName?: string };
+    finalInterestRate?: number;
+    finalTenure?: number;
+    selectedAt?: string;
+  };
   createdAt: string;
 }
 
@@ -296,7 +320,9 @@ const RmtDashboard: React.FC = () => {
       fetchData();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || "Failed to share with NBFCs");
+      toast.error(
+        error.response?.data?.message || "Failed to share with NBFCs",
+      );
     }
   };
 
@@ -355,39 +381,76 @@ const RmtDashboard: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '0 0 40px' }}>
+    <div style={{ padding: "0 0 40px" }}>
       {/* ── Page Header ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          marginBottom: 28,
+        }}
+      >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: '#92400e', margin: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 4,
+            }}
+          >
+            <h1
+              style={{
+                fontSize: 26,
+                fontWeight: 700,
+                color: "#92400e",
+                margin: 0,
+              }}
+            >
               Risk Management
             </h1>
-            <span style={{
-              background: 'linear-gradient(135deg,#B45309,#F59E0B)',
-              color: 'white',
-              fontSize: 11,
-              fontWeight: 700,
-              padding: '3px 10px',
-              borderRadius: 20,
-              letterSpacing: '0.04em',
-              boxShadow: '0 1px 3px rgba(180,83,9,0.25)',
-            }}>RMT</span>
+            <span
+              style={{
+                background: "linear-gradient(135deg,#B45309,#F59E0B)",
+                color: "white",
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "3px 10px",
+                borderRadius: 20,
+                letterSpacing: "0.04em",
+                boxShadow: "0 1px 3px rgba(180,83,9,0.25)",
+              }}
+            >
+              RMT
+            </span>
           </div>
-          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
-            Welcome back, {user?.name?.split(' ')[0] ?? 'Officer'} — Risk queue &amp; assessments
+          <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
+            Welcome back, {user?.name?.split(" ")[0] ?? "Officer"} — Risk queue
+            &amp; assessments
           </p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Last refreshed</p>
-          <p style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', margin: 0 }}>
-            {lastRefreshed.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+        <div style={{ textAlign: "right" }}>
+          <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>
+            Last refreshed
+          </p>
+          <p
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#6b7280",
+              margin: 0,
+            }}
+          >
+            {lastRefreshed.toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto">
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow p-4">
@@ -524,14 +587,32 @@ const RmtDashboard: React.FC = () => {
                         {cwcrf.subContractorId?.companyName}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {cwcrf.buyerDetails?.buyerName || cwcrf.epcId?.companyName || '—'}
+                        {cwcrf.buyerDetails?.buyerName ||
+                          cwcrf.epcId?.companyName ||
+                          "—"}
                       </td>
                       <td className="px-6 py-4 text-sm font-medium">
-                        ₹{(cwcrf.buyerVerification?.approvedAmount || cwcrf.cwcRequest?.requestedAmount || 0).toLocaleString()}
-                        {cwcrf.buyerVerification?.approvedAmount ? <span className="ml-1 text-xs text-green-600">(approved)</span> : <span className="ml-1 text-xs text-gray-400">(requested)</span>}
+                        ₹
+                        {(
+                          cwcrf.buyerVerification?.approvedAmount ||
+                          cwcrf.cwcRequest?.requestedAmount ||
+                          0
+                        ).toLocaleString()}
+                        {cwcrf.buyerVerification?.approvedAmount ? (
+                          <span className="ml-1 text-xs text-green-600">
+                            (approved)
+                          </span>
+                        ) : (
+                          <span className="ml-1 text-xs text-gray-400">
+                            (requested)
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {cwcrf.buyerVerification?.repaymentTimeline || cwcrf.cwcRequest?.requestedTenure || '—'} days
+                        {cwcrf.buyerVerification?.repaymentTimeline ||
+                          cwcrf.cwcRequest?.requestedTenure ||
+                          "—"}{" "}
+                        days
                       </td>
                       <td className="px-6 py-4">{statusBadge(cwcrf.status)}</td>
                       <td className="px-6 py-4">
@@ -542,7 +623,8 @@ const RmtDashboard: React.FC = () => {
                           >
                             View Details
                           </button>
-                          {(cwcrf.status === "UNDER_RISK_REVIEW" || cwcrf.status === "BUYER_APPROVED") && (
+                          {(cwcrf.status === "UNDER_RISK_REVIEW" ||
+                            cwcrf.status === "BUYER_APPROVED") && (
                             <button
                               onClick={() => {
                                 setSelectedCwcrf(cwcrf);
@@ -558,12 +640,24 @@ const RmtDashboard: React.FC = () => {
                               <button
                                 onClick={async () => {
                                   try {
-                                    await cwcrfApi.rmtForwardToOps(cwcrf._id, "Risk assessment complete");
-                                    toast.success("Forwarded to Ops for risk triage");
+                                    await cwcrfApi.rmtForwardToOps(
+                                      cwcrf._id,
+                                      "Risk assessment complete",
+                                    );
+                                    toast.success(
+                                      "Forwarded to Ops for risk triage",
+                                    );
                                     fetchData();
                                   } catch (err: unknown) {
-                                    const e = err as { response?: { data?: { message?: string } } };
-                                    toast.error(e.response?.data?.message || "Failed to forward");
+                                    const e = err as {
+                                      response?: {
+                                        data?: { message?: string };
+                                      };
+                                    };
+                                    toast.error(
+                                      e.response?.data?.message ||
+                                        "Failed to forward",
+                                    );
                                   }
                                 }}
                                 className="text-orange-600 hover:underline text-sm font-medium"
@@ -574,11 +668,20 @@ const RmtDashboard: React.FC = () => {
                                 onClick={async () => {
                                   try {
                                     setSelectedCwcrf(cwcrf);
-                                    const res = await opsApi.getMatchingNbfcs(cwcrf._id);
-                                    setMatchingNbfcs(res.data?.nbfcs || res.data || []);
+                                    const res = await opsApi.getMatchingNbfcs(
+                                      cwcrf._id,
+                                    );
+                                    setMatchingNbfcs(
+                                      res.data?.matchingNbfcs ||
+                                        res.data?.nbfcs ||
+                                        res.data ||
+                                        [],
+                                    );
                                     setShowNbfcModal(true);
                                   } catch {
-                                    toast.error("Failed to load matching NBFCs");
+                                    toast.error(
+                                      "Failed to load matching NBFCs",
+                                    );
                                   }
                                 }}
                                 className="text-purple-600 hover:underline text-sm"
@@ -588,14 +691,22 @@ const RmtDashboard: React.FC = () => {
                             </>
                           )}
                           {cwcrf.status === "RMT_APPROVED" && (
-                            <span className="text-green-600 text-sm">✓ Sent to Ops</span>
+                            <span className="text-green-600 text-sm">
+                              ✓ Sent to Ops
+                            </span>
                           )}
                           <button
                             onClick={async () => {
                               try {
-                                toast.loading("Generating PDF...", { id: "pdf-gen" });
-                                const res = await cwcrfApi.downloadCasePdf(cwcrf._id);
-                                const blob = new Blob([res.data], { type: "application/pdf" });
+                                toast.loading("Generating PDF...", {
+                                  id: "pdf-gen",
+                                });
+                                const res = await cwcrfApi.downloadCasePdf(
+                                  cwcrf._id,
+                                );
+                                const blob = new Blob([res.data], {
+                                  type: "application/pdf",
+                                });
                                 const url = window.URL.createObjectURL(blob);
                                 const a = document.createElement("a");
                                 a.href = url;
@@ -985,7 +1096,9 @@ const RmtDashboard: React.FC = () => {
                       <span>100</span>
                     </div>
                     <textarea
-                      value={cwcafForm.riskAssessmentDetails.invoiceAging.remarks}
+                      value={
+                        cwcafForm.riskAssessmentDetails.invoiceAging.remarks
+                      }
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
@@ -1017,7 +1130,8 @@ const RmtDashboard: React.FC = () => {
                       min="0"
                       max="100"
                       value={
-                        cwcafForm.riskAssessmentDetails.buyerCreditworthiness.score
+                        cwcafForm.riskAssessmentDetails.buyerCreditworthiness
+                          .score
                       }
                       onChange={(e) =>
                         setCwcafForm({
@@ -1025,7 +1139,8 @@ const RmtDashboard: React.FC = () => {
                           riskAssessmentDetails: {
                             ...cwcafForm.riskAssessmentDetails,
                             buyerCreditworthiness: {
-                              ...cwcafForm.riskAssessmentDetails.buyerCreditworthiness,
+                              ...cwcafForm.riskAssessmentDetails
+                                .buyerCreditworthiness,
                               score: Number(e.target.value),
                             },
                           },
@@ -1036,13 +1151,17 @@ const RmtDashboard: React.FC = () => {
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>0</span>
                       <span className="font-semibold">
-                        {cwcafForm.riskAssessmentDetails.buyerCreditworthiness.score}
+                        {
+                          cwcafForm.riskAssessmentDetails.buyerCreditworthiness
+                            .score
+                        }
                       </span>
                       <span>100</span>
                     </div>
                     <textarea
                       value={
-                        cwcafForm.riskAssessmentDetails.buyerCreditworthiness.remarks
+                        cwcafForm.riskAssessmentDetails.buyerCreditworthiness
+                          .remarks
                       }
                       onChange={(e) =>
                         setCwcafForm({
@@ -1050,7 +1169,8 @@ const RmtDashboard: React.FC = () => {
                           riskAssessmentDetails: {
                             ...cwcafForm.riskAssessmentDetails,
                             buyerCreditworthiness: {
-                              ...cwcafForm.riskAssessmentDetails.buyerCreditworthiness,
+                              ...cwcafForm.riskAssessmentDetails
+                                .buyerCreditworthiness,
                               remarks: e.target.value,
                             },
                           },
@@ -1074,14 +1194,17 @@ const RmtDashboard: React.FC = () => {
                       type="range"
                       min="0"
                       max="100"
-                      value={cwcafForm.riskAssessmentDetails.sellerTrackRecord.score}
+                      value={
+                        cwcafForm.riskAssessmentDetails.sellerTrackRecord.score
+                      }
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
                           riskAssessmentDetails: {
                             ...cwcafForm.riskAssessmentDetails,
                             sellerTrackRecord: {
-                              ...cwcafForm.riskAssessmentDetails.sellerTrackRecord,
+                              ...cwcafForm.riskAssessmentDetails
+                                .sellerTrackRecord,
                               score: Number(e.target.value),
                             },
                           },
@@ -1092,19 +1215,26 @@ const RmtDashboard: React.FC = () => {
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>0</span>
                       <span className="font-semibold">
-                        {cwcafForm.riskAssessmentDetails.sellerTrackRecord.score}
+                        {
+                          cwcafForm.riskAssessmentDetails.sellerTrackRecord
+                            .score
+                        }
                       </span>
                       <span>100</span>
                     </div>
                     <textarea
-                      value={cwcafForm.riskAssessmentDetails.sellerTrackRecord.remarks}
+                      value={
+                        cwcafForm.riskAssessmentDetails.sellerTrackRecord
+                          .remarks
+                      }
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
                           riskAssessmentDetails: {
                             ...cwcafForm.riskAssessmentDetails,
                             sellerTrackRecord: {
-                              ...cwcafForm.riskAssessmentDetails.sellerTrackRecord,
+                              ...cwcafForm.riskAssessmentDetails
+                                .sellerTrackRecord,
                               remarks: e.target.value,
                             },
                           },
@@ -1128,14 +1258,17 @@ const RmtDashboard: React.FC = () => {
                       type="range"
                       min="0"
                       max="100"
-                      value={cwcafForm.riskAssessmentDetails.collateralCoverage.score}
+                      value={
+                        cwcafForm.riskAssessmentDetails.collateralCoverage.score
+                      }
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
                           riskAssessmentDetails: {
                             ...cwcafForm.riskAssessmentDetails,
                             collateralCoverage: {
-                              ...cwcafForm.riskAssessmentDetails.collateralCoverage,
+                              ...cwcafForm.riskAssessmentDetails
+                                .collateralCoverage,
                               score: Number(e.target.value),
                             },
                           },
@@ -1146,13 +1279,17 @@ const RmtDashboard: React.FC = () => {
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>0</span>
                       <span className="font-semibold">
-                        {cwcafForm.riskAssessmentDetails.collateralCoverage.score}
+                        {
+                          cwcafForm.riskAssessmentDetails.collateralCoverage
+                            .score
+                        }
                       </span>
                       <span>100</span>
                     </div>
                     <textarea
                       value={
-                        cwcafForm.riskAssessmentDetails.collateralCoverage.remarks
+                        cwcafForm.riskAssessmentDetails.collateralCoverage
+                          .remarks
                       }
                       onChange={(e) =>
                         setCwcafForm({
@@ -1160,7 +1297,8 @@ const RmtDashboard: React.FC = () => {
                           riskAssessmentDetails: {
                             ...cwcafForm.riskAssessmentDetails,
                             collateralCoverage: {
-                              ...cwcafForm.riskAssessmentDetails.collateralCoverage,
+                              ...cwcafForm.riskAssessmentDetails
+                                .collateralCoverage,
                               remarks: e.target.value,
                             },
                           },
@@ -1178,9 +1316,12 @@ const RmtDashboard: React.FC = () => {
                     <span className="text-2xl font-bold">
                       {(
                         (cwcafForm.riskAssessmentDetails.invoiceAging.score +
-                          cwcafForm.riskAssessmentDetails.buyerCreditworthiness.score +
-                          cwcafForm.riskAssessmentDetails.sellerTrackRecord.score +
-                          cwcafForm.riskAssessmentDetails.collateralCoverage.score) /
+                          cwcafForm.riskAssessmentDetails.buyerCreditworthiness
+                            .score +
+                          cwcafForm.riskAssessmentDetails.sellerTrackRecord
+                            .score +
+                          cwcafForm.riskAssessmentDetails.collateralCoverage
+                            .score) /
                         4
                       ).toFixed(2)}
                     </span>
@@ -1220,13 +1361,20 @@ const RmtDashboard: React.FC = () => {
                       onChange={(e) =>
                         setCwcafForm({
                           ...cwcafForm,
-                          rmtRecommendation: e.target.value as "PROCEED" | "REVIEW" | "REJECT",
+                          rmtRecommendation: e.target.value as
+                            | "PROCEED"
+                            | "REVIEW"
+                            | "REJECT",
                         })
                       }
                       className="w-full p-2 border rounded"
                     >
-                      <option value="PROCEED">PROCEED — Recommend for funding</option>
-                      <option value="REVIEW">REVIEW — Needs further scrutiny</option>
+                      <option value="PROCEED">
+                        PROCEED — Recommend for funding
+                      </option>
+                      <option value="REVIEW">
+                        REVIEW — Needs further scrutiny
+                      </option>
                       <option value="REJECT">REJECT — Not recommended</option>
                     </select>
                   </div>
@@ -1254,49 +1402,91 @@ const RmtDashboard: React.FC = () => {
 
         {/* ═══ Case Detail Modal ═══ */}
         {caseDetailCwcrf && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-start justify-center z-50 p-4 overflow-y-auto" id="case-detail-overlay">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-8" id="case-detail-printable">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-start justify-center z-50 p-4 overflow-y-auto"
+            id="case-detail-overlay"
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-8"
+              id="case-detail-printable"
+            >
               {/* ── Modal Header ── */}
               <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-sky-50 rounded-t-2xl no-print-header">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="text-2xl font-bold text-gray-900">{caseDetailCwcrf.cwcRfNumber}</span>
-                    <span style={{
-                      display: "inline-block",
-                      padding: "3px 12px",
-                      borderRadius: 20,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      background: caseDetailCwcrf.status === "CWCAF_READY" ? "#d1fae5" : caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ? "#dbeafe" : "#fef3c7",
-                      color: caseDetailCwcrf.status === "CWCAF_READY" ? "#065f46" : caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ? "#1e40af" : "#92400e",
-                    }}>
+                    <span className="text-2xl font-bold text-gray-900">
+                      {caseDetailCwcrf.cwcRfNumber}
+                    </span>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "3px 12px",
+                        borderRadius: 20,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background:
+                          caseDetailCwcrf.status === "CWCAF_READY"
+                            ? "#d1fae5"
+                            : caseDetailCwcrf.status === "UNDER_RISK_REVIEW"
+                              ? "#dbeafe"
+                              : "#fef3c7",
+                        color:
+                          caseDetailCwcrf.status === "CWCAF_READY"
+                            ? "#065f46"
+                            : caseDetailCwcrf.status === "UNDER_RISK_REVIEW"
+                              ? "#1e40af"
+                              : "#92400e",
+                      }}
+                    >
                       {caseDetailCwcrf.status?.replace(/_/g, " ")}
                     </span>
                   </div>
                   <p className="text-sm text-gray-500">
-                    Submitted: {caseDetailCwcrf.createdAt ? new Date(caseDetailCwcrf.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—"}
+                    Submitted:{" "}
+                    {caseDetailCwcrf.createdAt
+                      ? new Date(caseDetailCwcrf.createdAt).toLocaleDateString(
+                          "en-IN",
+                          { day: "numeric", month: "long", year: "numeric" },
+                        )
+                      : "—"}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
-                      const overlay = document.getElementById("case-detail-overlay");
+                      const overlay = document.getElementById(
+                        "case-detail-overlay",
+                      );
                       if (overlay) overlay.style.display = "none";
                       window.print();
                       if (overlay) overlay.style.display = "";
                     }}
                     style={{
-                      display: "flex", alignItems: "center", gap: 6,
-                      background: "#4f46e5", color: "white",
-                      border: "none", borderRadius: 8,
-                      padding: "9px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "#4f46e5",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "9px 16px",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
                     }}
                   >
                     🖨️ Print / Download PDF
                   </button>
                   <button
                     onClick={() => setCaseDetailCwcrf(null)}
-                    style={{ background: "none", border: "none", fontSize: 24, color: "#94a3b8", cursor: "pointer", lineHeight: 1 }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      fontSize: 24,
+                      color: "#94a3b8",
+                      cursor: "pointer",
+                      lineHeight: 1,
+                    }}
                   >
                     ×
                   </button>
@@ -1304,146 +1494,891 @@ const RmtDashboard: React.FC = () => {
               </div>
 
               {/* ── Print Header (only visible when printing) ── */}
-              <div className="print-only-header" style={{ display: "none", padding: "24px 28px 0" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #4f46e5", paddingBottom: 16, marginBottom: 24 }}>
+              <div
+                className="print-only-header"
+                style={{ display: "none", padding: "24px 28px 0" }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    borderBottom: "2px solid #4f46e5",
+                    paddingBottom: 16,
+                    marginBottom: 24,
+                  }}
+                >
                   <div>
-                    <h1 style={{ fontSize: 22, fontWeight: 800, color: "#1e293b", margin: "0 0 4px" }}>Gryork Platform — CWCRF Case Report</h1>
-                    <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>Credit on Working Capital Request Form — Detailed Assessment</p>
+                    <h1
+                      style={{
+                        fontSize: 22,
+                        fontWeight: 800,
+                        color: "#1e293b",
+                        margin: "0 0 4px",
+                      }}
+                    >
+                      Gryork Platform — CWCRF Case Report
+                    </h1>
+                    <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
+                      Credit on Working Capital Request Form — Detailed
+                      Assessment
+                    </p>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: "#1e293b", margin: "0 0 2px" }}>{caseDetailCwcrf.cwcRfNumber}</p>
-                    <p style={{ fontSize: 11, color: "#64748b", margin: 0 }}>Printed: {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "#1e293b",
+                        margin: "0 0 2px",
+                      }}
+                    >
+                      {caseDetailCwcrf.cwcRfNumber}
+                    </p>
+                    <p style={{ fontSize: 11, color: "#64748b", margin: 0 }}>
+                      Printed:{" "}
+                      {new Date().toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* ── Body ── */}
-              <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20 }}>
-
+              <div
+                style={{
+                  padding: "24px 28px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 20,
+                }}
+              >
                 {/* Row 1: SC + EPC + Status */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: 16,
+                  }}
+                >
                   {/* Sub-Contractor */}
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px" }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", margin: "0 0 10px" }}>Sub-Contractor (Seller)</p>
-                    <p style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                  <div
+                    style={{
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 12,
+                      padding: "14px 16px",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        color: "#64748b",
+                        margin: "0 0 10px",
+                      }}
+                    >
+                      Sub-Contractor (Seller)
+                    </p>
+                    <p
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: "#1e293b",
+                        margin: "0 0 4px",
+                      }}
+                    >
                       {caseDetailCwcrf.subContractorId?.companyName || "—"}
                     </p>
-                    <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>ID: {caseDetailCwcrf.subContractorId?._id?.slice(-8) || "—"}</p>
+                    <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>
+                      ID:{" "}
+                      {caseDetailCwcrf.subContractorId?._id?.slice(-8) || "—"}
+                    </p>
                   </div>
                   {/* EPC Buyer */}
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px" }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", margin: "0 0 10px" }}>EPC Buyer</p>
-                    <p style={{ fontSize: 16, fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
+                  <div
+                    style={{
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 12,
+                      padding: "14px 16px",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        color: "#64748b",
+                        margin: "0 0 10px",
+                      }}
+                    >
+                      EPC Buyer
+                    </p>
+                    <p
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: "#1e293b",
+                        margin: "0 0 4px",
+                      }}
+                    >
                       {caseDetailCwcrf.buyerDetails?.buyerName || "—"}
                     </p>
-                    <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>GSTIN: {caseDetailCwcrf.buyerDetails?.buyerGstin || "—"}</p>
+                    <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>
+                      GSTIN: {caseDetailCwcrf.buyerDetails?.buyerGstin || "—"}
+                    </p>
                     {caseDetailCwcrf.buyerVerification?.verifiedAt && (
-                      <p style={{ fontSize: 11, color: "#059669", fontWeight: 600, marginTop: 4 }}>✓ Buyer Verified</p>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "#059669",
+                          fontWeight: 600,
+                          marginTop: 4,
+                        }}
+                      >
+                        ✓ Buyer Verified
+                      </p>
                     )}
                   </div>
                   {/* Case Status */}
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px" }}>
-                    <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", margin: "0 0 10px" }}>Case Status</p>
-                    <span style={{
-                      display: "inline-block",
-                      padding: "4px 12px",
-                      borderRadius: 20,
-                      fontSize: 12,
-                      fontWeight: 700,
-                      background: caseDetailCwcrf.status === "CWCAF_READY" ? "#d1fae5" : caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ? "#dbeafe" : "#fef3c7",
-                      color: caseDetailCwcrf.status === "CWCAF_READY" ? "#065f46" : caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ? "#1e40af" : "#92400e",
-                    }}>
+                  <div
+                    style={{
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 12,
+                      padding: "14px 16px",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        color: "#64748b",
+                        margin: "0 0 10px",
+                      }}
+                    >
+                      Case Status
+                    </p>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "4px 12px",
+                        borderRadius: 20,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        background:
+                          caseDetailCwcrf.status === "CWCAF_READY"
+                            ? "#d1fae5"
+                            : caseDetailCwcrf.status === "UNDER_RISK_REVIEW"
+                              ? "#dbeafe"
+                              : "#fef3c7",
+                        color:
+                          caseDetailCwcrf.status === "CWCAF_READY"
+                            ? "#065f46"
+                            : caseDetailCwcrf.status === "UNDER_RISK_REVIEW"
+                              ? "#1e40af"
+                              : "#92400e",
+                      }}
+                    >
                       {caseDetailCwcrf.status?.replace(/_/g, " ") || "—"}
                     </span>
-                    <p style={{ fontSize: 12, color: "#64748b", margin: "8px 0 0" }}>
-                      Submitted: {caseDetailCwcrf.createdAt ? new Date(caseDetailCwcrf.createdAt).toLocaleDateString("en-IN") : "—"}
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: "#64748b",
+                        margin: "8px 0 0",
+                      }}
+                    >
+                      Submitted:{" "}
+                      {caseDetailCwcrf.createdAt
+                        ? new Date(
+                            caseDetailCwcrf.createdAt,
+                          ).toLocaleDateString("en-IN")
+                        : "—"}
                     </p>
                   </div>
                 </div>
 
                 {/* Divider */}
-                <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: 0 }} />
+                <hr
+                  style={{
+                    border: "none",
+                    borderTop: "1px solid #e2e8f0",
+                    margin: 0,
+                  }}
+                />
 
                 {/* Section B: Invoice Details */}
                 <div>
-                  <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#4f46e5", margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      color: "#4f46e5",
+                      margin: "0 0 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
                     📄 Section B — Invoice Details
                   </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: 12,
+                    }}
+                  >
                     {[
-                      { label: "Invoice Number", value: caseDetailCwcrf.invoiceDetails?.invoiceNumber || "—" },
-                      { label: "Invoice Amount", value: caseDetailCwcrf.invoiceDetails?.invoiceAmount ? `₹${caseDetailCwcrf.invoiceDetails.invoiceAmount.toLocaleString()}` : "—" },
-                      { label: "Invoice Date", value: caseDetailCwcrf.invoiceDetails?.invoiceDate ? new Date(caseDetailCwcrf.invoiceDetails.invoiceDate).toLocaleDateString("en-IN") : "—" },
-                      { label: "Approved by EPC", value: caseDetailCwcrf.buyerVerification?.approvedAmount ? `₹${caseDetailCwcrf.buyerVerification.approvedAmount.toLocaleString()}` : "Pending" },
-                      { label: "Repayment Timeline", value: caseDetailCwcrf.buyerVerification?.repaymentTimeline ? `${caseDetailCwcrf.buyerVerification.repaymentTimeline} days` : "—" },
-                      { label: "Repayment Arrangement", value: caseDetailCwcrf.buyerVerification?.repaymentArrangement || "—" },
+                      {
+                        label: "Invoice Number",
+                        value:
+                          caseDetailCwcrf.invoiceDetails?.invoiceNumber || "—",
+                      },
+                      {
+                        label: "Invoice Amount",
+                        value: caseDetailCwcrf.invoiceDetails?.invoiceAmount
+                          ? `₹${caseDetailCwcrf.invoiceDetails.invoiceAmount.toLocaleString()}`
+                          : "—",
+                      },
+                      {
+                        label: "Invoice Date",
+                        value: caseDetailCwcrf.invoiceDetails?.invoiceDate
+                          ? new Date(
+                              caseDetailCwcrf.invoiceDetails.invoiceDate,
+                            ).toLocaleDateString("en-IN")
+                          : "—",
+                      },
+                      {
+                        label: "Approved by EPC",
+                        value: caseDetailCwcrf.buyerVerification?.approvedAmount
+                          ? `₹${caseDetailCwcrf.buyerVerification.approvedAmount.toLocaleString()}`
+                          : "Pending",
+                      },
+                      {
+                        label: "Repayment Timeline",
+                        value: caseDetailCwcrf.buyerVerification
+                          ?.repaymentTimeline
+                          ? `${caseDetailCwcrf.buyerVerification.repaymentTimeline} days`
+                          : "—",
+                      },
+                      {
+                        label: "Repayment Arrangement",
+                        value:
+                          caseDetailCwcrf.buyerVerification
+                            ?.repaymentArrangement || "—",
+                      },
                     ].map((f) => (
-                      <div key={f.label} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px" }}>
-                        <p style={{ fontSize: 11, color: "#64748b", margin: "0 0 4px", fontWeight: 600 }}>{f.label}</p>
-                        <p style={{ fontSize: 14, color: "#1e293b", margin: 0, fontWeight: 600 }}>{f.value}</p>
+                      <div
+                        key={f.label}
+                        style={{
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 8,
+                          padding: "10px 14px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 11,
+                            color: "#64748b",
+                            margin: "0 0 4px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {f.label}
+                        </p>
+                        <p
+                          style={{
+                            fontSize: 14,
+                            color: "#1e293b",
+                            margin: 0,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {f.value}
+                        </p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: 0 }} />
+                <hr
+                  style={{
+                    border: "none",
+                    borderTop: "1px solid #e2e8f0",
+                    margin: 0,
+                  }}
+                />
 
                 {/* Section C: Credit Request */}
                 <div>
-                  <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#0284c7", margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      color: "#0284c7",
+                      margin: "0 0 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
                     💳 Section C — Credit Request
                   </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: 12,
+                    }}
+                  >
                     {[
-                      { label: "Requested Amount", value: caseDetailCwcrf.cwcRequest?.requestedAmount ? `₹${caseDetailCwcrf.cwcRequest.requestedAmount.toLocaleString()}` : "—" },
-                      { label: "Requested Tenure", value: caseDetailCwcrf.cwcRequest?.requestedTenure ? `${caseDetailCwcrf.cwcRequest.requestedTenure} days` : "—" },
-                      { label: "Urgency Level", value: caseDetailCwcrf.cwcRequest?.urgencyLevel || "—" },
+                      {
+                        label: "Requested Amount",
+                        value: caseDetailCwcrf.cwcRequest?.requestedAmount
+                          ? `₹${caseDetailCwcrf.cwcRequest.requestedAmount.toLocaleString()}`
+                          : "—",
+                      },
+                      {
+                        label: "Requested Tenure",
+                        value: caseDetailCwcrf.cwcRequest?.requestedTenure
+                          ? `${caseDetailCwcrf.cwcRequest.requestedTenure} days`
+                          : "—",
+                      },
+                      {
+                        label: "Urgency Level",
+                        value: caseDetailCwcrf.cwcRequest?.urgencyLevel || "—",
+                      },
                     ].map((f) => (
-                      <div key={f.label} style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 8, padding: "10px 14px" }}>
-                        <p style={{ fontSize: 11, color: "#0284c7", margin: "0 0 4px", fontWeight: 600 }}>{f.label}</p>
-                        <p style={{ fontSize: 14, color: "#0c4a6e", margin: 0, fontWeight: 700 }}>{f.value}</p>
+                      <div
+                        key={f.label}
+                        style={{
+                          background: "#f0f9ff",
+                          border: "1px solid #bae6fd",
+                          borderRadius: 8,
+                          padding: "10px 14px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 11,
+                            color: "#0284c7",
+                            margin: "0 0 4px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {f.label}
+                        </p>
+                        <p
+                          style={{
+                            fontSize: 14,
+                            color: "#0c4a6e",
+                            margin: 0,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {f.value}
+                        </p>
                       </div>
                     ))}
                   </div>
                   {caseDetailCwcrf.cwcRequest?.reasonForFunding && (
-                    <div style={{ marginTop: 10, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 14px" }}>
-                      <p style={{ fontSize: 11, color: "#64748b", margin: "0 0 4px", fontWeight: 600 }}>Reason for Funding</p>
-                      <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>{caseDetailCwcrf.cwcRequest.reasonForFunding}</p>
+                    <div
+                      style={{
+                        marginTop: 10,
+                        background: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: 8,
+                        padding: "10px 14px",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "#64748b",
+                          margin: "0 0 4px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Reason for Funding
+                      </p>
+                      <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>
+                        {caseDetailCwcrf.cwcRequest.reasonForFunding}
+                      </p>
                     </div>
                   )}
                 </div>
 
-                <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: 0 }} />
+                <hr
+                  style={{
+                    border: "none",
+                    borderTop: "1px solid #e2e8f0",
+                    margin: 0,
+                  }}
+                />
 
                 {/* Section D: Interest Preference */}
                 <div>
-                  <p style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#059669", margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      color: "#059669",
+                      margin: "0 0 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
                     📈 Section D — Interest Preference
                   </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: 12,
+                    }}
+                  >
                     {[
-                      { label: "Minimum Interest Rate", value: caseDetailCwcrf.interestPreference?.minRate != null ? `${caseDetailCwcrf.interestPreference.minRate}%` : "—" },
-                      { label: "Maximum Interest Rate", value: caseDetailCwcrf.interestPreference?.maxRate != null ? `${caseDetailCwcrf.interestPreference.maxRate}%` : "—" },
-                      { label: "Max Acceptable Rate", value: caseDetailCwcrf.interestPreference?.maxAcceptableRate != null ? `${caseDetailCwcrf.interestPreference.maxAcceptableRate}%` : "—" },
+                      {
+                        label: "Minimum Interest Rate",
+                        value:
+                          caseDetailCwcrf.interestPreference?.minRate != null
+                            ? `${caseDetailCwcrf.interestPreference.minRate}%`
+                            : "—",
+                      },
+                      {
+                        label: "Maximum Interest Rate",
+                        value:
+                          caseDetailCwcrf.interestPreference?.maxRate != null
+                            ? `${caseDetailCwcrf.interestPreference.maxRate}%`
+                            : "—",
+                      },
+                      {
+                        label: "Max Acceptable Rate",
+                        value:
+                          caseDetailCwcrf.interestPreference
+                            ?.maxAcceptableRate != null
+                            ? `${caseDetailCwcrf.interestPreference.maxAcceptableRate}%`
+                            : "—",
+                      },
                     ].map((f) => (
-                      <div key={f.label} style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px" }}>
-                        <p style={{ fontSize: 11, color: "#059669", margin: "0 0 4px", fontWeight: 600 }}>{f.label}</p>
-                        <p style={{ fontSize: 14, color: "#14532d", margin: 0, fontWeight: 700 }}>{f.value}</p>
+                      <div
+                        key={f.label}
+                        style={{
+                          background: "#f0fdf4",
+                          border: "1px solid #bbf7d0",
+                          borderRadius: 8,
+                          padding: "10px 14px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 11,
+                            color: "#059669",
+                            margin: "0 0 4px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {f.label}
+                        </p>
+                        <p
+                          style={{
+                            fontSize: 14,
+                            color: "#14532d",
+                            margin: 0,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {f.value}
+                        </p>
                       </div>
                     ))}
                   </div>
                 </div>
 
+                {/* Section E: NBFC Bidding & Selection */}
+                {caseDetailCwcrf.nbfcQuotations &&
+                  caseDetailCwcrf.nbfcQuotations.length > 0 && (
+                    <div>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          color: "#7c3aed",
+                          margin: "0 0 12px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        🏦 Section E — NBFC Bids & Selection
+                      </p>
+
+                      {/* Selected NBFC banner */}
+                      {caseDetailCwcrf.selectedNbfc?.nbfcId && (
+                        <div
+                          style={{
+                            background: "#f0fdf4",
+                            border: "2px solid #22c55e",
+                            borderRadius: 12,
+                            padding: "12px 16px",
+                            marginBottom: 14,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <div>
+                            <p
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: "#059669",
+                                textTransform: "uppercase",
+                                margin: "0 0 4px",
+                              }}
+                            >
+                              ✅ Selected NBFC
+                            </p>
+                            <p
+                              style={{
+                                fontSize: 15,
+                                fontWeight: 700,
+                                color: "#14532d",
+                                margin: 0,
+                              }}
+                            >
+                              {caseDetailCwcrf.selectedNbfc.nbfcId.name ||
+                                caseDetailCwcrf.selectedNbfc.nbfcId.companyName}
+                            </p>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <p
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: "#14532d",
+                                margin: 0,
+                              }}
+                            >
+                              {caseDetailCwcrf.selectedNbfc.finalInterestRate}%
+                              p.a.
+                            </p>
+                            <p
+                              style={{
+                                fontSize: 12,
+                                color: "#059669",
+                                margin: "2px 0 0",
+                              }}
+                            >
+                              {caseDetailCwcrf.selectedNbfc.finalTenure} days
+                              tenure
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quotation cards grid */}
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fill, minmax(220px, 1fr))",
+                          gap: 10,
+                        }}
+                      >
+                        {caseDetailCwcrf.nbfcQuotations.map((q, idx) => {
+                          const isSelected =
+                            caseDetailCwcrf.selectedNbfc?.nbfcId?._id ===
+                            q.nbfcId?._id;
+                          const isQuoted = q.status === "QUOTED";
+                          const statusColor = isSelected
+                            ? {
+                                bg: "#d1fae5",
+                                text: "#065f46",
+                                border: "#22c55e",
+                              }
+                            : isQuoted
+                              ? {
+                                  bg: "#ede9fe",
+                                  text: "#5b21b6",
+                                  border: "#a78bfa",
+                                }
+                              : {
+                                  bg: "#fef3c7",
+                                  text: "#92400e",
+                                  border: "#fbbf24",
+                                };
+
+                          return (
+                            <div
+                              key={idx}
+                              style={{
+                                background: statusColor.bg,
+                                border: `1px solid ${statusColor.border}`,
+                                borderRadius: 10,
+                                padding: "12px 14px",
+                                position: "relative",
+                              }}
+                            >
+                              {isSelected && (
+                                <span
+                                  style={{
+                                    position: "absolute",
+                                    top: 6,
+                                    right: 8,
+                                    fontSize: 10,
+                                    fontWeight: 800,
+                                    color: "#059669",
+                                    textTransform: "uppercase",
+                                  }}
+                                >
+                                  ★ Selected
+                                </span>
+                              )}
+                              <p
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: statusColor.text,
+                                  margin: "0 0 6px",
+                                  paddingRight: isSelected ? 60 : 0,
+                                }}
+                              >
+                                {q.nbfcId?.name ||
+                                  q.nbfcId?.companyName ||
+                                  `NBFC ${idx + 1}`}
+                              </p>
+                              <span
+                                style={{
+                                  display: "inline-block",
+                                  padding: "2px 8px",
+                                  borderRadius: 12,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  background: isQuoted ? "#c4b5fd" : "#fde68a",
+                                  color: isQuoted ? "#4c1d95" : "#78350f",
+                                }}
+                              >
+                                {q.status}
+                              </span>
+                              {isQuoted && q.quotation && (
+                                <div style={{ marginTop: 8 }}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      fontSize: 12,
+                                      marginBottom: 3,
+                                    }}
+                                  >
+                                    <span style={{ color: "#6b7280" }}>
+                                      Offered:
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontWeight: 700,
+                                        color: statusColor.text,
+                                      }}
+                                    >
+                                      ₹
+                                      {(
+                                        q.quotation.offeredAmount || 0
+                                      ).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      fontSize: 12,
+                                      marginBottom: 3,
+                                    }}
+                                  >
+                                    <span style={{ color: "#6b7280" }}>
+                                      Interest:
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontWeight: 600,
+                                        color: statusColor.text,
+                                      }}
+                                    >
+                                      {q.quotation.interestRate}% p.a.
+                                    </span>
+                                  </div>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      fontSize: 12,
+                                      marginBottom: 3,
+                                    }}
+                                  >
+                                    <span style={{ color: "#6b7280" }}>
+                                      Tenure:
+                                    </span>
+                                    <span
+                                      style={{
+                                        fontWeight: 600,
+                                        color: statusColor.text,
+                                      }}
+                                    >
+                                      {q.quotation.tenure} days
+                                    </span>
+                                  </div>
+                                  {q.quotation.processingFee != null && (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        fontSize: 12,
+                                      }}
+                                    >
+                                      <span style={{ color: "#6b7280" }}>
+                                        Proc. Fee:
+                                      </span>
+                                      <span
+                                        style={{
+                                          fontWeight: 600,
+                                          color: statusColor.text,
+                                        }}
+                                      >
+                                        {q.quotation.processingFee}%
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {!isQuoted && (
+                                <p
+                                  style={{
+                                    fontSize: 11,
+                                    color: "#92400e",
+                                    marginTop: 6,
+                                    fontStyle: "italic",
+                                  }}
+                                >
+                                  Awaiting quotation...
+                                </p>
+                              )}
+                              {q.sharedAt && (
+                                <p
+                                  style={{
+                                    fontSize: 10,
+                                    color: "#9ca3af",
+                                    marginTop: 6,
+                                  }}
+                                >
+                                  Shared:{" "}
+                                  {new Date(q.sharedAt).toLocaleDateString(
+                                    "en-IN",
+                                    { day: "2-digit", month: "short" },
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Summary row */}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 16,
+                          marginTop: 12,
+                          fontSize: 12,
+                          color: "#64748b",
+                        }}
+                      >
+                        <span>
+                          Total shared:{" "}
+                          <strong>
+                            {caseDetailCwcrf.nbfcQuotations.length}
+                          </strong>
+                        </span>
+                        <span>
+                          Quoted:{" "}
+                          <strong>
+                            {
+                              caseDetailCwcrf.nbfcQuotations.filter(
+                                (q) => q.status === "QUOTED",
+                              ).length
+                            }
+                          </strong>
+                        </span>
+                        <span>
+                          Pending:{" "}
+                          <strong>
+                            {
+                              caseDetailCwcrf.nbfcQuotations.filter(
+                                (q) => q.status === "PENDING",
+                              ).length
+                            }
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                <hr
+                  style={{
+                    border: "none",
+                    borderTop: "1px solid #e2e8f0",
+                    margin: 0,
+                  }}
+                />
+
                 {/* Actions (no-print) */}
-                <div className="no-print-actions" style={{ display: "flex", gap: 10, borderTop: "1px solid #e2e8f0", paddingTop: 16, flexWrap: "wrap" }}>
-                  {(caseDetailCwcrf.status === "UNDER_RISK_REVIEW" || caseDetailCwcrf.status === "BUYER_APPROVED") && (
+                <div
+                  className="no-print-actions"
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    borderTop: "1px solid #e2e8f0",
+                    paddingTop: 16,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {(caseDetailCwcrf.status === "UNDER_RISK_REVIEW" ||
+                    caseDetailCwcrf.status === "BUYER_APPROVED") && (
                     <button
                       onClick={() => {
                         setSelectedCwcrf(caseDetailCwcrf);
                         setCaseDetailCwcrf(null);
                         setShowCwcafModal(true);
                       }}
-                      style={{ background: "#2563eb", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                      style={{
+                        background: "#2563eb",
+                        color: "white",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "10px 20px",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
                     >
                       Complete Risk Assessment
                     </button>
@@ -1452,7 +2387,10 @@ const RmtDashboard: React.FC = () => {
                     <button
                       onClick={async () => {
                         try {
-                          await cwcrfApi.rmtForwardToOps(caseDetailCwcrf._id, "Risk assessment complete");
+                          await cwcrfApi.rmtForwardToOps(
+                            caseDetailCwcrf._id,
+                            "Risk assessment complete",
+                          );
                           toast.success("Forwarded to Ops for risk triage");
                           setCaseDetailCwcrf(null);
                           fetchData();
@@ -1460,14 +2398,33 @@ const RmtDashboard: React.FC = () => {
                           toast.error("Failed to forward");
                         }
                       }}
-                      style={{ background: "#d97706", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                      style={{
+                        background: "#d97706",
+                        color: "white",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "10px 20px",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
                     >
                       Forward to Ops
                     </button>
                   )}
                   <button
                     onClick={() => setCaseDetailCwcrf(null)}
-                    style={{ background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer", marginLeft: "auto" }}
+                    style={{
+                      background: "#f1f5f9",
+                      color: "#64748b",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 8,
+                      padding: "10px 20px",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      marginLeft: "auto",
+                    }}
                   >
                     Close
                   </button>

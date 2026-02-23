@@ -158,6 +158,8 @@ class CwcRfService {
     return CwcRf.find({ subContractorId })
       .populate("epcId", "companyName")
       .populate("billId", "billNumber amount")
+      .populate("nbfcQuotations.nbfcId", "name companyName email")
+      .populate("selectedNbfc.nbfcId", "name companyName email")
       .sort({ createdAt: -1 });
   }
 
@@ -573,7 +575,13 @@ class CwcRfService {
     }
 
     results.sort((a, b) => b.matchScore - a.matchScore);
-    return { cwcRf, matchingNbfcs: results };
+
+    // Include IDs of NBFCs already shared with this CWCRF so UI can grey them out
+    const alreadySharedNbfcIds = (cwcRf.nbfcQuotations || []).map((q) =>
+      q.nbfcId?.toString(),
+    );
+
+    return { cwcRf, matchingNbfcs: results, alreadySharedNbfcIds };
   }
 
   /**
@@ -822,7 +830,10 @@ class CwcRfService {
     }
 
     const caseDoc = await Case.findById(cwcRf.caseId);
-    if (!caseDoc || caseDoc.status !== "CWCAF_READY") {
+    if (
+      !caseDoc ||
+      !["CWCAF_READY", "SHARED_WITH_NBFC"].includes(caseDoc.status)
+    ) {
       throw new Error("CWCAF must be ready before sharing with NBFCs");
     }
 
@@ -830,19 +841,37 @@ class CwcRfService {
       throw new Error("Please select at least one NBFC to share with");
     }
 
-    // Fetch only the selected NBFCs
-    const nbfcs = await Nbfc.find({ _id: { $in: nbfcIds }, status: "ACTIVE" });
+    // Filter out NBFCs already shared with this CWCRF
+    const alreadyShared = (cwcRf.nbfcQuotations || []).map((q) =>
+      q.nbfcId?.toString(),
+    );
+    const newNbfcIds = nbfcIds.filter(
+      (id) => !alreadyShared.includes(id.toString()),
+    );
+
+    if (newNbfcIds.length === 0) {
+      throw new Error(
+        "All selected NBFCs have already been shared with this CWCRF",
+      );
+    }
+
+    // Fetch only the new selected NBFCs
+    const nbfcs = await Nbfc.find({
+      _id: { $in: newNbfcIds },
+      status: "ACTIVE",
+    });
 
     if (nbfcs.length === 0) {
       throw new Error("No valid active NBFCs found for the given selection");
     }
 
-    const selectedNbfcIds = [];
-    const nbfcQuotations = [];
+    const addedNbfcIds = [];
 
     for (const nbfc of nbfcs) {
-      selectedNbfcIds.push(nbfc._id);
-      nbfcQuotations.push({
+      addedNbfcIds.push(nbfc._id);
+
+      // Append to existing quotations (don't overwrite)
+      cwcRf.nbfcQuotations.push({
         nbfcId: nbfc._id,
         sharedAt: new Date(),
         status: "PENDING",
@@ -857,13 +886,12 @@ class CwcRfService {
       });
     }
 
-    // Update CWCRF
-    cwcRf.nbfcQuotations = nbfcQuotations;
+    // Update CWCRF status
     cwcRf.status = "SHARED_WITH_NBFC";
     cwcRf.statusHistory.push({
       status: "SHARED_WITH_NBFC",
       changedBy: rmtUserId,
-      notes: `Shared with ${selectedNbfcIds.length} NBFCs`,
+      notes: `Shared with ${addedNbfcIds.length} additional NBFCs (total: ${cwcRf.nbfcQuotations.length})`,
     });
 
     await cwcRf.save();
@@ -873,12 +901,12 @@ class CwcRfService {
     caseDoc.statusHistory.push({
       status: "SHARED_WITH_NBFC",
       changedBy: rmtUserId,
-      notes: `CWCAF shared with ${selectedNbfcIds.length} NBFCs`,
+      notes: `CWCAF shared with ${addedNbfcIds.length} additional NBFCs`,
     });
 
     await caseDoc.save();
 
-    return { cwcRf, matchingNbfcs: selectedNbfcIds.length };
+    return { cwcRf, matchingNbfcs: addedNbfcIds.length };
   }
 
   /**
@@ -899,10 +927,17 @@ class CwcRfService {
       throw new Error("CWCAF not shared with this NBFC");
     }
 
+    // Block duplicate submissions
+    if (cwcRf.nbfcQuotations[quotationIndex].status === "QUOTED") {
+      throw new Error("You have already submitted a quotation for this CWCRF");
+    }
+
     // Update quotation
     cwcRf.nbfcQuotations[quotationIndex].quotation = {
       interestRate: quotationData.interestRate,
+      offeredAmount: quotationData.offeredAmount,
       tenure: quotationData.tenure,
+      processingFee: quotationData.processingFee,
       terms: quotationData.terms,
       remarks: quotationData.remarks,
     };
@@ -1036,7 +1071,19 @@ class CwcRfService {
       query.status = filters.status;
     } else {
       query.status = {
-        $in: ["BUYER_APPROVED", "UNDER_RISK_REVIEW", "CWCAF_READY"],
+        $in: [
+          "BUYER_APPROVED",
+          "UNDER_RISK_REVIEW",
+          "CWCAF_READY",
+          "SHARED_WITH_NBFC",
+          "QUOTES_RECEIVED",
+          "NBFC_SELECTED",
+          "MOVED_TO_NBFC_PROCESS",
+          "NBFC_DUE_DILIGENCE",
+          "NBFC_SANCTIONED",
+          "DISBURSEMENT_INITIATED",
+          "DISBURSED",
+        ],
       };
     }
 
@@ -1044,6 +1091,8 @@ class CwcRfService {
       .populate("subContractorId", "companyName ownerName pan gstin")
       .populate("epcId", "companyName")
       .populate("billId", "billNumber amount")
+      .populate("nbfcQuotations.nbfcId", "name companyName email")
+      .populate("selectedNbfc.nbfcId", "name companyName email")
       .sort({ createdAt: -1 });
   }
 
@@ -1051,7 +1100,7 @@ class CwcRfService {
    * Get CWCRFs for NBFC dashboard
    */
   async getCwcRfsForNbfc(nbfcId) {
-    return CwcRf.find({
+    const cwcrfs = await CwcRf.find({
       "nbfcQuotations.nbfcId": nbfcId,
       status: {
         $in: [
@@ -1066,10 +1115,47 @@ class CwcRfService {
         ],
       },
     })
-      .populate("subContractorId", "companyName")
+      .populate("subContractorId", "companyName gstin constitutionType")
       .populate("epcId", "companyName")
+      .populate("nbfcQuotations.nbfcId", "name companyName email")
       .populate("caseId")
       .sort({ createdAt: -1 });
+
+    // Transform for NBFC frontend — set alreadyQuoted flag per NBFC
+    return cwcrfs.map((cwcrf) => {
+      const doc = cwcrf.toObject();
+      const myQuotation = doc.nbfcQuotations?.find(
+        (q) =>
+          q.nbfcId?._id?.toString() === nbfcId.toString() ||
+          q.nbfcId?.toString() === nbfcId.toString(),
+      );
+      return {
+        ...doc,
+        sellerProfile: {
+          companyName: doc.subContractorId?.companyName || "—",
+          gstin: doc.subContractorId?.gstin || "—",
+          constitutionType: doc.subContractorId?.constitutionType || "—",
+        },
+        buyerProfile: {
+          companyName:
+            doc.epcId?.companyName || doc.buyerDetails?.buyerName || "—",
+          creditRating: doc.buyerDetails?.creditRating || null,
+        },
+        cwcaf: doc.cwcaf || {
+          riskCategory: doc.riskAssessmentDetails?.riskCategory || null,
+          rmtRecommendation:
+            doc.riskAssessmentDetails?.rmtRecommendation || null,
+          riskScore: doc.riskAssessmentDetails?.riskScore || null,
+        },
+        sharedAt: myQuotation?.sharedAt || doc.createdAt,
+        alreadyQuoted:
+          myQuotation?.status === "QUOTED" ||
+          myQuotation?.status === "SELECTED" ||
+          myQuotation?.status === "NOT_SELECTED",
+        myQuotation: myQuotation?.quotation || null,
+        myQuotationStatus: myQuotation?.status || "PENDING",
+      };
+    });
   }
 
   // =========================================================

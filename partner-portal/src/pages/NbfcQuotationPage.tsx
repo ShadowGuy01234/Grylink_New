@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { cwcrfApi, nbfcApi } from "../api";
+import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 
 interface AvailableCwcrf {
@@ -36,6 +38,14 @@ interface AvailableCwcrf {
   sharedAt: string;
   quotationDeadline?: string;
   alreadyQuoted?: boolean;
+  myQuotation?: {
+    offeredAmount?: number;
+    interestRate?: number;
+    tenure?: number;
+    processingFee?: number;
+    terms?: string;
+  };
+  myQuotationStatus?: string;
 }
 
 interface QuotationForm {
@@ -47,6 +57,8 @@ interface QuotationForm {
 }
 
 const NbfcQuotationPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [cwcrfs, setCwcrfs] = useState<AvailableCwcrf[]>([]);
   const [selectedCwcrf, setSelectedCwcrf] = useState<AvailableCwcrf | null>(
@@ -207,17 +219,138 @@ const NbfcQuotationPage: React.FC = () => {
   const availableCwcrfs = cwcrfs.filter((c) => !c.alreadyQuoted);
   const quotedCwcrfs = cwcrfs.filter((c) => c.alreadyQuoted);
 
+  const sidebarContent = (
+    <aside className="sidebar">
+      <div className="mb-8 px-2 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+          G
+        </div>
+        <div>
+          <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-sky-600">
+            Gryork
+          </h1>
+          <p className="text-xs text-slate-400 font-medium">Partner Portal</p>
+        </div>
+      </div>
+
+      <nav className="flex-1 space-y-1">
+        <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">
+          Menu
+        </p>
+        <button onClick={() => navigate("/nbfc")} className="nav-item">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"
+            />
+          </svg>
+          Home
+        </button>
+        <button className="nav-item active">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+          My Quotations
+        </button>
+        <div className="pt-2 mt-2 border-t border-slate-100">
+          <button
+            onClick={() => navigate("/nbfc/lps")}
+            className="nav-item text-purple-600 hover:bg-purple-50"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            LPS Settings
+          </button>
+        </div>
+      </nav>
+
+      <div className="mt-auto pt-8 border-t border-slate-100">
+        <div className="flex items-center gap-3 px-2 mb-3">
+          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">
+            {user?.name?.[0]?.toUpperCase() || "N"}
+          </div>
+          <div className="overflow-hidden flex-1">
+            <p className="text-sm font-semibold text-slate-700 truncate">
+              {user?.name || "NBFC User"}
+            </p>
+            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+          </div>
+        </div>
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </aside>
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading available CWCRFs...</div>
+      <div className="app-container">
+        {sidebarContent}
+        <main className="main-content-area flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+            <p className="text-sm text-gray-500">Loading available CWCRFs…</p>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="app-container">
+      {sidebarContent}
+      <main className="main-content-area">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">CWCRF Quotations</h1>
           <p className="text-gray-600">
@@ -301,6 +434,56 @@ const NbfcQuotationPage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Already Quoted CWCRFs */}
+            {quotedCwcrfs.length > 0 && (
+              <div className="bg-white rounded-lg shadow mt-4">
+                <div className="p-4 border-b">
+                  <h2 className="text-lg font-semibold text-green-700">
+                    Already Quoted ({quotedCwcrfs.length})
+                  </h2>
+                </div>
+                <div className="divide-y max-h-[400px] overflow-y-auto">
+                  {quotedCwcrfs.map((cwcrf) => (
+                    <div
+                      key={cwcrf._id}
+                      className="p-4 bg-green-50/50 cursor-default"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-medium text-sm truncate text-gray-700">
+                          {cwcrf.sellerProfile?.companyName}
+                        </span>
+                        <span className="px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-700">
+                          {cwcrf.myQuotationStatus === "SELECTED"
+                            ? "SELECTED"
+                            : cwcrf.myQuotationStatus === "NOT_SELECTED"
+                              ? "NOT SELECTED"
+                              : "QUOTED"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-1">
+                        Buyer: {cwcrf.buyerProfile?.companyName}
+                      </p>
+                      {cwcrf.myQuotation && (
+                        <div className="flex gap-3 text-xs mt-1">
+                          <span className="text-green-700 font-semibold">
+                            {formatCurrency(
+                              cwcrf.myQuotation.offeredAmount || 0,
+                            )}
+                          </span>
+                          <span className="text-gray-500">
+                            @ {cwcrf.myQuotation.interestRate}% p.a.
+                          </span>
+                          <span className="text-gray-400">
+                            {cwcrf.myQuotation.tenure} days
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quotation Form */}
@@ -620,7 +803,7 @@ const NbfcQuotationPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
