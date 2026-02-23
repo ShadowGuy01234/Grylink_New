@@ -35,10 +35,10 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 export const STATS = [
-  { value: "₹500+Cr", label: "Transactions Facilitated", num: 500, prefix: "₹", suffix: "+Cr" },
-  { value: "200+", label: "EPC Partners", num: 200, prefix: "", suffix: "+" },
-  { value: "50+", label: "RBI-Registered NBFC Partners", num: 50, prefix: "", suffix: "+" },
-  { value: "99%", label: "Repayment Rate", num: 99, prefix: "", suffix: "%" },
+  { value: "₹1,000", label: "Flat Submission Fee — No Hidden Charges", num: 1000, prefix: "₹", suffix: "" },
+  { value: "48 hrs", label: "Target Funding Time After Approval", num: 48, prefix: "", suffix: " hrs" },
+  { value: "100%", label: "Fully Digital — No Branch Visits", num: 100, prefix: "", suffix: "%" },
+  { value: "Zero", label: "Collateral Required", num: 0, prefix: "", suffix: "" },
 ];
 
 export const FEATURES = [
@@ -50,9 +50,9 @@ export const FEATURES = [
   },
   {
     icon: "Building2",
-    title: "50+ NBFCs Competing for Your Bill",
+    title: "Multiple NBFCs Competing for Your Bill",
     description:
-      "Multiple lenders bid on your invoice — you choose the best rate. Never be stuck with a single bank's terms again.",
+      "Multiple RBI-registered lenders bid on your invoice — you choose the best rate. Never be stuck with a single bank's terms again.",
   },
   {
     icon: "BarChart3",
@@ -153,55 +153,23 @@ export const SC_ELIGIBILITY = [
   "Minimum 6 months of business operation",
 ];
 
-export const NBFC_NAMES = [
-  "Tata Capital",
-  "Bajaj Finserv",
-  "Mahindra Finance",
-  "Aditya Birla Finance",
-  "IIFL Finance",
-  "Cholamandalam",
-  "Muthoot Finance",
-  "Shriram Finance",
-  "HDB Financial",
-  "L&T Finance",
-  "Piramal Finance",
-  "IndiaBulls",
+export const TRUST_BADGES = [
+  "RBI-Registered NBFCs Only",
+  "End-to-End Encrypted",
+  "100% Digital Process",
+  "Competitive Bidding",
+  "Direct Bank Transfer",
+  "Zero Collateral Required",
+  "One-Time KYC",
+  "Real-Time Status Updates",
+  "Fully Compliant",
+  "Secure Document Storage",
+  "RBI-Registered NBFCs Only",
+  "End-to-End Encrypted",
 ];
 
-export const TESTIMONIALS = [
-  {
-    quote:
-      "As a sub-contractor, getting paid within days instead of months has completely changed how we run our business. We can take on bigger projects now because we're not waiting for cash.",
-    author: "Managing Director",
-    company: "Infrastructure Sub-contractor, Maharashtra",
-    role: "subcontractor",
-    rating: 5,
-  },
-  {
-    quote:
-      "The KYC was done in a day, the bill was approved by our EPC in 2 days, and we had money in our account by day 5. I didn't believe it would be this fast until I saw it myself.",
-    author: "Proprietor",
-    company: "Civil Works Contractor, Gujarat",
-    role: "subcontractor",
-    rating: 5,
-  },
-  {
-    quote:
-      "Gryork has transformed how we manage our working capital. Fast, reliable, and completely digital. We've onboarded 40+ of our sub-contractors.",
-    author: "CFO",
-    company: "Leading EPC Company, Delhi",
-    role: "epc",
-    rating: 5,
-  },
-  {
-    quote:
-      "Access to pre-verified deals with comprehensive RMT risk assessment has improved our lending portfolio significantly.",
-    author: "Head of Lending",
-    company: "Top NBFC Partner",
-    role: "nbfc",
-    rating: 5,
-  },
-];
+// Testimonials intentionally empty — no mock/fabricated reviews
+export const TESTIMONIALS: Array<{ quote: string; author: string; company: string; role: string; rating: number }> = [];
 
 export const FAQS = [
   {

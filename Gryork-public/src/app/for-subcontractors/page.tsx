@@ -188,9 +188,9 @@ export default function ForSubcontractorsPage() {
                 className="text-center"
               >
                 <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-2">
-                  12-18%
+                  Multi-NBFC
                 </div>
-                <div className="text-gray-600">Annual Rates</div>
+                <div className="text-gray-600">Competitive Bidding</div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -436,8 +436,8 @@ export default function ForSubcontractorsPage() {
               transition={{ delay: 0.1 }}
               className="text-xl text-green-100 mb-8 max-w-2xl mx-auto"
             >
-              Join hundreds of sub-contractors already using Gryork for quick
-              working capital.
+              Get your working capital faster, stay financially healthy, and
+              take on bigger projects with confidence.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
