@@ -8,7 +8,6 @@ import {
   ForStakeholders,
   Testimonials,
   FAQ,
-  CTA,
 } from "@/components/sections";
 
 export default function HomePage() {
@@ -32,8 +31,6 @@ export default function HomePage() {
         <Testimonials />
         {/* 8. FAQ — accordion, SC-focused questions */}
         <FAQ />
-        {/* 9. CTA — dual card SC/Partner split */}
-        <CTA />
       </main>
       <Footer />
     </>

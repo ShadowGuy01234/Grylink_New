@@ -45,9 +45,9 @@ const benefits = [
   },
   {
     icon: CheckCircle,
-    title: "High Repayment Rate",
+    title: "Strong Repayment Structure",
     description:
-      "99% repayment rate with EPC-backed receivables",
+      "EPC-backed receivables with buyer confirmation at every step",
   },
 ];
 
@@ -80,10 +80,10 @@ const steps = [
 ];
 
 const stats = [
-  { value: "₹500+ Cr", label: "Monthly Deal Volume" },
-  { value: "200+", label: "Active Deals/Month" },
-  { value: "99%", label: "Repayment Rate" },
-  { value: "48h", label: "Average Cycle Time" },
+  { value: "Pre-Verified", label: "KYC & Docs Completed Before You See the Deal" },
+  { value: "RMT Report", label: "Risk Assessment Included with Every Case" },
+  { value: "EPC Backed", label: "Buyer Confirmation on Every Invoice" },
+  { value: "₹1,000 Fee", label: "SC Commitment Fee Filters Serious Applicants" },
 ];
 
 export default function ForNBFCPage() {
@@ -129,9 +129,9 @@ export default function ForNBFCPage() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-12 bg-primary-900">
+        <section className="py-12 bg-white border-b border-gray-100">
           <div className="container-custom">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-200">
               {stats.map((stat, index) => (
                 <motion.div
                   key={index}
@@ -139,12 +139,12 @@ export default function ForNBFCPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="text-center"
+                  className="text-center px-6 py-4"
                 >
-                  <div className="text-3xl md:text-4xl font-bold text-white mb-1">
+                  <div className="text-xl md:text-2xl font-bold text-primary-700 mb-1">
                     {stat.value}
                   </div>
-                  <div className="text-blue-200 text-sm">{stat.label}</div>
+                  <div className="text-gray-500 text-xs leading-snug max-w-[120px] mx-auto">{stat.label}</div>
                 </motion.div>
               ))}
             </div>

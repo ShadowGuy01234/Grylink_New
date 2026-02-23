@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
   Zap,
@@ -9,6 +10,7 @@ import {
   Smartphone,
   Banknote,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import { FEATURES } from "@/lib/constants";
 
@@ -40,6 +42,10 @@ const itemVariants = {
 };
 
 export default function Features() {
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const toggle = (i: number) => setExpanded((prev) => (prev === i ? null : i));
+
   return (
     <section className="py-20 md:py-28 bg-white relative overflow-hidden">
       {/* Subtle BG */}
@@ -93,32 +99,73 @@ export default function Features() {
           {FEATURES.map((feature, index) => {
             const Icon = iconMap[feature.icon];
             const colors = iconColors[index % iconColors.length];
+            const isOpen = expanded === index;
             return (
               <motion.div key={index} variants={itemVariants} className="group">
                 <div
-                  className={`relative h-full bg-white rounded-2xl p-7 border ${colors.border} hover:shadow-xl hover:shadow-gray-100 transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
+                  className={`relative h-full bg-white rounded-2xl border ${
+                    colors.border
+                  } transition-all duration-300 overflow-hidden ${
+                    isOpen ? "shadow-xl shadow-gray-100" : "hover:shadow-lg hover:shadow-gray-100"
+                  }`}
                 >
-                  {/* Hover glow */}
+                  {/* Hover / open glow */}
                   <div
-                    className={`absolute inset-0 ${colors.bg} opacity-0 group-hover:opacity-40 rounded-2xl transition-opacity duration-300`}
+                    className={`absolute inset-0 ${
+                      colors.bg
+                    } rounded-2xl transition-opacity duration-300 ${
+                      isOpen ? "opacity-30" : "opacity-0 group-hover:opacity-30"
+                    }`}
                   />
 
-                  {/* Icon */}
-                  <div className="relative mb-5">
+                  {/* Always-visible header row */}
+                  <button
+                    onClick={() => toggle(index)}
+                    className="relative w-full flex items-center gap-4 p-6 text-left"
+                  >
+                    {/* Icon */}
                     <div
-                      className={`w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center border ${colors.border} group-hover:scale-110 transition-transform duration-300`}
+                      className={`w-11 h-11 flex-shrink-0 ${
+                        colors.bg
+                      } rounded-xl flex items-center justify-center border ${
+                        colors.border
+                      } transition-transform duration-300 ${
+                        isOpen ? "scale-105" : "group-hover:scale-105"
+                      }`}
                     >
-                      {Icon && <Icon className={`w-6 h-6 ${colors.icon}`} />}
+                      {Icon && <Icon className={`w-5 h-5 ${colors.icon}`} />}
                     </div>
-                  </div>
 
-                  {/* Content */}
-                  <h3 className="relative text-lg font-bold text-primary-900 mb-2 group-hover:text-primary-700 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="relative text-sm text-gray-500 leading-relaxed">
-                    {feature.description}
-                  </p>
+                    {/* Title */}
+                    <h3 className="flex-1 text-base font-bold text-primary-900 leading-snug">
+                      {feature.title}
+                    </h3>
+
+                    {/* Chevron */}
+                    <ChevronDown
+                      className={`w-4 h-4 flex-shrink-0 text-gray-400 transition-transform duration-300 ${
+                        isOpen ? "rotate-180 text-primary-500" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Expandable description */}
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        key="body"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <p className="relative px-6 pb-6 text-sm text-gray-500 leading-relaxed">
+                          {feature.description}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </motion.div>
             );

@@ -17,7 +17,7 @@ const SC_PORTAL_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173"
 const pipeline = [
   { label: "Submit Bill", icon: "📄", color: "bg-blue-100 text-blue-700" },
   { label: "EPC Verifies", icon: "✅", color: "bg-purple-100 text-purple-700" },
-  { label: "50+ NBFCs Bid", icon: "🏦", color: "bg-amber-100 text-amber-700" },
+  { label: "NBFCs Bid", icon: "🏦", color: "bg-amber-100 text-amber-700" },
   { label: "Funds in 48hrs", icon: "⚡", color: "bg-green-100 text-green-700" },
 ];
 
@@ -90,7 +90,7 @@ export default function Hero() {
               >
                 <Zap className="w-3.5 h-3.5 text-accent-300" />
                 <span className="text-sm font-medium text-white">
-                  50+ RBI-Registered NBFCs. Funds in 48 hours.
+                  100% Digital. RBI-Registered NBFCs.
                 </span>
                 <ArrowRight className="w-3 h-3 text-white/60" />
               </motion.a>
@@ -135,7 +135,7 @@ export default function Hero() {
               className="text-lg md:text-xl text-blue-100 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed"
             >
               Sub-contractors across India discount their bills on Gryork. One-time
-              KYC, 100% digital, and 50+ NBFCs competing for your invoice.
+              KYC, 100% digital, with multiple RBI-registered NBFCs competing for your invoice.
             </motion.p>
 
             {/* Trust bullets */}
@@ -246,10 +246,10 @@ export default function Hero() {
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-white">
-                    ₹12,40,000
+                    Your Bill — Funded
                   </p>
                   <p className="text-xs text-accent-300 mt-0.5">
-                    Transferred to HDFC Bank •••• 8821
+                    Transferred directly to your bank account
                   </p>
                 </motion.div>
 

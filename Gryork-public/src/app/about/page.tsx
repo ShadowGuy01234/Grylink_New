@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 
 const stats = [
-  { value: "₹500+ Cr", label: "Transaction Volume" },
-  { value: "200+", label: "Active Sub-Contractors" },
-  { value: "50+", label: "Partner NBFCs" },
-  { value: "99%", label: "On-Time Repayment" },
+  { value: "₹1,000", label: "Flat Submission Fee" },
+  { value: "48 hrs", label: "Target Funding Time" },
+  { value: "100%", label: "Digital Process" },
+  { value: "Zero", label: "Collateral Required" },
 ];
 
 const values = [
@@ -49,24 +49,14 @@ const values = [
 
 const milestones = [
   {
-    year: "2023",
+    year: "2025",
+    title: "Founded",
+    description: "Gryork was founded to bridge the gap between infrastructure sub-contractors and working capital lenders",
+  },
+  {
+    year: "2026",
     title: "Platform Launch",
-    description: "Gryork launched with initial NBFC partnerships",
-  },
-  {
-    year: "2023",
-    title: "100 Sub-Contractors",
-    description: "Reached milestone of 100 active sub-contractors",
-  },
-  {
-    year: "2024",
-    title: "₹100 Cr Milestone",
-    description: "Crossed ₹100 Crore in transaction volume",
-  },
-  {
-    year: "2024",
-    title: "Expansion",
-    description: "Expanded to multiple infrastructure sectors",
+    description: "Active onboarding of sub-contractors, EPC companies, and RBI-registered NBFC partners",
   },
 ];
 
