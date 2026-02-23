@@ -178,12 +178,9 @@ const nbfcSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Index for efficient filtering
-nbfcSchema.index({
-  "coverage.geographies": 1,
-  "coverage.sectors": 1,
-  status: 1,
-});
+// Indexes for efficient filtering (separate indexes for array fields — MongoDB disallows compound multikey)
+nbfcSchema.index({ "coverage.geographies": 1, status: 1 });
+nbfcSchema.index({ "coverage.sectors": 1, status: 1 });
 nbfcSchema.index({ preferenceScore: -1, status: 1 });
 nbfcSchema.index({ "lendingPreferenceSheet.riskAppetite": 1, status: 1 });
 nbfcSchema.index({ activeLendingStatus: 1, status: 1 });

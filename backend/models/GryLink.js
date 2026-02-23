@@ -9,6 +9,7 @@ const gryLinkSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "SubContractor",
     },
+    nbfcId: { type: mongoose.Schema.Types.ObjectId, ref: "Nbfc" },
     salesAgentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -16,10 +17,10 @@ const gryLinkSchema = new mongoose.Schema(
     },
     email: { type: String, required: true, lowercase: true, trim: true },
 
-    // Type of link - company or subcontractor
+    // Type of link - company, subcontractor, or nbfc
     linkType: {
       type: String,
-      enum: ["company", "subcontractor"],
+      enum: ["company", "subcontractor", "nbfc"],
       default: "company",
     },
 

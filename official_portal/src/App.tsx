@@ -23,6 +23,7 @@ import EpcVerificationPage from "./pages/ops/EpcVerificationPage";
 import BillVerificationPage from "./pages/ops/BillVerificationPage";
 import KycVerificationPage from "./pages/ops/KycVerificationPage";
 import SlaTrackerPage from "./pages/ops/SlaTrackerPage";
+import NbfcOnboardingPage from "./pages/ops/NbfcOnboardingPage";
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -177,6 +178,16 @@ const AppRoutes = () => {
           element={
             ["ops", "admin", "founder"].includes(user.role) ? (
               <OpsDashboard defaultTab="cwcrf" />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="ops/nbfc"
+          element={
+            ["ops", "admin", "founder"].includes(user.role) ? (
+              <NbfcOnboardingPage />
             ) : (
               <Navigate to={homeRoute} replace />
             )

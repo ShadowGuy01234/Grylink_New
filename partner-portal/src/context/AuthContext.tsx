@@ -1,5 +1,11 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { authApi } from '../api';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
+import { authApi } from "../api";
 
 interface User {
   id: string;
@@ -7,6 +13,7 @@ interface User {
   email: string;
   role: string;
   companyId?: string;
+  nbfcId?: string;
 }
 
 interface AuthContextType {
@@ -21,7 +28,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("token"),
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -30,12 +39,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const res = await authApi.getMe();
           // Only allow EPC users (and potentially NBFC in the future)
-          if (!['epc', 'nbfc'].includes(res.data.role)) {
-            throw new Error('Access denied');
+          if (!["epc", "nbfc"].includes(res.data.role)) {
+            throw new Error("Access denied");
           }
           setUser(res.data);
         } catch {
-          localStorage.removeItem('token');
+          localStorage.removeItem("token");
           setToken(null);
         }
       }
@@ -48,16 +57,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const res = await authApi.login({ email, password });
     const { user: userData, token: authToken } = res.data;
     // Only allow EPC/NBFC users
-    if (!['epc', 'nbfc'].includes(userData.role)) {
-      throw new Error('Access denied. This portal is for EPC and NBFC partners only.');
+    if (!["epc", "nbfc"].includes(userData.role)) {
+      throw new Error(
+        "Access denied. This portal is for EPC and NBFC partners only.",
+      );
     }
-    localStorage.setItem('token', authToken);
+    localStorage.setItem("token", authToken);
     setToken(authToken);
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setToken(null);
     setUser(null);
   };
@@ -71,6 +82,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };
