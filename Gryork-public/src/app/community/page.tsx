@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
+import { useState } from "react";
 import { Header, Footer } from "@/components/layout";
-import { motion } from "framer-motion";
-import { Users, BookOpen, TrendingUp, Globe, ArrowRight, CheckCircle, Lightbulb, ShieldCheck, IndianRupee, Clock } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Users, BookOpen, TrendingUp, Globe, ArrowRight, CheckCircle, Lightbulb, ShieldCheck, IndianRupee, Clock, ChevronDown } from "lucide-react";
 
-// ── Social platform data ─────────────────────────────────────────────────────
+// â”€â”€ Social platform data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const socials = [
   {
@@ -26,7 +27,7 @@ const socials = [
   },
   {
     name: "Instagram",
-    handle: "@gryork_official",
+    handle: "@gryork.official",
     description:
       "Follow us for infographics on infrastructure finance, explainers on bill discounting, and behind-the-scenes of how invoices get funded.",
     color: "from-pink-500 via-red-500 to-yellow-500",
@@ -77,13 +78,13 @@ const socials = [
   },
 ];
 
-// ── Educational bill discounting explainer cards ──────────────────────────
+// â”€â”€ Educational bill discounting explainer cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const educationCards = [
   {
     icon: IndianRupee,
     title: "What is Bill Discounting?",
     body:
-      "Bill discounting is a short-term financing method where a business sells its unpaid invoices to a lender at a discount, receiving immediate working capital instead of waiting 30–90 days for payment.",
+      "Bill discounting is a short-term financing method where a business sells its unpaid invoices to a lender at a discount, receiving immediate working capital instead of waiting 30â€“90 days for payment.",
   },
   {
     icon: ShieldCheck,
@@ -101,7 +102,7 @@ const educationCards = [
     icon: Clock,
     title: "Faster Liquidity Cycle",
     body:
-      "Traditional bank loans take weeks and require collateral. With invoice discounting, approval is tied to the invoice itself — enabling turnaround in days, not months.",
+      "Traditional bank loans take weeks and require collateral. With invoice discounting, approval is tied to the invoice itself â€” enabling turnaround in days, not months.",
   },
   {
     icon: Lightbulb,
@@ -113,7 +114,7 @@ const educationCards = [
     icon: Globe,
     title: "A Growing Ecosystem",
     body:
-      "India's bill discounting market is expanding rapidly as RBI-registered NBFCs adopt digital platforms to fund verified invoices — bringing institutional credit to India's vast informal infrastructure supply chain.",
+      "India's bill discounting market is expanding rapidly as RBI-registered NBFCs adopt digital platforms to fund verified invoices â€” bringing institutional credit to India's vast informal infrastructure supply chain.",
   },
 ];
 
@@ -127,12 +128,14 @@ const whyJoin = [
 ];
 
 export default function CommunityPage() {
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
+
   return (
     <>
       <Header />
       <main className="pt-20">
 
-        {/* ── Hero ── */}
+        {/* â”€â”€ Hero â”€â”€ */}
         <section className="bg-gradient-hero py-20 md:py-28 overflow-hidden relative">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-16 left-1/4 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl" />
@@ -144,7 +147,7 @@ export default function CommunityPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white text-sm font-medium px-4 py-2 rounded-full mb-6"
+                className="inline-flex items-center gap-2 bg-white/15 border border-white/30 text-white text-sm font-medium px-4 py-2 rounded-full mb-6"
               >
                 <Users className="w-4 h-4 text-accent-300" />
                 India&apos;s Home for Infrastructure Finance
@@ -153,10 +156,10 @@ export default function CommunityPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight"
+                className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-md"
               >
                 Learn. Connect. Grow.
-                <span className="block text-accent-300 mt-1">
+                <span className="block text-accent-300 mt-1 drop-shadow-lg">
                   Bill Discounting &amp; CWC Finance
                 </span>
               </motion.h1>
@@ -164,22 +167,28 @@ export default function CommunityPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto"
+                className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed"
               >
                 A dedicated space for sub-contractors, EPC companies, and financiers to stay informed on{" "}
-                <strong className="text-white">Bill Discounting</strong> and{" "}
-                <strong className="text-white">CWC (Custody &amp; Warehouse Certificate)</strong> financing in India.
+                <strong className="text-white font-bold">Bill Discounting</strong> and{" "}
+                <strong className="text-white font-bold">CWC (Custody &amp; Warehouse Certificate)</strong> financing in India.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-wrap justify-center gap-3"
+                className="flex flex-col sm:flex-row justify-center gap-3 px-4 sm:px-0"
               >
-                <a href="#join" className="btn-secondary inline-flex items-center gap-2">
+                <a
+                  href="#join"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-accent-500 hover:bg-accent-400 text-white font-semibold text-base shadow-lg shadow-accent-900/40 transition-all hover:-translate-y-0.5 active:scale-95"
+                >
                   Explore Platforms <ArrowRight className="w-4 h-4" />
                 </a>
-                <a href="#why" className="btn-outline-white inline-flex items-center gap-2">
+                <a
+                  href="#why"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white/15 hover:bg-white/25 border border-white/40 text-white font-semibold text-base backdrop-blur-sm transition-all hover:-translate-y-0.5 active:scale-95"
+                >
                   Why Join? <CheckCircle className="w-4 h-4" />
                 </a>
               </motion.div>
@@ -187,8 +196,117 @@ export default function CommunityPage() {
           </div>
         </section>
 
-        {/* ── What is Bill Discounting ── */}
-        <section className="bg-white py-16 border-b border-gray-100">
+        {/* â”€â”€ Choose Your Platform (FIRST after hero) â”€â”€ */}
+        <section id="join" className="py-16 md:py-20 bg-white border-b border-gray-100">
+          <div className="container-custom">
+            <div className="text-center mb-12">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 bg-accent-50 text-accent-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-4"
+              >
+                <Globe className="w-4 h-4" />
+                Follow Us
+              </motion.div>
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.05 }}
+                className="text-3xl md:text-4xl font-bold text-primary-900 mb-3"
+              >
+                Choose Your Platform
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="text-gray-500 max-w-xl mx-auto"
+              >
+                We&apos;re active on every major platform â€” join us wherever you spend your time
+              </motion.p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {socials.map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                  className={`rounded-2xl border ${s.border} ${s.bg} p-5 flex flex-col gap-4 hover:shadow-lg transition-all hover:-translate-y-1`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${s.color} text-white flex items-center justify-center shadow-md flex-shrink-0`}>
+                      {s.icon}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-base">{s.name}</h3>
+                      <p className={`text-xs font-medium ${s.textColor}`}>{s.handle}</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm flex-1 leading-relaxed">{s.description}</p>
+                  <a
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center justify-center gap-1.5 w-full px-4 py-2.5 rounded-full text-sm font-semibold text-white transition-all active:scale-95 ${s.btnColor}`}
+                  >
+                    Follow / Join <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* â”€â”€ Why Follow Gryork â”€â”€ */}
+        <section id="why" className="py-16 md:py-20 bg-gray-50 border-b border-gray-100">
+          <div className="container-custom">
+            <div className="max-w-3xl mx-auto">
+              <div className="text-center mb-12">
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-3xl md:text-4xl font-bold text-primary-900 mb-4"
+                >
+                  Why Follow Gryork?
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 }}
+                  className="text-lg text-gray-600"
+                >
+                  Free access to India&apos;s most focused infrastructure finance knowledge network
+                </motion.p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {whyJoin.map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className="flex items-start gap-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100"
+                  >
+                    <CheckCircle className="w-5 h-5 text-accent-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-gray-700 text-sm">{item}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* â”€â”€ Understand the Basics (accordion, LAST) â”€â”€ */}
+        <section className="py-16 md:py-20 bg-white border-b border-gray-100">
           <div className="container-custom">
             <div className="text-center mb-12">
               <motion.div
@@ -216,137 +334,61 @@ export default function CommunityPage() {
                 transition={{ delay: 0.1 }}
                 className="text-gray-500 max-w-xl mx-auto"
               >
-                Bill discounting and CWC financing are powerful tools for India’s infrastructure supply chain.
-                Here’s what you need to know.
+                Click any topic to learn about bill discounting and CWC financing in India&apos;s infrastructure sector.
               </motion.p>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {educationCards.map((card, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.08 }}
-                  className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-shadow"
-                >
-                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-4">
-                    <card.icon className="w-5 h-5 text-primary-600" />
-                  </div>
-                  <h3 className="font-bold text-primary-900 mb-2 text-base">{card.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{card.body}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        {/* ── Why Join ── */}
-        <section id="why" className="section bg-gray-50">
-          <div className="container-custom">
-            <div className="max-w-3xl mx-auto">
-              <div className="text-center mb-12">
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className="text-3xl md:text-4xl font-bold text-primary-900 mb-4"
-                >
-                  Why Follow Gryork?
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 }}
-                  className="text-lg text-gray-600"
-                >
-                  Free access to India’s most focused infrastructure finance knowledge network
-                </motion.p>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {whyJoin.map((item, i) => (
+            <div className="max-w-3xl mx-auto flex flex-col gap-3">
+              {educationCards.map((card, i) => {
+                const isOpen = expandedCard === i;
+                return (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.08 }}
-                    className="flex items-start gap-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100"
+                    transition={{ delay: i * 0.06 }}
+                    className={`rounded-2xl border transition-all duration-200 overflow-hidden ${isOpen ? "border-primary-200 shadow-md" : "border-gray-100 shadow-sm"} bg-white`}
                   >
-                    <CheckCircle className="w-5 h-5 text-accent-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-gray-700 text-sm">{item}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Social platforms ── */}
-        <section id="join" className="section bg-white">
-          <div className="container-custom">
-            <div className="text-center mb-14">
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-3xl md:text-4xl font-bold text-primary-900 mb-4"
-              >
-                Choose Your Platform
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="text-lg text-gray-600 max-w-2xl mx-auto"
-              >
-                We&apos;re active on every major platform — join us wherever you spend your time
-              </motion.p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {socials.map((s, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className={`rounded-2xl border ${s.border} ${s.bg} p-6 flex flex-col gap-4 hover:shadow-lg transition-shadow`}
-                >
-                  {/* Platform header */}
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${s.color} text-white flex items-center justify-center shadow-md`}>
-                      {s.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">{s.name}</h3>
-                      <p className={`text-sm font-medium ${s.textColor}`}>{s.handle}</p>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-600 text-sm flex-1">{s.description}</p>
-
-                  <div className="flex items-center justify-between mt-auto pt-2">
-                    <a
-                      href={s.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white transition-colors ${s.btnColor}`}
+                    <button
+                      onClick={() => setExpandedCard(isOpen ? null : i)}
+                      className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
                     >
-                      Follow / Join <ArrowRight className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                </motion.div>
-              ))}
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isOpen ? "bg-primary-600" : "bg-primary-100"}`}>
+                          <card.icon className={`w-4 h-4 ${isOpen ? "text-white" : "text-primary-600"}`} />
+                        </div>
+                        <span className={`font-semibold text-sm md:text-base transition-colors ${isOpen ? "text-primary-700" : "text-primary-900"}`}>
+                          {card.title}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180 text-primary-500" : ""}`}
+                      />
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                        >
+                          <div className="px-5 pb-5 pt-1 border-t border-primary-50">
+                            <p className="text-gray-600 text-sm leading-relaxed">{card.body}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* ── CTA ── */}
-        <section className="section bg-gradient-cta">
+        {/* â”€â”€ CTA â”€â”€ */}
+        <section className="py-16 md:py-20 bg-gradient-cta">
           <div className="container-custom text-center">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
@@ -361,9 +403,9 @@ export default function CommunityPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-xl text-green-100 mb-8 max-w-2xl mx-auto"
+              className="text-xl text-white/80 mb-8 max-w-2xl mx-auto"
             >
-              Stay informed, connected, and ahead in India’s infrastructure finance ecosystem.
+              Stay informed, connected, and ahead in India&apos;s infrastructure finance ecosystem.
               Follow Gryork on your preferred platform.
             </motion.p>
             <motion.a
@@ -372,7 +414,7 @@ export default function CommunityPage() {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
               href="#join"
-              className="btn-primary bg-white text-accent-700 hover:bg-gray-100 inline-flex items-center gap-2"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-accent-700 font-semibold hover:bg-gray-100 shadow-lg transition-all hover:-translate-y-0.5 active:scale-95"
             >
               Follow Gryork <ArrowRight className="w-4 h-4" />
             </motion.a>

@@ -286,13 +286,9 @@ export default function Header() {
                               onClick={() => { setIsMenuOpen(false); setMobileExpanded(null); }}
                               className={cn(
                                 "flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors",
-                                scrolled
-                                  ? pathname === child.href
-                                    ? "text-primary-700 bg-primary-50"
-                                    : "text-gray-600 hover:bg-gray-50"
-                                  : pathname === child.href
-                                    ? "text-white bg-white/15"
-                                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                                pathname === child.href
+                                  ? "text-primary-700 bg-primary-50"
+                                  : "text-gray-600 hover:bg-gray-50"
                               )}
                             >
                               <span className="text-base">{child.emoji}</span>
@@ -312,13 +308,9 @@ export default function Header() {
                     href={link.href!}
                     className={cn(
                       "px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                      scrolled
-                        ? isActive
-                          ? "text-primary-700 bg-primary-50"
-                          : "text-gray-700 hover:bg-gray-50"
-                        : isActive
-                          ? "text-white bg-white/15"
-                          : "text-white/80 hover:bg-white/10 hover:text-white"
+                      isActive
+                      ? "text-primary-700 bg-primary-50"
+                      : "text-gray-700 hover:bg-gray-50"
                     )}
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -338,12 +330,7 @@ export default function Header() {
               </Link>
               <Link
                 href={PORTALS.partner}
-                className={cn(
-                  "inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-medium transition-colors border",
-                  scrolled
-                    ? "border-gray-200 text-gray-700 hover:bg-gray-50"
-                    : "border-white/30 text-white hover:bg-white/10"
-                )}
+                className="inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-medium transition-colors border border-gray-200 text-gray-700 hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Partner Login (EPC / NBFC)
