@@ -41,7 +41,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email Us",
-    detail: "contact@gryork.com",
+    detail: "gryorkofficialmail@gmail.com",
     subDetail: "support@gryork.com",
   },
   {
@@ -53,7 +53,7 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Visit Us",
-    detail: "Bangalore, Karnataka",
+    detail: "New Delhi",
     subDetail: "India",
   },
   {
@@ -186,14 +186,14 @@ export default function ContactPage() {
                       <div className="grid md:grid-cols-2 gap-6">
                         <Input
                           label="Full Name"
-                          placeholder="John Doe"
+                          placeholder="Your Name"
                           error={errors.name?.message}
                           {...register("name")}
                         />
                         <Input
                           label="Email Address"
                           type="email"
-                          placeholder="john@company.com"
+                          placeholder="name@company.com"
                           error={errors.email?.message}
                           {...register("email")}
                         />
@@ -340,7 +340,7 @@ export default function ContactPage() {
                 <div className="mt-8 bg-gray-200 rounded-xl h-64 flex items-center justify-center">
                   <div className="text-center text-gray-500">
                     <MapPin className="w-8 h-8 mx-auto mb-2" />
-                    <p>Bangalore, Karnataka, India</p>
+                    <p>New Delhi, India</p>
                   </div>
                 </div>
               </motion.div>
