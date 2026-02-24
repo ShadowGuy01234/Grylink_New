@@ -160,7 +160,7 @@ export default function CommunityPage() {
               >
                 Learn. Connect. Grow.
                 <span className="block text-accent-300 mt-1 drop-shadow-lg">
-                  Bill Discounting &amp; CWC Finance
+                  Bill Discounting
                 </span>
               </motion.h1>
               <motion.p
@@ -170,8 +170,7 @@ export default function CommunityPage() {
                 className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed"
               >
                 A dedicated space for sub-contractors, EPC companies, and financiers to stay informed on{" "}
-                <strong className="text-white font-bold">Bill Discounting</strong> and{" "}
-                <strong className="text-white font-bold">CWC (Custody &amp; Warehouse Certificate)</strong> financing in India.
+                <strong className="text-white font-bold">Bill Discounting</strong>.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
