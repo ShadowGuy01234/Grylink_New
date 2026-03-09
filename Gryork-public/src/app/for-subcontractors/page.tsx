@@ -1,7 +1,8 @@
 "use client";
 
 import { Header, Footer } from "@/components/layout";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { InfiniteSlider } from "@/components/ui/infinite-slider";
 import {
   Clock,
   Shield,
@@ -126,9 +127,9 @@ export default function ForSubcontractorsPage() {
           <div className="container-custom">
             <div className="max-w-3xl">
               <motion.h1
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
+                transition={{ type: "spring", stiffness: 80, damping: 20 }}
                 className="text-4xl md:text-5xl font-bold text-white mb-6"
               >
                 Get Paid Faster
@@ -137,29 +138,31 @@ export default function ForSubcontractorsPage() {
                 </span>
               </motion.h1>
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
+                transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.1 }}
                 className="text-xl text-blue-100 mb-8"
               >
                 Convert your validated EPC bills into working capital within 48
                 hours. No more waiting months for payments.
               </motion.p>
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+                transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.2 }}
                 className="flex flex-col sm:flex-row gap-4"
               >
-                <a href="/contact" className="btn-secondary">
+                <motion.a href="/contact" className="btn-secondary" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   Get Started Now
-                </a>
-                <a
+                </motion.a>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   href="#how-it-works"
                   className="btn-outline border-white text-white hover:bg-white hover:text-primary-900"
                 >
                   See How It Works
-                </a>
+                </motion.a>
               </motion.div>
             </div>
           </div>
@@ -243,25 +246,27 @@ export default function ForSubcontractorsPage() {
               </motion.p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {benefits.map((benefit, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="card"
-                >
-                  <div className="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
-                    <benefit.icon className="w-6 h-6 text-accent-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-primary-900 mb-2">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-600">{benefit.description}</p>
-                </motion.div>
-              ))}
+            <div className="mt-8 overflow-hidden w-full relative">
+              <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+              <InfiniteSlider gap={24} duration={40} speedOnHover={80}>
+                {benefits.map((benefit, index) => (
+                  <motion.div
+                    key={index}
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="card w-[320px] shrink-0 h-full flex flex-col items-start bg-white border border-gray-100 shadow-sm hover:shadow-md cursor-pointer"
+                  >
+                    <div className="w-12 h-12 bg-accent-50 rounded-lg flex items-center justify-center mb-4">
+                      <benefit.icon className="w-6 h-6 text-accent-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-primary-900 mb-2">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-gray-600 flex-1">{benefit.description}</p>
+                  </motion.div>
+                ))}
+              </InfiniteSlider>
             </div>
           </div>
         </section>
@@ -298,23 +303,29 @@ export default function ForSubcontractorsPage() {
                   {steps.map((step, index) => (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex gap-6"
+                      initial={{ opacity: 0, x: -30, scale: 0.95 }}
+                      whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ type: "spring", stiffness: 90, damping: 15, delay: index * 0.15 }}
+                      className="flex gap-6 relative"
                     >
                       <div className="flex-shrink-0 relative z-10">
-                        <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold">
+                        <motion.div 
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold cursor-default shadow-lg"
+                        >
                           {step.step}
-                        </div>
+                        </motion.div>
                       </div>
-                      <div className="bg-gray-50 rounded-xl p-6 flex-1">
+                      <motion.div 
+                        whileHover={{ x: 5 }}
+                        className="bg-gray-50 rounded-xl p-6 flex-1 shadow-sm border border-gray-100"
+                      >
                         <h3 className="text-lg font-semibold text-primary-900 mb-2">
                           {step.title}
                         </h3>
                         <p className="text-gray-600">{step.description}</p>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   ))}
                 </div>
@@ -358,10 +369,11 @@ export default function ForSubcontractorsPage() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: 30, scale: 0.95 }}
+                whileInView={{ opacity: 1, x: 0, scale: 1 }}
                 viewport={{ once: true }}
-                className="bg-white rounded-2xl p-8 shadow-lg"
+                transition={{ type: "spring", stiffness: 80, damping: 20 }}
+                className="bg-white rounded-2xl p-8 shadow-xl border border-gray-50"
               >
                 <h3 className="text-2xl font-bold text-primary-900 mb-6">
                   Ready to Get Started?
@@ -370,12 +382,14 @@ export default function ForSubcontractorsPage() {
                   Contact our team to learn more about how Gryork can help your
                   business grow with quick working capital.
                 </p>
-                <a
+                <motion.a
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   href="/contact"
-                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-shadow"
                 >
                   Contact Us <ArrowRight className="w-4 h-4" />
-                </a>
+                </motion.a>
                 <p className="text-sm text-gray-500 text-center mt-4">
                   Our team will reach out within 24 hours
                 </p>
@@ -445,12 +459,14 @@ export default function ForSubcontractorsPage() {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              <a
-                href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173"}
-                className="btn-primary bg-white text-accent-700 hover:bg-gray-100"
-              >
-                Get Started Today
-              </a>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173"}
+                  className="btn-primary bg-white text-accent-700 hover:bg-gray-100 shadow-xl"
+                >
+                  Get Started Today
+                </motion.a>
             </motion.div>
           </div>
         </section>
