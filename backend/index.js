@@ -63,7 +63,13 @@ app.use(
         process.env.ADMIN_PORTAL_URL,
         process.env.OFFICIAL_PORTAL_URL,
         process.env.GRYLINK_FRONTEND_URL,
-      ].filter(Boolean);
+      ]
+        .filter(Boolean)
+        .filter(
+          (url) =>
+            process.env.NODE_ENV !== "production" ||
+            !/^http:\/\/localhost:\d+$/i.test(url),
+        );
 
       if (envOrigins.includes(origin)) return callback(null, true);
 

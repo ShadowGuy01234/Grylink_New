@@ -1,0 +1,219 @@
+\documentclass[11pt, a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in, headheight=15pt}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{microtype} % Improves typography
+\renewcommand{\familydefault}{\sfdefault} % Professional sans-serif font
+
+% --- Branding Colors ---
+\definecolor{gryorkBlue}{RGB}{14, 42, 71}
+\definecolor{gryorkLightBlue}{RGB}{52, 114, 184}
+\definecolor{fintechGreen}{RGB}{39, 174, 96}
+\definecolor{darkGray}{RGB}{50, 50, 50}
+
+% --- Hyperlink Formatting ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=gryorkLightBlue,
+    filecolor=gryorkBlue,      
+    urlcolor=fintechGreen,
+}
+
+% --- Page Style ---
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\rhead{\textcolor{gryorkLightBlue}{\textbf{Gateway Integration Guide}}}
+\lhead{\textcolor{gryorkBlue}{\textbf{Gryork Tech}}}
+\cfoot{\textcolor{darkGray}{\thepage}}
+
+% --- Title Formats ---
+\titleformat{\chapter}[display]
+  {\normalfont\sffamily\bfseries\color{gryorkBlue}}
+  {\titlerule[1.5pt]\vspace{2ex}\Large\chaptertitlename\ \thechapter}
+  {1ex}
+  {\huge}
+  [\vspace{1ex}\titlerule]
+
+\titleformat{\section}
+  {\normalfont\sffamily\Large\bfseries\color{gryorkBlue}}
+  {\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\sffamily\large\bfseries\color{gryorkLightBlue}}
+  {\thesubsection}{1em}{}
+
+% --- Spacing ---
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% ==========================================
+% TITLE PAGE
+% ==========================================
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    
+    {\Huge \bfseries \textcolor{gryorkBlue}{Gryork Fintech Gateway Integration Guide} \par}
+    \vspace{1cm}
+    {\Large \textbf{\textcolor{darkGray}{Actionable Implementation Runbook for Executive\\ \& Engineering Teams}} \par}
+    
+    \vspace{4cm}
+    
+    \large
+    As an unregulated B2B aggregator, Gryork cannot directly ping core government or banking assets (like UIDAI or RBI databases). We must bridge this gap using \textbf{authorized API Gateways}.
+    
+    \vspace{1em}
+    This document represents the exact steps, required documents, pricing timelines, and logical flows to procure and activate these gateways.
+    
+    \vfill
+    
+    \begin{flushright}
+        {\large \textbf{Prepared For:} Gryork Engineering \& Operations \par}
+        {\large \textbf{Date:} \today \par}
+        {\large \textbf{Document Type:} \textcolor{fintechGreen}{Technical Runbook (LaTeX)} \par}
+    \end{flushright}
+    
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ==========================================
+% CHAPTER 1: DLT
+% ==========================================
+\chapter{DLT Registration (OTP Delivery)}
+
+TRAI (Telecom Regulatory Authority of India) regulates all commercial SMS traffic in India via Distributed Ledger Technology (DLT). This guarantees that bad actors cannot spoof the "Gryork" sender name.
+
+\section{Procurement \& Registration Steps}
+\begin{enumerate}[label=\textbf{\textcolor{gryorkBlue}{\arabic*.}}, itemsep=0.3em]
+    \item \textbf{Choose a Telecom Gateway:} Navigate to an enterprise platform like \textbf{JioTrueConnect} (\url{reliancejio.com/trueconnect}) or \textbf{Vilpower} (Vodafone Idea). \textit{Note: Approvals sync across all telcos.}
+    \item \textbf{Register as a Principal Entity:} 
+        \begin{itemize}
+            \item You need Gryork’s Certificate of Incorporation (CIN).
+            \item Gryork's Company PAN Card.
+            \item Letter of Authorization (LOA) signed by an active Director/Founder.
+        \end{itemize}
+    \item \textbf{Register the Sender ID:} Apply for a 6-letter alphabetic Header (e.g., \texttt{GRYORK}). Takes $\sim$48 hours to approve.
+    \item \textbf{Register Content Templates:} Every SMS sent by Node.js must match an exact template hash stored on the blockchain. 
+        \begin{itemize}
+            \item \textit{Example Template:} \texttt{"Your Gryork login OTP is \{\#var\#\}. Do not share this with anyone. - Gryork Team"}
+        \end{itemize}
+\end{enumerate}
+
+\section{Vendor Selection for API Routing}
+Once registered on the DLT portal, you need a software vendor to pipe your Express.js API calls to the telecom network.
+\begin{itemize}
+    \item \textbf{Recommended Vendors:} \textbf{MSG91} or \textbf{Exotel}.
+    \item \textbf{Pricing:} $\sim$₹0.15 to ₹0.20 per SMS. DLT Registration fee is a flat ₹5,900 (₹5,000 + GST).
+\end{itemize}
+
+\section{Node.js Technical Implementation}
+\begin{itemize}
+    \item Generate a secure, random 6-digit number in the \texttt{backend}.
+    \item Store it in a Redis cache (or MongoDB TTL index) with the key \texttt{otp:\$\{phoneNumber\}}. Set the expiry to precisely \texttt{180} seconds (3 minutes).
+    \item Trigger an HTTP POST request to MSG91 embedding your approved DLT Template ID and the hashed OTP.
+\end{itemize}
+
+% ==========================================
+% CHAPTER 2: CIBIL
+% ==========================================
+\chapter{Experian \& CIBIL Integration}
+
+To predict subcontractor SLA failure risks without being a lending NBFC, Gryork will utilize a third-party gateway that bundles credit bureaus legally into a single API pull.
+
+\section{Procurement \& Gateway Steps}
+\begin{enumerate}[label=\textbf{\textcolor{gryorkBlue}{\arabic*.}}, itemsep=0.3em]
+    \item \textbf{Choose an Aggregation Gateway:} \textbf{Decentro.tech}, \textbf{Setu.co}, or \textbf{IDSPay}.
+    \item \textbf{Sign Enterprise Master Services Agreement (MSA):} You will undergo a thorough vetting by the gateway. You have to prove that Gryork has a legitimate B2B use case to access financial histories (i.e., verifying EPC viability and Subcontractor track records for Working Capital).
+    \item \textbf{Compliance Requirement:} You must legally agree to capture explicit consent \textit{before} querying a PAN. 
+        \begin{itemize}
+            \item \textbf{UI Fix:} Add a mandatory checkbox on the \texttt{subcontractor-portal}: \textit{"[ ] I authorize Gryork to fetch and retain my credit assessment data."}
+        \end{itemize}
+\end{enumerate}
+
+\section{Pricing Estimates}
+\begin{itemize}
+    \item \textbf{Setup/Platform Access:} Typically between ₹20,000 to ₹50,000 one-time.
+    \item \textbf{Per-PAN Verification (Experian/CIBIL):} $\sim$₹15 to ₹40 per successful API call depending on bulk volume tier.
+\end{itemize}
+
+\section{Node.js Technical Implementation}
+\begin{itemize}
+    \item When a Subcontractor submits their \texttt{CWCRF} request, the \texttt{status} moves to \texttt{RMT\_PENDING}.
+    \item A background worker (e.g., \texttt{node-cron} or BullMQ) takes the user's \texttt{pan} and triggers the gateway's REST endpoint.
+    \item \textbf{\textcolor{alertRed}{CRITICAL:}} Only extract the \texttt{Score} (e.g., 780) and \texttt{Default Risk Flags}. Store these against \texttt{SellerRiskAssessment} in MongoDB. Delete the detailed JSON trace to stay compliant with RBI data-retention limits.
+\end{itemize}
+
+% ==========================================
+% CHAPTER 3: Aadhaar
+% ==========================================
+\chapter{Aadhaar Offline eKYC (Aadhaar-as-a-Service)}
+
+Gryork will replace manual PDF uploads of Aadhaar cards with an "Offline XML" ingestion flow to eliminate spoofed ID documents completely.
+
+\section{Procurement \& Setup}
+\begin{enumerate}[label=\textbf{\textcolor{gryorkBlue}{\arabic*.}}, itemsep=0.3em]
+    \item \textbf{Vendor Selection:} Standardize on \textbf{Digio.in}, \textbf{Zoop.one}, or \textbf{Karza Technologies}. They handle the volatile UIDAI specifications so your backend doesn't have to.
+    \item \textbf{Setup Workflow:}
+        \begin{itemize}
+            \item Integrate the gateway's React SDK into the \texttt{subcontractor-portal} onboarding sequence.
+            \item The user clicks "Verify Aadhaar," and a secure iframe/modal opens. They enter their Aadhaar Number and receive an OTP directly from UIDAI servers.
+            \item Upon success, the UI modal closes, and the gateway validates the signature cryptographically.
+        \end{itemize}
+\end{enumerate}
+
+\section{Pricing Estimates}
+\begin{itemize}
+    \item \textbf{Integration Fee:} Often bundled with a broader KYC suite ($\sim$₹15,000 to ₹30,000).
+    \item \textbf{Per Verification Pull:} $\sim$₹3 to ₹7 per successful Aadhaar validation.
+\end{itemize}
+
+\section{Node.js Technical Implementation}
+\begin{itemize}
+    \item Wait for the webhook from Digio/Zoop to hit your Express server.
+    \item Parse the JSON payload containing the user's \textbf{Real Name}, \textbf{Date of Birth}, and \textbf{Base64 Profile Photo}.
+    \item Fuzzy match the \texttt{Real Name} against the \texttt{ownerName} input during signup. If match $>$ 85\%, automatically mark \texttt{kycStatus} as \texttt{COMPLETED}.
+\end{itemize}
+
+% ==========================================
+% CHAPTER 4: FIU
+% ==========================================
+\chapter{Sahamati Account Aggregator (FIU)}
+
+This is the most advanced capability. It allows Gryork to pull 6 months of bank statements dynamically from the Subcontractor's bank and analyze their cash flow, entirely destroying the need for uploaded \texttt{bankStatements} and \texttt{cancelledCheque} images.
+
+\section{Certification \& Integration}
+\begin{enumerate}[label=\textbf{\textcolor{gryorkBlue}{\arabic*.}}, itemsep=0.3em]
+    \item \textbf{Understand the Roles:} The Subcontractor’s bank is the \textbf{FIP} (Provider). Gryork is the \textbf{FIU} (User). 
+    \item \textbf{Sahamati Engagement:} Gryork must formally register with \textbf{Sahamati} (the collective governing Account Aggregators in India) to become an authorized FIU.
+    \item \textbf{Engage an FIU-TSP (Technology Service Provider):} Implementing the encrypted data rails manually requires months of engineering. Partner with a TSP like \textbf{Finvu} or \textbf{Setu API}.
+    \item \textbf{Sandbox Certification:} You must deploy a test module, connect to the Sahamati Central Sandbox, and prove your Node.js server can decipher the encrypted XML streams before you are granted live access.
+\end{enumerate}
+
+\section{Pricing Estimates}
+\begin{itemize}
+    \item \textbf{Sahamati FIU Certification \& TSP Implementation:} ₹1,50,000+ (High barrier to entry, but grants access to banking-grade financial pipelines).
+    \item \textbf{Consent \& Data Fetch Pull:} $\sim$₹15 to ₹50 per bank account analyzed.
+\end{itemize}
+
+\section{Node.js Technical Implementation}
+\begin{enumerate}[label=\textbf{\textcolor{gryorkBlue}{\arabic*.}}, itemsep=0.3em]
+    \item \textbf{Generate a Consent Request:} Server API makes a call invoking standard data fields (e.g., "Requesting 6 Months of Transaction History from [HDFC Bank]").
+    \item \textbf{Consent Callback:} User opens their Account Aggregator app (or a web view) and approves via OTP.
+    \item \textbf{Encrypted Payload Delivery:} Account Aggregator transmits the JWE (JSON Web Encryption) packet to Gryork's webhook endpoint.
+    \item \textbf{Decrypt \& Analyze:} Your server decrypts the payload natively and runs an algorithmic underwriting check (e.g., checking average daily balances and recurring loan EMI deductions) to approve or deny the CWCRF automatically.
+\end{enumerate}
+
+\end{document}
