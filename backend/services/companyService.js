@@ -5,6 +5,7 @@ const GryLink = require("../models/GryLink");
 const XLSX = require("xlsx");
 const { sendStatusUpdate, sendOnboardingLink } = require("./emailService");
 const authService = require("./authService");
+const { buildOnboardingLink } = require("./urlService");
 const { deleteFromCloudinary, uploadToCloudinary } = require("./cloudinaryService");
 
 // Step 5: EPC uploads documents
@@ -172,7 +173,7 @@ const addSubContractors = async (companyId, subContractors, userId) => {
     await gryLink.save();
 
     // Send onboarding email
-    const link = `${process.env.SUBCONTRACTOR_PORTAL_URL || process.env.GRYLINK_FRONTEND_URL}/onboarding/${gryLink.token}`;
+    const link = buildOnboardingLink(gryLink.token);
     await sendOnboardingLink(sc.email, sc.contactName || sc.companyName, link);
 
     created.push(subContractor);
@@ -247,7 +248,7 @@ const bulkAddSubContractors = async (companyId, fileBuffer, userId) => {
       await gryLink.save();
 
       // Send onboarding email
-      const link = `${process.env.SUBCONTRACTOR_PORTAL_URL || process.env.GRYLINK_FRONTEND_URL}/onboarding/${gryLink.token}`;
+      const link = buildOnboardingLink(gryLink.token);
       await sendOnboardingLink(row.email, contactName || companyName, link);
 
       results.created.push(subContractor);

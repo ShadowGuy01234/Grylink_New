@@ -4,6 +4,7 @@ const SubContractor = require('../models/SubContractor');
 const GryLink = require('../models/GryLink');
 const { sendOnboardingLink } = require('./emailService');
 const authService = require('./authService');
+const { buildOnboardingLink } = require('./urlService');
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ const createCompanyLead = async (data, salesAgentId) => {
   });
   await gryLink.save();
 
-  const link = `${process.env.GRYLINK_FRONTEND_URL}/onboarding/${gryLink.token}`;
+  const link = buildOnboardingLink(gryLink.token);
   await sendOnboardingLink(email, ownerName, link);
 
   return { company, gryLink };
@@ -192,7 +193,7 @@ const resendCompanyGryLink = async (companyId, salesAgentId) => {
   });
   await gryLink.save();
 
-  const link = `${process.env.GRYLINK_FRONTEND_URL}/onboarding/${gryLink.token}`;
+  const link = buildOnboardingLink(gryLink.token);
   await sendOnboardingLink(company.email, company.ownerName, link);
 
   return { gryLink, message: 'GryLink resent successfully' };
@@ -304,7 +305,7 @@ const resendGryLink = async (gryLinkId, salesAgentId) => {
   });
   await newLink.save();
 
-  const frontendUrl = `${process.env.GRYLINK_FRONTEND_URL}/onboarding/${newLink.token}`;
+  const frontendUrl = buildOnboardingLink(newLink.token);
   const recipient = original.companyId || original.subContractorId;
   const name = recipient?.ownerName || recipient?.contactName || recipient?.companyName || 'User';
   await sendOnboardingLink(original.email, name, frontendUrl);

@@ -13,6 +13,7 @@ const {
   sendNbfcOnboardingLink,
   sendStatusUpdate,
 } = require("./emailService");
+const { buildOnboardingLink } = require("./urlService");
 
 // Import new services
 const kycService = require("./kycService");
@@ -248,8 +249,7 @@ const inviteNbfc = async (data, opsUserId) => {
   await gryLink.save();
 
   // Send onboarding email
-  const baseUrl = process.env.GRYLINK_FRONTEND_URL || "http://localhost:5174";
-  const link = `${baseUrl}/onboarding/${gryLink.token}`;
+  const link = buildOnboardingLink(gryLink.token);
   await sendNbfcOnboardingLink(email, ownerName, name, link);
 
   return {
