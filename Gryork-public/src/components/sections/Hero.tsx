@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -15,10 +15,10 @@ import {
 const SC_PORTAL_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
 
 const pipeline = [
-  { label: "Submit Bill", icon: "📄", color: "bg-blue-100 text-blue-700" },
-  { label: "EPC Verifies", icon: "✅", color: "bg-purple-100 text-purple-700" },
-  { label: "NBFCs Bid", icon: "🏦", color: "bg-amber-100 text-amber-700" },
-  { label: "Funds in 48hrs", icon: "⚡", color: "bg-green-100 text-green-700" },
+  { label: "Submit Bill", icon: "", color: "bg-blue-100 text-blue-700" },
+  { label: "EPC Verifies", icon: "", color: "bg-purple-100 text-purple-700" },
+  { label: "NBFCs Bid", icon: "", color: "bg-amber-100 text-amber-700" },
+  { label: "Funds in 48hrs", icon: "", color: "bg-green-100 text-green-700" },
 ];
 
 export default function Hero() {
@@ -147,7 +147,7 @@ export default function Hero() {
             >
               {[
                 "No collateral required",
-                "₹1,000 flat platform fee",
+                "?1,000 flat platform fee",
                 "Fully digital & paperless",
               ].map((item, i) => (
                 <div
@@ -185,7 +185,7 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right — Mini Pipeline Visual */}
+          {/* Right � Mini Pipeline Visual */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -201,7 +201,7 @@ export default function Hero() {
                   <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
                   <div className="w-3 h-3 rounded-full bg-green-400/80" />
                   <span className="ml-2 text-xs text-white/50 font-mono">
-                    gryork.com — your dashboard
+                    gryork.com � your dashboard
                   </span>
                 </div>
 
@@ -246,7 +246,7 @@ export default function Hero() {
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-white">
-                    Your Bill — Funded
+                    Your Bill � Funded
                   </p>
                   <p className="text-xs text-accent-300 mt-0.5">
                     Transferred directly to your bank account
@@ -343,10 +343,11 @@ function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; s
 
 // Parse stat value for animation
 function parseStatValue(value: string): { num: number; prefix: string; suffix: string } {
-  const match = value.match(/^([₹]?)(\d+)(.*)$/);
+  const match = value.match(/^([?]?)(\d+)(.*)$/);
   if (match) {
     return { prefix: match[1], num: parseInt(match[2]), suffix: match[3] };
   }
   return { prefix: "", num: 0, suffix: value };
 }
+
 

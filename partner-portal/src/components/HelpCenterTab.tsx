@@ -280,7 +280,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-          <span style={{ fontSize: 24 }}>❓</span>
+          <span style={{ fontSize: 24 }}>?</span>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Help Center</h2>
         </div>
         <p style={{ color: "#c7d2fe", fontSize: 13, margin: 0 }}>
@@ -293,7 +293,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
       {/* FAQ Section */}
       <div className="help-section-card">
         <div className="help-section-header">
-          <span>📖</span>
+          <span></span>
           <h3>Frequently Asked Questions</h3>
         </div>
 
@@ -313,7 +313,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
               outline: "none",
             }}
           />
-          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 14 }}>🔍</span>
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", fontSize: 14 }}></span>
         </div>
 
         {/* Category filters */}
@@ -418,7 +418,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
       {/* Virtual Assistant */}
       <div className="help-section-card">
         <div className="help-section-header">
-          <span>🤖</span>
+          <span></span>
           <h3>Virtual Assistant</h3>
         </div>
         <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
@@ -462,7 +462,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
                   flexShrink: 0,
                 }}
               >
-                {msg.role === "bot" ? "🤖" : "👤"}
+                {msg.role === "bot" ? "" : ""}
               </div>
               <div
                 style={{
@@ -484,7 +484,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
           ))}
           {isBotTyping && (
             <div style={{ display: "flex", gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>🤖</div>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}></div>
               <div style={{ background: "white", border: "1px solid #e2e8f0", borderRadius: 14, borderTopLeftRadius: 4, padding: "10px 14px", display: "flex", gap: 4, alignItems: "center" }}>
                 <span style={{ width: 6, height: 6, background: "#94a3b8", borderRadius: "50%", animation: "bounce 0.6s infinite" }}></span>
                 <span style={{ width: 6, height: 6, background: "#94a3b8", borderRadius: "50%", animation: "bounce 0.6s 0.15s infinite" }}></span>
@@ -526,7 +526,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
               transition: "all 0.15s",
             }}
           >
-            ➤
+            >
           </button>
         </div>
       </div>
@@ -534,7 +534,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
       {/* Contact Support */}
       <div className="help-section-card">
         <div className="help-section-header">
-          <span>🎧</span>
+          <span></span>
           <h3>Contact Support</h3>
         </div>
         <p style={{ fontSize: 12, color: "#64748b", marginBottom: 16 }}>
@@ -544,7 +544,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
         {/* Call */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderRadius: 10, border: "1px solid #d1fae5", background: "#f0fdf4", marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#d1fae5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📞</div>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#d1fae5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}></div>
             <div>
               <p style={{ fontWeight: 600, fontSize: 14, margin: "0 0 2px", color: "#1e293b" }}>Call Us</p>
               <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>Mon–Sat · 10 AM – 6 PM IST</p>
@@ -565,14 +565,14 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
               gap: 6,
             }}
           >
-            📞 +91 80000 00000
+             +91 80000 00000
           </a>
         </div>
 
         {/* Email */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderRadius: 10, border: "1px solid #bfdbfe", background: "#eff6ff", marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#bfdbfe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>✉️</div>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#bfdbfe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}></div>
             <div>
               <p style={{ fontWeight: 600, fontSize: 14, margin: "0 0 2px", color: "#1e293b" }}>Email Support</p>
               <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>Response within 1 business day</p>
@@ -598,7 +598,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
         <div style={{ padding: "14px 16px", borderRadius: 10, border: "1px solid #e0e7ff", background: "#eef2ff" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: showContactForm ? 12 : 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#e0e7ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>💬</div>
+              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#e0e7ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}></div>
               <div>
                 <p style={{ fontWeight: 600, fontSize: 14, margin: "0 0 2px", color: "#1e293b" }}>Message Ops Team</p>
                 <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>Send a message directly to our operations team</p>
@@ -608,7 +608,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
               onClick={() => setShowContactForm(!showContactForm)}
               style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#4f46e5", padding: 4 }}
             >
-              {showContactForm ? "✕" : "▼"}
+              {showContactForm ? "" : ""}
             </button>
           </div>
           {showContactForm && (
@@ -646,11 +646,11 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
                     transition: "all 0.15s",
                   }}
                 >
-                  {sendingSupport ? "Sending..." : "Send to Ops ➤"}
+                  {sendingSupport ? "Sending..." : "Send to Ops "}
                 </button>
               </div>
               <p style={{ fontSize: 11, color: "#6b7280", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
-                ✅ Your message will be received by the Ops team and responded to within 1 business day.
+                 Your message will be received by the Ops team and responded to within 1 business day.
               </p>
             </div>
           )}
@@ -689,3 +689,4 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
 };
 
 export default HelpCenterTab;
+

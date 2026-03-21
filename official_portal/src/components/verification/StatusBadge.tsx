@@ -34,3 +34,4 @@ export const StatusBadge = ({ status, size = 'md', className = '' }: StatusBadge
 };
 
 export default StatusBadge;
+

@@ -371,7 +371,7 @@ const DashboardPage = () => {
                 ></path>
               </svg>
               Sub-Contractors
-              {!areDocsVerified && <span className="nav-lock-icon">🔒</span>}
+              {!areDocsVerified && <span className="nav-lock-icon"></span>}
             </button>
           )}
 
@@ -395,7 +395,7 @@ const DashboardPage = () => {
             </svg>
             Cases & Bills
             {isEpc && !areDocsVerified && (
-              <span className="nav-lock-icon">🔒</span>
+              <span className="nav-lock-icon"></span>
             )}
           </button>
 
@@ -457,7 +457,7 @@ const DashboardPage = () => {
             </svg>
             My Bids
             {isEpc && !areDocsVerified && (
-              <span className="nav-lock-icon">🔒</span>
+              <span className="nav-lock-icon"></span>
             )}
             {activeBids.length > 0 && (
               <span className="ml-auto bg-indigo-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
@@ -1179,7 +1179,7 @@ const DashboardPage = () => {
                           <div key={idx} className="flex items-center flex-1 last:flex-none">
                             <div className="flex flex-col items-center">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${cwcrfReviewStep > idx + 1 ? "bg-emerald-500 text-white" : cwcrfReviewStep === idx + 1 ? "bg-violet-600 text-white shadow-md shadow-violet-200" : "bg-slate-100 text-slate-400"}`}>
-                                {cwcrfReviewStep > idx + 1 ? "✓" : idx + 1}
+                                {cwcrfReviewStep > idx + 1 ? "" : idx + 1}
                               </div>
                               <span className={`text-xs mt-1 whitespace-nowrap ${cwcrfReviewStep === idx + 1 ? "text-violet-600 font-semibold" : "text-slate-400"}`}>{label}</span>
                             </div>
@@ -1222,7 +1222,7 @@ const DashboardPage = () => {
                               { label: "Declaration Accepted", ok: selectedCwcrf.subContractorId?.declarationStatus === "ACCEPTED" },
                             ].map((item) => (
                               <span key={item.label} className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold ${item.ok ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
-                                {item.ok ? "✓" : "✗"} {item.label}
+                                {item.ok ? "" : ""} {item.label}
                               </span>
                             ))}
                           </div>
@@ -1360,7 +1360,7 @@ const DashboardPage = () => {
                             </span>
                           </label>
                           {!cwcrfVerifyForm.buyerDeclarationAccepted && (
-                            <p className="text-xs text-amber-600 text-center">⚠ You must accept the declaration to proceed to bid terms</p>
+                            <p className="text-xs text-amber-600 text-center">You must accept the declaration to proceed to bid terms</p>
                           )}
                         </div>
                       )}
@@ -1441,12 +1441,12 @@ const DashboardPage = () => {
                               <>
                                 <button onClick={() => setCwcrfActionMode("reject")}
                                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-red-300 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-colors">
-                                  ✗ Reject
+                                  Reject
                                 </button>
                                 <button onClick={handleCwcrfApprove}
                                   disabled={cwcrfDecisionLoading || !cwcrfVerifyForm.approvedAmount || !cwcrfVerifyForm.buyerDeclarationAccepted}
                                   className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-colors">
-                                  {cwcrfDecisionLoading ? "Processing..." : "✓ Confirm Approval"}
+                                  {cwcrfDecisionLoading ? "Processing..." : "Confirm Approval"}
                                 </button>
                               </>
                             ) : (
@@ -1498,3 +1498,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+

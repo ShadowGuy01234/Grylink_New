@@ -149,7 +149,7 @@ Validate completeness
 Flag discrepancies
 
 Output:
-✅ EPC profile marked Active – Buyer
+ EPC profile marked Active  Buyer
 
 Phase 2: Sub-Contractor (Seller) Basic Onboarding
 
@@ -207,7 +207,7 @@ Past project list
 
 EPC agreement
 
-🚫 No email uploads permitted.
+ No email uploads permitted.
 
 Phase 5: EPC Validation of Seller
 

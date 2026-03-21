@@ -1,7 +1,7 @@
-﻿import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-// ─── Role colour map ──────────────────────────────────────────────────────────
+// --- Role colour map ----------------------------------------------------------
 const ROLE_COLORS: Record<
   string,
   { primary: string; light: string; gradient: string }
@@ -33,7 +33,7 @@ const ROLE_COLORS: Record<
   },
 };
 
-// ─── SVG Icons ────────────────────────────────────────────────────────────────
+// --- SVG Icons ----------------------------------------------------------------
 const Ico = {
   grid: (
     <svg
@@ -313,7 +313,7 @@ const Ico = {
   ),
 };
 
-// ─── Reusable NavItem ─────────────────────────────────────────────────────────
+// --- Reusable NavItem ---------------------------------------------------------
 interface NavItemProps {
   to: string;
   icon: React.ReactNode;
@@ -407,7 +407,7 @@ const SidebarNavItem = ({
   </NavLink>
 );
 
-// ─── Section header ───────────────────────────────────────────────────────────
+// --- Section header -----------------------------------------------------------
 const SidebarSection = ({ label }: { label: string }) => (
   <div
     style={{
@@ -423,7 +423,7 @@ const SidebarSection = ({ label }: { label: string }) => (
   </div>
 );
 
-// ─── Main Layout ──────────────────────────────────────────────────────────────
+// --- Main Layout --------------------------------------------------------------
 const Layout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -473,7 +473,7 @@ const Layout = () => {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#f8fafc" }}>
-      {/* ═══════════════════ SIDEBAR ═══════════════════ */}
+      {/* ------------------- SIDEBAR ------------------- */}
       <aside
         style={{
           width: 256,
@@ -491,7 +491,7 @@ const Layout = () => {
           overflowX: "hidden",
         }}
       >
-        {/* ── Logo ── */}
+        {/* -- Logo -- */}
         <div
           style={{
             padding: "18px 16px 16px",
@@ -553,7 +553,7 @@ const Layout = () => {
           </div>
         </div>
 
-        {/* ── Navigation ── */}
+        {/* -- Navigation -- */}
         <nav
           style={{
             flex: 1,
@@ -705,7 +705,7 @@ const Layout = () => {
           )}
         </nav>
 
-        {/* ── User Footer ── */}
+        {/* -- User Footer -- */}
         <div
           style={{
             padding: "12px 12px",
@@ -789,7 +789,7 @@ const Layout = () => {
         </div>
       </aside>
 
-      {/* ═══════════════════ MAIN CONTENT ═══════════════════ */}
+      {/* ------------------- MAIN CONTENT ------------------- */}
       <main
         style={{
           flex: 1,
@@ -807,3 +807,4 @@ const Layout = () => {
 };
 
 export default Layout;
+

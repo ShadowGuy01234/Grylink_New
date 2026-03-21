@@ -107,10 +107,11 @@ export default function Footer() {
             © {currentYear} Gryork Technologies Pvt Ltd. All rights reserved.
           </p>
           <p className="text-gray-400 text-sm">
-            Made with ❤️ in India
+            Made with love in India
           </p>
         </div>
       </div>
     </footer>
   );
 }
+

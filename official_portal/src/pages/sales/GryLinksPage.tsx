@@ -41,7 +41,7 @@ const STATUS_CONFIG = {
     badge: 'badge badge-blue',
   },
   used: {
-    label: 'Used ✓',
+    label: 'Used ',
     icon: <HiOutlineCheckCircle style={{ fontSize: 12 }} />,
     color: '#15803D',
     bg: 'rgba(34,197,94,0.1)',
@@ -181,7 +181,7 @@ const GryLinksPage = () => {
         })}
         {stats.expiringSoon > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 18px', borderRadius: 12, border: '2px solid #F59E0B', background: 'rgba(245,158,11,0.08)' }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
+            <span style={{ fontSize: 18 }}></span>
             <div>
               <div style={{ fontSize: 18, fontWeight: 800, color: '#92400E', lineHeight: 1.1 }}>{stats.expiringSoon}</div>
               <div style={{ fontSize: 11, fontWeight: 600, color: '#92400E' }}>Expiring &lt;24h</div>
@@ -316,7 +316,7 @@ const GryLinksPage = () => {
                         <span className="badge badge-gray">{link.status}</span>
                       )}
                       {expSoon && (
-                        <div style={{ fontSize: 10, color: '#D97706', marginTop: 3, fontWeight: 600 }}>⚠ Expires soon!</div>
+                        <div style={{ fontSize: 10, color: '#D97706', marginTop: 3, fontWeight: 600 }}>Expires soon!</div>
                       )}
                     </td>
 
@@ -383,3 +383,4 @@ const GryLinksPage = () => {
 };
 
 export default GryLinksPage;
+

@@ -86,3 +86,4 @@ export const SlaProgressRing = ({
 };
 
 export default SlaProgressRing;
+

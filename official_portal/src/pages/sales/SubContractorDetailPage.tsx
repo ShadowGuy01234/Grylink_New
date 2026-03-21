@@ -190,7 +190,7 @@ const SubContractorDetailPage = () => {
   if (loading) return <div className="page-loading">Loading sub-contractor…</div>;
   if (!sc) return (
     <div style={{ textAlign: 'center', padding: 60 }}>
-      <div style={{ fontSize: 48, color: '#e5e7eb' }}>👤</div>
+      <div style={{ fontSize: 48, color: '#e5e7eb' }}></div>
       <p style={{ color: '#6b7280' }}>Sub-contractor not found</p>
       <button className="btn-secondary" onClick={() => navigate('/sales/subcontractors')}>← Back</button>
     </div>
@@ -223,7 +223,7 @@ const SubContractorDetailPage = () => {
                   style={{ fontSize: 12, color: '#1E5AAF', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}
                   onClick={() => sc.linkedEpcId && navigate(`/sales/companies/${sc.linkedEpcId._id}`)}
                 >
-                  🏢 {sc.linkedEpcId.companyName}
+                  {sc.linkedEpcId.companyName}
                 </span>
               )}
               <span style={{ fontSize: 12, color: '#9ca3af' }}>· Added {fmtDate(sc.createdAt)}</span>
@@ -411,7 +411,7 @@ const SubContractorDetailPage = () => {
                 return (
                   <div key={log._id || i} style={{ display: 'flex', gap: 12, padding: '12px 14px', background: '#f9f9ff', border: '1px solid #f3f4f6', borderRadius: 10, alignItems: 'flex-start' }}>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: `${METHOD_COLORS[log.method]}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 16, color: METHOD_COLORS[log.method] || '#6b7280' }}>
-                      {log.method === 'Call' ? '📞' : log.method === 'Email' ? '✉️' : log.method === 'WhatsApp' ? '💬' : '🤝'}
+                      {log.method === 'Call' ? '' : log.method === 'Email' ? '' : log.method === 'WhatsApp' ? '' : ''}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -458,3 +458,4 @@ const SubContractorDetailPage = () => {
 };
 
 export default SubContractorDetailPage;
+

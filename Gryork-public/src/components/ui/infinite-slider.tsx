@@ -95,3 +95,4 @@ export function InfiniteSlider({
     </div>
   );
 }
+

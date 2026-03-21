@@ -85,7 +85,7 @@ function ApplicationDrawer({ app, onClose, onUpdate }: DrawerProps) {
             <h2 style={{ fontWeight: 700, fontSize: 20, color: "#111827", margin: 0 }}>{app.name}</h2>
             <p style={{ color: "#6b7280", fontSize: 13, margin: "4px 0 0" }}>{app.role} · {app.department}</p>
           </div>
-          <button onClick={onClose} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, cursor: "pointer", background: "#f9fafb", fontSize: 16, color: "#6b7280" }}>✕</button>
+          <button onClick={onClose} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, cursor: "pointer", background: "#f9fafb", fontSize: 16, color: "#6b7280" }}>X</button>
         </div>
 
         {/* Status badge */}
@@ -339,7 +339,7 @@ export default function CareerApplicationsPage() {
             <div style={{ padding: 48, textAlign: "center", color: "#9ca3af" }}>Loading applications…</div>
           ) : applications.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}></div>
               <p style={{ color: "#9ca3af", margin: 0 }}>No applications found</p>
             </div>
           ) : (
@@ -395,7 +395,7 @@ export default function CareerApplicationsPage() {
                             onClick={() => handleDelete(app._id)}
                             style={{ padding: "6px 12px", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontSize: 12, cursor: "pointer" }}
                           >
-                            ✕
+                            X
                           </button>
                         </div>
                       </td>
@@ -415,3 +415,4 @@ export default function CareerApplicationsPage() {
     </>
   );
 }
+

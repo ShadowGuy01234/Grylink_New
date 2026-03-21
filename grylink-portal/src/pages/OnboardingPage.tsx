@@ -4,17 +4,17 @@ import { grylinkApi } from "../api";
 import toast from "react-hot-toast";
 
 const EPC_ONBOARDING_STEPS = [
-  { label: "Activate Account", desc: "Set your password", icon: "🔐" },
-  { label: "Upload Documents", desc: "KYC & company docs", icon: "📄" },
-  { label: "Add Sub-Contractors", desc: "Register your team", icon: "👥" },
-  { label: "Go Live", desc: "Start financing", icon: "🚀" },
+  { label: "Activate Account", desc: "Set your password", icon: "" },
+  { label: "Upload Documents", desc: "KYC & company docs", icon: "" },
+  { label: "Add Sub-Contractors", desc: "Register your team", icon: "" },
+  { label: "Go Live", desc: "Start financing", icon: "" },
 ];
 
 const NBFC_ONBOARDING_STEPS = [
-  { label: "Activate Account", desc: "Set your password", icon: "🔐" },
-  { label: "Partner Dashboard", desc: "Access your NBFC portal", icon: "📊" },
-  { label: "Configure LPS", desc: "Set your lending preferences", icon: "⚙️" },
-  { label: "Start Lending", desc: "Receive & bid on cases", icon: "💰" },
+  { label: "Activate Account", desc: "Set your password", icon: "" },
+  { label: "Partner Dashboard", desc: "Access your NBFC portal", icon: "" },
+  { label: "Configure LPS", desc: "Set your lending preferences", icon: "" },
+  { label: "Start Lending", desc: "Receive & bid on cases", icon: "" },
 ];
 
 const OnboardingPage = () => {
@@ -184,7 +184,7 @@ const OnboardingPage = () => {
             </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Welcome, {linkData?.ownerName}! 👋
+            Welcome, {linkData?.ownerName}!
           </h1>
           <p className="text-gray-500 text-sm mt-1">
             {isNbfc ? (
@@ -207,7 +207,7 @@ const OnboardingPage = () => {
           </p>
           {isNbfc && (
             <div className="mt-2 inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">
-              <span>🏦</span> NBFC Partner Onboarding
+              NBFC Partner Onboarding
             </div>
           )}
         </div>
@@ -388,3 +388,4 @@ const OnboardingPage = () => {
 };
 
 export default OnboardingPage;
+

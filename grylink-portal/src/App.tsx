@@ -43,3 +43,4 @@ const InvalidLinkPage = () => {
 };
 
 export default App;
+

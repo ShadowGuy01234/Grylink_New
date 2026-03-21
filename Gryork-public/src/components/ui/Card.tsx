@@ -20,3 +20,4 @@ export default function Card({ children, className, hover = true }: CardProps) {
     </div>
   );
 }
+

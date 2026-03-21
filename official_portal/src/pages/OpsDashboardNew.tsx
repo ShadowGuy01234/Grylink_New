@@ -349,7 +349,7 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
             <HiOutlineBell />
           </div>
           <div className="escalation-content">
-            <strong>⚠️ SLA Escalation Required</strong>
+            <strong>SLA Escalation Required</strong>
             <span>
               {overdueSlas.length} task(s) have breached SLA deadlines and
               require immediate attention
@@ -2068,12 +2068,12 @@ const CompanyReviewModal = ({
           <div className="footer-info">
             {allDocsVerified && (
               <span className="info-text success">
-                ✓ All documents verified
+                 All documents verified
               </span>
             )}
             {anyDocRejected && (
               <span className="info-text danger">
-                ⚠ Some documents rejected
+                 Some documents rejected
               </span>
             )}
           </div>
@@ -2503,7 +2503,7 @@ const BillsTab = ({
                         <span className="bill-doc-name">WCC</span>
                         <span className="bill-doc-action">
                           {selectedBill.wcc.verified
-                            ? "✓ Verified"
+                            ? " Verified"
                             : "Click to open →"}
                         </span>
                       </div>
@@ -2526,7 +2526,7 @@ const BillsTab = ({
                         <span className="bill-doc-name">Measurement Sheet</span>
                         <span className="bill-doc-action">
                           {selectedBill.measurementSheet.certified
-                            ? "✓ Certified"
+                            ? " Certified"
                             : "Click to open →"}
                         </span>
                       </div>
@@ -3470,7 +3470,7 @@ const KycDetailPanel = ({
           gap: 8,
         }}
       >
-        <span>🔍</span>
+        <span></span>
         <span>Open Full KYC Review</span>
         <span style={{ marginLeft: 4 }}>→</span>
       </button>
@@ -3491,7 +3491,7 @@ const KycDetailPanel = ({
             opacity: completingKyc ? 0.7 : 1,
           }}
         >
-          {completingKyc ? "Processing..." : "✓ Complete KYC"}
+          {completingKyc ? "Processing..." : " Complete KYC"}
         </button>
       )}
     </div>
@@ -4072,7 +4072,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                 fontWeight: 600,
                               }}
                             >
-                              ✓ All Sections Verified
+                              All Sections Verified
                             </span>
                           )}
                         </div>
@@ -4289,7 +4289,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               ],
                               [
                                 "Fee Paid",
-                                cwcrf.platformFeePaid ? "✅ Yes" : "⚠️ Pending",
+                                cwcrf.platformFeePaid ? " Yes" : " Pending",
                               ],
                             ].map(([l, v]) => (
                               <div
@@ -4393,7 +4393,6 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                     <span
                                       style={{ fontSize: 18, color: "#22c55e" }}
                                     >
-                                      ✓
                                     </span>
                                   )}
                                 </div>
@@ -4782,7 +4781,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                                 borderRadius: 4,
                                               }}
                                             >
-                                              📄 View RA Bill
+                                              View RA Bill
                                             </a>
                                           </div>
                                         )}
@@ -4831,7 +4830,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                                 borderRadius: 4,
                                               }}
                                             >
-                                              📄 View WCC
+                                              View WCC
                                             </a>
                                           </div>
                                         )}
@@ -4880,7 +4879,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                                 borderRadius: 4,
                                               }}
                                             >
-                                              📄 View Measurement Sheet
+                                              View Measurement Sheet
                                             </a>
                                           </div>
                                         )}
@@ -5351,7 +5350,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   marginBottom: 8,
                                 }}
                               >
-                                🔄 Re-request from Sub-Contractor
+                                Re-request from Sub-Contractor
                               </p>
                               <textarea
                                 placeholder="Type a message requesting SC to re-upload or correct something..."
@@ -5470,7 +5469,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                 marginBottom: 6,
                               }}
                             >
-                              ⚠ Detached Fields (pending SC re-upload)
+                              Detached Fields (pending SC re-upload)
                             </p>
                             {cwcrf.opsDetachedFields
                               .filter((d: any) => !d.resolved)
@@ -5743,7 +5742,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               color: "#b91c1c",
                             }}
                           >
-                            ⚠️ <strong>High-risk case:</strong> Ensure Founder /
+                            <strong>High-risk case:</strong> Ensure Founder /
                             Senior Ops approval has been obtained before
                             forwarding to EPC.
                           </div>
@@ -6224,7 +6223,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               cursor: "pointer",
                             }}
                           >
-                            {isTriaging ? "Processing..." : "✓ Forward to EPC"}
+                            {isTriaging ? "Processing..." : " Forward to EPC"}
                           </button>
                           <button
                             disabled={
@@ -6252,7 +6251,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               cursor: "pointer",
                             }}
                           >
-                            {isTriaging ? "Processing..." : "✕ Reject"}
+                            {isTriaging ? "Processing..." : " Reject"}
                           </button>
                         </div>
                         {!triageNotes[noteKey]?.trim() && (
@@ -6286,7 +6285,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                 color: "#94a3b8",
               }}
             >
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🏦</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}></div>
               <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>
                 No CWCRFs pending NBFC dispatch
               </p>
@@ -6404,7 +6403,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               fontWeight: 600,
                             }}
                           >
-                            ✓ EPC Verified
+                            EPC Verified
                           </span>
                         </div>
                         <p
@@ -6634,7 +6633,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   cursor: "pointer",
                                 }}
                               >
-                                📄 Generate CWCAF
+                                Generate CWCAF
                               </button>
                             </div>
                           </div>
@@ -6985,7 +6984,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               >
                                 {cwcafGenerating
                                   ? "Generating..."
-                                  : "✓ Generate CWCAF"}
+                                  : " Generate CWCAF"}
                               </button>
                             </div>
                           </div>
@@ -7006,7 +7005,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               gap: 8,
                             }}
                           >
-                            <span style={{ fontSize: 16 }}>✓</span>
+                            <span style={{ fontSize: 16 }}></span>
                             <span
                               style={{
                                 fontSize: 13,
@@ -7044,7 +7043,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                             >
                               {loading
                                 ? "Loading NBFCs..."
-                                : "🔍 Get Matching NBFCs"}
+                                : " Get Matching NBFCs"}
                             </button>
                             {matches.length > 0 && (
                               <span
@@ -7281,7 +7280,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                           >
                             {sending
                               ? "Sending..."
-                              : `📨 Send to ${selected.length > 0 ? `${selected.length} ` : ""}Selected NBFC${selected.length !== 1 ? "s" : ""}`}
+                              : `Send to ${selected.length > 0 ? `${selected.length} ` : ""}Selected NBFC${selected.length !== 1 ? "s" : ""}`}
                           </button>
                         </div>
                         {matches.length === 0 && !loading && (
@@ -7309,3 +7308,4 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
     </div>
   );
 };
+

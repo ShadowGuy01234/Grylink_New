@@ -194,7 +194,7 @@ const CompanyDetailPage = () => {
   if (loading) return <div className="page-loading">Loading company…</div>;
   if (!company) return (
     <div style={{ textAlign: 'center', padding: 60 }}>
-      <div style={{ fontSize: 48, color: '#e5e7eb' }}>🏢</div>
+      <div style={{ fontSize: 48, color: '#e5e7eb' }}></div>
       <p style={{ color: '#6b7280' }}>Company not found</p>
       <button className="btn-secondary" onClick={() => navigate('/sales/companies')}>← Back</button>
     </div>
@@ -338,7 +338,7 @@ const CompanyDetailPage = () => {
                     color: glStatus === 'used' ? '#15803D' : glStatus === 'active' ? '#1D4ED8' : '#DC2626',
                   }}
                 >
-                  {glStatus === 'used' ? '✓ Used' : glStatus === 'active' ? '◉ Active' : '✗ Expired'}
+                  {glStatus === 'used' ? ' Used' : glStatus === 'active' ? ' Active' : ' Expired'}
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -467,3 +467,4 @@ const CompanyDetailPage = () => {
 };
 
 export default CompanyDetailPage;
+

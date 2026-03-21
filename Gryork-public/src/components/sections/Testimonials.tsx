@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
 import { HardHat, Building2, Landmark, ArrowRight, Sparkles } from "lucide-react";
@@ -19,7 +19,7 @@ const earlyAccessCards = [
   {
     icon: Building2,
     role: "EPC Company",
-    pitch: "Support your vendor ecosystem with quick working capital access. Your payment cycle stays unchanged — only your vendor relationships improve.",
+    pitch: "Support your vendor ecosystem with quick working capital access. Your payment cycle stays unchanged � only your vendor relationships improve.",
     cta: "Partner as EPC",
     href: "/for-epc",
     color: "bg-blue-50 border-blue-200",
@@ -113,4 +113,5 @@ export default function Testimonials() {
     </section>
   );
 }
+
 

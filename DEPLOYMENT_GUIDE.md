@@ -1,11 +1,11 @@
-# 🚀 Gryork Platform — Vercel Deployment Guide
+# Gryork Platform — Vercel Deployment Guide
 
 > **Target Infrastructure**: Vercel (serverless) for all frontends + backend  
 > **Last Updated**: February 12, 2026
 
 ---
 
-## 📐 Architecture Overview
+## Architecture Overview
 
 The Gryork monorepo contains **6 deployable services** (the `frontend/` directory is a legacy scaffold and is **not deployed**).
 
@@ -33,7 +33,7 @@ gryork-monorepo/
 
 ---
 
-## 🏗️ Deployment Strategy — Each Service is a Separate Vercel Project
+## Deployment Strategy — Each Service is a Separate Vercel Project
 
 Since this is a monorepo, **each service gets its own Vercel project**. Vercel's "Root Directory" setting allows you to point each project at its subfolder within the same Git repo.
 
@@ -42,9 +42,9 @@ Since this is a monorepo, **each service gets its own Vercel project**. Vercel's
 
 ---
 
-## 📦 Service-by-Service Deployment
+## Service-by-Service Deployment
 
-### 1️⃣ Backend API → `api.gryork.com`
+### Backend API → `api.gryork.com`
 
 > [!CAUTION]
 > The Express.js backend cannot run as-is on Vercel Serverless Functions. It requires a small adapter file and removing the `app.listen()` call when deployed serverlessly.
@@ -176,7 +176,7 @@ module.exports = app;
 
 ---
 
-### 2️⃣ Public Website → `gryork.com`
+### Public Website → `gryork.com`
 
 This is a **Next.js 16** app — Vercel's native framework. Simplest deployment.
 
@@ -203,7 +203,7 @@ This is a **Next.js 16** app — Vercel's native framework. Simplest deployment.
 
 ---
 
-### 3️⃣ Subcontractor Portal → `app.gryork.com`
+### Subcontractor Portal → `app.gryork.com`
 
 #### Vercel Project Settings
 
@@ -233,7 +233,7 @@ This is a **Next.js 16** app — Vercel's native framework. Simplest deployment.
 
 ---
 
-### 4️⃣ GryLink Portal → `link.gryork.com`
+### GryLink Portal → `link.gryork.com`
 
 #### Vercel Project Settings
 
@@ -263,7 +263,7 @@ This is a **Next.js 16** app — Vercel's native framework. Simplest deployment.
 
 ---
 
-### 5️⃣ Partner Portal → `partner.gryork.com`
+### Partner Portal → `partner.gryork.com`
 
 #### Vercel Project Settings
 
@@ -293,7 +293,7 @@ This is a **Next.js 16** app — Vercel's native framework. Simplest deployment.
 
 ---
 
-### 6️⃣ Admin Portal → `admin.gryork.com`
+### Admin Portal → `admin.gryork.com`
 
 #### Vercel Project Settings
 
@@ -323,7 +323,7 @@ This is a **Next.js 16** app — Vercel's native framework. Simplest deployment.
 
 ---
 
-## 🌐 Domain Configuration
+## Domain Configuration
 
 ### DNS Records (on your domain registrar, e.g. GoDaddy, Namecheap, Cloudflare)
 
@@ -342,7 +342,7 @@ This is a **Next.js 16** app — Vercel's native framework. Simplest deployment.
 
 ---
 
-## ✅ Pre-Deployment Checklist
+## Pre-Deployment Checklist
 
 ### Code Changes Required
 
@@ -372,7 +372,7 @@ This is a **Next.js 16** app — Vercel's native framework. Simplest deployment.
 
 ---
 
-## 🔄 Step-by-Step Deployment Order
+## Step-by-Step Deployment Order
 
 ### Phase 1: Code Prep
 1. Make all code changes from the checklist above
@@ -417,7 +417,7 @@ For each:
 
 ---
 
-## ⚠️ Important Serverless Considerations
+## Important Serverless Considerations
 
 ### Cold Starts
 Vercel Serverless Functions have **cold starts** (~250ms–1s). For the backend API:
@@ -435,7 +435,7 @@ Vercel Serverless Functions have **cold starts** (~250ms–1s). For the backend 
 
 ### File Uploads
 - `multer` with disk storage won't work on Vercel (read-only filesystem except `/tmp`)
-- Your current setup uses **Cloudinary storage** (`multer-storage-cloudinary`), which is ✅ compatible
+- Your current setup uses **Cloudinary storage** (`multer-storage-cloudinary`), which is compatible
 
 ### Execution Limits
 - **Hobby Plan**: 10s max execution per function
@@ -449,7 +449,7 @@ Vercel Serverless Functions have **cold starts** (~250ms–1s). For the backend 
 
 ---
 
-## 🗂️ Summary Matrix
+## Summary Matrix
 
 | Service | Deploy As | Root Dir | Custom Domain | Framework |
 |---|---|---|---|---|
@@ -462,13 +462,13 @@ Vercel Serverless Functions have **cold starts** (~250ms–1s). For the backend 
 
 ---
 
-## 🚑 Rollback
+## Rollback
 
 Each Vercel project has **instant rollback** — click on any previous deployment in the Vercel Dashboard and promote it to production. No `git revert` necessary.
 
 ---
 
-## 💰 Expected Costs (Vercel Pro Plan)
+## Expected Costs (Vercel Pro Plan)
 
 | Item | Cost |
 |---|---|

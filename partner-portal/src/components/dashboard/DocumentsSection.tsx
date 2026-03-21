@@ -95,7 +95,7 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                         : "bg-slate-100 text-slate-400"
                 }`}
               >
-                {isVerified ? "✓" : isRejected ? "!" : isUploaded ? "📄" : "☁️"}
+                {isVerified ? "" : isRejected ? "" : isUploaded ? "" : ""}
               </div>
 
               {/* Content */}
@@ -218,3 +218,4 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 };
 
 export { DOCUMENT_TYPES };
+

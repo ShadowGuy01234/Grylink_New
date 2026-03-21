@@ -308,7 +308,7 @@ const SalesOverview = () => {
           icon={<HiOutlineLink />}
           sub={
             (stats?.totals.expiringSoon ?? 0) > 0
-              ? `⚠️ ${stats?.totals.expiringSoon} expiring soon`
+              ? ` ${stats?.totals.expiringSoon} expiring soon`
               : 'All links healthy'
           }
           color={(stats?.totals.expiringSoon ?? 0) > 0 ? 'yellow' : 'blue'}
@@ -678,7 +678,7 @@ const SalesOverview = () => {
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
                 <button type="submit" className="btn-primary" disabled={creating}>
-                  {creating ? 'Creating…' : '✉️ Create & Send Link'}
+                  {creating ? 'Creating…' : ' Create & Send Link'}
                 </button>
               </div>
             </form>
@@ -690,3 +690,4 @@ const SalesOverview = () => {
 };
 
 export default SalesOverview;
+

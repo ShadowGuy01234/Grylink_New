@@ -195,3 +195,4 @@ export const SlaPipelineKanban = ({
 };
 
 export default SlaPipelineKanban;
+

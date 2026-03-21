@@ -692,7 +692,7 @@ const RmtDashboard: React.FC = () => {
                           )}
                           {cwcrf.status === "RMT_APPROVED" && (
                             <span className="text-green-600 text-sm">
-                              ✓ Sent to Ops
+                              Sent to Ops
                             </span>
                           )}
                           <button
@@ -725,7 +725,7 @@ const RmtDashboard: React.FC = () => {
                             className="text-gray-600 hover:text-gray-900 hover:underline text-sm"
                             title="Download full case as PDF"
                           >
-                            📄 PDF
+                            PDF
                           </button>
                         </div>
                       </td>
@@ -919,7 +919,7 @@ const RmtDashboard: React.FC = () => {
                     onClick={() => setSelectedAssessment(null)}
                     className="text-gray-500 hover:text-gray-700"
                   >
-                    ✕
+                    X
                   </button>
                 </div>
 
@@ -952,7 +952,7 @@ const RmtDashboard: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           {value.verified ? (
-                            <span className="text-green-600">✓ Verified</span>
+                            <span className="text-green-600"> Verified</span>
                           ) : (
                             <button
                               onClick={() => setChecklistModal(key)}
@@ -1475,7 +1475,7 @@ const RmtDashboard: React.FC = () => {
                       cursor: "pointer",
                     }}
                   >
-                    🖨️ Print / Download PDF
+                     Print / Download PDF
                   </button>
                   <button
                     onClick={() => setCaseDetailCwcrf(null)}
@@ -1643,7 +1643,7 @@ const RmtDashboard: React.FC = () => {
                           marginTop: 4,
                         }}
                       >
-                        ✓ Buyer Verified
+                        Buyer Verified
                       </p>
                     )}
                   </div>
@@ -1732,7 +1732,7 @@ const RmtDashboard: React.FC = () => {
                       gap: 6,
                     }}
                   >
-                    📄 Section B — Invoice Details
+                    Section B — Invoice Details
                   </p>
                   <div
                     style={{
@@ -1838,7 +1838,7 @@ const RmtDashboard: React.FC = () => {
                       gap: 6,
                     }}
                   >
-                    💳 Section C — Credit Request
+                    Section C  Credit Request
                   </p>
                   <div
                     style={{
@@ -1947,7 +1947,7 @@ const RmtDashboard: React.FC = () => {
                       gap: 6,
                     }}
                   >
-                    📈 Section D — Interest Preference
+                    Section D — Interest Preference
                   </p>
                   <div
                     style={{
@@ -2031,7 +2031,7 @@ const RmtDashboard: React.FC = () => {
                           gap: 6,
                         }}
                       >
-                        🏦 Section E — NBFC Bids & Selection
+                        Section E  NBFC Bids & Selection
                       </p>
 
                       {/* Selected NBFC banner */}
@@ -2058,7 +2058,7 @@ const RmtDashboard: React.FC = () => {
                                 margin: "0 0 4px",
                               }}
                             >
-                              ✅ Selected NBFC
+                              Selected NBFC
                             </p>
                             <p
                               style={{
@@ -2153,7 +2153,7 @@ const RmtDashboard: React.FC = () => {
                                     textTransform: "uppercase",
                                   }}
                                 >
-                                  ★ Selected
+                                  Selected
                                 </span>
                               )}
                               <p
@@ -2585,3 +2585,4 @@ const RmtDashboard: React.FC = () => {
 };
 
 export default RmtDashboard;
+

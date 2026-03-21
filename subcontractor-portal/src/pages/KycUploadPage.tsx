@@ -703,3 +703,4 @@ const KycUploadPage = () => {
 };
 
 export default KycUploadPage;
+

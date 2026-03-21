@@ -1,4 +1,4 @@
-# GRYORK PLATFORM - ROLE ACCESS & FEATURE DOCUMENTATION
+﻿# GRYORK PLATFORM - ROLE ACCESS & FEATURE DOCUMENTATION
 
 **Version:** 1.0  
 **Generated:** Analysis of codebase vs SOP requirements  
@@ -53,47 +53,47 @@ INTERNAL ROLES          EXTERNAL ROLES
 
 | Role | Official Portal | Partner Portal | GryLink |
 |------|-----------------|----------------|---------|
-| sales | ✅ | ❌ | ❌ |
-| ops | ✅ | ❌ | ❌ |
-| rmt | ✅ | ❌ | ❌ |
-| admin | ✅ | ❌ | ❌ |
-| founder | ✅ | ❌ | ❌ |
-| epc | ❌ | ✅ | ✅ (onboarding) |
-| subcontractor | ❌ | ✅ | ❌ |
-| nbfc | ⚠️ TBD | ❌ | ❌ |
+| sales |  |  |  |
+| ops |  |  |  |
+| rmt |  |  |  |
+| admin |  |  |  |
+| founder |  |  |  |
+| epc |  |  |  (onboarding) |
+| subcontractor |  |  |  |
+| nbfc |  TBD |  |  |
 
 ### Feature Access Matrix
 
 | Feature | sales | ops | rmt | admin | founder | epc | subcon | nbfc |
 |---------|-------|-----|-----|-------|---------|-----|--------|------|
-| Create EPC Leads | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| View Leads | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Mark SC Contacted | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Verify Company Docs | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Verify Bills | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| KYC Verification | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| KYC Doc Requests | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| Risk Assessments | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Generate CWCAF | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Share with NBFCs | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Manage Users | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Strategic Approvals | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Manage Agents | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Cron Jobs | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Upload Documents | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
-| Add Sub-Contractors | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Submit CWCRF | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Verify CWCRF | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Upload Bills | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| View CWCAF Offers | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Submit Quotes | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Manage LPS | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Blacklist Report | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Blacklist Approve | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Blacklist Revoke | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Transaction Create | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Transaction Manage | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| View NBFC List | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Create EPC Leads |  |  |  |  |  |  |  |  |
+| View Leads |  |  |  |  |  |  |  |  |
+| Mark SC Contacted |  |  |  |  |  |  |  |  |
+| Verify Company Docs |  |  |  |  |  |  |  |  |
+| Verify Bills |  |  |  |  |  |  |  |  |
+| KYC Verification |  |  |  |  |  |  |  |  |
+| KYC Doc Requests |  |  |  |  |  |  |  |  |
+| Risk Assessments |  |  |  |  |  |  |  |  |
+| Generate CWCAF |  |  |  |  |  |  |  |  |
+| Share with NBFCs |  |  |  |  |  |  |  |  |
+| Manage Users |  |  |  |  |  |  |  |  |
+| Strategic Approvals |  |  |  |  |  |  |  |  |
+| Manage Agents |  |  |  |  |  |  |  |  |
+| Cron Jobs |  |  |  |  |  |  |  |  |
+| Upload Documents |  |  |  |  |  |  |  |  |
+| Add Sub-Contractors |  |  |  |  |  |  |  |  |
+| Submit CWCRF |  |  |  |  |  |  |  |  |
+| Verify CWCRF |  |  |  |  |  |  |  |  |
+| Upload Bills |  |  |  |  |  |  |  |  |
+| View CWCAF Offers |  |  |  |  |  |  |  |  |
+| Submit Quotes |  |  |  |  |  |  |  |  |
+| Manage LPS |  |  |  |  |  |  |  |  |
+| Blacklist Report |  |  |  |  |  |  |  |  |
+| Blacklist Approve |  |  |  |  |  |  |  |  |
+| Blacklist Revoke |  |  |  |  |  |  |  |  |
+| Transaction Create |  |  |  |  |  |  |  |  |
+| Transaction Manage |  |  |  |  |  |  |  |  |
+| View NBFC List |  |  |  |  |  |  |  |  |
 
 ---
 
@@ -107,11 +107,11 @@ INTERNAL ROLES          EXTERNAL ROLES
 **Dashboard:** SalesDashboard.tsx (~270 lines)
 
 #### SOP Responsibilities (GryorkSOP.md Section 3.1)
-- ✅ Source EPCs and Sub-contractors
-- ✅ Explain Gryork offering
-- ✅ Coordinate initial interest
-- ✅ Act as relationship owner
-- ✅ Contact EPC-shared sub-contractors
+-  Source EPCs and Sub-contractors
+-  Explain Gryork offering
+-  Coordinate initial interest
+-  Act as relationship owner
+-  Contact EPC-shared sub-contractors
 
 #### Backend API Access
 | Endpoint | Method | Purpose |
@@ -124,19 +124,19 @@ INTERNAL ROLES          EXTERNAL ROLES
 | `/api/blacklist/report` | POST | Report fraud/blacklist |
 
 #### Frontend Features (Implemented)
-- ✅ **Stats Cards:** Total Companies, Active Companies, Sub-Contractors, Pending Contact
-- ✅ **Create Company Lead Modal:** Form with validation
-- ✅ **Company Leads Table:** Status tracking (LEAD_CREATED → ACTIVE)
-- ✅ **Sub-Contractors Table:** Contact status tracking
-- ✅ **Mark Contacted Modal:** Add contact notes
+-  **Stats Cards:** Total Companies, Active Companies, Sub-Contractors, Pending Contact
+-  **Create Company Lead Modal:** Form with validation
+-  **Company Leads Table:** Status tracking (LEAD_CREATED → ACTIVE)
+-  **Sub-Contractors Table:** Contact status tracking
+-  **Mark Contacted Modal:** Add contact notes
 
 #### Gap Analysis
 | SOP Requirement | Status | Notes |
 |-----------------|--------|-------|
-| Source EPCs | ✅ Implemented | Create Lead feature |
-| Explain offering | ⚠️ Manual | No automated material |
-| Contact sub-contractors | ✅ Implemented | Mark Contacted feature |
-| Relationship tracking | ⚠️ Basic | Only contact notes, no CRM |
+| Source EPCs |  Implemented | Create Lead feature |
+| Explain offering |  Manual | No automated material |
+| Contact sub-contractors |  Implemented | Mark Contacted feature |
+| Relationship tracking |  Basic | Only contact notes, no CRM |
 
 #### Industry Recommendations
 1. **Add CRM Features:** 
@@ -160,11 +160,11 @@ INTERNAL ROLES          EXTERNAL ROLES
 **Dashboard:** OpsDashboardNew.tsx (~2600 lines)
 
 #### SOP Responsibilities (GryorkSOP.md Section 3.2)
-- ✅ Execute onboarding
-- ✅ Collect & verify documents
-- ✅ Coordinate EPC–Seller validations
-- ✅ Maintain platform data integrity
-- ✅ KYC verification with document-request system
+-  Execute onboarding
+-  Collect & verify documents
+-  Coordinate EPC–Seller validations
+-  Maintain platform data integrity
+-  KYC verification with document-request system
 
 #### Backend API Access
 | Endpoint | Method | Purpose |
@@ -187,21 +187,21 @@ INTERNAL ROLES          EXTERNAL ROLES
 | `/api/cwcrf/chat/:cwcrfId` | ALL | CWCRF chat access |
 
 #### Frontend Features (Implemented)
-- ✅ **Overview Tab:** Workflow summary, stats overview
-- ✅ **EPC Verification Tab:** Company document review & approval
-- ✅ **Bill Verification Tab:** Invoice/WCC/Measurement verification
-- ✅ **Seller KYC Tab:** Split-panel layout with document-request system (request additional docs, verify/reject each document inline)
-- ✅ **Cases Tab:** Case management
-- ✅ **NBFC Invite Tab:** NBFC management
+-  **Overview Tab:** Workflow summary, stats overview
+-  **EPC Verification Tab:** Company document review & approval
+-  **Bill Verification Tab:** Invoice/WCC/Measurement verification
+-  **Seller KYC Tab:** Split-panel layout with document-request system (request additional docs, verify/reject each document inline)
+-  **Cases Tab:** Case management
+-  **NBFC Invite Tab:** NBFC management
 
 #### Gap Analysis
 | SOP Requirement | Status | Notes |
 |-----------------|--------|-------|
-| Execute onboarding | ✅ Implemented | Full verification flow |
-| Document verification | ✅ Implemented | With viewer & actions |
-| KYC document-request system | ✅ Implemented | Ops requests docs; SC uploads from portal |
-| Data integrity | ⚠️ Partial | No audit logging UI |
-| SLA tracking | ⚠️ Missing | No visual SLA timers |
+| Execute onboarding |  Implemented | Full verification flow |
+| Document verification |  Implemented | With viewer & actions |
+| KYC document-request system |  Implemented | Ops requests docs; SC uploads from portal |
+| Data integrity |  Partial | No audit logging UI |
+| SLA tracking |  Missing | No visual SLA timers |
 
 #### Industry Recommendations
 1. **SLA Dashboard:**
@@ -225,11 +225,11 @@ INTERNAL ROLES          EXTERNAL ROLES
 **Dashboard:** RmtDashboard.tsx (~1295 lines)
 
 #### SOP Responsibilities (GryorkSOP.md Section 3.3)
-- ✅ Perform seller & buyer risk assessment
-- ✅ Maintain checklist-based judgment framework
-- ✅ Prepare NBFC-shareable Risk Analysis Report (CWCAF)
-- ✅ Numeric risk scoring
-- ✅ Risk categorization (Low/Medium/High)
+-  Perform seller & buyer risk assessment
+-  Maintain checklist-based judgment framework
+-  Prepare NBFC-shareable Risk Analysis Report (CWCAF)
+-  Numeric risk scoring
+-  Risk categorization (Low/Medium/High)
 
 #### Backend API Access
 | Endpoint | Method | Purpose |
@@ -251,21 +251,21 @@ INTERNAL ROLES          EXTERNAL ROLES
 | `/api/cases/:id` | GET | Case details |
 
 #### Frontend Features (Implemented)
-- ✅ **Stats Grid:** Total assessments, In Progress, Approved, Rejected
-- ✅ **Risk Distribution:** Visual breakdown (Low/Medium/High)
-- ✅ **Risk Assessments Tab:** Seller assessment with checklist verification
-- ✅ **Pending Approvals Tab:** Approval request management
-- ✅ **CWCRF Queue Tab:** Generate CWCAF, share with NBFCs
+-  **Stats Grid:** Total assessments, In Progress, Approved, Rejected
+-  **Risk Distribution:** Visual breakdown (Low/Medium/High)
+-  **Risk Assessments Tab:** Seller assessment with checklist verification
+-  **Pending Approvals Tab:** Approval request management
+-  **CWCRF Queue Tab:** Generate CWCAF, share with NBFCs
 
 #### Gap Analysis
 | SOP Requirement | Status | Notes |
 |-----------------|--------|-------|
-| Risk assessment | ✅ Implemented | Full checklist system |
-| Numeric scoring | ✅ Implemented | Risk score calculation |
-| Risk categorization | ✅ Implemented | LOW/MEDIUM/HIGH |
-| CWCAF generation | ✅ Implemented | Full form workflow |
-| NBFC matching | ✅ Implemented | Auto-match by criteria |
-| Founder escalation (High risk) | ⚠️ Partial | Needs explicit workflow |
+| Risk assessment |  Implemented | Full checklist system |
+| Numeric scoring |  Implemented | Risk score calculation |
+| Risk categorization |  Implemented | LOW/MEDIUM/HIGH |
+| CWCAF generation |  Implemented | Full form workflow |
+| NBFC matching |  Implemented | Auto-match by criteria |
+| Founder escalation (High risk) |  Partial | Needs explicit workflow |
 
 #### Industry Recommendations
 1. **Risk Intelligence:**
@@ -302,18 +302,18 @@ All routes with `authorize("admin")` - Full system access including:
 - Transaction management
 
 #### Frontend Features (Implemented)
-- ✅ **User Management:** Create, Edit, Activate/Deactivate users
-- ✅ **User Stats:** By role breakdown
-- ✅ **User Filters:** Role, status, search
-- ✅ **Role-based User Creation:** Sales, Ops, RMT, Admin roles
+-  **User Management:** Create, Edit, Activate/Deactivate users
+-  **User Stats:** By role breakdown
+-  **User Filters:** Role, status, search
+-  **Role-based User Creation:** Sales, Ops, RMT, Admin roles
 
 #### Gap Analysis
 | Feature | Status | Notes |
 |---------|--------|-------|
-| User CRUD | ✅ Implemented | Full functionality |
-| Role assignment | ✅ Implemented | During creation/edit |
-| Activity logs | ❌ Missing | No audit trail UI |
-| System settings | ❌ Missing | No config management |
+| User CRUD |  Implemented | Full functionality |
+| Role assignment |  Implemented | During creation/edit |
+| Activity logs |  Missing | No audit trail UI |
+| System settings |  Missing | No config management |
 
 #### Industry Recommendations
 1. **Audit & Compliance:**
@@ -337,11 +337,11 @@ All routes with `authorize("admin")` - Full system access including:
 **Dashboard:** FounderDashboard.tsx (~580 lines)
 
 #### SOP Responsibilities (GryorkSOP.md Section 3.5)
-- ✅ Mandatory approval for deals > ₹1 Cr
-- ✅ High-risk rejection cases approval
-- ✅ EPC non-responsiveness escalations
-- ✅ Strategic/exception cases
-- ✅ Agent misconduct decisions
+-  Mandatory approval for deals > ₹1 Cr
+-  High-risk rejection cases approval
+-  EPC non-responsiveness escalations
+-  Strategic/exception cases
+-  Agent misconduct decisions
 
 #### Backend API Access
 | Endpoint | Method | Purpose |
@@ -358,22 +358,22 @@ All routes with `authorize("admin")` - Full system access including:
 | All RMT routes | ALL | Full RMT access |
 
 #### Frontend Features (Implemented)
-- ✅ **Stats Cards:** Pending Approvals, Active Agents, Pending Re-KYC, Overdue Transactions
-- ✅ **Approvals Tab:** Strategic approval queue with approve/reject
-- ✅ **Agents Tab:** Agent management with misconduct history
-- ✅ **Re-KYC Tab:** Re-KYC pending items
-- ✅ **Overdue Tab:** Overdue transaction tracking
-- ✅ **System Jobs Tab:** Cron job management (dormant, SLA, KYC expiry, overdue)
+-  **Stats Cards:** Pending Approvals, Active Agents, Pending Re-KYC, Overdue Transactions
+-  **Approvals Tab:** Strategic approval queue with approve/reject
+-  **Agents Tab:** Agent management with misconduct history
+-  **Re-KYC Tab:** Re-KYC pending items
+-  **Overdue Tab:** Overdue transaction tracking
+-  **System Jobs Tab:** Cron job management (dormant, SLA, KYC expiry, overdue)
 
 #### Gap Analysis
 | SOP Requirement | Status | Notes |
 |-----------------|--------|-------|
-| Deal size approvals | ✅ Implemented | Approval queue |
-| High-risk approvals | ✅ Implemented | Priority flagging |
-| Agent misconduct | ✅ Implemented | Decision workflow |
-| Re-KYC oversight | ✅ Implemented | Completion flow |
-| System monitoring | ✅ Implemented | Cron management |
-| Strategic dashboard | ⚠️ Basic | Needs advanced analytics |
+| Deal size approvals |  Implemented | Approval queue |
+| High-risk approvals |  Implemented | Priority flagging |
+| Agent misconduct |  Implemented | Decision workflow |
+| Re-KYC oversight |  Implemented | Completion flow |
+| System monitoring |  Implemented | Cron management |
+| Strategic dashboard |  Basic | Needs advanced analytics |
 
 #### Industry Recommendations
 1. **Executive Dashboard:**
@@ -419,20 +419,20 @@ All routes with `authorize("admin")` - Full system access including:
 | `/api/bids/my` | GET | My bids |
 
 #### Frontend Features (Implemented)
-- ✅ **Overview Tab:** Company status, stats, progress
-- ✅ **Documents Tab:** Upload/manage company documents (CIN, GST, PAN, etc.)
-- ✅ **Sub-Contractors Tab:** Add individual, bulk CSV upload
-- ✅ **Cases Tab:** View cases, place bids
+-  **Overview Tab:** Company status, stats, progress
+-  **Documents Tab:** Upload/manage company documents (CIN, GST, PAN, etc.)
+-  **Sub-Contractors Tab:** Add individual, bulk CSV upload
+-  **Cases Tab:** View cases, place bids
 
 #### Gap Analysis
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Document upload | ✅ Implemented | All required types |
-| Sub-contractor management | ✅ Implemented | Single and bulk |
-| CWCRF verification | ✅ Implemented | Approve/reject flow |
-| Case management | ✅ Implemented | Basic functionality |
-| Bid placement | ✅ Implemented | Amount and duration |
-| Payment tracking | ⚠️ Basic | Limited visibility |
+| Document upload |  Implemented | All required types |
+| Sub-contractor management |  Implemented | Single and bulk |
+| CWCRF verification |  Implemented | Approve/reject flow |
+| Case management |  Implemented | Basic functionality |
+| Bid placement |  Implemented | Amount and duration |
+| Payment tracking |  Basic | Limited visibility |
 
 #### Industry Recommendations
 1. **Supplier Portal:**
@@ -479,23 +479,23 @@ All routes with `authorize("admin")` - Full system access including:
 | `/api/subcontractor/kyc/additional/:docId` | POST | Upload additional requested doc |
 
 #### Frontend Features (Implemented)
-- ✅ **Overview Tab:** Profile status, stats
-- ✅ **Profile Tab:** Business details, bank details
-- ✅ **Documents Tab:** KYC document upload
-- ✅ **Bills Tab:** Upload bills with metadata
-- ✅ **CWC Requests Tab:** Submit CWCRF
-- ✅ **Bids Tab:** View and respond to bids
+-  **Overview Tab:** Profile status, stats
+-  **Profile Tab:** Business details, bank details
+-  **Documents Tab:** KYC document upload
+-  **Bills Tab:** Upload bills with metadata
+-  **CWC Requests Tab:** Submit CWCRF
+-  **Bids Tab:** View and respond to bids
 
 #### Gap Analysis
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Profile completion | ✅ Implemented | Full form |
-| KYC uploads | ✅ Implemented | All doc types |
-| Bill submission | ✅ Implemented | With attachments |
-| CWCRF workflow | ✅ Implemented | 6-step form |
-| Bid management | ✅ Implemented | Accept/reject |
-| Payment tracking | ⚠️ Basic | No detailed history |
-| NBFC selection | ✅ Implemented | Quote comparison |
+| Profile completion |  Implemented | Full form |
+| KYC uploads |  Implemented | All doc types |
+| Bill submission |  Implemented | With attachments |
+| CWCRF workflow |  Implemented | 6-step form |
+| Bid management |  Implemented | Accept/reject |
+| Payment tracking |  Basic | No detailed history |
+| NBFC selection |  Implemented | Quote comparison |
 
 #### Industry Recommendations
 1. **Financial Dashboard:**
@@ -515,8 +515,8 @@ All routes with `authorize("admin")` - Full system access including:
 
 ### 8. NBFC ROLE
 
-**Portal:** ⚠️ TBD (Currently backend-only)  
-**Dashboard:** ❌ Not implemented in frontend
+**Portal:**  TBD (Currently backend-only)  
+**Dashboard:**  Not implemented in frontend
 
 #### Purpose
 - Lending partner operations
@@ -537,19 +537,19 @@ All routes with `authorize("admin")` - Full system access including:
 | `/api/transaction` | POST | Create transaction |
 
 #### Frontend Features
-- ❌ **Dashboard:** Not implemented
-- ❌ **LPS Management UI:** Not implemented
-- ❌ **Quote Submission UI:** Not implemented
-- ❌ **Deal Pipeline:** Not implemented
+-  **Dashboard:** Not implemented
+-  **LPS Management UI:** Not implemented
+-  **Quote Submission UI:** Not implemented
+-  **Deal Pipeline:** Not implemented
 
 #### Gap Analysis
 | Feature | Status | Notes |
 |---------|--------|-------|
-| NBFC Dashboard | ❌ Missing | Critical gap |
-| LPS Management | ❌ Missing | Backend ready |
-| Quote Submission | ❌ Missing | Backend ready |
-| Deal Tracking | ❌ Missing | Backend ready |
-| Transaction Monitoring | ❌ Missing | Backend ready |
+| NBFC Dashboard |  Missing | Critical gap |
+| LPS Management |  Missing | Backend ready |
+| Quote Submission |  Missing | Backend ready |
+| Deal Tracking |  Missing | Backend ready |
+| Transaction Monitoring |  Missing | Backend ready |
 
 #### Industry Recommendations
 1. **URGENT - Create NBFC Portal:**
@@ -606,52 +606,52 @@ All routes with `authorize("admin")` - Full system access including:
 ### Phase 1: EPC Onboarding
 | SOP Step | Implementation Status |
 |----------|----------------------|
-| Sales creates lead | ✅ Implemented |
-| GryLink generation | ✅ Implemented |
-| EPC self-onboarding | ✅ Implemented |
-| Document upload | ✅ Implemented |
-| Ops verification | ✅ Implemented |
-| EPC activation | ✅ Implemented |
+| Sales creates lead |  Implemented |
+| GryLink generation |  Implemented |
+| EPC self-onboarding |  Implemented |
+| Document upload |  Implemented |
+| Ops verification |  Implemented |
+| EPC activation |  Implemented |
 
 ### Phase 2: Sub-Contractor Onboarding
 | SOP Step | Implementation Status |
 |----------|----------------------|
-| Sales contacts SC | ✅ Implemented |
-| SC registration | ✅ Implemented |
-| Profile completion | ✅ Implemented |
-| KYC upload | ✅ Implemented |
-| Ops verification | ✅ Implemented |
+| Sales contacts SC |  Implemented |
+| SC registration |  Implemented |
+| Profile completion |  Implemented |
+| KYC upload |  Implemented |
+| Ops verification |  Implemented |
 
 ### Phase 3: Bill Submission
 | SOP Step | Implementation Status |
 |----------|----------------------|
-| SC uploads bill | ✅ Implemented |
-| Ops verifies bill | ✅ Implemented |
-| CWCRF submission | ✅ Implemented |
+| SC uploads bill |  Implemented |
+| Ops verifies bill |  Implemented |
+| CWCRF submission |  Implemented |
 
 ### Phase 4: EPC Verification
 | SOP Step | Implementation Status |
 |----------|----------------------|
-| EPC verifies CWCRF | ✅ Implemented |
-| Approve/reject | ✅ Implemented |
-| Repayment details | ✅ Implemented |
+| EPC verifies CWCRF |  Implemented |
+| Approve/reject |  Implemented |
+| Repayment details |  Implemented |
 
 ### Phase 5: Risk Assessment
 | SOP Step | Implementation Status |
 |----------|----------------------|
-| RMT assessment | ✅ Implemented |
-| Checklist verification | ✅ Implemented |
-| Risk scoring | ✅ Implemented |
-| CWCAF generation | ✅ Implemented |
-| NBFC matching | ✅ Implemented |
+| RMT assessment |  Implemented |
+| Checklist verification |  Implemented |
+| Risk scoring |  Implemented |
+| CWCAF generation |  Implemented |
+| NBFC matching |  Implemented |
 
 ### Phase 6: NBFC & Funding
 | SOP Step | Implementation Status |
 |----------|----------------------|
-| Share with NBFCs | ✅ Implemented (backend) |
-| NBFC quote submission | ⚠️ Backend only |
-| Seller NBFC selection | ✅ Implemented |
-| Transaction creation | ✅ Implemented (backend) |
+| Share with NBFCs |  Implemented (backend) |
+| NBFC quote submission |  Backend only |
+| Seller NBFC selection |  Implemented |
+| Transaction creation |  Implemented (backend) |
 
 ---
 
@@ -713,3 +713,4 @@ All routes with `authorize("admin")` - Full system access including:
 ---
 
 *Document generated from codebase analysis of Gryork Platform*
+

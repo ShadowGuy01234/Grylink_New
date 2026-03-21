@@ -246,3 +246,4 @@ const SellerDeclarationPage = () => {
 };
 
 export default SellerDeclarationPage;
+

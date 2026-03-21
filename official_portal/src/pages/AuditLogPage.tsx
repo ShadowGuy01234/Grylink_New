@@ -1220,3 +1220,4 @@ const AuditLogPage = () => {
 };
 
 export default AuditLogPage;
+

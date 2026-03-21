@@ -259,7 +259,7 @@ const RmtCasesPage: React.FC = () => {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <StatusBadge status={selected.status} />
-                <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 18, lineHeight: 1, padding: 4 }}>✕</button>
+                <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 18, lineHeight: 1, padding: 4 }}>x</button>
               </div>
             </div>
 
@@ -379,14 +379,14 @@ const RmtCasesPage: React.FC = () => {
                           disabled={actionLoading}
                           style={{ fontSize: 12, fontWeight: 600, padding: "7px 14px", background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: 8, cursor: "pointer" }}
                         >
-                          ✓ Approve
+                          Approve
                         </button>
                         <button
                           onClick={() => handleUpdateStatus(selected._id, "RMT_REJECTED")}
                           disabled={actionLoading}
                           style={{ fontSize: 12, fontWeight: 600, padding: "7px 14px", background: "#fef2f2", color: "#991b1b", border: "1px solid #fecaca", borderRadius: 8, cursor: "pointer" }}
                         >
-                          ✗ Reject
+                          Reject
                         </button>
                       </>
                     )}
@@ -429,3 +429,4 @@ const RmtCasesPage: React.FC = () => {
 };
 
 export default RmtCasesPage;
+

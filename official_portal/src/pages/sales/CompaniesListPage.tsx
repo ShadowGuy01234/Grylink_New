@@ -45,7 +45,7 @@ const STATUS_CONFIG: Record<string, { label: string; badge: string; color: strin
 
 const GRYLINK_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
   active: { label: 'Link Active', color: '#15803D', bg: 'rgba(34,197,94,0.1)', icon: <HiOutlineCheckCircle /> },
-  used: { label: 'Link Used ✓', color: '#1D4ED8', bg: 'rgba(59,130,246,0.1)', icon: <HiOutlineCheckCircle /> },
+  used: { label: 'Link Used ', color: '#1D4ED8', bg: 'rgba(59,130,246,0.1)', icon: <HiOutlineCheckCircle /> },
   expired: { label: 'Link Expired', color: '#DC2626', bg: 'rgba(239,68,68,0.1)', icon: <HiOutlineXCircle /> },
   none: { label: 'Not Sent', color: '#D97706', bg: 'rgba(245,158,11,0.1)', icon: <HiOutlineMail /> },
 };
@@ -459,7 +459,7 @@ const CompaniesListPage = () => {
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
                 <button type="submit" className="btn-primary" disabled={creating}>
-                  {creating ? 'Creating…' : '✉️ Create & Send Link'}
+                  {creating ? 'Creating…' : ' Create & Send Link'}
                 </button>
               </div>
             </form>
@@ -471,3 +471,4 @@ const CompaniesListPage = () => {
 };
 
 export default CompaniesListPage;
+

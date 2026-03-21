@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -15,7 +15,7 @@ const PORTALS = {
   admin: process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:5177",
 };
 
-// ── nav helpers ──────────────────────────────────────────────────────────────
+// -- nav helpers --------------------------------------------------------------
 function isDropdown(link: NavLink): link is Extract<NavLink, { children: unknown[] }> {
   return Array.isArray((link as { children?: unknown }).children);
 }
@@ -51,7 +51,7 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pt-3 pb-2 px-4 bg-transparent">
-      {/* ── Floating pill container ── */}
+      {/* -- Floating pill container -- */}
       <div
         className={cn(
           "mx-auto max-w-7xl rounded-2xl transition-all duration-400 ease-in-out",
@@ -60,7 +60,7 @@ export default function Header() {
       >
         <div className="flex items-center justify-between px-4 py-2.5">
 
-          {/* ── Logo ── */}
+          {/* -- Logo -- */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <Logo className="h-12 w-auto" />
             <span
@@ -70,7 +70,7 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* ── Desktop nav ── */}
+          {/* -- Desktop nav -- */}
           <nav className="hidden lg:flex items-center gap-1" ref={navDropdownRef}>
             {NAV_LINKS.map((link) => {
               if (isDropdown(link)) {
@@ -152,7 +152,7 @@ export default function Header() {
             })}
           </nav>
 
-          {/* ── Desktop CTAs ── */}
+          {/* -- Desktop CTAs -- */}
           <div className="hidden lg:flex items-center gap-2">
             {/* Divider */}
             <div
@@ -203,7 +203,7 @@ export default function Header() {
                     onClick={() => setIsLoginDropdownOpen(false)}
                   >
                     <span className="mt-0.5 w-8 h-8 rounded-lg bg-accent-100 text-accent-700 flex items-center justify-center text-sm shrink-0 group-hover:bg-accent-200 transition-colors">
-                      🏗️
+                      
                     </span>
                     <span>
                       <span className="font-semibold block text-sm text-gray-800">Sub-Contractor</span>
@@ -217,7 +217,7 @@ export default function Header() {
                     onClick={() => setIsLoginDropdownOpen(false)}
                   >
                     <span className="mt-0.5 w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center text-sm shrink-0 group-hover:bg-primary-200 transition-colors">
-                      🏦
+                      
                     </span>
                     <span>
                       <span className="font-semibold block text-sm text-gray-800">Partner (EPC / NBFC)</span>
@@ -237,7 +237,7 @@ export default function Header() {
             </div>
           </div>
 
-          {/* ── Mobile hamburger ── */}
+          {/* -- Mobile hamburger -- */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={cn(
@@ -250,7 +250,7 @@ export default function Header() {
           </button>
         </div>
 
-        {/* ── Mobile drawer (slides inside pill) ── */}
+        {/* -- Mobile drawer (slides inside pill) -- */}
         <div
           className={cn(
             "lg:hidden overflow-hidden transition-all duration-300",
@@ -343,4 +343,5 @@ export default function Header() {
     </header>
   );
 }
+
 

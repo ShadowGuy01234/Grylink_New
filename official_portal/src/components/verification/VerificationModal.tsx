@@ -445,3 +445,4 @@ export const VerificationModal = ({
 };
 
 export default VerificationModal;
+

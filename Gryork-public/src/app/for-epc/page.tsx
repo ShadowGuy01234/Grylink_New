@@ -161,7 +161,7 @@ export default function ForEPCPage() {
                 <div className="bg-red-50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-red-700 mb-4 flex items-center gap-2">
                     <span className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      ✗
+                      
                     </span>
                     Without Gryork
                   </h3>
@@ -184,7 +184,7 @@ export default function ForEPCPage() {
                 <div className="bg-green-50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-green-700 mb-4 flex items-center gap-2">
                     <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      ✓
+                      
                     </span>
                     With Gryork
                   </h3>
@@ -351,3 +351,4 @@ export default function ForEPCPage() {
     </>
   );
 }
+

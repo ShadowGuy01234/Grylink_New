@@ -263,7 +263,7 @@ const CwcrfVerificationPage: React.FC = () => {
                     onClick={() => setSelectedCwcrf(null)}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    ✕
+                    X
                   </button>
                 </div>
                 <div className="p-6">
@@ -547,3 +547,4 @@ const CwcrfVerificationPage: React.FC = () => {
 };
 
 export default CwcrfVerificationPage;
+

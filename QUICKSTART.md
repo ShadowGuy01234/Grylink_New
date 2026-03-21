@@ -1,8 +1,8 @@
-# 🚀 Gryork Quick Start Guide
+# Gryork Quick Start Guide
 
 Get the entire Gryork platform up and running in minutes.
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
@@ -10,7 +10,7 @@ Before you begin, ensure you have the following installed:
 - **MongoDB** 5.0+ (local or MongoDB Atlas)
 - **Git**
 
-## 🌐 Platform Architecture
+## Platform Architecture
 
 | Portal | Directory | Port | URL (Dev) | Purpose |
 |--------|-----------|------|-----------|---------|
@@ -21,7 +21,7 @@ Before you begin, ensure you have the following installed:
 | Admin | `official_portal/` | 5177 | http://localhost:5177 | Internal admin |
 | Backend | `backend/` | 5000 | http://localhost:5000 | API server |
 
-## 🎯 Quick Setup
+## Quick Setup
 
 ### 1. Set Up Backend
 
@@ -88,7 +88,7 @@ See `.env.example` in each directory for full configuration.
 
 ---
 
-## 🔑 Test Accounts
+## Test Accounts
 
 After running the seed script (`npm run seed` in backend/), use these accounts:
 
@@ -102,7 +102,7 @@ After running the seed script (`npm run seed` in backend/), use these accounts:
 
 ---
 
-## 📱 User Flows
+## User Flows
 
 ### Sub-Contractor Flow
 1. Go to http://localhost:5173 (subcontractor-portal)
@@ -127,7 +127,7 @@ After running the seed script (`npm run seed` in backend/), use these accounts:
 
 Official Portal will run on **http://localhost:5174**
 
-## 🎉 You're Ready!
+## You're Ready!
 
 Your Gryork platform is now running:
 
@@ -136,7 +136,7 @@ Your Gryork platform is now running:
 - **Backend API**: http://localhost:5000/api
 - **API Health Check**: http://localhost:5000/api/health
 
-## 👤 Create Your First User
+## Create Your First User
 
 ### Option 1: Via API (Postman/cURL)
 
@@ -172,7 +172,7 @@ db.users.insertOne({
 
 Default password: `password123`
 
-## 🧪 Test the System
+## Test the System
 
 ### 1. Test Backend API
 ```bash
@@ -196,7 +196,7 @@ Visit http://localhost:5173 - you should see the home page
 - Email: `admin@gryork.com`
 - Password: `password123`
 
-## 📚 Next Steps
+## Next Steps
 
 ### Create Test Data
 
@@ -234,7 +234,7 @@ node scripts/seedUsers.js
 
 This will create sample users for all roles.
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Backend won't start
 - **Check MongoDB**: Ensure MongoDB is running
@@ -274,7 +274,7 @@ This will create sample users for all roles.
 - **MongoDB running**: Verify MongoDB service is active
 - **Network**: Check firewall/security settings
 
-## 🔧 Development Tools
+## Development Tools
 
 ### Recommended VS Code Extensions
 - ESLint
@@ -293,21 +293,21 @@ This will create sample users for all roles.
 - **Thunder Client**: VS Code extension
 - **cURL**: Command line
 
-## 📖 Additional Resources
+## Additional Resources
 
 - **System Architecture**: `/SYSTEM_ARCHITECTURE.md`
 - **Frontend Guide**: `/frontend/FRONTEND_README.md`
 - **Backend README**: `/backend/README.md`
 - **Workflow Documentation**: `/doc/workflow.md`
 
-## 🤝 Need Help?
+## Need Help?
 
 - Check the documentation files
 - Review the codebase comments
 - Inspect browser console for errors
 - Check backend logs for API errors
 
-## 🎨 Customization
+## Customization
 
 ### Change Theme Colors
 Edit `/frontend/src/index.css` CSS variables:
@@ -331,6 +331,6 @@ Edit `/frontend/src/index.css` CSS variables:
 
 ---
 
-**Happy Coding!** 🚀
+**Happy Coding!**
 
 If you encounter any issues, refer to the detailed documentation or create an issue in the repository.

@@ -926,14 +926,14 @@ const NbfcDashboard: React.FC = () => {
                   onClick={() => handleApprove(responseModal._id)}
                   className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
                 >
-                  ✓ Approve
+                  Approve
                 </button>
                 <button
                   onClick={() => handleReject(responseModal._id)}
                   disabled={!responseForm.rejectionReason.trim()}
                   className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  ✕ Reject
+                  Reject
                 </button>
               </div>
             </div>
@@ -1126,3 +1126,4 @@ const NbfcDashboard: React.FC = () => {
 };
 
 export default NbfcDashboard;
+

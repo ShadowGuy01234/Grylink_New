@@ -1,4 +1,4 @@
-# Gryork Platform — Official Workflow Documentation
+﻿# Gryork Platform — Official Workflow Documentation
 
 **Version:** 1.0  
 **Date:** February 19, 2026  
@@ -57,7 +57,7 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
 ## 3. Implementation Status Summary
 
 > **Last analysed:** February 21, 2026 — updated after latest push  
-> **Legend:** ✅ Fully built | ⚠️ Partially built / has gaps | ❌ Not built
+> **Legend:**  Fully built |  Partially built / has gaps |  Not built
 
 ---
 
@@ -65,149 +65,149 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
 
 | Phase | Description | Status | Completion |
 |-------|-------------|--------|-----------|
-| **Phase 1** | EPC Company Onboarding | ✅ Complete | 100% |
-| **Phase 2** | EPC Document Verification | ✅ Complete | 100% |
-| **Phase 3** | SC Registration via EPC | ✅ Complete | 100% |
-| **Phase 4** | SC Onboarding & KYC | ✅ Complete | 100% |
-| **Phase 5** | CWCRF Submission | ✅ Complete | 100% |
-| **Phase 6** | Ops CWCRF Review (Super Access) | ✅ Complete | 100% |
-| **Phase 7** | RMT Risk Assessment | ✅ Complete | 100% |
-| **Phase 8** | Ops Risk Triage & Forward to EPC | ✅ Complete | 100% |
-| **Phase 9** | EPC Case Review & Bid | ✅ Complete | 100% |
-| **Phase 10** | CWCAF Generation & NBFC Selection | ✅ Complete | 100% |
-| **Phase 11** | NBFC Review | ✅ Complete | 100% |
+| **Phase 1** | EPC Company Onboarding |  Complete | 100% |
+| **Phase 2** | EPC Document Verification |  Complete | 100% |
+| **Phase 3** | SC Registration via EPC |  Complete | 100% |
+| **Phase 4** | SC Onboarding & KYC |  Complete | 100% |
+| **Phase 5** | CWCRF Submission |  Complete | 100% |
+| **Phase 6** | Ops CWCRF Review (Super Access) |  Complete | 100% |
+| **Phase 7** | RMT Risk Assessment |  Complete | 100% |
+| **Phase 8** | Ops Risk Triage & Forward to EPC |  Complete | 100% |
+| **Phase 9** | EPC Case Review & Bid |  Complete | 100% |
+| **Phase 10** | CWCAF Generation & NBFC Selection |  Complete | 100% |
+| **Phase 11** | NBFC Review |  Complete | 100% |
 
 ---
 
 ### Phase-by-Phase Detailed Status
 
-#### Phase 1 — EPC Company Onboarding ✅ COMPLETE
+#### Phase 1 — EPC Company Onboarding  COMPLETE
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 1.1 | Sales creates EPC lead | `CompaniesListPage.tsx` + Create Lead modal | `POST /api/sales/companies` | ✅ |
-| 1.2 | GryLink generated & sent | `GryLinksPage.tsx`, `CompanyDetailPage.tsx` | `POST /api/sales/companies/:id/grylink` | ✅ |
-| 1.3 | EPC onboards at link.gryork.com | `grylink-portal/OnboardingPage.tsx` | `GET /api/grylink/validate/:token` + `POST set-password` | ✅ |
-| 1.4 | EPC uploads company documents | `partner-portal/DashboardPage.tsx` → Documents tab | `POST /api/company/documents` | ✅ |
+| 1.1 | Sales creates EPC lead | `CompaniesListPage.tsx` + Create Lead modal | `POST /api/sales/companies` |  |
+| 1.2 | GryLink generated & sent | `GryLinksPage.tsx`, `CompanyDetailPage.tsx` | `POST /api/sales/companies/:id/grylink` |  |
+| 1.3 | EPC onboards at link.gryork.com | `grylink-portal/OnboardingPage.tsx` | `GET /api/grylink/validate/:token` + `POST set-password` |  |
+| 1.4 | EPC uploads company documents | `partner-portal/DashboardPage.tsx` → Documents tab | `POST /api/company/documents` |  |
 
 ---
 
-#### Phase 2 — EPC Document Verification ✅ COMPLETE
+#### Phase 2 — EPC Document Verification  COMPLETE
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 2.1 | Ops reviews documents individually | `OpsDashboardNew.tsx` → Companies tab | `GET /api/ops/companies/:id/documents` | ✅ |
-| 2.2 | Ops approves/rejects EPC | `OpsDashboardNew.tsx` → Companies tab | `POST /api/ops/companies/:id/verify` | ✅ |
+| 2.1 | Ops reviews documents individually | `OpsDashboardNew.tsx` → Companies tab | `GET /api/ops/companies/:id/documents` |  |
+| 2.2 | Ops approves/rejects EPC | `OpsDashboardNew.tsx` → Companies tab | `POST /api/ops/companies/:id/verify` |  |
 
 ---
 
-#### Phase 3 — SC Registration via EPC ✅ COMPLETE
+#### Phase 3 — SC Registration via EPC  COMPLETE
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 3.1 | EPC uploads SC list (manual + bulk Excel) | `partner-portal/SubContractorsSection.tsx` | `POST /api/company/subcontractors` + `/bulk` | ✅ |
-| 3.2 | Sales contacts SC, logs contact | `SubContractorDetailPage.tsx` → Contact Log | `POST /api/sales/subcontractors/:id/contact-log` | ✅ |
-| 3.3 | SC self-registers with same email | `subcontractor-portal/RegisterPage.tsx` | `POST /api/auth/register-subcontractor` | ✅ |
+| 3.1 | EPC uploads SC list (manual + bulk Excel) | `partner-portal/SubContractorsSection.tsx` | `POST /api/company/subcontractors` + `/bulk` |  |
+| 3.2 | Sales contacts SC, logs contact | `SubContractorDetailPage.tsx` → Contact Log | `POST /api/sales/subcontractors/:id/contact-log` |  |
+| 3.3 | SC self-registers with same email | `subcontractor-portal/RegisterPage.tsx` | `POST /api/auth/register-subcontractor` |  |
 
 ---
 
-#### Phase 4 — SC Onboarding & KYC ✅ COMPLETE
+#### Phase 4 — SC Onboarding & KYC  COMPLETE
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 4.1 | SC completes basic profile | `ProfileCompletionPage.tsx` (204 lines) | `PUT /api/subcontractor/profile` | ✅ |
-| 4.2 | SC uploads KYC documents | `KycUploadPage.tsx` (685 lines) | `POST /api/subcontractor/kyc/upload` | ✅ |
-| 4.3 | SC submits bank details | `KycUploadPage.tsx` — bank details section | `PUT /api/subcontractor/bank-details` | ✅ |
-| 4.4 | SC accepts seller declaration | `SellerDeclarationPage.tsx` (249 lines) | `POST /api/subcontractor/declaration/accept` | ✅ |
-| 4.5 | Ops KYC review (document-request system) | `OpsDashboardNew.tsx` → KYC tab → `/ops/kyc` detail page | `POST /api/ops/kyc/:id/request-additional-document`, `/api/ops/kyc/documents/:id/verify`, `/api/ops/kyc/:id/complete` | ✅ |
+| 4.1 | SC completes basic profile | `ProfileCompletionPage.tsx` (204 lines) | `PUT /api/subcontractor/profile` |  |
+| 4.2 | SC uploads KYC documents | `KycUploadPage.tsx` (685 lines) | `POST /api/subcontractor/kyc/upload` |  |
+| 4.3 | SC submits bank details | `KycUploadPage.tsx` — bank details section | `PUT /api/subcontractor/bank-details` |  |
+| 4.4 | SC accepts seller declaration | `SellerDeclarationPage.tsx` (249 lines) | `POST /api/subcontractor/declaration/accept` |  |
+| 4.5 | Ops KYC review (document-request system) | `OpsDashboardNew.tsx` → KYC tab → `/ops/kyc` detail page | `POST /api/ops/kyc/:id/request-additional-document`, `/api/ops/kyc/documents/:id/verify`, `/api/ops/kyc/:id/complete` |  |
 
 ---
 
-#### Phase 5 — CWCRF Submission ✅ COMPLETE
+#### Phase 5 — CWCRF Submission  COMPLETE
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 5.1 | SC fills CWCRF form (4 sections) | `CwcrfSubmissionPage.tsx` (677 lines) | `POST /api/cwcrf` | ✅ |
-| 5.2 | Bill uploaded INSIDE CWCRF | `CwcrfSubmissionPage.tsx` — bill + WCC + measurement sheet uploaded with CWCRF | `POST /api/subcontractor/bill-with-cwcrf` — multer fields for raBill, wcc, measurementSheet | ✅ |
-| 5.3 | SC pays ₹1,000 platform fee | SC portal `cwcrfApi.recordPayment()` | `POST /api/cwcrf/:id/payment` → `cwcrfService.recordPlatformFee()` — records paymentReference + platformFeePaid | ✅ |
-| 5.4 | SC submits CWCRF | `CwcrfSubmissionPage.tsx` | `POST /api/cwcrf` | ✅ |
+| 5.1 | SC fills CWCRF form (4 sections) | `CwcrfSubmissionPage.tsx` (677 lines) | `POST /api/cwcrf` |  |
+| 5.2 | Bill uploaded INSIDE CWCRF | `CwcrfSubmissionPage.tsx` — bill + WCC + measurement sheet uploaded with CWCRF | `POST /api/subcontractor/bill-with-cwcrf` — multer fields for raBill, wcc, measurementSheet |  |
+| 5.3 | SC pays ₹1,000 platform fee | SC portal `cwcrfApi.recordPayment()` | `POST /api/cwcrf/:id/payment` → `cwcrfService.recordPlatformFee()` — records paymentReference + platformFeePaid |  |
+| 5.4 | SC submits CWCRF | `CwcrfSubmissionPage.tsx` | `POST /api/cwcrf` |  |
 
 ---
 
-#### Phase 6 — Ops CWCRF Review (Super Access) ✅ COMPLETE (NEW in latest push)
+#### Phase 6 — Ops CWCRF Review (Super Access)  COMPLETE (NEW in latest push)
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 6.1 | Ops sees CWCRF queue | `OpsDashboardNew.tsx` → **CWCRF tab** → "Section Verify" sub-tab | `GET /api/cwcrf/ops/queue` | ✅ |
-| 6.2 | Ops section-by-section verification | `CwcrfOpsTab` component (in-file) — Section A/B/C/D + RA Bill + WCC + Measurement Sheet, each card with Mark Verified / Unmark buttons + notes field | `POST /api/cwcrf/:id/ops/verify-section` → `cwcrfService.opsVerifySection()` | ✅ |
-| 6.2a | Ops Super Access — Detach Field | `CwcrfOpsTab` — per-section "Detach Field" button with inline form (field name + reason) | `POST /api/cwcrf/:id/ops/detach-field` → `cwcrfService.opsDetachField()` — clears value, records in `opsDetachedFields[]`, sets `ACTION_REQUIRED` | ✅ |
-| 6.2b | Ops Super Access — Edit Field | `CwcrfOpsTab` — per-section "Edit Field" button with inline form (field name + new value + reason) | `PATCH /api/cwcrf/:id/ops/edit-field` → `cwcrfService.opsEditField()` — records old/new in `opsEditLog[]` | ✅ |
-| 6.2c | Ops Super Access — Re-request from SC | `CwcrfOpsTab` — textarea + send button below section grid | `POST /api/cwcrf/:id/ops/re-request` → `cwcrfService.opsReRequest()` — creates ChatMessage of type `action_required` | ✅ |
-| 6.3 | "All sections verified" → Forward to RMT | "Forward to RMT →" button appears automatically when all 4 sections are verified, calls `opsApi.forwardCwcrfToRmt(id)` | `POST /api/cwcrf/:id/rmt/move-to-queue` | ✅ |
-| 6.4 | Bill verification | `OpsDashboardNew.tsx` → Bills tab | `POST /api/ops/bills/:id/verify` | ✅ |
+| 6.1 | Ops sees CWCRF queue | `OpsDashboardNew.tsx` → **CWCRF tab** → "Section Verify" sub-tab | `GET /api/cwcrf/ops/queue` |  |
+| 6.2 | Ops section-by-section verification | `CwcrfOpsTab` component (in-file) — Section A/B/C/D + RA Bill + WCC + Measurement Sheet, each card with Mark Verified / Unmark buttons + notes field | `POST /api/cwcrf/:id/ops/verify-section` → `cwcrfService.opsVerifySection()` |  |
+| 6.2a | Ops Super Access — Detach Field | `CwcrfOpsTab` — per-section "Detach Field" button with inline form (field name + reason) | `POST /api/cwcrf/:id/ops/detach-field` → `cwcrfService.opsDetachField()` — clears value, records in `opsDetachedFields[]`, sets `ACTION_REQUIRED` |  |
+| 6.2b | Ops Super Access — Edit Field | `CwcrfOpsTab` — per-section "Edit Field" button with inline form (field name + new value + reason) | `PATCH /api/cwcrf/:id/ops/edit-field` → `cwcrfService.opsEditField()` — records old/new in `opsEditLog[]` |  |
+| 6.2c | Ops Super Access — Re-request from SC | `CwcrfOpsTab` — textarea + send button below section grid | `POST /api/cwcrf/:id/ops/re-request` → `cwcrfService.opsReRequest()` — creates ChatMessage of type `action_required` |  |
+| 6.3 | "All sections verified" → Forward to RMT | "Forward to RMT →" button appears automatically when all 4 sections are verified, calls `opsApi.forwardCwcrfToRmt(id)` | `POST /api/cwcrf/:id/rmt/move-to-queue` |  |
+| 6.4 | Bill verification | `OpsDashboardNew.tsx` → Bills tab | `POST /api/ops/bills/:id/verify` |  |
 
 ---
 
-#### Phase 7 — RMT Risk Assessment ✅ COMPLETE (incl. PDF download)
+#### Phase 7 — RMT Risk Assessment  COMPLETE (incl. PDF download)
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 7.1 | RMT receives case with full details | `RmtDashboard.tsx` — queue view | `GET /api/cwcrf/rmt/queue` | ✅ |
-| 7.2 | Download full case as PDF | `RmtDashboard.tsx` — 📄 PDF button on every CWCRF row, triggers blob download | `GET /api/cwcrf/:id/pdf` → `cwcrfService.generateCasePdf()` using pdfkit (SC profile, Sections A–D, Ops verification, EPC verification, NBFC quotations, status history) | ✅ |
-| 7.3 | 12-point risk checklist + scoring | `RmtDashboard.tsx` — risk assessment form | `POST /api/cases/:id/risk-assessment` | ✅ |
-| 7.4 | Upload/create assessment report + generate CWCAF | `RmtDashboard.tsx` — CWCAF modal (Generate CWCAF button) | `POST /api/cwcrf/:id/rmt/generate-cwcaf` | ✅ |
-| 7.5 | RMT forwards back to Ops | `RmtDashboard.tsx` — "Forward to Ops" button shown when `status === "CWCAF_READY"` | `POST /api/cwcrf/:id/rmt/forward-to-ops` | ✅ |
+| 7.1 | RMT receives case with full details | `RmtDashboard.tsx` — queue view | `GET /api/cwcrf/rmt/queue` |  |
+| 7.2 | Download full case as PDF | `RmtDashboard.tsx` —  PDF button on every CWCRF row, triggers blob download | `GET /api/cwcrf/:id/pdf` → `cwcrfService.generateCasePdf()` using pdfkit (SC profile, Sections A–D, Ops verification, EPC verification, NBFC quotations, status history) |  |
+| 7.3 | 12-point risk checklist + scoring | `RmtDashboard.tsx` — risk assessment form | `POST /api/cases/:id/risk-assessment` |  |
+| 7.4 | Upload/create assessment report + generate CWCAF | `RmtDashboard.tsx` — CWCAF modal (Generate CWCAF button) | `POST /api/cwcrf/:id/rmt/generate-cwcaf` |  |
+| 7.5 | RMT forwards back to Ops | `RmtDashboard.tsx` — "Forward to Ops" button shown when `status === "CWCAF_READY"` | `POST /api/cwcrf/:id/rmt/forward-to-ops` |  |
 
 ---
 
-#### Phase 8 — Ops Risk Triage & Forward to EPC ✅ COMPLETE (NEW in latest push)
+#### Phase 8 — Ops Risk Triage & Forward to EPC  COMPLETE (NEW in latest push)
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 8.1 | Ops reviews RMT report | `OpsDashboardNew.tsx` → CWCRF tab → **"Risk Triage" sub-tab** — shows `RMT_APPROVED` queue with RMT recommendation banner and risk category badge | `GET /api/cwcrf/ops/queue?phase=triage` | ✅ |
-| 8.2A | Forward to EPC (all risk levels) | "✓ Forward to EPC" button calls `opsApi.triageCwcrf(id, 'forward_to_epc', notes)` | `POST /api/cwcrf/:id/ops/triage` → `cwcrfService.opsTriage()` | ✅ |
-| 8.2B | High-risk warning banner | HIGH risk shows amber warning: "Ensure Founder/Senior Ops approval has been obtained before forwarding" | UI-only guard (no hard block) | ✅ |
-| 8.2C | Reject (with mandatory notes) | "✕ Reject" button is disabled until notes are filled, then calls `opsApi.triageCwcrf(id, 'reject', notes)` | `POST /api/cwcrf/:id/ops/triage` | ✅ |
+| 8.1 | Ops reviews RMT report | `OpsDashboardNew.tsx` → CWCRF tab → **"Risk Triage" sub-tab** — shows `RMT_APPROVED` queue with RMT recommendation banner and risk category badge | `GET /api/cwcrf/ops/queue?phase=triage` |  |
+| 8.2A | Forward to EPC (all risk levels) | " Forward to EPC" button calls `opsApi.triageCwcrf(id, 'forward_to_epc', notes)` | `POST /api/cwcrf/:id/ops/triage` → `cwcrfService.opsTriage()` |  |
+| 8.2B | High-risk warning banner | HIGH risk shows amber warning: "Ensure Founder/Senior Ops approval has been obtained before forwarding" | UI-only guard (no hard block) |  |
+| 8.2C | Reject (with mandatory notes) | " Reject" button is disabled until notes are filled, then calls `opsApi.triageCwcrf(id, 'reject', notes)` | `POST /api/cwcrf/:id/ops/triage` |  |
 
 ---
 
-#### Phase 9 — EPC Case Review & Bid ✅ COMPLETE (4-step guided modal)
+#### Phase 9 — EPC Case Review & Bid  COMPLETE (4-step guided modal)
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 9.1 | EPC sees CWCRF list | `partner-portal/DashboardPage.tsx` → CWC Requests tab — table with Review button | `GET /api/cases` | ✅ |
-| 9.2 | EPC verifies SC documents (Step 1) | `DashboardPage.tsx` — **4-step guided review modal** (`cwcrfReviewStep=1`): SC profile grid (company name, email, GSTIN, PAN), KYC/Bank/Declaration status badges, supporting docs (RA Bill, WCC, Meas. Sheet) with View links, invoice summary | Populated from CWCRF + SC data | ✅ |
-| 9.3 | EPC reviews RMT risk report (Step 2) | `DashboardPage.tsx` — `cwcrfReviewStep=2`: Risk Category banner (color-coded LOW/MEDIUM/HIGH), RMT Recommendation block with notes, Assessment Breakdown grid (4-point scores with remarks), Seller Profile Summary | Populated from CWCAF data | ✅ |
-| 9.4 | EPC accepts buyer declaration (Step 3) | `DashboardPage.tsx` — `cwcrfReviewStep=3`: 6-point declaration list, checkbox to accept, Next button blocked until accepted | `POST /api/cwcrf/:id/buyer/verify` (includes `buyerDeclaration.accepted`) | ✅ |
-| 9.5 | EPC enters bid terms (Step 4) | `DashboardPage.tsx` — `cwcrfReviewStep=4`: approvedAmount, repaymentTimeline (30/45/60/90), repaymentSource (5 options + OTHER), remarks, notes, Approve/Reject buttons with confirm flow | `POST /api/cwcrf/:id/buyer/verify` | ✅ |
+| 9.1 | EPC sees CWCRF list | `partner-portal/DashboardPage.tsx` → CWC Requests tab — table with Review button | `GET /api/cases` |  |
+| 9.2 | EPC verifies SC documents (Step 1) | `DashboardPage.tsx` — **4-step guided review modal** (`cwcrfReviewStep=1`): SC profile grid (company name, email, GSTIN, PAN), KYC/Bank/Declaration status badges, supporting docs (RA Bill, WCC, Meas. Sheet) with View links, invoice summary | Populated from CWCRF + SC data |  |
+| 9.3 | EPC reviews RMT risk report (Step 2) | `DashboardPage.tsx` — `cwcrfReviewStep=2`: Risk Category banner (color-coded LOW/MEDIUM/HIGH), RMT Recommendation block with notes, Assessment Breakdown grid (4-point scores with remarks), Seller Profile Summary | Populated from CWCAF data |  |
+| 9.4 | EPC accepts buyer declaration (Step 3) | `DashboardPage.tsx` — `cwcrfReviewStep=3`: 6-point declaration list, checkbox to accept, Next button blocked until accepted | `POST /api/cwcrf/:id/buyer/verify` (includes `buyerDeclaration.accepted`) |  |
+| 9.5 | EPC enters bid terms (Step 4) | `DashboardPage.tsx` — `cwcrfReviewStep=4`: approvedAmount, repaymentTimeline (30/45/60/90), repaymentSource (5 options + OTHER), remarks, notes, Approve/Reject buttons with confirm flow | `POST /api/cwcrf/:id/buyer/verify` |  |
 
 ---
 
-#### Phase 10 — CWCAF Generation & NBFC Selection ✅ COMPLETE (CWCAF + NBFC dispatch)
+#### Phase 10 — CWCAF Generation & NBFC Selection  COMPLETE (CWCAF + NBFC dispatch)
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 10.1 | Ops generates CWCAF | `OpsDashboardNew.tsx` → CWCRF tab → **"NBFC Dispatch" sub-tab** — "Generate CWCAF" button (shown when `status=BUYER_APPROVED`) opens modal with riskCategory, recommendation, businessAge, totalTransactions, averageInvoiceValue, repaymentHistory, notes. Also available in `RmtDashboard.tsx`. | `POST /api/cwcrf/:id/rmt/generate-cwcaf` (authorized for `rmt, ops, admin`) | ✅ |
-| 10.2 | NBFC selection (Ops picks NBFCs) | `OpsDashboardNew.tsx` → NBFC Dispatch sub-tab — "Select & Share with NBFCs" button loads matching NBFCs with checkboxes + match scores | `GET /api/cwcrf/:id/matching-nbfcs` | ✅ |
-| 10.3 | CWCAF sent to selected NBFCs | `OpsDashboardNew.tsx` → NBFC Dispatch — Share button after NBFC selection | `POST /api/cwcrf/:id/share-with-nbfcs` | ✅ |
+| 10.1 | Ops generates CWCAF | `OpsDashboardNew.tsx` → CWCRF tab → **"NBFC Dispatch" sub-tab** — "Generate CWCAF" button (shown when `status=BUYER_APPROVED`) opens modal with riskCategory, recommendation, businessAge, totalTransactions, averageInvoiceValue, repaymentHistory, notes. Also available in `RmtDashboard.tsx`. | `POST /api/cwcrf/:id/rmt/generate-cwcaf` (authorized for `rmt, ops, admin`) |  |
+| 10.2 | NBFC selection (Ops picks NBFCs) | `OpsDashboardNew.tsx` → NBFC Dispatch sub-tab — "Select & Share with NBFCs" button loads matching NBFCs with checkboxes + match scores | `GET /api/cwcrf/:id/matching-nbfcs` |  |
+| 10.3 | CWCAF sent to selected NBFCs | `OpsDashboardNew.tsx` → NBFC Dispatch — Share button after NBFC selection | `POST /api/cwcrf/:id/share-with-nbfcs` |  |
 
 ---
 
-#### Phase 11 — NBFC Review ✅ COMPLETE (full post-quotation flow)
+#### Phase 11 — NBFC Review  COMPLETE (full post-quotation flow)
 
 | Step | Description | Frontend | Backend | Status |
 |------|-------------|----------|---------|--------|
-| 11.1 | NBFC sees available CWCAFs | `partner-portal/NbfcDashboard.tsx` | `GET /api/cwcrf/nbfc/available` | ✅ |
-| 11.2 | NBFC submits quotation | `partner-portal/NbfcQuotationPage.tsx` | `POST /api/cwcrf/:id/nbfc/quote` + `POST /api/nbfc/:caseId/respond` | ✅ |
-| 11.3 | NBFC manages LPS | `partner-portal/LpsManagementPage.tsx` | `GET+PUT /api/nbfc/lps` | ✅ |
-| 11.4 | SC selects NBFC | `subcontractor-portal/CwcrfDetailPage.tsx` — quotation cards with Select button | `POST /api/cwcrf/:id/select-nbfc` → `cwcrfService.selectNbfc()` | ✅ |
-| 11.5 | NBFC starts due diligence | `NbfcDashboard.tsx` → Active Process tab — Start DD button | `POST /api/cwcrf/:id/nbfc/start-due-diligence` → 6-point checklist | ✅ |
-| 11.6 | NBFC completes due diligence | `NbfcDashboard.tsx` → Process Modal — checklist + approve/conditional/reject | `POST /api/cwcrf/:id/nbfc/complete-due-diligence` | ✅ |
-| 11.7 | NBFC issues sanction letter | `NbfcDashboard.tsx` → Process Modal — amount/rate/tenure/conditions form | `POST /api/cwcrf/:id/nbfc/issue-sanction` | ✅ |
-| 11.8 | SC accepts sanction letter | `CwcrfDetailPage.tsx` — sanction details banner + Accept button | `POST /api/cwcrf/:id/accept-sanction` → `cwcrfService.scAcceptSanctionLetter()` | ✅ |
-| 11.9 | NBFC initiates disbursement | `NbfcDashboard.tsx` → Process Modal — amount/mode form | `POST /api/cwcrf/:id/nbfc/initiate-disbursement` | ✅ |
-| 11.10 | NBFC confirms disbursement | `NbfcDashboard.tsx` → Process Modal — UTR number entry | `POST /api/cwcrf/:id/nbfc/confirm-disbursement` → marks DISBURSED | ✅ |
-| 11.11 | NBFC process dashboard | `NbfcDashboard.tsx` → Active Process tab with step progress bar | `GET /api/cwcrf/nbfc/process` → `cwcrfService.getCwcRfsInNbfcProcess()` | ✅ |
+| 11.1 | NBFC sees available CWCAFs | `partner-portal/NbfcDashboard.tsx` | `GET /api/cwcrf/nbfc/available` |  |
+| 11.2 | NBFC submits quotation | `partner-portal/NbfcQuotationPage.tsx` | `POST /api/cwcrf/:id/nbfc/quote` + `POST /api/nbfc/:caseId/respond` |  |
+| 11.3 | NBFC manages LPS | `partner-portal/LpsManagementPage.tsx` | `GET+PUT /api/nbfc/lps` |  |
+| 11.4 | SC selects NBFC | `subcontractor-portal/CwcrfDetailPage.tsx` — quotation cards with Select button | `POST /api/cwcrf/:id/select-nbfc` → `cwcrfService.selectNbfc()` |  |
+| 11.5 | NBFC starts due diligence | `NbfcDashboard.tsx` → Active Process tab — Start DD button | `POST /api/cwcrf/:id/nbfc/start-due-diligence` → 6-point checklist |  |
+| 11.6 | NBFC completes due diligence | `NbfcDashboard.tsx` → Process Modal — checklist + approve/conditional/reject | `POST /api/cwcrf/:id/nbfc/complete-due-diligence` |  |
+| 11.7 | NBFC issues sanction letter | `NbfcDashboard.tsx` → Process Modal — amount/rate/tenure/conditions form | `POST /api/cwcrf/:id/nbfc/issue-sanction` |  |
+| 11.8 | SC accepts sanction letter | `CwcrfDetailPage.tsx` — sanction details banner + Accept button | `POST /api/cwcrf/:id/accept-sanction` → `cwcrfService.scAcceptSanctionLetter()` |  |
+| 11.9 | NBFC initiates disbursement | `NbfcDashboard.tsx` → Process Modal — amount/mode form | `POST /api/cwcrf/:id/nbfc/initiate-disbursement` |  |
+| 11.10 | NBFC confirms disbursement | `NbfcDashboard.tsx` → Process Modal — UTR number entry | `POST /api/cwcrf/:id/nbfc/confirm-disbursement` → marks DISBURSED |  |
+| 11.11 | NBFC process dashboard | `NbfcDashboard.tsx` → Active Process tab with step progress bar | `GET /api/cwcrf/nbfc/process` → `cwcrfService.getCwcRfsInNbfcProcess()` |  |
 
 ---
 
@@ -215,23 +215,23 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
 
 > **Updated February 22, 2026** — ALL core workflow phases (1–11) are now **COMPLETE**. All items below have been addressed.
 
-#### 🔴 High Priority — Core Workflow Blockers
+####  High Priority — Core Workflow Blockers
 
-1. ~~**Phase 9 — EPC Full Case Review Flow**~~ ✅ **DONE** — 4-step guided modal built in `DashboardPage.tsx` (SC Docs → RMT Risk Report → Declaration → Bid Terms)
+1. ~~**Phase 9 — EPC Full Case Review Flow**~~  **DONE** — 4-step guided modal built in `DashboardPage.tsx` (SC Docs → RMT Risk Report → Declaration → Bid Terms)
 
-2. ~~**Phase 10 — CWCAF Move to Ops + NBFC Selection**~~ ✅ **DONE** — CWCAF generation + NBFC selection + sharing all built in `OpsDashboardNew.tsx` NBFC Dispatch sub-tab
+2. ~~**Phase 10 — CWCAF Move to Ops + NBFC Selection**~~  **DONE** — CWCAF generation + NBFC selection + sharing all built in `OpsDashboardNew.tsx` NBFC Dispatch sub-tab
 
-#### 🟡 Medium Priority — Feature Completeness
+####  Medium Priority — Feature Completeness
 
-3. ~~**Phase 5 — ₹1,000 Platform Fee Payment**~~ ✅ **DONE** — `POST /api/cwcrf/:id/payment` records paymentReference + platformFeePaid. SC portal `cwcrfApi.recordPayment()` wired.
+3. ~~**Phase 5 — ₹1,000 Platform Fee Payment**~~  **DONE** — `POST /api/cwcrf/:id/payment` records paymentReference + platformFeePaid. SC portal `cwcrfApi.recordPayment()` wired.
 
-4. ~~**Phase 5 — Bill Upload Inside CWCRF**~~ ✅ **DONE** — Backend `POST /api/subcontractor/bill-with-cwcrf` fixed to use multer fields (raBill, wcc, measurementSheet). Cloudinary upload integrated.
+4. ~~**Phase 5 — Bill Upload Inside CWCRF**~~  **DONE** — Backend `POST /api/subcontractor/bill-with-cwcrf` fixed to use multer fields (raBill, wcc, measurementSheet). Cloudinary upload integrated.
 
-5. ~~**Phase 7 — PDF Case Download for RMT**~~ ✅ **DONE** — `GET /api/cwcrf/:id/pdf` using pdfkit, 📄 PDF button in RmtDashboard
+5. ~~**Phase 7 — PDF Case Download for RMT**~~  **DONE** — `GET /api/cwcrf/:id/pdf` using pdfkit,  PDF button in RmtDashboard
 
-#### 🟢 Lower Priority — Polish & Completion
+####  Lower Priority — Polish & Completion
 
-6. ~~**Phase 11 — Full NBFC Process**~~ ✅ **DONE** — Complete post-quotation flow built:
+6. ~~**Phase 11 — Full NBFC Process**~~  **DONE** — Complete post-quotation flow built:
    - Due diligence (6-point checklist, approve/conditional/reject)
    - Sanction letter issuance (amount/rate/tenure/conditions)
    - SC sanction acceptance (detail banner + accept button in CwcrfDetailPage)
@@ -239,13 +239,13 @@ Gryork is a **supply-chain finance platform** for the Indian construction sector
    - NBFC Active Process tab with step progress bar in NbfcDashboard
    - SC process visibility in CwcrfDetailPage (DD status, sanction details, disbursement tracking)
 
-7. ~~**Notification System**~~ ✅ **DONE** — Email notifications wired via `emailService` helpers:
+7. ~~**Notification System**~~  **DONE** — Email notifications wired via `emailService` helpers:
    - `_notifyStatusChange()` — emails SC on every status change
    - `_notifyOpsTeam()` — emails all ops users (e.g., on CWCRF submission)
    - `_notifyEpc()` — emails EPC users (e.g., on ops triage forward)
    - Wired into: `submitCwcRf`, `opsTriage`, `nbfcConfirmDisbursement`
 
-8. ~~**EPC: SC Removal UI**~~ ✅ **DONE** — Built in prior sessions. Backend `DELETE /api/company/subcontractors/:id` + partner-portal UI.
+8. ~~**EPC: SC Removal UI**~~  **DONE** — Built in prior sessions. Backend `DELETE /api/company/subcontractors/:id` + partner-portal UI.
 
 ---
 
@@ -309,12 +309,12 @@ After first login, EPC must upload all required company documents to gain full a
 
 | Document | Required |
 |----------|----------|
-| Certificate of Incorporation / MoA | ✅ |
-| GST Registration Certificate | ✅ |
-| PAN Card (Company) | ✅ |
-| Latest Audited Balance Sheet | ✅ |
-| Bank Statement (6 months) | ✅ |
-| Owner KYC (Aadhaar / Passport) | ✅ |
+| Certificate of Incorporation / MoA |  |
+| GST Registration Certificate |  |
+| PAN Card (Company) |  |
+| Latest Audited Balance Sheet |  |
+| Bank Statement (6 months) |  |
+| Owner KYC (Aadhaar / Passport) |  |
 | Board Resolution (if applicable) | Optional |
 
 **Result:** Company status changes to `DOCS_SUBMITTED`.
@@ -613,14 +613,14 @@ Ops has **super access** (elevated permissions) on each CWCRF. This means:
 
 | Item | Action Available |
 |------|----------------|
-| Section A (Buyer Details) | ✅ Verify / ❌ Reject with reason |
-| Section B (Invoice Details) | ✅ Verify / ❌ Reject with reason |
-| Section C (Credit Request) | ✅ Verify / ❌ Reject with reason |
-| Section D (Interest Preference) | ✅ Verify / ❌ Reject with reason |
-| RA Bill / Invoice | ✅ Verify / ❌ Reject with reason |
-| WCC (Work Completion Certificate) | ✅ Verify / ❌ Reject with reason |
-| Measurement Sheet | ✅ Verify / ❌ Reject with reason |
-| Payment Confirmation | ✅ Verify / ❌ Flag issue |
+| Section A (Buyer Details) |  Verify /  Reject with reason |
+| Section B (Invoice Details) |  Verify /  Reject with reason |
+| Section C (Credit Request) |  Verify /  Reject with reason |
+| Section D (Interest Preference) |  Verify /  Reject with reason |
+| RA Bill / Invoice |  Verify /  Reject with reason |
+| WCC (Work Completion Certificate) |  Verify /  Reject with reason |
+| Measurement Sheet |  Verify /  Reject with reason |
+| Payment Confirmation |  Verify /  Flag issue |
 
 #### Ops Super Access Powers:
 
@@ -652,10 +652,10 @@ The bill is verified as part of the CWCRF:
 **Portal:** official_portal → Ops Dashboard → CWCRF Detail → Forward to RMT
 
 Once Ops has verified:
-- ✅ All 4 CWCRF sections
-- ✅ RA Bill + supporting documents
-- ✅ SC KYC is completed
-- ✅ EPC company is active
+-  All 4 CWCRF sections
+-  RA Bill + supporting documents
+-  SC KYC is completed
+-  EPC company is active
 
 Ops clicks **"Forward to RMT"** → `POST /api/cwcrf/:id/rmt/move-to-queue`
 
@@ -1084,3 +1084,4 @@ NOT_STARTED → DOCUMENTS_PENDING → UNDER_REVIEW → COMPLETED / REJECTED
 
 *Document maintained by: Gryork Product & Engineering Team*  
 *Last updated: February 19, 2026*
+

@@ -709,3 +709,4 @@ const CwcrfDetailPage = () => {
 };
 
 export default CwcrfDetailPage;
+
