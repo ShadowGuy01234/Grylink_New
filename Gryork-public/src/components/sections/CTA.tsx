@@ -81,7 +81,7 @@ export default function CTA() {
             transition={{ delay: 0.2 }}
             className="grid sm:grid-cols-2 gap-5 max-w-2xl mx-auto"
           >
-            {/* SC Card — Primary */}
+            {/* SC Card  Primary */}
             <div className="bg-white rounded-2xl p-6 text-left shadow-xl shadow-black/20">
               <div className="w-10 h-10 bg-accent-100 rounded-xl flex items-center justify-center mb-4">
                 <HardHat className="w-5 h-5 text-accent-600" />
@@ -101,7 +101,7 @@ export default function CTA() {
               </Link>
             </div>
 
-            {/* EPC/NBFC Card — Secondary */}
+            {/* EPC/NBFC Card  Secondary */}
             <div className="bg-white/10 border border-white/20 backdrop-blur-sm rounded-2xl p-6 text-left hover:bg-white/15 transition-all duration-200">
               <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center mb-4">
                 <Building2 className="w-5 h-5 text-white" />

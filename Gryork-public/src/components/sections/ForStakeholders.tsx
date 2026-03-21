@@ -61,12 +61,12 @@ export default function ForStakeholders() {
             transition={{ delay: 0.15 }}
             className="text-blue-100 max-w-xl mx-auto text-base"
           >
-            Whether you perform the work, finance the project, or enable the vendor � Gryork has a role for you.
+            Whether you perform the work, finance the project, or enable the vendor  Gryork has a role for you.
           </motion.p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {/* For Sub-Contractors � FEATURED (largest, first) */}
+          {/* For Sub-Contractors  FEATURED (largest, first) */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -92,7 +92,7 @@ export default function ForStakeholders() {
                   For Sub-Contractors
                 </h3>
                 <p className="text-gray-500 text-sm mb-5 leading-relaxed">
-                  You complete the work. Get paid for it now � not after 90 days. Discount your invoices and keep your projects moving.
+                  You complete the work. Get paid for it now  not after 90 days. Discount your invoices and keep your projects moving.
                 </p>
                 <ul className="space-y-2.5 mb-6">
                   {[
@@ -111,7 +111,7 @@ export default function ForStakeholders() {
                   href={SC_PORTAL_URL}
                   className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-accent-500 text-white font-semibold rounded-xl hover:bg-accent-600 transition-all duration-200 shadow-md shadow-accent-500/25 hover:-translate-y-0.5"
                 >
-                  Register Now � It&apos;s Free
+                  Register Now  It&apos;s Free
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

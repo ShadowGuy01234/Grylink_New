@@ -83,7 +83,7 @@ export default function Features() {
             transition={{ delay: 0.15 }}
             className="text-lg text-gray-500 max-w-2xl mx-auto"
           >
-            Every feature is designed around one goal — getting working capital into
+            Every feature is designed around one goal  getting working capital into
             your hands faster, cheaper, and with zero hassle.
           </motion.p>
         </div>

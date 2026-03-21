@@ -112,9 +112,9 @@ const UploadCard = ({ label, hint, required, file, colorClass, onChange }: {
           : <span className="text-xs font-normal text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md leading-none">Optional</span>}
       </p>
       {file ? (
-        <p className="text-xs text-gray-600 mt-0.5 truncate">{file.name} � {(file.size / 1024).toFixed(0)} KB</p>
+        <p className="text-xs text-gray-600 mt-0.5 truncate">{file.name}  {(file.size / 1024).toFixed(0)} KB</p>
       ) : (
-        <p className="text-xs text-gray-400 mt-0.5">{hint || 'PDF, JPG or PNG � max 5 MB'}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{hint || 'PDF, JPG or PNG  max 5 MB'}</p>
       )}
     </div>
     {file ? (
@@ -144,7 +144,7 @@ const ReviewBlock = ({ icon: Icon, title, headerBg, children }: {
 const ReviewItem = ({ label, value }: { label: string; value?: string | number }) => (
   <div>
     <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">{label}</p>
-    <p className="text-sm font-medium text-gray-900 break-words">{value || '�'}</p>
+    <p className="text-sm font-medium text-gray-900 break-words">{value || ''}</p>
   </div>
 );
 
@@ -304,7 +304,7 @@ const CwcrfSubmissionPage = () => {
       <div className="min-h-[60vh] flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Checking eligibility�</p>
+          <p className="text-sm text-gray-500">Checking eligibility</p>
         </motion.div>
       </div>
     );
@@ -398,7 +398,7 @@ const CwcrfSubmissionPage = () => {
       {/* -- Step content -- */}
       <AnimatePresence mode="wait">
 
-        {/* Step 1 � Documents */}
+        {/* Step 1  Documents */}
         {currentStep === 1 && (
           <motion.div key="s1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.18 }}
             className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
@@ -406,13 +406,13 @@ const CwcrfSubmissionPage = () => {
               title="Upload Supporting Documents"
               subtitle="Attach your RA Bill and any supplementary documents" />
             <div className="space-y-3">
-              <UploadCard label="Running Account (RA) Bill" required hint="PDF, JPG or PNG � max 5 MB"
+              <UploadCard label="Running Account (RA) Bill" required hint="PDF, JPG or PNG  max 5 MB"
                 file={billFiles.raBill} colorClass="border-green-300 bg-green-50/50"
                 onChange={(f) => setBillFiles(p => ({ ...p, raBill: f }))} />
-              <UploadCard label="Work Completion Certificate" hint="Strengthens your application � PDF, JPG or PNG"
+              <UploadCard label="Work Completion Certificate" hint="Strengthens your application  PDF, JPG or PNG"
                 file={billFiles.wcc} colorClass="border-blue-300 bg-blue-50/50"
                 onChange={(f) => setBillFiles(p => ({ ...p, wcc: f }))} />
-              <UploadCard label="Measurement Sheet" hint="Site measurement record � PDF, JPG or PNG"
+              <UploadCard label="Measurement Sheet" hint="Site measurement record  PDF, JPG or PNG"
                 file={billFiles.measurementSheet} colorClass="border-violet-300 bg-violet-50/50"
                 onChange={(f) => setBillFiles(p => ({ ...p, measurementSheet: f }))} />
             </div>
@@ -423,15 +423,15 @@ const CwcrfSubmissionPage = () => {
           </motion.div>
         )}
 
-        {/* Step 2 � Buyer & Invoice */}
+        {/* Step 2  Buyer & Invoice */}
         {currentStep === 2 && (
           <motion.div key="s2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.18 }} className="space-y-4">
 
-            {/* Section A � Buyer & Project */}
+            {/* Section A  Buyer & Project */}
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
               <SectionHead accent="bg-blue-50" iconColor="text-blue-600" icon={Building2}
-                title="Section A � Buyer & Project Details"
-                subtitle="EPC info is auto-filled � Enter project details below" />
+                title="Section A  Buyer & Project Details"
+                subtitle="EPC info is auto-filled  Enter project details below" />
               {/* Read-only EPC info */}
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">EPC / Buyer (Auto-filled)</p>
               <div className="grid sm:grid-cols-2 gap-4 mb-5">
@@ -473,10 +473,10 @@ const CwcrfSubmissionPage = () => {
               </div>
             </div>
 
-            {/* Section B � Invoice */}
+            {/* Section B  Invoice */}
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
               <SectionHead accent="bg-green-50" iconColor="text-green-600" icon={Receipt}
-                title="Section B � Invoice Details"
+                title="Section B  Invoice Details"
                 subtitle="Enter the invoice you are raising for bill discounting" />
               <div className="space-y-4">
                 <FieldRow>
@@ -519,19 +519,19 @@ const CwcrfSubmissionPage = () => {
                   </Field>
                 </FieldRow>
                 <Field label="Work Description" col2>
-                  <Textarea value={formData.sectionB.workDescription} onChange={(e) => update('sectionB', 'workDescription', e.target.value)} placeholder="Briefly describe the work / services completed�" rows={3} className="resize-none" />
+                  <Textarea value={formData.sectionB.workDescription} onChange={(e) => update('sectionB', 'workDescription', e.target.value)} placeholder="Briefly describe the work / services completed" rows={3} className="resize-none" />
                 </Field>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* Step 3 � CWC Request */}
+        {/* Step 3  CWC Request */}
         {currentStep === 3 && (
           <motion.div key="s3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.18 }}
             className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
             <SectionHead accent="bg-violet-50" iconColor="text-violet-600" icon={Target}
-              title="Section C � CWC Request Details"
+              title="Section C  CWC Request Details"
               subtitle="Tell us how much funding you need and when" />
             <div className="space-y-4">
               <FieldRow>
@@ -546,7 +546,7 @@ const CwcrfSubmissionPage = () => {
                     )}
                   </div>
                 </Field>
-                <Field label="Tenure" required hint="(days, 7�180)">
+                <Field label="Tenure" required hint="(days, 7180)">
                   <div className="relative">
                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                     <Input type="number" value={formData.sectionC.requestedTenure} onChange={(e) => update('sectionC', 'requestedTenure', parseInt(e.target.value))} min={7} max={180} className="pl-8" />
@@ -569,21 +569,21 @@ const CwcrfSubmissionPage = () => {
                 </Field>
               </FieldRow>
               <Field label="Reason for Funding" required col2>
-                <Textarea value={formData.sectionC.reasonForFunding} onChange={(e) => update('sectionC', 'reasonForFunding', e.target.value)} placeholder="e.g. Need working capital for next site mobilisation, pay subcontractors, purchase materials�" rows={3} className="resize-none" />
+                <Textarea value={formData.sectionC.reasonForFunding} onChange={(e) => update('sectionC', 'reasonForFunding', e.target.value)} placeholder="e.g. Need working capital for next site mobilisation, pay subcontractors, purchase materials" rows={3} className="resize-none" />
               </Field>
               <Field label="Existing Loan / Credit Details" hint="(optional)" col2>
-                <Textarea value={formData.sectionC.existingLoanDetails} onChange={(e) => update('sectionC', 'existingLoanDetails', e.target.value)} placeholder="List any active loans, credit limits, or overdraft facilities�" rows={2} className="resize-none" />
+                <Textarea value={formData.sectionC.existingLoanDetails} onChange={(e) => update('sectionC', 'existingLoanDetails', e.target.value)} placeholder="List any active loans, credit limits, or overdraft facilities" rows={2} className="resize-none" />
               </Field>
             </div>
           </motion.div>
         )}
 
-        {/* Step 4 � Interest */}
+        {/* Step 4  Interest */}
         {currentStep === 4 && (
           <motion.div key="s4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.18 }}
             className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
             <SectionHead accent="bg-amber-50" iconColor="text-amber-600" icon={Percent}
-              title="Section D � Interest & Repayment Preference"
+              title="Section D  Interest & Repayment Preference"
               subtitle="Set the financing terms you're comfortable with" />
             <div className="space-y-5">
 
@@ -639,7 +639,7 @@ const CwcrfSubmissionPage = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-800">I accept a processing fee</p>
-                    <p className="text-xs text-gray-500">NBFCs typically charge 0.5�2% of the funded amount</p>
+                    <p className="text-xs text-gray-500">NBFCs typically charge 0.52% of the funded amount</p>
                   </div>
                 </div>
                 <AnimatePresence>
@@ -659,7 +659,7 @@ const CwcrfSubmissionPage = () => {
           </motion.div>
         )}
 
-        {/* Step 5 � Review */}
+        {/* Step 5  Review */}
         {currentStep === 5 && (
           <motion.div key="s5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.18 }} className="space-y-4">
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
@@ -677,7 +677,7 @@ const CwcrfSubmissionPage = () => {
                   <span key={label} className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border font-medium
                     ${file ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>
                     {file ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-                    {label}{!file && ' � not uploaded'}
+                    {label}{!file && '  not uploaded'}
                   </span>
                 ))}
               </div>
@@ -701,7 +701,7 @@ const CwcrfSubmissionPage = () => {
                   <ReviewItem label="Urgency" value={formData.sectionC.urgencyLevel} />
                 </ReviewBlock>
                 <ReviewBlock icon={Percent} title="Interest Preference" headerBg="bg-amber-50 text-amber-800">
-                  <ReviewItem label="Rate Range" value={`${formData.sectionD.acceptableInterestRateMin}% � ${formData.sectionD.acceptableInterestRateMax}% p.a.`} />
+                  <ReviewItem label="Rate Range" value={`${formData.sectionD.acceptableInterestRateMin}%  ${formData.sectionD.acceptableInterestRateMax}% p.a.`} />
                   <ReviewItem label="Repayment" value={formData.sectionD.preferredRepaymentFrequency.replace(/_/g, ' ')} />
                   <ReviewItem label="Processing Fee" value={formData.sectionD.processingFeeAcceptance ? `Up to ${formData.sectionD.maxProcessingFeePercent}%` : 'Not accepted'} />
                 </ReviewBlock>
@@ -765,7 +765,7 @@ const CwcrfSubmissionPage = () => {
             <Button size="sm" onClick={handleSubmit} disabled={submitting}
               className="gap-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-70 min-w-[130px]">
               {submitting
-                ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting�</>
+                ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting</>
                 : <><Zap className="h-4 w-4" />Submit CWCRF</>}
             </Button>
           )}

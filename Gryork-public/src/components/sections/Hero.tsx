@@ -185,7 +185,7 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right � Mini Pipeline Visual */}
+          {/* Right  Mini Pipeline Visual */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -201,7 +201,7 @@ export default function Hero() {
                   <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
                   <div className="w-3 h-3 rounded-full bg-green-400/80" />
                   <span className="ml-2 text-xs text-white/50 font-mono">
-                    gryork.com � your dashboard
+                    gryork.com  your dashboard
                   </span>
                 </div>
 
@@ -246,7 +246,7 @@ export default function Hero() {
                     </span>
                   </div>
                   <p className="text-2xl font-bold text-white">
-                    Your Bill � Funded
+                    Your Bill  Funded
                   </p>
                   <p className="text-xs text-accent-300 mt-0.5">
                     Transferred directly to your bank account

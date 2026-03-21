@@ -84,7 +84,7 @@ const educationCards = [
     icon: IndianRupee,
     title: "What is Bill Discounting?",
     body:
-      "Bill discounting is a short-term financing method where a business sells its unpaid invoices to a lender at a discount, receiving immediate working capital instead of waiting 30–90 days for payment."
+      "Bill discounting is a short-term financing method where a business sells its unpaid invoices to a lender at a discount, receiving immediate working capital instead of waiting 3090 days for payment."
   },
   {
     icon: ShieldCheck,
@@ -102,7 +102,7 @@ const educationCards = [
     icon: Clock,
     title: "Faster Liquidity Cycle",
     body:
-      "Traditional bank loans take weeks and require collateral. With invoice discounting, approval is tied to the invoice itself — enabling turnaround in days, not months."
+      "Traditional bank loans take weeks and require collateral. With invoice discounting, approval is tied to the invoice itself  enabling turnaround in days, not months."
   },
   {
     icon: Lightbulb,
@@ -114,7 +114,7 @@ const educationCards = [
     icon: Globe,
     title: "A Growing Ecosystem",
     body:
-      "India's bill discounting market is expanding rapidly as RBI-registered NBFCs adopt digital platforms to fund verified invoices — bringing institutional credit to India's vast informal infrastructure supply chain."
+      "India's bill discounting market is expanding rapidly as RBI-registered NBFCs adopt digital platforms to fund verified invoices  bringing institutional credit to India's vast informal infrastructure supply chain."
   },
 ];
 

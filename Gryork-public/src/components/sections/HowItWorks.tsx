@@ -55,7 +55,7 @@ export default function HowItWorks() {
             transition={{ delay: 0.1 }}
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-900 mb-4"
           >
-            From Bill to Bank —{" "}
+            From Bill to Bank {" "}
             <span className="text-accent-500">in 5 Steps</span>
           </motion.h2>
           <motion.p
@@ -71,7 +71,7 @@ export default function HowItWorks() {
 
         {/* Steps */}
         <div ref={containerRef} className="relative">
-          {/* Animated connector line — desktop */}
+          {/* Animated connector line  desktop */}
           <div className="hidden lg:block absolute top-16 left-[10%] right-[10%] h-0.5">
             <div className="h-full bg-gray-200 rounded-full" />
             <motion.div
@@ -175,14 +175,14 @@ export default function HowItWorks() {
               </h4>
               <p className="text-gray-500 text-sm">
                 From first bill submission to money in your account:{" "}
-                <span className="font-bold text-accent-600">3–5 business days</span>
+                <span className="font-bold text-accent-600">35 business days</span>
               </p>
             </div>
             <Link
               href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173"}
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap"
             >
-              Register — It&apos;s Free
+              Register  It&apos;s Free
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
