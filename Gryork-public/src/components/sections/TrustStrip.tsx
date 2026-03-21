@@ -10,7 +10,7 @@ export default function TrustStrip() {
     <section className="border-y border-gray-100 bg-gray-50/60 py-0">
       {/* Stat Strip */}
       <div className="container-custom">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-200">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 divide-x divide-gray-200">
           {STATS.map((stat, i) => (
             <motion.div
               key={i}

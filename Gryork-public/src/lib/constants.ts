@@ -35,10 +35,9 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 export const STATS = [
-  { value: "500+", label: "Contractors Funded", num: 500, prefix: "", suffix: "+" },
-  { value: "₹50 Cr+", label: "Processed Through Platform", num: 50, prefix: "", suffix: " Cr+" },
-  { value: "99%", label: "Approval Rate", num: 99, prefix: "", suffix: "%" },
   { value: "48 hrs", label: "Average Funding Time", num: 48, prefix: "", suffix: " hrs" },
+  { value: "100%", label: "Fully Digital — No Branch Visits", num: 100, prefix: "", suffix: "%" },
+  { value: "Zero", label: "Collateral Required", num: 0, prefix: "", suffix: "" },
 ];
 
 export const FEATURES = [
