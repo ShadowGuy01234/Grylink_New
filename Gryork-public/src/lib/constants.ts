@@ -168,6 +168,36 @@ export const TRUST_BADGES = [
   "End-to-End Encrypted",
 ];
 
+export const QUICK_WINS = [
+  {
+    role: "Sub-Contractors",
+    icon: "Banknote",
+    wins: [
+      { title: "Get Paid in 48 Hours", description: "Stop waiting 60–90 days. Access working capital immediately via verified NBFCs." },
+      { title: "No Collateral Needed", description: "Your work is your collateral. Bill verification replaces traditional asset-backed lending." },
+      { title: "Choose Your Lender", description: "50+ RBI-registered NBFCs bid on your invoice. Pick the best rates and terms." },
+    ],
+  },
+  {
+    role: "NBFCs",
+    icon: "TrendingUp",
+    wins: [
+      { title: "Pre-Verified Opportunities", description: "EPC-verified bills eliminate underwriting friction. Direct access to verified invoices." },
+      { title: "Competitive Auction", description: "Real-time bidding platform increases deal velocity and asset quality." },
+      { title: "Standardized Diligence", description: "One KYC per contractor. No duplicate verification across multiple platforms." },
+    ],
+  },
+  {
+    role: "EPCs",
+    icon: "BarChart3",
+    wins: [
+      { title: "Digitized Bill Verification", description: "Replace manual paperwork with one-click verification on the platform." },
+      { title: "Payment Acceleration", description: "Contractors get paid faster → quicker project completion & payment to EPCs." },
+      { title: "Real-Time Visibility", description: "Track contractor payments and project funding status in a single dashboard." },
+    ],
+  },
+];
+
 // Testimonials intentionally empty — no mock/fabricated reviews
 export const TESTIMONIALS: Array<{ quote: string; author: string; company: string; role: string; rating: number }> = [];
 

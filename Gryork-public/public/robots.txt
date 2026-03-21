@@ -1,0 +1,27 @@
+# robots.txt for Gryork
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+Disallow: /*.json$
+Disallow: /*?*
+Allow: /*.html$
+Allow: /*?utm_
+
+# Sitemap location
+Sitemap: https://gryork.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Bing
+User-agent: Bingbot
+Allow: /
+
+# Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0

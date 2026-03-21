@@ -171,18 +171,20 @@ export default function Hero() {
               <Link
                 href={SC_PORTAL_URL}
                 onClick={() => trackCTAClick("hero", "Get Your Bills Funded")}
+                aria-label="Get Your Bills Funded - Start your journey today"
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent-500 text-white font-semibold rounded-xl hover:bg-accent-600 transition-all duration-300 shadow-lg shadow-accent-500/30 hover:shadow-accent-500/50 hover:-translate-y-0.5"
               >
-                <IndianRupee className="w-5 h-5" />
+                <IndianRupee className="w-5 h-5" aria-hidden="true" />
                 Get Your Bills Funded
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </Link>
               <Link
                 href="/how-it-works"
                 onClick={() => trackCTAClick("hero", "See How It Works")}
+                aria-label="See How It Works - Learn about our funding process"
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-300"
               >
-                <Play className="w-4 h-4" />
+                <Play className="w-4 h-4" aria-hidden="true" />
                 See How It Works
               </Link>
             </motion.div>

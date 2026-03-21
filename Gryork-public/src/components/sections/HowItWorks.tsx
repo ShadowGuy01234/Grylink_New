@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   FileText,
@@ -10,6 +11,7 @@ import {
   Banknote,
   UserCheck,
   Clock,
+  ChevronDown,
 } from "lucide-react";
 import { HOW_IT_WORKS_STEPS } from "@/lib/constants";
 import { useRef } from "react";
@@ -31,46 +33,84 @@ const stepColors = [
 ];
 
 export default function HowItWorks() {
+  const [isExpanded, setIsExpanded] = useState(false);
   const containerRef = useRef(null);
   const isInView = useInView(containerRef, { once: true, margin: "-80px" });
 
   return (
     <section id="how-it-works" className="py-20 md:py-28 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
       <div className="container-custom">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-100 text-accent-700 text-xs font-semibold uppercase tracking-wider mb-4"
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Simple 5-Step Process
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-900 mb-4"
-          >
-            From Bill to Bank {" "}
-            <span className="text-accent-500">in 5 Steps</span>
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.15 }}
-            className="text-lg text-gray-500 max-w-2xl mx-auto"
-          >
-            A transparent, fully digital journey from KYC to disbursement
-          </motion.p>
-        </div>
+        {/* Header with Collapse Toggle */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? "Hide detailed 5-step process" : "View detailed 5-step process"}
+          className="w-full mb-10 focus:outline-none"
+        >
+          <div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-100 text-accent-700 text-xs font-semibold uppercase tracking-wider mb-4"
+              aria-hidden="true"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Detailed 5-Step Process
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-900 mb-4"
+            >
+              From Bill to Bank {" "}
+              <span className="text-accent-500">in 5 Steps</span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 }}
+              className="text-lg text-gray-500 max-w-2xl mx-auto mb-6"
+            >
+              A transparent, fully digital journey from KYC to disbursement
+            </motion.p>
+            
+            {/* Expand/Collapse Toggle */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-150 rounded-lg transition-colors"
+              aria-hidden="true"
+            >
+              <span className="text-sm font-semibold text-gray-700">
+                {isExpanded ? "Hide Details" : "View Details"}
+              </span>
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              </motion.div>
+            </motion.div>
+          </div>
+        </button>
 
-        {/* Steps */}
-        <div ref={containerRef} className="relative">
+        {/* Steps Grid - Collapsible */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4 }}
+              className="overflow-hidden"
+            >
+              <div className="mb-10">
           {/* Animated connector line  desktop */}
           <div className="hidden lg:block absolute top-16 left-[10%] right-[10%] h-0.5">
             <div className="h-full bg-gray-200 rounded-full" />
@@ -159,34 +199,48 @@ export default function HowItWorks() {
             })}
           </div>
         </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Timeline bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.6 }}
-          className="mt-14 bg-primary-50 border border-primary-100 rounded-2xl p-6 md:p-8"
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="text-center md:text-left">
-              <h4 className="text-xl font-bold text-primary-900 mb-1">
-                Typical funding timeline
-              </h4>
-              <p className="text-gray-500 text-sm">
-                From first bill submission to money in your account:{" "}
-                <span className="font-bold text-accent-600">35 business days</span>
-              </p>
-            </div>
-            <Link
-              href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173"}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap"
+        {/* Timeline bar - Collapsible */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
             >
-              Register  It&apos;s Free
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.6 }}
+                className="mt-14 bg-primary-50 border border-primary-100 rounded-2xl p-6 md:p-8"
+              >
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="text-center md:text-left">
+                    <h4 className="text-xl font-bold text-primary-900 mb-1">
+                      Typical funding timeline
+                    </h4>
+                    <p className="text-gray-500 text-sm">
+                      From first bill submission to money in your account:{" "}
+                      <span className="font-bold text-accent-600">35 business days</span>
+                    </p>
+                  </div>
+                  <Link
+                    href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173"}
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap"
+                  >
+                    Register  It&apos;s Free
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

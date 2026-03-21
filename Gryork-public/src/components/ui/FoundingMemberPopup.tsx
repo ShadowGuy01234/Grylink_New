@@ -49,25 +49,30 @@ export default function FoundingMemberPopup() {
       />
 
       {/* Modal */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md mx-4">
+      <div 
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md mx-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="founding-member-title"
+      >
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
           {/* Close Button */}
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
-            aria-label="Close"
+            aria-label="Close founding member popup modal"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
           </button>
 
           {/* Gradient Header */}
           <div className="bg-gradient-to-r from-accent-600 to-accent-500 px-6 pt-8 pb-6">
             <div className="flex items-start gap-3 mb-3">
               <div className="p-2 bg-white/20 rounded-lg">
-                <Zap className="w-6 h-6 text-white" />
+                <Zap className="w-6 h-6 text-white" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">
+                <h2 id="founding-member-title" className="text-2xl font-bold text-white mb-1">
                   Founding Member Program
                 </h2>
                 <p className="text-white/90 text-sm">
@@ -92,6 +97,7 @@ export default function FoundingMemberPopup() {
                     className="w-5 h-5 text-accent-600 mt-0.5"
                     fill="currentColor"
                     viewBox="0 0 20 20"
+                    aria-hidden="true"
                   >
                     <path
                       fillRule="evenodd"
@@ -108,6 +114,7 @@ export default function FoundingMemberPopup() {
                     className="w-5 h-5 text-accent-600 mt-0.5"
                     fill="currentColor"
                     viewBox="0 0 20 20"
+                    aria-hidden="true"
                   >
                     <path
                       fillRule="evenodd"
@@ -124,6 +131,7 @@ export default function FoundingMemberPopup() {
                     className="w-5 h-5 text-accent-600 mt-0.5"
                     fill="currentColor"
                     viewBox="0 0 20 20"
+                    aria-hidden="true"
                   >
                     <path
                       fillRule="evenodd"
@@ -140,6 +148,7 @@ export default function FoundingMemberPopup() {
                     className="w-5 h-5 text-accent-600 mt-0.5"
                     fill="currentColor"
                     viewBox="0 0 20 20"
+                    aria-hidden="true"
                   >
                     <path
                       fillRule="evenodd"
@@ -156,6 +165,7 @@ export default function FoundingMemberPopup() {
             <Link
               href="/early-access"
               onClick={handleClaimSpot}
+              aria-label="Claim your founding member spot - limited to 20 members"
               className="block w-full px-6 py-3 bg-accent-600 text-white font-semibold rounded-lg hover:bg-accent-700 transition-colors text-center mb-3"
             >
               Claim Your Spot
@@ -163,6 +173,7 @@ export default function FoundingMemberPopup() {
 
             <button
               onClick={handleClose}
+              aria-label="Dismiss founding member popup for now"
               className="block w-full px-6 py-2 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               Maybe Later
