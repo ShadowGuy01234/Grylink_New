@@ -526,7 +526,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
               transition: "all 0.15s",
             }}
           >
-            >
+            {'>'}
           </button>
         </div>
       </div>
