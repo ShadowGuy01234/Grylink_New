@@ -41,8 +41,8 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email Us",
-    detail: "gryorkofficialmail@gmail.com",
-    subDetail: "support@gryork.com",
+    detail: "contact@gryork.com",
+    subDetail: "",
   },
   {
     icon: Phone,

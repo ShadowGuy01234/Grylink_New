@@ -35,7 +35,7 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 export const STATS = [
-  { value: "₹1,000", label: "Flat Submission Fee — No Hidden Charges", num: 1000, prefix: "₹", suffix: "" },
+  { value: "50+", label: "NBFCs Competing for Your Bill", num: 50, prefix: "", suffix: "+" },
   { value: "48 hrs", label: "Target Funding Time After Approval", num: 48, prefix: "", suffix: " hrs" },
   { value: "100%", label: "Fully Digital — No Branch Visits", num: 100, prefix: "", suffix: "%" },
   { value: "Zero", label: "Collateral Required", num: 0, prefix: "", suffix: "" },
@@ -60,12 +60,7 @@ export const FEATURES = [
     description:
       "Live status updates from submission to disbursement. Full visibility — know exactly where your money is at every step.",
   },
-  {
-    icon: "Banknote",
-    title: "₹1,000 Flat Platform Fee",
-    description:
-      "No hidden charges. One small flat fee gives you full platform access per submission. Competitive percentage fee only on funded amount.",
-  },
+
   {
     icon: "Shield",
     title: "100% Secure & Compliant",
@@ -77,6 +72,12 @@ export const FEATURES = [
     title: "Fully Digital — No Paperwork",
     description:
       "Complete KYC once, upload bills from anywhere. No branch visits, no couriers. The entire process fits in your phone.",
+  },
+  {
+    icon: "CheckCircle2",
+    title: "Instant Quote & Decision",
+    description:
+      "Get instant quotes from multiple NBFCs based on your bill. No waiting for approval decisions. Choose and fund within minutes.",
   },
 ];
 
@@ -193,9 +194,9 @@ export const FAQS = [
       "No collateral required. Gryork uses your verified work completion bills as the financing basis. The invoice itself is the asset being discounted.",
   },
   {
-    question: "What is the platform fee?",
+    question: "What are the charges involved?",
     answer:
-      "A one-time ₹1,000 submission fee per CWCRF application, plus a small percentage-based transaction fee on the funded amount. No hidden charges.",
+      "We charge a small percentage-based transaction fee only on the funded amount when your bill gets discounted. No hidden charges. Details are shared during the submission process.",
   },
   {
     question: "My EPC is not on Gryork. Can I still apply?",

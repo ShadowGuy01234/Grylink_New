@@ -98,8 +98,7 @@ export default function ForStakeholders() {
                   {[
                     { icon: Clock, text: "Funded in 48 hours" },
                     { icon: IndianRupee, text: "50+ NBFCs competing for your bill" },
-                    { icon: FileCheck, text: "One-time KYC, reuse forever" },
-                    { icon: CheckCircle2, text: "?1,000 flat platform fee only" },
+                    { icon: FileCheck, text: "One-time KYC, reuse forever" },                    { icon: CheckCircle2, text: "100% secure & compliant" },
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-2.5 text-sm text-gray-700">
                       <item.icon className="w-4 h-4 text-accent-500 flex-shrink-0" />

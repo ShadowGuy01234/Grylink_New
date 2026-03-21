@@ -147,7 +147,7 @@ export default function Hero() {
             >
               {[
                 "No collateral required",
-                "?1,000 flat platform fee",
+                "RBI-registered lenders only",
                 "Fully digital & paperless",
               ].map((item, i) => (
                 <div

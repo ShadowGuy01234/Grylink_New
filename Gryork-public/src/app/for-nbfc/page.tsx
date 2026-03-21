@@ -83,7 +83,7 @@ const stats = [
   { value: "Pre-Verified", label: "KYC & Docs Completed Before You See the Deal" },
   { value: "RMT Report", label: "Risk Assessment Included with Every Case" },
   { value: "EPC Backed", label: "Buyer Confirmation on Every Invoice" },
-  { value: "₹1,000 Fee", label: "SC Commitment Fee Filters Serious Applicants" },
+  { value: "Real-Time", label: "Track Status from Submission to Disbursement" },
 ];
 
 export default function ForNBFCPage() {

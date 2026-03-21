@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 const stats = [
-  { value: "₹1,000", label: "Flat Submission Fee" },
+  { value: "50+", label: "NBFCs Competing" },
   { value: "48 hrs", label: "Target Funding Time" },
   { value: "100%", label: "Digital Process" },
   { value: "Zero", label: "Collateral Required" },

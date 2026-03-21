@@ -184,7 +184,7 @@ export default function PrivacyPage() {
                 </p>
                 <ul>
                   <li>
-                    <strong>Email:</strong> privacy@gryork.com
+                    <strong>Email:</strong> contact@gryork.com
                   </li>
                   <li>
                     <strong>Address:</strong> Bangalore, Karnataka, India
@@ -202,7 +202,7 @@ export default function PrivacyPage() {
                     <strong>Name:</strong> Grievance Officer
                   </li>
                   <li>
-                    <strong>Email:</strong> grievance@gryork.com
+                    <strong>Email:</strong> contact@gryork.com
                   </li>
                   <li>
                     <strong>Address:</strong> Bangalore, Karnataka, India

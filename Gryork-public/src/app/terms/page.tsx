@@ -241,7 +241,7 @@ export default function TermsPage() {
                 </p>
                 <ul>
                   <li>
-                    <strong>Email:</strong> legal@gryork.com
+                    <strong>Email:</strong> contact@gryork.com
                   </li>
                   <li>
                     <strong>Address:</strong> Bangalore, Karnataka, India
