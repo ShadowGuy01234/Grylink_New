@@ -1,6 +1,7 @@
 import { Header, Footer } from "@/components/layout";
 import {
   Hero,
+  SocialProof,
   TrustStrip,
   PainPoints,
   Features,
@@ -17,7 +18,9 @@ export default function HomePage() {
       <main>
         {/* 1. Hero — SC-focused headline + pipeline visual */}
         <Hero />
-        {/* 2. Trust Strip — live stats + NBFC logos slider */}
+        {/* 2. Social Proof — Stats with social trust signals */}
+        <SocialProof />
+        {/* 3. Trust Strip — live stats + NBFC logos slider */}
         <TrustStrip />
         {/* 3. Pain Points — before/after comparison + eligibility */}
         <PainPoints />

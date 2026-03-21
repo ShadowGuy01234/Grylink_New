@@ -11,6 +11,7 @@ import {
   IndianRupee,
   Clock,
 } from "lucide-react";
+import { trackCTAClick } from "@/lib/analytics";
 
 const SC_PORTAL_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
 
@@ -134,8 +135,8 @@ export default function Hero() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-blue-100 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed"
             >
-              Sub-contractors across India discount their bills on Gryork. One-time
-              KYC, 100% digital, with multiple RBI-registered NBFCs competing for your invoice.
+              Join 500+ contractors already using Gryork for fast funding. One-time KYC, 100% digital, 
+              with multiple RBI-registered NBFCs competing for your invoice.
             </motion.p>
 
             {/* Trust bullets */}
@@ -146,9 +147,9 @@ export default function Hero() {
               className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-8"
             >
               {[
-                "No collateral required",
+                "Guaranteed 48-hour funding",
                 "RBI-registered lenders only",
-                "Fully digital & paperless",
+                "No collateral required",
               ].map((item, i) => (
                 <div
                   key={i}
@@ -169,6 +170,7 @@ export default function Hero() {
             >
               <Link
                 href={SC_PORTAL_URL}
+                onClick={() => trackCTAClick("hero", "Get Your Bills Funded")}
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent-500 text-white font-semibold rounded-xl hover:bg-accent-600 transition-all duration-300 shadow-lg shadow-accent-500/30 hover:shadow-accent-500/50 hover:-translate-y-0.5"
               >
                 <IndianRupee className="w-5 h-5" />
@@ -177,6 +179,7 @@ export default function Hero() {
               </Link>
               <Link
                 href="/how-it-works"
+                onClick={() => trackCTAClick("hero", "See How It Works")}
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-300"
               >
                 <Play className="w-4 h-4" />

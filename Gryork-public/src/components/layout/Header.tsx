@@ -162,9 +162,9 @@ export default function Header() {
               )}
             />
 
-            {/* Get Funded */}
+            {/* Get Early Access */}
             <Link
-              href={PORTALS.subcontractor}
+              href="/early-access"
               className={cn(
                 "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95",
                 "bg-accent-500 text-white hover:bg-accent-600",
@@ -172,7 +172,7 @@ export default function Header() {
               )}
             >
               <IndianRupee className="w-3.5 h-3.5" />
-              Get Funded
+              Get Early Access
             </Link>
 
             {/* Login dropdown */}

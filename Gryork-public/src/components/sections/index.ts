@@ -1,4 +1,5 @@
 export { default as Hero } from "./Hero";
+export { default as SocialProof } from "./SocialProof";
 export { default as TrustStrip } from "./TrustStrip";
 export { default as PainPoints } from "./PainPoints";
 export { default as Features } from "./Features";

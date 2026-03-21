@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import LayoutClient from "./LayoutClient";
 
 export const metadata: Metadata = {
   title: "Gryork - Bill Discounting Platform for Infrastructure",
@@ -16,7 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <LayoutClient>{children}</LayoutClient>
+      </body>
     </html>
   );
 }
