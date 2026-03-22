@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { salesApi } from '../../api';
+import { salesApi, adminApi } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
@@ -33,6 +33,16 @@ interface DashboardStats {
   recentActivity: any[];
   expiringSoon: any[];
   gryLinkStats: { active: number; used: number; expired: number };
+}
+
+interface PublicFeedback {
+  _id: string;
+  type: 'bug' | 'idea' | 'question';
+  roleContext: string;
+  message: string;
+  status: 'new' | 'in_review' | 'resolved' | 'closed';
+  createdAt: string;
+  pagePath?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -210,6 +220,9 @@ const SalesOverview = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ companyName: '', ownerName: '', email: '', phone: '', address: '' });
+  const [feedbackItems, setFeedbackItems] = useState<PublicFeedback[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [updatingFeedbackId, setUpdatingFeedbackId] = useState<string | null>(null);
 
   const fetchStats = async () => {
     try {
@@ -222,7 +235,40 @@ const SalesOverview = () => {
     }
   };
 
-  useEffect(() => { fetchStats(); }, []);
+  const fetchFeedback = async () => {
+    try {
+      setFeedbackLoading(true);
+      const res = await adminApi.getPublicFeedback({ limit: 8 });
+      setFeedbackItems(res.data.items || []);
+    } catch {
+      toast.error('Failed to load feedback');
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+    fetchFeedback();
+  }, []);
+
+  const updateFeedbackStatus = async (
+    id: string,
+    status: 'new' | 'in_review' | 'resolved' | 'closed',
+  ) => {
+    try {
+      setUpdatingFeedbackId(id);
+      await adminApi.updatePublicFeedbackStatus(id, status);
+      setFeedbackItems((prev) =>
+        prev.map((item) => (item._id === id ? { ...item, status } : item)),
+      );
+      toast.success('Feedback status updated');
+    } catch {
+      toast.error('Unable to update feedback status');
+    } finally {
+      setUpdatingFeedbackId(null);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -593,6 +639,91 @@ const SalesOverview = () => {
       </div>
 
       {/* ── GryLinks Expiring Soon ── */}
+      <div
+        style={{
+          marginTop: 20,
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: 14,
+          overflow: 'hidden',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        }}
+      >
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #EFF6FF, #F0FDF4)',
+            padding: '14px 20px',
+            borderBottom: '1px solid #e5e7eb',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#0a2463' }}>
+            Public Website Feedback
+          </span>
+          <button
+            onClick={fetchFeedback}
+            style={{ fontSize: 12, color: '#1E5AAF', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            Refresh
+          </button>
+        </div>
+        <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, boxShadow: 'none' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Role</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {feedbackLoading && (
+                <tr>
+                  <td colSpan={5} className="empty-state">Loading feedback...</td>
+                </tr>
+              )}
+              {!feedbackLoading &&
+                feedbackItems.map((item) => (
+                  <tr key={item._id}>
+                    <td>{item.type}</td>
+                    <td>{item.roleContext}</td>
+                    <td style={{ maxWidth: 420 }}>
+                      {item.message.length > 110 ? `${item.message.slice(0, 110)}...` : item.message}
+                    </td>
+                    <td>
+                      <select
+                        value={item.status}
+                        disabled={updatingFeedbackId === item._id}
+                        onChange={(e) =>
+                          updateFeedbackStatus(
+                            item._id,
+                            e.target.value as 'new' | 'in_review' | 'resolved' | 'closed',
+                          )
+                        }
+                      >
+                        <option value="new">new</option>
+                        <option value="in_review">in_review</option>
+                        <option value="resolved">resolved</option>
+                        <option value="closed">closed</option>
+                      </select>
+                    </td>
+                    <td>{new Date(item.createdAt).toLocaleString('en-IN')}</td>
+                  </tr>
+                ))}
+              {!feedbackLoading && feedbackItems.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="empty-state">No feedback yet</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {(stats?.expiringSoon?.length ?? 0) > 0 && (
         <div
           style={{

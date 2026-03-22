@@ -27,6 +27,16 @@ interface Stats {
   }>;
 }
 
+interface PublicFeedback {
+  _id: string;
+  type: "bug" | "idea" | "question";
+  roleContext: string;
+  message: string;
+  status: "new" | "in_review" | "resolved" | "closed";
+  createdAt: string;
+  pagePath?: string;
+}
+
 const ROLES = ["sales", "ops", "rmt", "admin"];
 
 const AdminDashboard = () => {
@@ -47,6 +57,9 @@ const AdminDashboard = () => {
     role: "sales",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [publicFeedback, setPublicFeedback] = useState<PublicFeedback[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
+  const [feedbackUpdatingId, setFeedbackUpdatingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -61,10 +74,13 @@ const AdminDashboard = () => {
       ]);
       setUsers(usersRes.data);
       setStats(statsRes.data);
+      const feedbackRes = await adminApi.getPublicFeedback({ limit: 10 });
+      setPublicFeedback(feedbackRes.data.items || []);
     } catch {
       toast.error("Failed to load data");
     } finally {
       setLoading(false);
+      setFeedbackLoading(false);
     }
   }, [filterRole, filterActive, searchQuery]);
 
@@ -190,6 +206,24 @@ const AdminDashboard = () => {
     return roleStats?.total || 0;
   };
 
+  const handleFeedbackStatusUpdate = async (
+    id: string,
+    status: "new" | "in_review" | "resolved" | "closed",
+  ) => {
+    try {
+      setFeedbackUpdatingId(id);
+      await adminApi.updatePublicFeedbackStatus(id, status);
+      setPublicFeedback((prev) =>
+        prev.map((item) => (item._id === id ? { ...item, status } : item)),
+      );
+      toast.success("Feedback status updated");
+    } catch {
+      toast.error("Failed to update feedback");
+    } finally {
+      setFeedbackUpdatingId(null);
+    }
+  };
+
   if (loading) return <div className="page-loading">Loading dashboard...</div>;
 
   return (
@@ -268,6 +302,67 @@ const AdminDashboard = () => {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+        </div>
+      </div>
+
+      <div className="table-section">
+        <h2>Public Feedback ({publicFeedback.length})</h2>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Role</th>
+                <th>Message</th>
+                <th>Page</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {feedbackLoading && (
+                <tr>
+                  <td colSpan={6} className="empty-state">
+                    Loading feedback...
+                  </td>
+                </tr>
+              )}
+              {!feedbackLoading &&
+                publicFeedback.map((item) => (
+                  <tr key={item._id}>
+                    <td>{item.type}</td>
+                    <td>{item.roleContext}</td>
+                    <td>{item.message.length > 120 ? `${item.message.slice(0, 120)}...` : item.message}</td>
+                    <td>{item.pagePath || "—"}</td>
+                    <td>
+                      <select
+                        value={item.status}
+                        disabled={feedbackUpdatingId === item._id}
+                        onChange={(e) =>
+                          handleFeedbackStatusUpdate(
+                            item._id,
+                            e.target.value as "new" | "in_review" | "resolved" | "closed",
+                          )
+                        }
+                      >
+                        <option value="new">new</option>
+                        <option value="in_review">in_review</option>
+                        <option value="resolved">resolved</option>
+                        <option value="closed">closed</option>
+                      </select>
+                    </td>
+                    <td>{new Date(item.createdAt).toLocaleString()}</td>
+                  </tr>
+                ))}
+              {!feedbackLoading && publicFeedback.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="empty-state">
+                    No public feedback found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
