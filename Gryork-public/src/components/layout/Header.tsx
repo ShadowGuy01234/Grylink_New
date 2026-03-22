@@ -55,7 +55,9 @@ export default function Header() {
       <div
         className={cn(
           "mx-auto max-w-7xl rounded-2xl transition-all duration-400 ease-in-out",
-          "bg-white/95 shadow-[0_4px_24px_rgba(10,36,99,0.10)] border border-gray-200/70 backdrop-blur-md"
+          scrolled
+            ? "bg-[#0B0F19]/80 shadow-[0_12px_30px_rgba(0,0,0,0.35)] border border-white/15 backdrop-blur-md"
+            : "bg-transparent border border-transparent"
         )}
       >
         <div className="flex items-center justify-between px-4 py-2.5">
@@ -63,12 +65,15 @@ export default function Header() {
           {/* -- Logo -- */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <Logo className="h-12 w-auto" />
-            <span
-              className="text-lg font-bold tracking-tight text-primary-900"
-            >
-              Gryork
-            </span>
-          </Link>
+              <span
+                className={cn(
+                  "text-lg font-bold tracking-tight transition-colors",
+                  scrolled ? "text-white" : "text-white"
+                )}
+              >
+                Gryork
+              </span>
+            </Link>
 
           {/* -- Desktop nav -- */}
           <nav className="hidden lg:flex items-center gap-1" ref={navDropdownRef}>
@@ -84,7 +89,9 @@ export default function Header() {
                         "relative inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
                         isChildActive
                           ? "text-primary-700 bg-primary-50"
-                          : "text-gray-600 hover:text-primary-700 hover:bg-gray-50"
+                          : scrolled
+                            ? "text-gray-200 hover:text-white hover:bg-white/10"
+                            : "text-gray-600 hover:text-primary-700 hover:bg-gray-50"
                       )}
                     >
                       {link.label}
@@ -138,7 +145,9 @@ export default function Header() {
                     "relative px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
                     isActive
                       ? "text-primary-700 bg-primary-50"
-                      : "text-gray-600 hover:text-primary-700 hover:bg-gray-50"
+                      : scrolled
+                        ? "text-gray-200 hover:text-white hover:bg-white/10"
+                        : "text-gray-600 hover:text-primary-700 hover:bg-gray-50"
                   )}
                 >
                   {link.label}
@@ -156,19 +165,19 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-2">
             {/* Divider */}
             <div
-              className={cn(
-                "w-px h-6 mx-1 rounded-full",
-                "bg-gray-200"
-              )}
-            />
+                className={cn(
+                  "w-px h-6 mx-1 rounded-full",
+                  scrolled ? "bg-white/20" : "bg-gray-200"
+                )}
+              />
 
             {/* Get Early Access */}
             <Link
               href="/early-access"
-              className={cn(
-                "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95",
-                "bg-accent-500 text-white hover:bg-accent-600",
-                "shadow-md shadow-accent-500/30 hover:shadow-accent-500/40 hover:-translate-y-0.5"
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 active:scale-95",
+                  "bg-accent-500 text-white hover:bg-accent-600",
+                  "shadow-md shadow-accent-500/30 hover:shadow-accent-500/40 hover:-translate-y-0.5"
               )}
             >
               <IndianRupee className="w-3.5 h-3.5" />
@@ -181,7 +190,9 @@ export default function Header() {
                 onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition-all duration-200 active:scale-95",
-                  "border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-primary-50"
+                  scrolled
+                    ? "border-white/20 text-gray-200 hover:border-white/40 hover:bg-white/10"
+                    : "border-gray-200 text-gray-700 hover:border-primary-300 hover:bg-primary-50"
                 )}
               >
                 Login
@@ -242,7 +253,7 @@ export default function Header() {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={cn(
               "lg:hidden p-2 rounded-xl transition-colors",
-              "text-gray-600 hover:bg-gray-100"
+              scrolled ? "text-gray-200 hover:bg-white/10" : "text-gray-600 hover:bg-gray-100"
             )}
             aria-label="Toggle menu"
           >

@@ -125,6 +125,7 @@ app.use("/api/rekyc", require("./routes/rekyc"));
 app.use("/api/cron", require("./routes/cron"));
 app.use("/api/audit", require("./routes/audit"));
 app.use("/api/careers", require("./routes/careers"));
+app.use("/api/public", require("./routes/public"));
 
 // 404 handler
 app.use((req, res) => {

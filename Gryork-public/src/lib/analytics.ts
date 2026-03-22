@@ -38,6 +38,15 @@ export const GA4_EVENTS = {
   LINK_CLICK: 'link_click',
   SCROLL_DEPTH: 'scroll_depth',
   TIME_ON_PAGE: 'time_on_page',
+
+  // Redesign interactions
+  ROLE_TOGGLE: "role_toggle",
+  PROCESS_STEP_VIEW: "process_step_view",
+  FEEDBACK_WIDGET_OPEN: "feedback_widget_open",
+  FEEDBACK_SUBMIT_SUCCESS: "feedback_submit_success",
+  FEEDBACK_SUBMIT_ERROR: "feedback_submit_error",
+  FORM_SUBMIT_SUCCESS: "form_submit_success",
+  FORM_SUBMIT_ERROR: "form_submit_error",
 } as const;
 
 export type GA4EventName = (typeof GA4_EVENTS)[keyof typeof GA4_EVENTS];
@@ -153,6 +162,22 @@ export function trackTimeOnPage(path: string, timeInMs: number) {
   });
 }
 
+export function trackRoleToggle(role: string, source = "hero_role_toggle") {
+  trackEvent(GA4_EVENTS.ROLE_TOGGLE, {
+    role,
+    source,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+export function trackProcessStep(step: number, title: string) {
+  trackEvent(GA4_EVENTS.PROCESS_STEP_VIEW, {
+    step,
+    step_title: title,
+    timestamp: new Date().toISOString(),
+  });
+}
+
 // TypeScript augmentation for window.gtag
 declare global {
   interface Window {
@@ -169,5 +194,7 @@ export default {
   trackScrollDepth,
   trackLinkClick,
   trackTimeOnPage,
+  trackRoleToggle,
+  trackProcessStep,
   GA4_EVENTS,
 };

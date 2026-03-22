@@ -1,5 +1,5 @@
 import { Header, Footer } from "@/components/layout";
-import { Hero, SocialProof } from "@/components/sections";
+import { HeroDynamicRole, MetricsBanner, ProblemSolutionBento, ProcessStickyScroll, EligibilityChecklist, SocialProof } from "@/components/sections";
 import dynamic from "next/dynamic";
 
 // Lazy load below-the-fold components for better initial page load
@@ -63,31 +63,39 @@ export default function HomePage() {
     <>
       <Header />
       <main>
-        {/* 1. Hero — SC-focused headline + pipeline visual */}
-        <Hero />
-        {/* 2. Social Proof — Stats with social trust signals */}
+        {/* 1. Dynamic Role Hero */}
+        <HeroDynamicRole />
+        {/* 2. Metrics Banner */}
+        <MetricsBanner />
+        {/* 3. Social Proof */}
         <SocialProof />
-        {/* 3. Trust Strip — live stats + NBFC logos slider */}
+        {/* 4. Trust Strip */}
         <TrustStrip />
-        {/* 4. Pain Points — before/after comparison + eligibility */}
+        {/* 5. Problem/Solution Bento */}
+        <ProblemSolutionBento />
+        {/* 6. Pain Points */}
         <PainPoints />
-        {/* 5. Simple Process — 3-step collapsible process (before role breakdown) */}
+        {/* 7. Sticky Process Scroll */}
+        <ProcessStickyScroll />
+        {/* 8. Simple Process */}
         <SimpleProcess />
-        {/* 6. Quick Wins — role-specific benefits for 3 stakeholders */}
+        {/* 9. Quick Wins */}
         <QuickWins />
-        {/* 7. Exclusive Member Offer — exclusive benefits section with urgency */}
+        {/* 10. Eligibility Checklist */}
+        <EligibilityChecklist />
+        {/* 11. Exclusive Member Offer */}
         <FoundingMemberOffer />
-        {/* 8. Features — SC pain-relief feature grid + detailed benefits */}
+        {/* 12. Features */}
         <Features />
-        {/* 9. Real Impact — metrics + contractor testimonials + social proof */}
+        {/* 13. Real Impact */}
         <RealImpact />
-        {/* 10. How It Works — detailed 5-step SC funding journey */}
+        {/* 14. How It Works */}
         <HowItWorks />
-        {/* 11. For Stakeholders — SC featured + EPC + NBFC cards */}
+        {/* 15. For Stakeholders */}
         <ForStakeholders />
-        {/* 12. Testimonials — additional SC voices + role badges */}
+        {/* 16. Testimonials */}
         <Testimonials />
-        {/* 13. FAQ — accordion, SC-focused objection handling */}
+        {/* 17. FAQ */}
         <FAQ />
       </main>
       <Footer />

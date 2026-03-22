@@ -238,6 +238,13 @@ export const adminApi = {
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
   restoreUser: (id: string) => api.post(`/admin/users/${id}/restore`),
   getStats: () => api.get("/admin/stats"),
+  getPublicInsights: () => api.get("/public/insights"),
+  getPublicFeedback: (params?: { status?: string; type?: string; page?: number; limit?: number }) =>
+    api.get("/public/feedback", { params }),
+  updatePublicFeedbackStatus: (id: string, status: "new" | "in_review" | "resolved" | "closed") =>
+    api.patch(`/public/feedback/${id}/status`, { status }),
+  getPublicLeads: (params?: { status?: string; source?: string; page?: number; limit?: number }) =>
+    api.get("/public/leads", { params }),
 };
 
 // Approvals

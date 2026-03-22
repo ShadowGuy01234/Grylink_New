@@ -1,10 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-base: #0B0F19;
+    --surface-1: rgba(255, 255, 255, 0.04);
+    --surface-2: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --text-high: #E5E7EB;
+    --text-mid: #9CA3AF;
+    --accent-emerald: #10B981;
+    --accent-cobalt: #3B82F6;
+  }
+
   html {
     scroll-behavior: smooth;
   }
@@ -83,6 +94,16 @@
   /* Container */
   .container-custom {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-md border rounded-2xl;
+    background: var(--surface-1);
+    border-color: var(--border-subtle);
+  }
+
+  .text-display {
+    font-family: "Space Grotesk", "Inter", system-ui, -apple-system, sans-serif;
   }
 }
 

@@ -231,6 +231,20 @@ const Ico = {
       <polyline points="14 2 14 8 20 8" />
     </svg>
   ),
+  pulse: (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 12h-4l-3 7-4-14-3 7H2" />
+    </svg>
+  ),
   epc: (
     <svg
       width="18"
@@ -577,6 +591,12 @@ const Layout = () => {
                 to="/admin/careers"
                 icon={Ico.briefcase}
                 label="Career Applications"
+                roleColor={rc}
+              />
+              <SidebarNavItem
+                to="/admin/public-insights"
+                icon={Ico.pulse}
+                label="Public Insights"
                 roleColor={rc}
               />
             </>

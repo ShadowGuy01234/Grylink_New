@@ -16,6 +16,8 @@ import {
   Loader2,
   MessageSquare,
 } from "lucide-react";
+import { postJson } from "@/lib/api";
+import { trackEvent, GA4_EVENTS } from "@/lib/analytics";
 
 const contactFormSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -66,6 +68,7 @@ const contactInfo = [
 
 export default function ContactPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const {
     register,
@@ -76,9 +79,16 @@ export default function ContactPage() {
   });
 
   const onSubmit = async (data: ContactFormData) => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Contact form submitted:", data);
-    setIsSubmitted(true);
+    setSubmitError("");
+    try {
+      await postJson("/contact", data);
+      trackEvent(GA4_EVENTS.FORM_SUBMIT_SUCCESS, { form: "contact" });
+      setIsSubmitted(true);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to submit contact request";
+      setSubmitError(msg);
+      trackEvent(GA4_EVENTS.FORM_SUBMIT_ERROR, { form: "contact", error: msg });
+    }
   };
 
   return (
@@ -262,6 +272,7 @@ export default function ContactPage() {
                           </>
                         )}
                       </button>
+                      {submitError && <p className="text-sm text-red-500 text-center">{submitError}</p>}
                     </form>
                   </div>
                 )}

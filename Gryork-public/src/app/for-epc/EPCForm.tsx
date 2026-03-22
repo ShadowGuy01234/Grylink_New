@@ -7,6 +7,8 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import { Input, Textarea } from "@/components/ui";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { postJson } from "@/lib/api";
+import { trackEvent, GA4_EVENTS } from "@/lib/analytics";
 
 const epcFormSchema = z.object({
   companyName: z.string().min(2, "Company name is required"),
@@ -39,6 +41,7 @@ const preferredTimeOptions = [
 
 export default function EPCForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const {
     register,
@@ -49,10 +52,16 @@ export default function EPCForm() {
   });
 
   const onSubmit = async (data: EPCFormData) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("EPC Form submitted:", data);
-    setIsSubmitted(true);
+    setSubmitError("");
+    try {
+      await postJson("/epc/inquiry", data);
+      trackEvent(GA4_EVENTS.FORM_SUBMIT_SUCCESS, { form: "epc_inquiry" });
+      setIsSubmitted(true);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to submit form";
+      setSubmitError(msg);
+      trackEvent(GA4_EVENTS.FORM_SUBMIT_ERROR, { form: "epc_inquiry", error: msg });
+    }
   };
 
   if (isSubmitted) {
@@ -209,6 +218,8 @@ export default function EPCForm() {
             "Request a Demo"
           )}
         </button>
+
+        {submitError && <p className="text-sm text-red-500 text-center">{submitError}</p>}
 
         <p className="text-xs text-gray-500 text-center">
           By submitting this form, you agree to our{" "}

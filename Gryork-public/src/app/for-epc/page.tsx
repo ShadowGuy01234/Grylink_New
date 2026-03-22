@@ -97,19 +97,20 @@ export default function ForEPCPage() {
   return (
     <>
       <Header />
-      <main className="pt-20">
+      <main className="pt-20 bg-[var(--bg-base)]">
         {/* Hero Section */}
-        <section className="bg-gradient-hero py-20 md:py-28">
+        <section className="relative py-20 md:py-28 overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.18),transparent_35%)]" />
           <div className="container-custom">
-            <div className="max-w-3xl">
+            <div className="max-w-3xl relative z-10">
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="text-4xl md:text-5xl font-bold text-white mb-6"
+                className="text-display text-4xl md:text-5xl font-bold text-white mb-6"
               >
                 Strengthen Your Supply Chain
-                <span className="block text-accent-300">
+                <span className="block text-cyan-300">
                   Support Your Sub-Contractors
                 </span>
               </motion.h1>
@@ -117,7 +118,7 @@ export default function ForEPCPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-xl text-blue-100 mb-8"
+                className="text-xl text-gray-300 mb-8"
               >
                 Help your vendors access quick working capital while maintaining
                 project timelines. No financial commitment required.
@@ -128,12 +129,12 @@ export default function ForEPCPage() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="flex flex-col sm:flex-row gap-4"
               >
-                <a href="#contact" className="btn-primary">
+                <a href="#contact" className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-cyan-500 text-slate-950 font-semibold hover:bg-cyan-400">
                   Contact Sales
                 </a>
                 <a
                   href="#how-it-works"
-                  className="btn-outline border-white text-white hover:bg-white hover:text-primary-900"
+                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl border border-white/30 text-white hover:bg-white/10"
                 >
                   See How It Works
                 </a>
@@ -143,14 +144,14 @@ export default function ForEPCPage() {
         </section>
 
         {/* Problem vs Solution Section */}
-        <section className="section bg-white">
+        <section className="section">
           <div className="container-custom">
             <div className="text-center mb-12">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="text-3xl md:text-4xl font-bold text-primary-900 mb-4"
+                className="text-display text-3xl md:text-4xl font-bold text-white mb-4"
               >
                 The Problem We Solve
               </motion.h2>
@@ -158,10 +159,10 @@ export default function ForEPCPage() {
 
             <div className="max-w-4xl mx-auto">
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-red-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-red-700 mb-4 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      
+                <div className="glass-card bg-red-500/10 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-red-300 mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
+                       
                     </span>
                     Without Gryork
                   </h3>
@@ -173,7 +174,7 @@ export default function ForEPCPage() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: index * 0.1 }}
-                        className="text-red-700"
+                        className="text-red-200"
                       >
                         {item.issue}
                       </motion.li>
@@ -181,10 +182,10 @@ export default function ForEPCPage() {
                   </ul>
                 </div>
 
-                <div className="bg-green-50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-green-700 mb-4 flex items-center gap-2">
-                    <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      
+                <div className="glass-card bg-emerald-500/10 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-emerald-300 mb-4 flex items-center gap-2">
+                    <span className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                       
                     </span>
                     With Gryork
                   </h3>
@@ -196,7 +197,7 @@ export default function ForEPCPage() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: index * 0.1 }}
-                        className="text-green-700"
+                        className="text-emerald-200"
                       >
                         {item.solution}
                       </motion.li>
@@ -209,14 +210,14 @@ export default function ForEPCPage() {
         </section>
 
         {/* Benefits Section */}
-        <section className="section bg-gray-50">
+        <section className="section">
           <div className="container-custom">
             <div className="text-center mb-12">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="text-3xl md:text-4xl font-bold text-primary-900 mb-4"
+                className="text-display text-3xl md:text-4xl font-bold text-white mb-4"
               >
                 Benefits for EPCs
               </motion.h2>
@@ -225,7 +226,7 @@ export default function ForEPCPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="text-lg text-gray-600 max-w-2xl mx-auto"
+                className="text-lg text-gray-300 max-w-2xl mx-auto"
               >
                 Why leading EPCs partner with Gryork
               </motion.p>
@@ -239,30 +240,30 @@ export default function ForEPCPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="card"
-                >
-                  <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center mb-4">
-                    <benefit.icon className="w-6 h-6 text-primary-600" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-primary-900 mb-2">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-600">{benefit.description}</p>
-                </motion.div>
-              ))}
+                   className="glass-card p-6 bg-white/[0.03]"
+                 >
+                   <div className="w-12 h-12 bg-cyan-500/15 rounded-lg flex items-center justify-center mb-4">
+                     <benefit.icon className="w-6 h-6 text-cyan-300" />
+                   </div>
+                   <h3 className="text-xl font-semibold text-white mb-2">
+                     {benefit.title}
+                   </h3>
+                   <p className="text-gray-300">{benefit.description}</p>
+                 </motion.div>
+               ))}
             </div>
           </div>
         </section>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className="section bg-white">
+        <section id="how-it-works" className="section">
           <div className="container-custom">
             <div className="text-center mb-12">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="text-3xl md:text-4xl font-bold text-primary-900 mb-4"
+                className="text-display text-3xl md:text-4xl font-bold text-white mb-4"
               >
                 Your Role is Simple
               </motion.h2>
@@ -271,7 +272,7 @@ export default function ForEPCPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="text-lg text-gray-600 max-w-2xl mx-auto"
+                className="text-lg text-gray-300 max-w-2xl mx-auto"
               >
                 No additional financial commitment - just validate bills
               </motion.p>
@@ -289,15 +290,15 @@ export default function ForEPCPage() {
                     className="flex gap-4"
                   >
                     <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-slate-950 font-bold">
                         {step.step}
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-primary-900 mb-1">
+                      <h3 className="text-lg font-semibold text-white mb-1">
                         {step.title}
                       </h3>
-                      <p className="text-gray-600 text-sm">{step.description}</p>
+                      <p className="text-gray-300 text-sm">{step.description}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -308,9 +309,9 @@ export default function ForEPCPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mt-12 bg-accent-50 rounded-2xl p-8 max-w-3xl mx-auto text-center"
+              className="mt-12 glass-card rounded-2xl p-8 max-w-3xl mx-auto text-center bg-emerald-500/10"
             >
-              <p className="text-accent-800 text-lg font-medium">
+              <p className="text-emerald-200 text-lg font-medium">
                 That&apos;s it! No additional financial commitment. Your payment
                 cycle to sub-contractors remains exactly the same.
               </p>
@@ -319,7 +320,7 @@ export default function ForEPCPage() {
         </section>
 
         {/* Contact Form Section */}
-        <section id="contact" className="section bg-gray-50">
+        <section id="contact" className="section">
           <div className="container-custom">
             <div className="max-w-2xl mx-auto">
               <div className="text-center mb-8">
@@ -327,7 +328,7 @@ export default function ForEPCPage() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  className="text-3xl md:text-4xl font-bold text-primary-900 mb-4"
+                  className="text-display text-3xl md:text-4xl font-bold text-white mb-4"
                 >
                   Get in Touch
                 </motion.h2>
@@ -336,7 +337,7 @@ export default function ForEPCPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 }}
-                  className="text-gray-600"
+                  className="text-gray-300"
                 >
                   Our team will reach out to schedule a demo
                 </motion.p>

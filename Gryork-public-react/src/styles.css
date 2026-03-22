@@ -1,0 +1,60 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.glass-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.page-section {
+  @apply py-12 md:py-16;
+}
+
+.container-page {
+  @apply mx-auto max-w-7xl px-4;
+}
+
+.heading-hero {
+  @apply font-display text-3xl font-bold leading-tight text-slate-900 sm:text-4xl md:text-5xl;
+}
+
+.heading-section {
+  @apply font-display text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl;
+}
+
+.text-muted {
+  @apply text-slate-600;
+}
+
+.btn-primary {
+  @apply inline-flex w-full items-center justify-center rounded-xl bg-emerald px-5 py-3 font-semibold text-white transition hover:opacity-90 sm:w-auto;
+}
+
+.btn-secondary {
+  @apply inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto;
+}
+
+.field {
+  @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-cobalt focus:ring-2 focus:ring-cobalt/20;
+}

@@ -7,6 +7,8 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import { Loader2, CheckCircle } from "lucide-react";
 import { Button, Input, Textarea } from "@/components/ui";
+import { postJson } from "@/lib/api";
+import { trackEvent, GA4_EVENTS } from "@/lib/analytics";
 
 const nbfcFormSchema = z.object({
   companyName: z.string().min(2, "Company name is required"),
@@ -40,6 +42,7 @@ const sectorOptions = [
 export default function NBFCForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const {
     register,
@@ -70,11 +73,18 @@ export default function NBFCForm() {
 
   const onSubmit = async (data: NBFCFormData) => {
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Form data:", data);
-    setIsSubmitting(false);
-    setIsSuccess(true);
+    setSubmitError("");
+    try {
+      await postJson("/nbfc/inquiry", data);
+      trackEvent(GA4_EVENTS.FORM_SUBMIT_SUCCESS, { form: "nbfc_inquiry" });
+      setIsSuccess(true);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to submit form";
+      setSubmitError(msg);
+      trackEvent(GA4_EVENTS.FORM_SUBMIT_ERROR, { form: "nbfc_inquiry", error: msg });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess) {
@@ -238,6 +248,7 @@ export default function NBFCForm() {
           "Submit Application"
         )}
       </Button>
+      {submitError && <p className="text-sm text-red-500 text-center">{submitError}</p>}
     </motion.form>
   );
 }

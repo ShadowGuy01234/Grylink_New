@@ -18,6 +18,7 @@ import RmtDashboard from "./pages/RmtDashboard";
 import RmtCasesPage from "./pages/RmtCasesPage";
 import FounderDashboard from "./pages/FounderDashboard";
 import AuditLogPage from "./pages/AuditLogPage";
+import PublicInsightsPage from "./pages/PublicInsightsPage";
 // Ops dedicated pages
 import EpcVerificationPage from "./pages/ops/EpcVerificationPage";
 import BillVerificationPage from "./pages/ops/BillVerificationPage";
@@ -238,6 +239,16 @@ const AppRoutes = () => {
           element={
             ["admin", "founder", "ops"].includes(user.role) ? (
               <AuditLogPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="admin/public-insights"
+          element={
+            ["admin", "founder"].includes(user.role) ? (
+              <PublicInsightsPage />
             ) : (
               <Navigate to={homeRoute} replace />
             )
