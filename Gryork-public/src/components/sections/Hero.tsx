@@ -135,8 +135,7 @@ export default function Hero() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-blue-100 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed"
             >
-              Join 500+ contractors already using Gryork for fast funding. One-time KYC, 100% digital, 
-              with multiple RBI-registered NBFCs competing for your invoice.
+              Get fast funding with one-time KYC, 100% digital process, and multiple RBI-registered NBFCs competing for your invoice.
             </motion.p>
 
             {/* Trust bullets */}

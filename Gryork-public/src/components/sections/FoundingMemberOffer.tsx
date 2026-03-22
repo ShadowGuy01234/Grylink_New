@@ -17,7 +17,7 @@ const benefits = [
   {
     icon: Zap,
     title: "Lifetime 0% Platform Fee",
-    description: "Lock in zero transaction fees forever. Founding members enjoy permanent pricing advantages.",
+    description: "Lock in zero transaction fees forever. Exclusive members enjoy permanent pricing advantages.",
   },
   {
     icon: TrendingUp,
@@ -27,7 +27,7 @@ const benefits = [
   {
     icon: Users,
     title: "Dedicated Support",
-    description: "Priority customer success team. Direct access to our founding member hotline.",
+    description: "Priority customer success team. Direct access to our exclusive member support line.",
   },
   {
     icon: Gift,
@@ -71,7 +71,7 @@ export default function FoundingMemberOffer() {
               transition={{ delay: 0.1 }}
               className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight"
             >
-              Become a Founding Member
+              Become an Exclusive Member
             </motion.h2>
 
             <motion.p

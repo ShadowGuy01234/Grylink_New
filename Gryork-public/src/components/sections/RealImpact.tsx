@@ -3,16 +3,26 @@
 import { motion } from "framer-motion";
 import { Star, Quote, TrendingUp, Users, ArrowUpRight } from "lucide-react";
 
+// Type definition for testimonials
+type TestimonialType = Array<{
+  name: string;
+  role: string;
+  company: string;
+  content: string;
+  rating: number;
+  metric: string;
+}>;
+
 const impacts = [
   {
-    metric: "₹50+ Cr",
-    label: "Funded",
+    metric: "100% Digital",
+    label: "Process",
     icon: TrendingUp,
     color: "from-green-400 to-emerald-600",
   },
   {
-    metric: "5,000+",
-    label: "Contractors",
+    metric: "RBI-Registered",
+    label: "NBFCs",
     icon: Users,
     color: "from-blue-400 to-blue-600",
   },
@@ -24,39 +34,9 @@ const impacts = [
   },
 ];
 
-const testimonials = [
-  {
-    name: "Rajesh Kumar",
-    role: "Sub-Contractor, Delhi",
-    company: "RK Construction",
-    content: "Earlier I waited 90 days for EPC payment. Now I get funded in 2 days. Gryork literally changed how I manage my cash flow.",
-    rating: 5,
-    metric: "₹15 Lakhs Funded",
-  },
-  {
-    name: "Priya Malhotra",
-    role: "Owner, PM Builders",
-    company: "Bangalore",
-    content: "The process is so transparent. Multiple NBFCs competing for my bill means I always get the best rates. No more banks saying no.",
-    rating: 5,
-    metric: "15+ Transactions",
-  },
-  {
-    name: "Amit Van",
-    role: "Founder, Silver Constructions",
-    company: "Mumbai",
-    content: "Best part? Zero collateral. Just my work. I can focus on building, not chasing payments. Highly recommend to all contractors.",
-    rating: 5,
-    metric: "₹3 Cr Funded",
-  },
-  {
-    name: "Nikhil Patel",
-    role: "Operations Manager, NP Infra",
-    company: "Gujarat",
-    content: "Bank rejected us 5 times. Gryork gave us instant approval. Been using for 6 months, never looked back. Game changer.",
-    rating: 5,
-    metric: "25+ Successful Bills",
-  },
+// Testimonials intentionally empty — no mock/fabricated reviews
+export const testimonials: TestimonialType = [
+  // To add real testimonials: Collect from actual customers, get permission, and add here
 ];
 
 export default function RealImpact() {
@@ -131,56 +111,75 @@ export default function RealImpact() {
         </motion.div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {testimonials.map((testimonial, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.08 }}
-              className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-6 relative"
-            >
-              {/* Quote Icon */}
-              <Quote className="w-6 h-6 text-accent-300 opacity-40 absolute top-4 right-4" />
+        {testimonials.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {testimonials.map((testimonial, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.08 }}
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-6 relative"
+              >
+                {/* Quote Icon */}
+                <Quote className="w-6 h-6 text-accent-300 opacity-40 absolute top-4 right-4" />
 
-              {/* Rating */}
-              <div className="flex gap-0.5 mb-4">
-                {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 fill-amber-400 text-amber-400"
-                  />
-                ))}
-              </div>
-
-              {/* Testimonial Text */}
-              <p className="text-gray-700 mb-4 leading-relaxed italic">
-                "{testimonial.content}"
-              </p>
-
-              {/* Author Info */}
-              <div className="flex items-start justify-between pt-4 border-t border-blue-200">
-                <div>
-                  <p className="font-semibold text-gray-900">
-                    {testimonial.name}
-                  </p>
-                  <p className="text-xs text-gray-600 mt-0.5">
-                    {testimonial.role}
-                  </p>
-                  <p className="text-xs text-accent-600 font-medium mt-1">
-                    {testimonial.company}
-                  </p>
+                {/* Rating */}
+                <div className="flex gap-0.5 mb-4">
+                  {Array.from({ length: testimonial.rating }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-4 h-4 fill-amber-400 text-amber-400"
+                    />
+                  ))}
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-accent-600">
-                    {testimonial.metric}
+
+                {/* Testimonial Text */}
+                <p className="text-gray-700 mb-4 leading-relaxed italic">
+                  "{testimonial.content}"
+                </p>
+
+                {/* Author Info */}
+                <div className="flex items-start justify-between pt-4 border-t border-blue-200">
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {testimonial.name}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      {testimonial.role}
+                    </p>
+                    <p className="text-xs text-accent-600 font-medium mt-1">
+                      {testimonial.company}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-accent-600">
+                      {testimonial.metric}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="max-w-2xl mx-auto text-center py-12"
+          >
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-8">
+              <p className="text-gray-600 mb-2">
+                Real customer testimonials coming soon
+              </p>
+              <p className="text-sm text-gray-500">
+                We're collecting verified reviews from our contractors and partners. Check back soon to see how Gryork is transforming construction finance.
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Bottom CTA */}
         <motion.div
@@ -191,7 +190,7 @@ export default function RealImpact() {
           className="text-center mt-14"
         >
           <p className="text-gray-600 mb-6">
-            Join 5,000+ contractors already using Gryork for instant funding
+            Get instant funding from multiple RBI-registered NBFCs competing for your invoice
           </p>
           <a
             href="/early-access"

@@ -60,7 +60,7 @@ export default function FoundingMemberPopup() {
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
-            aria-label="Close founding member popup modal"
+            aria-label="Close exclusive member popup modal"
           >
             <X className="w-5 h-5 text-gray-500" aria-hidden="true" />
           </button>
@@ -73,10 +73,10 @@ export default function FoundingMemberPopup() {
               </div>
               <div>
                 <h2 id="founding-member-title" className="text-2xl font-bold text-white mb-1">
-                  Founding Member Program
+                  Exclusive Member Program
                 </h2>
                 <p className="text-white/90 text-sm">
-                  Only 15/20 slots remaining
+                  Limited spots available
                 </p>
               </div>
             </div>
@@ -86,7 +86,7 @@ export default function FoundingMemberPopup() {
           <div className="px-6 pt-6 pb-4">
             {/* Headline */}
             <p className="text-gray-600 mb-6 leading-relaxed">
-              Get exclusive funding perks and join 500+ contractors already using Gryork.
+              Get exclusive funding perks and early access to premium features.
             </p>
 
             {/* Benefits List */}
@@ -165,7 +165,7 @@ export default function FoundingMemberPopup() {
             <Link
               href="/early-access"
               onClick={handleClaimSpot}
-              aria-label="Claim your founding member spot - limited to 20 members"
+              aria-label="Claim your exclusive member spot - limited availability"
               className="block w-full px-6 py-3 bg-accent-600 text-white font-semibold rounded-lg hover:bg-accent-700 transition-colors text-center mb-3"
             >
               Claim Your Spot
@@ -173,7 +173,7 @@ export default function FoundingMemberPopup() {
 
             <button
               onClick={handleClose}
-              aria-label="Dismiss founding member popup for now"
+              aria-label="Dismiss exclusive member popup for now"
               className="block w-full px-6 py-2 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               Maybe Later

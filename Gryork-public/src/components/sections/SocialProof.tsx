@@ -5,22 +5,22 @@ import { TrendingUp, Users, Zap, Percent } from "lucide-react";
 
 const socialProofStats = [
   {
-    value: "500+",
-    label: "Contractors Funded",
+    value: "100% Digital",
+    label: "End-to-End Process",
     icon: Users,
     color: "text-blue-600",
     bgColor: "bg-blue-50",
   },
   {
-    value: "₹50 Cr+",
-    label: "Processed Through Platform",
+    value: "RBI-Registered",
+    label: "NBFCs Only",
     icon: TrendingUp,
     color: "text-green-600",
     bgColor: "bg-green-50",
   },
   {
-    value: "99%",
-    label: "Approval Rate",
+    value: "Zero",
+    label: "Collateral Required",
     icon: Percent,
     color: "text-purple-600",
     bgColor: "bg-purple-50",

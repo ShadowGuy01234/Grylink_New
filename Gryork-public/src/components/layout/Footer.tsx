@@ -101,10 +101,10 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Founding Member CTA Section */}
+        {/* Exclusive Member CTA Section */}
         <div className="bg-gradient-to-r from-accent-600 to-accent-500 text-white py-8 px-6 rounded-2xl my-12 text-center">
-          <h3 className="text-2xl font-bold mb-2">Be a Founding Member</h3>
-          <p className="text-white/90 mb-6">Join 500+ contractors. Get exclusive funding perks.</p>
+          <h3 className="text-2xl font-bold mb-2">Become an Exclusive Member</h3>
+          <p className="text-white/90 mb-6">Get early access to premium features and dedicated support.</p>
           <Link
             href="/early-access"
             className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-accent-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"

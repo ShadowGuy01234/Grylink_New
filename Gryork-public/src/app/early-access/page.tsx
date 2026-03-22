@@ -77,13 +77,13 @@ export default function EarlyAccessPage() {
               Check your email for next steps
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              Welcome to the Gryork Founding Member program. We've sent confirmation details to{' '}
+              Welcome to the Gryork Exclusive Member program. We've sent confirmation details to{' '}
               <span className="font-semibold text-gray-700">{email}</span>.
             </p>
 
             {/* Benefits */}
             <div className="bg-accent-50 rounded-xl p-6 mb-6 text-left border border-accent-100">
-              <h3 className="font-semibold text-gray-900 mb-4">Your Founding Member Benefits:</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Your Exclusive Member Benefits:</h3>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <svg
@@ -175,7 +175,7 @@ export default function EarlyAccessPage() {
           {/* Heading */}
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-              Join Our Founding Members
+              Join Our Exclusive Members
             </h1>
             <p className="text-lg text-gray-600">
               Get exclusive benefits and lock in foundational rates.
@@ -232,7 +232,7 @@ export default function EarlyAccessPage() {
               </div>
             </div>
             <p className="text-xs text-gray-600 mt-4 pt-4 border-t border-accent-200">
-              Only 15 founding member slots remaining
+              Limited exclusive member slots available
             </p>
           </div>
 
@@ -264,7 +264,7 @@ export default function EarlyAccessPage() {
               disabled={loading}
               className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent-500 text-white font-semibold rounded-lg hover:bg-accent-600 disabled:bg-accent-400 transition-colors"
             >
-              {loading ? 'Joining...' : 'Join Founding Members'}
+              {loading ? 'Joining...' : 'Join Exclusive Members'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
