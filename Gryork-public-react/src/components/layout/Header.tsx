@@ -34,7 +34,7 @@ export function Header() {
           <img src="/logo.png" alt="Gryork logo" className="h-10 w-auto sm:h-12" />
           <div>
             <span className="font-display text-xl font-semibold text-slate-900 sm:text-2xl">Gryork</span>
-            <p className="hidden text-[10px] font-medium uppercase tracking-wide text-slate-500 sm:block">Infrastructure Finance Rail</p>
+            <p className="hidden text-[10px] font-medium uppercase tracking-wide text-slate-500 sm:block">Grow Your Work</p>
           </div>
         </NavLink>
         <button
