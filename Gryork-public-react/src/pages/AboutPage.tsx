@@ -1,3 +1,8 @@
+import { WorkflowDiagramMock } from "../components/WorkflowDiagramMock";
+import { SectionShell } from "../components/SectionShell";
+import { SignatureCard } from "../components/SignatureCard";
+import { AnimatedReveal } from "../components/AnimatedReveal";
+
 export function AboutPage() {
   const stats = [
     { value: "50+", label: "NBFCs in network" },
@@ -32,46 +37,49 @@ export function AboutPage() {
   ];
 
   return (
-    <section className="page-section">
+    <SectionShell variant="light">
       <div className="mx-auto max-w-6xl px-4">
-        <h1 className="heading-hero">About Gryork</h1>
-        <p className="text-muted mt-4 max-w-3xl">
-          Gryork bridges infrastructure subcontractors, EPCs, and NBFCs through a trusted digital marketplace.
-        </p>
+        <AnimatedReveal>
+          <p className="badge-info mb-4">Company Overview</p>
+          <h1 className="heading-hero">About Gryork</h1>
+          <p className="text-muted mt-4 max-w-3xl">
+            Gryork bridges infrastructure subcontractors, EPCs, and NBFCs through a trusted digital marketplace.
+          </p>
+        </AnimatedReveal>
 
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="glass-card p-4 text-center">
+            <SignatureCard key={stat.label} variant="metric" className="text-center">
               <p className="text-2xl font-bold text-cobalt">{stat.value}</p>
               <p className="text-muted mt-1 text-sm">{stat.label}</p>
-            </div>
+            </SignatureCard>
           ))}
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2">
-          <div className="glass-card p-6">
+          <SignatureCard variant="story" className="p-6">
             <h2 className="text-xl font-semibold text-slate-900">Our Mission</h2>
             <p className="text-muted mt-2">
               Empower infrastructure growth with transparent, secure, and predictable working capital rails.
             </p>
-          </div>
-          <div className="glass-card p-6">
+          </SignatureCard>
+          <SignatureCard variant="story" className="p-6">
             <h2 className="text-xl font-semibold text-slate-900">Our Values</h2>
             <p className="text-muted mt-2">Trust, security, execution discipline, and stakeholder partnership.</p>
-          </div>
+          </SignatureCard>
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {values.map((value) => (
-            <div key={value.title} className="glass-card p-6">
+            <SignatureCard key={value.title} variant="proof" className="p-6">
               <h3 className="font-semibold text-slate-900">{value.title}</h3>
               <p className="text-muted mt-2">{value.description}</p>
-            </div>
+            </SignatureCard>
           ))}
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="glass-card p-6">
+          <SignatureCard variant="workflow" className="p-6">
             <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Our Journey</h2>
             <div className="mt-4 space-y-4">
               {journey.map((item) => (
@@ -82,16 +90,16 @@ export function AboutPage() {
                 </div>
               ))}
             </div>
-          </div>
-          <div className="glass-card p-6">
+          </SignatureCard>
+          <SignatureCard variant="proof" className="p-6">
             <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Who We Serve</h2>
-            <img src="/media/About.png" alt="Gryork ecosystem stakeholders" className="mt-4 h-[200px] w-full rounded-lg object-cover sm:h-[320px]" />
+            <WorkflowDiagramMock variant="ecosystem-map" className="mt-4" />
             <p className="text-muted mt-4 text-sm">
               We align incentives across sub-contractors, EPCs, and NBFCs to keep projects running and payments predictable.
             </p>
-          </div>
+          </SignatureCard>
         </div>
       </div>
-    </section>
+    </SectionShell>
   );
 }

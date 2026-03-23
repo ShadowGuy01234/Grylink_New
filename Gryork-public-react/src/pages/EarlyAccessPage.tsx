@@ -2,6 +2,11 @@ import { useState } from "react";
 import { publicApi } from "../lib/api";
 import { getSessionId } from "../lib/session";
 import { trackEvent } from "../lib/analytics";
+import { WorkflowDiagramMock } from "../components/WorkflowDiagramMock";
+import { SectionShell } from "../components/SectionShell";
+import { SignatureCard } from "../components/SignatureCard";
+import { AnimatedReveal } from "../components/AnimatedReveal";
+import { Star, Rocket, Sparkles, MessageSquareHeart } from "lucide-react";
 
 export function EarlyAccessPage() {
   const [email, setEmail] = useState("");
@@ -11,25 +16,31 @@ export function EarlyAccessPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const perks = [
-    "Priority onboarding queue",
-    "Early access to funding workflow improvements",
-    "Dedicated support during onboarding setup",
-    "Feedback channel for feature influence",
+    { text: "Priority onboarding queue", icon: Star },
+    { text: "Early access to funding workflow improvements", icon: Rocket },
+    { text: "Dedicated support during onboarding setup", icon: Sparkles },
+    { text: "Feedback channel for feature influence", icon: MessageSquareHeart },
   ];
 
   return (
-    <section className="page-section">
+    <SectionShell variant="accent">
       <div className="mx-auto max-w-2xl px-4 text-center">
-        <h1 className="heading-hero">Join Early Access</h1>
-        <p className="text-muted mt-4">Get exclusive onboarding benefits and priority support.</p>
+        <AnimatedReveal>
+          <p className="badge-info mb-4">Priority Onboarding</p>
+          <h1 className="heading-hero">Join Early Access</h1>
+          <p className="text-muted mt-4">Get exclusive onboarding benefits and priority support.</p>
+        </AnimatedReveal>
         <div className="mt-8 grid gap-3 text-left">
           {perks.map((perk) => (
-            <div key={perk} className="glass-card p-4 text-slate-700">
-              • {perk}
-            </div>
+            <SignatureCard key={perk.text} variant="proof" className="p-4 text-slate-700">
+              <div className="flex items-start gap-2">
+                <perk.icon className="mt-0.5 h-4 w-4 text-cobalt" />
+                <span>{perk.text}</span>
+              </div>
+            </SignatureCard>
           ))}
         </div>
-        <div className="mt-8 glass-card p-6">
+        <SignatureCard variant="story" className="mt-8 p-6">
           {done ? (
             <p className="text-emerald">You&apos;re in! Check your inbox.</p>
           ) : (
@@ -105,9 +116,11 @@ export function EarlyAccessPage() {
               {error}
             </p>
           )}
+        </SignatureCard>
+        <div className="mt-8">
+          <WorkflowDiagramMock variant="early-access-funnel" />
         </div>
-        <img src="/media/Early-Access.png" alt="Early access preview" className="mt-8 h-[200px] w-full rounded-xl object-cover sm:h-[320px]" />
       </div>
-    </section>
+    </SectionShell>
   );
 }

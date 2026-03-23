@@ -2,6 +2,10 @@ import { useState } from "react";
 import { publicApi } from "../lib/api";
 import { getSessionId } from "../lib/session";
 import { trackEvent } from "../lib/analytics";
+import { SectionShell } from "../components/SectionShell";
+import { SignatureCard } from "../components/SignatureCard";
+import { AnimatedReveal } from "../components/AnimatedReveal";
+import { Mail, Phone, MapPin, Handshake, MessageCircle, Landmark } from "lucide-react";
 
 export function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -17,27 +21,31 @@ export function ContactPage() {
     message: "",
   });
   const contactCards = [
-    { title: "Email Us", detail: "contact@gryork.com", sub: "Best for detailed queries" },
-    { title: "Call Support", detail: "+91 80 4567 8900", sub: "Mon-Fri, 9 AM - 6 PM IST" },
-    { title: "Location", detail: "New Delhi", sub: "India" },
-    { title: "Partnership Desk", detail: "NBFC / EPC onboarding", sub: "Dedicated response flow" },
+    { title: "Email Us", detail: "contact@gryork.com", sub: "Best for detailed queries", icon: Mail },
+    { title: "Call Support", detail: "+91 80 4567 8900", sub: "Mon-Fri, 9 AM - 6 PM IST", icon: Phone },
+    { title: "Location", detail: "New Delhi", sub: "India", icon: MapPin },
+    { title: "Partnership Desk", detail: "NBFC / EPC onboarding", sub: "Dedicated response flow", icon: Handshake },
   ];
 
   return (
-    <section className="page-section">
+    <SectionShell variant="light">
       <div className="mx-auto max-w-4xl px-4">
-        <h1 className="heading-hero">Contact</h1>
-        <p className="text-muted mt-4">Have questions? Reach out to the Gryork team.</p>
+        <AnimatedReveal>
+          <p className="badge-info mb-4">Contact Desk</p>
+          <h1 className="heading-hero">Contact</h1>
+          <p className="text-muted mt-4">Have questions? Reach out to the Gryork team.</p>
+        </AnimatedReveal>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {contactCards.map((card) => (
-            <div key={card.title} className="glass-card p-5">
+            <SignatureCard key={card.title} variant="proof" className="p-5">
+              <card.icon className="h-4 w-4 text-cobalt" />
               <p className="font-semibold text-slate-900">{card.title}</p>
               <p className="mt-2 text-slate-700">{card.detail}</p>
               <p className="text-muted mt-1 text-sm">{card.sub}</p>
-            </div>
+            </SignatureCard>
           ))}
         </div>
-        <div className="mt-8 glass-card p-6">
+        <SignatureCard variant="story" className="mt-8 p-6">
           {submitted ? (
             <p className="text-emerald">Message sent. We will get back to you.</p>
           ) : (
@@ -145,19 +153,21 @@ export function ContactPage() {
               </button>
             </form>
           )}
-        </div>
+        </SignatureCard>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <a href="/how-it-works" className="glass-card p-5 transition hover:-translate-y-0.5">
+          <a href="/how-it-works" className="card-proof p-5 transition hover:-translate-y-0.5">
+            <MessageCircle className="h-4 w-4 text-cobalt" />
             <p className="font-semibold text-slate-900">How does Gryork work?</p>
             <p className="text-muted mt-1 text-sm">See role-wise process and timelines.</p>
           </a>
-          <a href="/for-nbfc" className="glass-card p-5 transition hover:-translate-y-0.5">
+          <a href="/for-nbfc" className="card-proof p-5 transition hover:-translate-y-0.5">
+            <Landmark className="h-4 w-4 text-cobalt" />
             <p className="font-semibold text-slate-900">NBFC partnership query</p>
             <p className="text-muted mt-1 text-sm">Explore criteria and onboarding process.</p>
           </a>
         </div>
       </div>
-    </section>
+    </SectionShell>
   );
 }

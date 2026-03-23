@@ -3,6 +3,8 @@ import { useState } from "react";
 import { CAREER_ROLES } from "../lib/constants";
 import { publicApi } from "../lib/api";
 import { trackEvent } from "../lib/analytics";
+import { SectionShell } from "../components/SectionShell";
+import { SignatureCard } from "../components/SignatureCard";
 
 export function CareerRolePage() {
   const { slug } = useParams();
@@ -24,29 +26,30 @@ export function CareerRolePage() {
 
   if (!role) {
     return (
-      <section className="page-section">
+      <SectionShell variant="light">
         <div className="mx-auto max-w-4xl px-4">
           <h1 className="text-3xl font-bold text-slate-900">Role not found</h1>
         </div>
-      </section>
+      </SectionShell>
     );
   }
 
   return (
-    <section className="page-section">
+    <SectionShell variant="light">
       <div className="mx-auto max-w-5xl px-4">
+        <p className="badge-info mb-4">Role Application</p>
         <h1 className="heading-hero">{role.title}</h1>
         <p className="mt-2 text-slate-500">
           {role.department} · {role.location} · {role.type}
         </p>
-        <div className="mt-8 glass-card p-6">
+        <SignatureCard variant="story" className="mt-8 p-6">
           <p className="text-muted">{role.description}</p>
           <div className="mt-6 grid gap-3 md:grid-cols-2">
-            <div className="rounded-lg bg-slate-50 p-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-900">What You&apos;ll Work On</p>
               <p className="text-muted mt-2 text-sm">Core product workflows, stakeholder-facing modules, and performance-oriented UX improvements.</p>
             </div>
-            <div className="rounded-lg bg-slate-50 p-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-900">How to Apply</p>
               <p className="text-muted mt-2 text-sm">Share your updated resume and a short note on why this role fits your experience.</p>
             </div>
@@ -166,8 +169,8 @@ export function CareerRolePage() {
               </button>
             </form>
           )}
-        </div>
+        </SignatureCard>
       </div>
-    </section>
+    </SectionShell>
   );
 }

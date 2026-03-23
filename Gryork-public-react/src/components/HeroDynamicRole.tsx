@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import { useRoleStore, type ActiveRole } from "../store/roleStore";
 import { trackEvent } from "../lib/analytics";
+import { AnimatedReveal } from "./AnimatedReveal";
+import { SectionShell } from "./SectionShell";
+import { SignatureCard } from "./SignatureCard";
 
 const roleContent: Record<ActiveRole, { title: string; subtitle: string; cta: string }> = {
   subcontractor: {
@@ -31,9 +34,10 @@ export function HeroDynamicRole() {
   const content = roleContent[activeRole];
 
   return (
-    <section className="relative overflow-hidden bg-white page-section">
+    <SectionShell variant="light" className="relative overflow-hidden">
       <div className="container-page grid gap-8 lg:grid-cols-2 lg:items-center">
         <div>
+          <p className="badge-info mb-4">Built for infrastructure finance trust</p>
           <div className="mb-6 grid grid-cols-3 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm sm:inline-flex sm:rounded-full">
             {roles.map((role) => (
               <button
@@ -57,18 +61,22 @@ export function HeroDynamicRole() {
             ))}
           </div>
 
-          <motion.h1
-            key={content.title}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="heading-hero"
-          >
-            {content.title}
-          </motion.h1>
+          <motion.div key={content.title} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <h1 className="heading-hero">{content.title}</h1>
+            <p className="mt-4 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              Trusted by infrastructure teams for faster validated payouts
+            </p>
+          </motion.div>
 
-          <motion.p key={content.subtitle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-muted mt-5 max-w-2xl">
+          <motion.p key={content.subtitle} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-muted mt-5 max-w-2xl text-base leading-relaxed">
             {content.subtitle}
           </motion.p>
+
+          <div className="mt-5 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 font-medium text-slate-700">100% Digital Workflow</span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 font-medium text-slate-700">EPC-Verified Process</span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 font-medium text-slate-700">NBFC Competition</span>
+          </div>
 
           <a
             href={activeRole === "subcontractor" ? "https://app.gryork.com" : "/contact"}
@@ -90,15 +98,12 @@ export function HeroDynamicRole() {
           </a>
         </div>
 
-        
-          
-          
+        <AnimatedReveal>
+          <SignatureCard variant="story" className="bg-gradient-to-br from-white via-blue-50/60 to-emerald-50/70 p-2">
             <img src="/media/hero-workflow-poster.png" alt="Workflow Preview" className="h-[240px] w-full rounded-lg object-cover object-center sm:h-[360px] lg:h-[360px]" />
-            
-              
-          
-        
+          </SignatureCard>
+        </AnimatedReveal>
       </div>
-    </section>
+    </SectionShell>
   );
 }

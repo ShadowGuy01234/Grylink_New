@@ -6,13 +6,22 @@
 
 :root {
   color-scheme: light;
+  --gry-bg: #f8fafc;
+  --gry-surface: #ffffff;
+  --gry-surface-soft: #f1f5f9;
+  --gry-ink: #0b0f19;
+  --gry-text: #0f172a;
+  --gry-muted: #475569;
+  --gry-cobalt: #3b82f6;
+  --gry-emerald: #10b981;
+  --gry-border: rgba(15, 23, 42, 0.1);
 }
 
 body {
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
-  color: #0f172a;
-  background: #f8fafc;
+  color: var(--gry-text);
+  background: var(--gry-bg);
 }
 
 #root {
@@ -21,10 +30,157 @@ body {
 
 .glass-card {
   border-radius: 1rem;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--gry-border);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.section-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.section-shell::before {
+  content: "";
+  position: absolute;
+  inset: auto -10% -120px -10%;
+  height: 220px;
+  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.section-light {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.section-accent {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.section-dark {
+  background: linear-gradient(180deg, #0b0f19 0%, #111827 100%);
+  color: #e2e8f0;
+}
+
+.section-dark .heading-hero,
+.section-dark .heading-section {
+  color: #f8fafc;
+}
+
+.section-dark .text-muted {
+  color: #cbd5e1;
+}
+
+.card-signature {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--gry-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.card-signature::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gry-cobalt), var(--gry-emerald));
+}
+
+.card-metric {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--gry-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.card-story {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--gry-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  padding: 1.25rem;
+}
+
+.card-workflow-step {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--gry-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.card-proof {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--gry-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.card-proof-active {
+  border-color: rgba(59, 130, 246, 0.65);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.35);
+  color: #ffffff;
+}
+
+.card-proof-active::after {
+  background: linear-gradient(90deg, #93c5fd, #6ee7b7);
+}
+
+.card-metric::after,
+.card-story::after,
+.card-workflow-step::after,
+.card-proof::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gry-cobalt), var(--gry-emerald));
+}
+
+@media (min-width: 640px) {
+  .card-metric {
+    padding: 1.25rem;
+  }
+
+  .card-story {
+    padding: 1.5rem;
+  }
+
+  .card-proof {
+    padding: 1.25rem;
+  }
+}
+
+.badge-trust {
+  @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold;
+  border-color: rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+}
+
+.badge-info {
+  @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold;
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
 }
 
 .page-section {
@@ -57,4 +213,13 @@ body {
 
 .field {
   @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-cobalt focus:ring-2 focus:ring-cobalt/20;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

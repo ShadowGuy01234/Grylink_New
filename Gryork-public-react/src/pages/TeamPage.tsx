@@ -1,3 +1,7 @@
+import { SectionShell } from "../components/SectionShell";
+import { SignatureCard } from "../components/SignatureCard";
+import { AnimatedReveal } from "../components/AnimatedReveal";
+
 type TeamMember = {
   name: string;
   role: string;
@@ -135,12 +139,15 @@ export function TeamPage() {
   const teamGroups = groups.filter((group) => group !== "Leadership");
 
   return (
-    <section className="page-section">
+    <SectionShell variant="light">
       <div className="container-page">
-        <h1 className="heading-hero">Gryork Consultants Pvt Ltd Team</h1>
-        <p className="text-muted mt-4 max-w-3xl">
-          The people building India&apos;s infrastructure financing platform.
-        </p>
+        <AnimatedReveal>
+          <p className="badge-info mb-4">People & Leadership</p>
+          <h1 className="heading-hero">Gryork Consultants Pvt Ltd Team</h1>
+          <p className="text-muted mt-4 max-w-3xl">
+            The people building India&apos;s infrastructure financing platform.
+          </p>
+        </AnimatedReveal>
 
         <div className="mt-10">
           <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Leadership</h2>
@@ -150,7 +157,7 @@ export function TeamPage() {
 
           <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {leadership.map((member) => (
-              <article key={member.name} className="glass-card overflow-hidden">
+              <SignatureCard key={member.name} variant="story" className="overflow-hidden p-0">
                 <div className="aspect-[4/5] bg-slate-100 sm:aspect-[3/4]">
                   <img
                     src={member.photo}
@@ -189,7 +196,7 @@ export function TeamPage() {
                     </div>
                   )}
                 </div>
-              </article>
+              </SignatureCard>
             ))}
           </div>
         </div>
@@ -202,7 +209,7 @@ export function TeamPage() {
                 <h2 className="text-2xl font-semibold text-slate-900">{group}</h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {list.map((member) => (
-                    <article key={member.name} className="glass-card overflow-hidden">
+                    <SignatureCard key={member.name} variant="proof" className="overflow-hidden p-0">
                       <div className="aspect-[4/3] bg-slate-100">
                         <img
                           src={member.photo}
@@ -215,7 +222,7 @@ export function TeamPage() {
                         <p className="text-sm text-cobalt">{member.role}</p>
                         {member.bio && <p className="text-muted mt-2 text-sm">{member.bio}</p>}
                       </div>
-                    </article>
+                    </SignatureCard>
                   ))}
                 </div>
               </div>
@@ -223,6 +230,6 @@ export function TeamPage() {
           })}
         </div>
       </div>
-    </section>
+    </SectionShell>
   );
 }

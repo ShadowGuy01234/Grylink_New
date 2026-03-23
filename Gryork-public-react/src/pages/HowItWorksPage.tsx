@@ -1,4 +1,9 @@
 import { useState } from "react";
+import { AnimatedReveal } from "../components/AnimatedReveal";
+import { WorkflowShowcase } from "../components/WorkflowShowcase";
+import { SnapshotShowcase } from "../components/SnapshotShowcase";
+import { SectionShell } from "../components/SectionShell";
+import { SignatureCard } from "../components/SignatureCard";
 
 type Role = "subcontractor" | "epc" | "nbfc";
 
@@ -52,41 +57,48 @@ export function HowItWorksPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   return (
-    <section className="page-section">
+    <SectionShell variant="light">
       <div className="mx-auto max-w-6xl px-4">
-        <h1 className="heading-hero">How Gryork Works</h1>
-        <p className="text-muted mt-4 max-w-3xl">
-          A transparent, role-based workflow connecting subcontractors, EPCs, and NBFCs in one digital financing loop.
-        </p>
+        <AnimatedReveal>
+          <p className="badge-info mb-4">Workflow Intelligence</p>
+          <h1 className="heading-hero">How Gryork Works</h1>
+          <p className="text-muted mt-4 max-w-3xl">
+            A transparent, role-based workflow connecting subcontractors, EPCs, and NBFCs in one digital financing loop.
+          </p>
+          <p className="mt-3 inline-flex rounded-full border border-cobalt/25 bg-cobalt/10 px-3 py-1 text-xs font-semibold text-cobalt">
+            Institution-grade control with execution speed
+          </p>
+        </AnimatedReveal>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          {roles.map((role) => (
-            <button
-              key={role.id}
-              onClick={() => setActiveRole(role.id)}
-              className={`rounded-2xl border p-4 text-left transition ${
-                activeRole === role.id ? "border-cobalt bg-cobalt text-white shadow-lg" : "border-slate-200 bg-white hover:border-slate-300"
-              }`}
-            >
-              <p className="font-semibold">{role.label}</p>
-              <p className={`mt-1 text-sm ${activeRole === role.id ? "text-cyan-100" : "text-slate-500"}`}>{role.description}</p>
-            </button>
+          {roles.map((role, index) => (
+            <AnimatedReveal key={role.id} delay={index * 0.07}>
+              <button
+                onClick={() => setActiveRole(role.id)}
+                className={`card-proof h-full w-full rounded-2xl p-4 text-left transition ${
+                  activeRole === role.id
+                    ? "card-proof-active"
+                    : "hover:border-slate-300"
+                }`}
+              >
+                <p className="font-semibold">{role.label}</p>
+                <p className={`mt-1 text-sm ${activeRole === role.id ? "text-blue-100" : "text-slate-500"}`}>{role.description}</p>
+              </button>
+            </AnimatedReveal>
           ))}
         </div>
 
         <div className="mt-8">
-          <div className="glass-card p-3 sm:p-4">
-            <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Complete Flow</h2>
-            <img
-              src="/media/process-step-preview.png"
-              alt="Gryork process primary visual"
-              className="mt-3 h-[220px] w-full rounded-lg object-cover object-center sm:h-[400px] lg:h-[640px]"
-            />
-          </div>
+          <WorkflowShowcase
+            title="Complete Flow"
+            subtitle="Visual map of the full lifecycle from bill submission to disbursement."
+            role={activeRole}
+          />
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="glass-card p-6">
+          <AnimatedReveal>
+            <SignatureCard variant="workflow" className="p-6">
             <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Step-by-Step Process</h2>
             <div className="mt-5 space-y-4">
               {roleSteps[activeRole].map((step, index) => (
@@ -101,19 +113,21 @@ export function HowItWorksPage() {
                 </div>
               ))}
             </div>
-          </div>
+            </SignatureCard>
+          </AnimatedReveal>
 
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Outcome Snapshot</h2>
-            <img src="/media/RA-Bill.png" alt="Gryork process flow preview" className="mt-4 h-[200px] w-full rounded-lg object-cover sm:h-[320px]" />
-          </div>
+          <SnapshotShowcase
+            title="Outcome Snapshot"
+            subtitle="Representative execution screen for role-based operations."
+            role={activeRole}
+          />
         </div>
 
         <div className="mt-10">
           <h2 className="text-2xl font-semibold text-slate-900">Frequently Asked Questions</h2>
           <div className="mt-4 space-y-3">
             {faqs.map((faq, i) => (
-              <div key={faq.question} className="glass-card overflow-hidden">
+              <div key={faq.question} className="card-proof overflow-hidden">
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="flex w-full items-center justify-between px-5 py-4 text-left"
@@ -127,6 +141,6 @@ export function HowItWorksPage() {
           </div>
         </div>
       </div>
-    </section>
+    </SectionShell>
   );
 }
