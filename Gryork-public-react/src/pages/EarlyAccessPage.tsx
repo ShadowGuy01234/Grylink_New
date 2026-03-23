@@ -6,7 +6,7 @@ import { WorkflowDiagramMock } from "../components/WorkflowDiagramMock";
 import { SectionShell } from "../components/SectionShell";
 import { SignatureCard } from "../components/SignatureCard";
 import { AnimatedReveal } from "../components/AnimatedReveal";
-import { Star, Rocket, Sparkles, MessageSquareHeart } from "lucide-react";
+import { Star, Rocket, Sparkles, MessageSquareHeart } from "../shims/lucide-react";
 
 export function EarlyAccessPage() {
   const [email, setEmail] = useState("");

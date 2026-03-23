@@ -2,7 +2,7 @@ import { AnimatedReveal } from "../components/AnimatedReveal";
 import { SectionShell } from "../components/SectionShell";
 import { SignatureCard } from "../components/SignatureCard";
 import { WorkflowDiagramMock } from "../components/WorkflowDiagramMock";
-import { Handshake, Gauge, WalletCards, ClipboardCheck, Building2 } from "lucide-react";
+import { Handshake, Gauge, WalletCards, ClipboardCheck, Building2 } from "../shims/lucide-react";
 
 const points = [
   { title: "Strengthen vendor relationships", detail: "Liquidity support improves vendor trust and retention.", tone: "from-cobalt/20 to-blue-100/40", icon: Handshake },

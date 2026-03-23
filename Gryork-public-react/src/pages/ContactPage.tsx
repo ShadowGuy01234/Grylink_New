@@ -5,7 +5,7 @@ import { trackEvent } from "../lib/analytics";
 import { SectionShell } from "../components/SectionShell";
 import { SignatureCard } from "../components/SignatureCard";
 import { AnimatedReveal } from "../components/AnimatedReveal";
-import { Mail, Phone, MapPin, Handshake, MessageCircle, Landmark } from "lucide-react";
+import { Mail, Phone, MapPin, Handshake, MessageCircle, Landmark } from "../shims/lucide-react";
 
 export function ContactPage() {
   const [submitted, setSubmitted] = useState(false);

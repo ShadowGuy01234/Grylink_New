@@ -2,7 +2,7 @@ import { AnimatedReveal } from "../components/AnimatedReveal";
 import { SectionShell } from "../components/SectionShell";
 import { SignatureCard } from "../components/SignatureCard";
 import { WorkflowDiagramMock } from "../components/WorkflowDiagramMock";
-import { Bolt, ShieldCheck, BadgePercent, FileCheck2, LayoutDashboard, TrendingUp, TimerReset } from "lucide-react";
+import { Bolt, ShieldCheck, BadgePercent, FileCheck2, LayoutDashboard, TrendingUp, TimerReset } from "../shims/lucide-react";
 
 const benefits = [
   {

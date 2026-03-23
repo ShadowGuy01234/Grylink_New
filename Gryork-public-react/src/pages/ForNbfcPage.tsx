@@ -2,7 +2,7 @@ import { AnimatedReveal } from "../components/AnimatedReveal";
 import { SectionShell } from "../components/SectionShell";
 import { SignatureCard } from "../components/SignatureCard";
 import { WorkflowDiagramMock } from "../components/WorkflowDiagramMock";
-import { LineChart, ShieldCheck, Banknote, Clock3, SlidersHorizontal } from "lucide-react";
+import { LineChart, ShieldCheck, Banknote, Clock3, SlidersHorizontal } from "../shims/lucide-react";
 
 const points = [
   { title: "Pre-verified infrastructure deals", detail: "Curated deal feed with operational and document context.", tone: "from-emerald-100/70 to-cyan-100/40", icon: ShieldCheck },
