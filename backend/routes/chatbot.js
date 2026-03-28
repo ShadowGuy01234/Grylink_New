@@ -119,6 +119,12 @@ const feedbackLimiter = createLimiter({
   bypassAdmins: true,
 });
 
+const sessionActionLimiter = createLimiter({
+  maxPerMinute: 5,
+  channel: "chat-session",
+  bypassAdmins: true,
+});
+
 const analyticsLimiter = createLimiter({
   maxPerMinute: 60,
   channel: "chat-analytics",
@@ -678,6 +684,7 @@ router.get(
   "/proactive",
   authenticate,
   authorize(...CHATBOT_ALLOWED_ROLES),
+  sessionActionLimiter,
   async (req, res) => {
     try {
       const userRole = String(req.user?.role || "public").toLowerCase();
@@ -706,7 +713,7 @@ router.get(
   },
 );
 
-router.get("/public-proactive", async (req, res) => {
+router.get("/public-proactive", sessionActionLimiter, async (req, res) => {
   try {
     const currentPrompt = sanitizeInput(req.query.currentPrompt || "");
     const proactive = buildProactiveResponse("public", currentPrompt);
@@ -721,6 +728,7 @@ router.get(
   "/session/:sessionId",
   authenticate,
   authorize(...CHATBOT_ALLOWED_ROLES),
+  sessionActionLimiter,
   async (req, res) => {
     try {
       const sessionId = sanitizeInput(req.params.sessionId || "").slice(0, 120);

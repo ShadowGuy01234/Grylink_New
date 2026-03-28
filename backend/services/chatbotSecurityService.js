@@ -52,6 +52,20 @@ const DANGEROUS_PATTERNS = [
   /```[\s\S]*?```/g,
 ];
 
+let cachedEmojiRegex = null;
+
+function getEmojiRegex() {
+  if (cachedEmojiRegex) return cachedEmojiRegex;
+
+  try {
+    cachedEmojiRegex = new RegExp("\\p{Extended_Pictographic}", "gu");
+  } catch {
+    cachedEmojiRegex = /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/gu;
+  }
+
+  return cachedEmojiRegex;
+}
+
 function normalizeWhitespace(text) {
   return String(text || "")
     .replace(/\r/g, "")
@@ -88,6 +102,14 @@ function detectExcessiveUrls(text) {
   return urls.length > 5;
 }
 
+function detectExcessiveEmojis(text) {
+  const emojiRegex = getEmojiRegex();
+  emojiRegex.lastIndex = 0;
+
+  const matches = String(text || "").match(emojiRegex) || [];
+  return matches.length > 20;
+}
+
 function detectInjectionAttempt(text) {
   return DANGEROUS_PATTERNS.some((pattern) => {
     pattern.lastIndex = 0;
@@ -100,7 +122,27 @@ function detectSpamSignals(text) {
   if (detectExcessiveRepeat(text)) issues.push("repeated_characters");
   if (detectCapsSpam(text)) issues.push("all_caps_pattern");
   if (detectExcessiveUrls(text)) issues.push("excessive_urls");
+  if (detectExcessiveEmojis(text)) issues.push("excessive_emojis");
   return issues;
+}
+
+function isLikelyMarathiText(text) {
+  const value = String(text || "");
+  if (!/[\u0900-\u097F]/.test(value)) return false;
+
+  const markers = [
+    "आहे",
+    "नाही",
+    "मध्ये",
+    "तुमच्या",
+    "माझ्या",
+    "कृपया",
+    "कशी",
+    "कसे",
+    "मराठी",
+  ];
+
+  return markers.some((token) => value.includes(token));
 }
 
 function validateChatMessage(rawInput, options = {}) {
@@ -168,7 +210,8 @@ function detectLanguage(text) {
   if (/[\u0C80-\u0CFF]/.test(value)) return { code: "kn", name: "Kannada" };
   if (/[\u0D00-\u0D7F]/.test(value)) return { code: "ml", name: "Malayalam" };
 
-  // Hindi/Marathi share Devanagari script; default to Hindi for conversational reply.
+  // Hindi/Marathi share Devanagari script; use lexical markers for Marathi.
+  if (isLikelyMarathiText(value)) return { code: "mr", name: "Marathi" };
   if (/[\u0900-\u097F]/.test(value)) return { code: "hi", name: "Hindi" };
 
   return { code: "en", name: "English" };

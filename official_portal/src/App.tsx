@@ -20,6 +20,7 @@ import RmtCasesPage from "./pages/RmtCasesPage";
 import FounderDashboard from "./pages/FounderDashboard";
 import AuditLogPage from "./pages/AuditLogPage";
 import PublicInsightsPage from "./pages/PublicInsightsPage";
+import ChatbotAnalyticsPage from "./pages/ChatbotAnalyticsPage";
 // Ops dedicated pages
 import EpcVerificationPage from "./pages/ops/EpcVerificationPage";
 import BillVerificationPage from "./pages/ops/BillVerificationPage";
@@ -252,6 +253,16 @@ const AppRoutes = () => {
           element={
             ["admin", "founder"].includes(user.role) ? (
               <PublicInsightsPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="admin/chatbot-analytics"
+          element={
+            ["admin", "founder"].includes(user.role) ? (
+              <ChatbotAnalyticsPage />
             ) : (
               <Navigate to={homeRoute} replace />
             )

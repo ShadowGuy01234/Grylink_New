@@ -599,6 +599,12 @@ const Layout = () => {
                 label="Public Insights"
                 roleColor={rc}
               />
+              <SidebarNavItem
+                to="/admin/chatbot-analytics"
+                icon={Ico.chart}
+                label="Chatbot Analytics"
+                roleColor={rc}
+              />
             </>
           )}
 
@@ -616,6 +622,12 @@ const Layout = () => {
                 to="/admin/careers"
                 icon={Ico.briefcase}
                 label="Career Applications"
+                roleColor={rc}
+              />
+              <SidebarNavItem
+                to="/admin/chatbot-analytics"
+                icon={Ico.chart}
+                label="Chatbot Analytics"
                 roleColor={rc}
               />
             </>

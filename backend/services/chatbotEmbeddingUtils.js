@@ -386,16 +386,22 @@ async function createEmbeddings(input, config = {}) {
       throw err;
     }
 
-    const embeddings = await requestGroqEmbeddings(items, config);
-    const dimension = await ensureDimensionCompatibility(embeddings, config, "Groq");
+    try {
+      const embeddings = await requestGroqEmbeddings(items, config);
+      const dimension = await ensureDimensionCompatibility(embeddings, config, "Groq");
 
-    return {
-      embeddings,
-      provider: "groq",
-      model: config.groqEmbeddingModel,
-      dimension,
-      usedFallback: false,
-    };
+      return {
+        embeddings,
+        provider: "groq",
+        model: config.groqEmbeddingModel,
+        dimension,
+        usedFallback: false,
+      };
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) {
+        throw error;
+      }
+    }
   }
 
   if (embeddingProvider === "auto" && hasHfToken) {

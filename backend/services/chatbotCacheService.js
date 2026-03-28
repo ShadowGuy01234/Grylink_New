@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const NodeCache = require("node-cache");
 
 const chatCache = new NodeCache({
-  stdTTL: 180,
+  stdTTL: 3600,
   checkperiod: 120,
   useClones: false,
   deleteOnExpire: true,
@@ -13,12 +13,19 @@ function normalizeText(value) {
   return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
-function createCacheKey({ prompt, role, language = "en", namespace = "chatbot" }) {
+function createCacheKey({
+  prompt,
+  role,
+  language = "en",
+  namespace = "chatbot",
+  policyVersion = "v1",
+}) {
   const payload = {
     prompt: normalizeText(prompt),
     role: String(role || "public").toLowerCase(),
     language: String(language || "en").toLowerCase(),
     namespace: String(namespace || "chatbot").toLowerCase(),
+    policyVersion: String(policyVersion || "v1").toLowerCase(),
   };
 
   const hash = crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
@@ -36,9 +43,9 @@ function getCachedChatResponse(input) {
   };
 }
 
-function setCachedChatResponse(input, payload, ttlSeconds = 180) {
+function setCachedChatResponse(input, payload, ttlSeconds = 3600) {
   const key = createCacheKey(input);
-  chatCache.set(key, payload, Math.max(30, Number(ttlSeconds) || 180));
+  chatCache.set(key, payload, Math.max(30, Number(ttlSeconds) || 3600));
   return key;
 }
 

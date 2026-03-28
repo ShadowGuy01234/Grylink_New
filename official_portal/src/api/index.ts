@@ -247,6 +247,17 @@ export const adminApi = {
     api.get("/public/leads", { params }),
 };
 
+export const chatbotApi = {
+  getAnalyticsSummary: (days = 7) =>
+    api.get("/chatbot/analytics/summary", {
+      params: { days },
+    }),
+  getSecurityAnalytics: (limit = 50) =>
+    api.get("/chatbot/analytics/security", {
+      params: { limit },
+    }),
+};
+
 // Approvals
 export const approvalApi = {
   getMyPending: () => api.get("/approvals/my-pending"),
