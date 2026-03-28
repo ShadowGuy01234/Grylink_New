@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const compression = require("compression");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 
@@ -90,6 +91,7 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(compression());
 
 // Health check
 app.get("/", (req, res) => {
@@ -126,6 +128,7 @@ app.use("/api/cron", require("./routes/cron"));
 app.use("/api/audit", require("./routes/audit"));
 app.use("/api/careers", require("./routes/careers"));
 app.use("/api/public", require("./routes/public"));
+app.use("/api/chatbot", require("./routes/chatbot"));
 
 // 404 handler
 app.use((req, res) => {

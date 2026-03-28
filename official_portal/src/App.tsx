@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
@@ -25,6 +26,8 @@ import BillVerificationPage from "./pages/ops/BillVerificationPage";
 import KycVerificationPage from "./pages/ops/KycVerificationPage";
 import SlaTrackerPage from "./pages/ops/SlaTrackerPage";
 import NbfcOnboardingPage from "./pages/ops/NbfcOnboardingPage";
+
+const GrybotWidget = lazy(() => import("./components/GrybotWidget"));
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -286,6 +289,9 @@ const App = () => {
           }}
         />
         <AppRoutes />
+        <Suspense fallback={null}>
+          <GrybotWidget portal="official-portal" />
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

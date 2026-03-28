@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRoleStore } from "../store/roleStore";
 import { publicApi } from "../lib/api";
 import { getSessionId } from "../lib/session";
@@ -6,7 +6,13 @@ import { trackEvent } from "../lib/analytics";
 
 type FeedbackType = "bug" | "idea" | "question";
 
-export function FloatingFeedbackWidget() {
+type FloatingFeedbackWidgetProps = {
+  showFloatingButton?: boolean;
+};
+
+export function FloatingFeedbackWidget({
+  showFloatingButton = true,
+}: FloatingFeedbackWidgetProps) {
   const { activeRole } = useRoleStore();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType>("idea");
@@ -16,6 +22,22 @@ export function FloatingFeedbackWidget() {
   const [company, setCompany] = useState("");
   const [status, setStatus] = useState<"idle" | "ok" | "error" | "loading">("idle");
   const [errorText, setErrorText] = useState("");
+
+  function openFeedback(source: "floating" | "navbar") {
+    setOpen(true);
+    trackEvent({
+      eventName: "feedback_opened",
+      category: "engagement",
+      roleContext: activeRole,
+      properties: { source },
+    });
+  }
+
+  useEffect(() => {
+    const onOpenRequest = () => openFeedback("navbar");
+    window.addEventListener("gryork-feedback-open", onOpenRequest);
+    return () => window.removeEventListener("gryork-feedback-open", onOpenRequest);
+  }, [activeRole]);
 
   async function onSubmit() {
     const cleanMessage = message.trim();
@@ -61,20 +83,15 @@ export function FloatingFeedbackWidget() {
 
   return (
     <>
-      <button
-        aria-label="Open feedback form"
-        onClick={() => {
-          setOpen(true);
-          trackEvent({
-            eventName: "feedback_opened",
-            category: "engagement",
-            roleContext: activeRole,
-          });
-        }}
-        className="fixed bottom-4 right-4 rounded-full bg-emerald px-4 py-3 font-semibold text-white shadow-glow sm:bottom-6 sm:right-6"
-      >
-        Feedback
-      </button>
+      {showFloatingButton && (
+        <button
+          aria-label="Open feedback form"
+          onClick={() => openFeedback("floating")}
+          className="fixed bottom-4 right-4 rounded-full bg-emerald px-4 py-3 font-semibold text-white shadow-glow sm:bottom-6 sm:right-6"
+        >
+          Feedback
+        </button>
+      )}
       {open && (
         <aside
           aria-label="Feedback drawer"

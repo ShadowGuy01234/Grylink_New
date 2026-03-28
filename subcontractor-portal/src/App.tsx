@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -14,6 +14,8 @@ import SellerDeclarationPage from "./pages/SellerDeclarationPage";
 import KycUploadPage from "./pages/KycUploadPage";
 import MyCwcrfsPage from "./pages/MyCwcrfsPage";
 import api from "./api";
+
+const GrybotWidget = lazy(() => import("./components/GrybotWidget"));
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -116,6 +118,9 @@ const App = () => {
           }}
         />
         <AppRoutes />
+        <Suspense fallback={null}>
+          <GrybotWidget portal="subcontractor-portal" />
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );
