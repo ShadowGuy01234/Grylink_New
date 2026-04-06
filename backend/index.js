@@ -52,6 +52,7 @@ app.use(
         "https://official-gryork.vercel.app",
         "https://discovery-gryork.vercel.app",
         "https://bdf-gryork.vercel.app",
+        "https://discovery.gryork.com",
         "https://grylink-backend.vercel.app",
       ];
 
