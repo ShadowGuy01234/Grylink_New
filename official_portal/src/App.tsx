@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
@@ -19,12 +20,15 @@ import RmtCasesPage from "./pages/RmtCasesPage";
 import FounderDashboard from "./pages/FounderDashboard";
 import AuditLogPage from "./pages/AuditLogPage";
 import PublicInsightsPage from "./pages/PublicInsightsPage";
+import ChatbotAnalyticsPage from "./pages/ChatbotAnalyticsPage";
 // Ops dedicated pages
 import EpcVerificationPage from "./pages/ops/EpcVerificationPage";
 import BillVerificationPage from "./pages/ops/BillVerificationPage";
 import KycVerificationPage from "./pages/ops/KycVerificationPage";
 import SlaTrackerPage from "./pages/ops/SlaTrackerPage";
 import NbfcOnboardingPage from "./pages/ops/NbfcOnboardingPage";
+
+const GrybotWidget = lazy(() => import("./components/GrybotWidget"));
 
 const AppRoutes = () => {
   const { user, isLoading } = useAuth();
@@ -255,6 +259,16 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="admin/chatbot-analytics"
+          element={
+            ["admin", "founder"].includes(user.role) ? (
+              <ChatbotAnalyticsPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
           path="founder"
           element={
             user.role === "founder" ? (
@@ -286,6 +300,9 @@ const App = () => {
           }}
         />
         <AppRoutes />
+        <Suspense fallback={null}>
+          <GrybotWidget portal="official-portal" />
+        </Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -1,8 +1,11 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { Toaster } from 'react-hot-toast';
 import HomePage from './pages/HomePage';
 import OnboardingPage from './pages/OnboardingPage';
+
+const GrybotWidget = lazy(() => import('./components/GrybotWidget'));
 
 const App = () => {
   return (
@@ -15,6 +18,9 @@ const App = () => {
         <Route path="/onboarding/:token" element={<OnboardingPage />} />
         <Route path="*" element={<InvalidLinkPage />} />
       </Routes>
+      <Suspense fallback={null}>
+        <GrybotWidget portal="grylink-portal" usePublicEndpoint />
+      </Suspense>
     </BrowserRouter>
   );
 };

@@ -10,6 +10,15 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
 
+  function openFeedbackFromNavbar() {
+    window.dispatchEvent(new Event("gryork-feedback-open"));
+    trackEvent({
+      eventName: "cta_click",
+      category: "engagement",
+      properties: { label: "Feedback", section: "header_feedback" },
+    });
+  }
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -68,6 +77,13 @@ export function Header() {
               {link.label}
             </NavLink>
           ))}
+          <button
+            type="button"
+            onClick={openFeedbackFromNavbar}
+            className="ml-2 inline-flex items-center gap-1 rounded-full border border-emerald/30 bg-emerald/10 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald hover:text-white"
+          >
+            Feedback
+          </button>
           <a
             href="/early-access"
             className="ml-2 inline-flex items-center gap-1 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
@@ -113,6 +129,16 @@ export function Header() {
               </NavLink>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              openFeedbackFromNavbar();
+              setMenuOpen(false);
+            }}
+            className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-emerald/30 bg-emerald/10 px-4 py-3 text-sm font-semibold text-emerald-700"
+          >
+            Feedback
+          </button>
           <a
             href="/early-access"
             className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"

@@ -1,4 +1,35 @@
-node_modules
+node_modules/
+**/node_modules/
 
+# Build outputs and caches
+dist/
+**/dist/
+build/
+**/build/
+.next/
+**/.next/
+*.tsbuildinfo
+**/build_output.txt
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
 .env
+.env.local
+.env.*.local
 grylink-portal/.env
+
+# Deployment/local tooling
+.vercel/
+
+# Local chatbot generated artifacts
+chatbot-data/ingestion-manifest.json
+chatbot-data/embeddings.backup.*.json
+chatbot-data/embeddings.json
+chatbot-data/gemini_embeddings.json
+chatbot-data/unified_rag_corpus.json

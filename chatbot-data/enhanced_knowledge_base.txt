@@ -1,0 +1,709 @@
+# GRYORK ENHANCED KNOWLEDGE BASE
+# This file contains comprehensive information about Gryork, CWC Model, Finance Terms, and Infrastructure Industry
+
+## ===== SECTION 1: ABOUT GRYORK PLATFORM =====
+
+### What is Gryork?
+Gryork is a revolutionary fintech platform solving India's ₹1.51 lakh crore pending bills crisis in the infrastructure sector. It's a comprehensive MERN stack platform that connects subcontractors, infrastructure companies, NBFCs (Non-Banking Financial Companies), and financial institutions to ensure smooth project execution and timely payments. The platform provides multi-role dashboards, invoice management, CWC request handling, and an AI-powered chatbot.
+
+### The Problem Gryork Solves
+India faces a massive ₹1.51 lakh crore payment crisis in the infrastructure sector. Subcontractors working on highways, pipelines, metro projects, and energy sectors often face:
+- Delayed payments from infrastructure companies (60-90 days typical)
+- Cash flow problems preventing them from paying their workers
+- Difficulty accessing traditional bank loans due to lack of credit history
+- Project delays due to financial constraints
+- Loss of trust between parties in the construction ecosystem
+
+This crisis impacts millions of workers and pulls down India's GDP by 2-3%.
+
+### How Gryork Works
+Gryork operates as a three-sided platform:
+1. **Subcontractors** upload invoices and work certificates to the platform
+2. **Infrastructure Companies** verify and approve the work completed
+3. **NBFCs/Banks** provide immediate financing (within 24-48 hours) based on verified invoices
+4. **Gryork** acts as the trusted intermediary, ensuring transparency and reducing risk
+
+The platform uses the Credit on Working Capital (CWC) model to provide quick financing without traditional credit checks.
+
+### Key Features of Gryork Platform
+- **Multi-Role Dashboards**: 6 different dashboards (Super Admin, Admin, Company, Subcontractor, NBFC, Sales)
+- **Invoice Management**: Digital invoice creation, approval workflow, and tracking
+- **CWC Request System**: Quick loan application process for subcontractors
+- **Real-time Tracking**: Monitor payment status and project progress
+- **AI Chatbot**: Get instant answers about CWC, finance, and platform usage
+- **Secure Authentication**: Multiple login methods (Email/Password, Phone/OTP, Google OAuth)
+- **Audit Logging**: Complete transparency with activity tracking
+- **Document Management**: PDF uploads and verification system
+- **Mobile Responsive**: Works seamlessly on all devices
+
+### Technology Stack
+- **Frontend**: React 19, Vite, Tailwind CSS, Framer Motion
+- **Backend**: Node.js, Express.js, MongoDB
+- **Authentication**: JWT tokens, MSG91 OTP service, Google OAuth 2.0
+- **AI**: Google Gemini 2.5 Flash for intelligent chatbot
+- **Storage**: Cloudinary for document management
+
+### User Roles in Gryork
+1. **Subcontractor**: The workers/contractors who complete infrastructure projects and need quick payment
+2. **Company**: Infrastructure companies (like L&T, Adani) who assign projects and verify work
+3. **Admin**: Gryork team members who manage the platform operations
+4. **Super Admin**: System administrators with full access to all features
+5. **NBFC**: Financial institutions that provide loans through the CWC model
+6. **Sales**: Gryork sales team managing client relationships
+
+### Invoice Approval Workflow
+Step 1: Subcontractor creates and uploads invoice with supporting documents
+Step 2: Company admin reviews and approves the invoice (first level approval)
+Step 3: Gryork admin performs final verification (second level approval)
+Step 4: NBFC receives approved invoice and releases funds within 24-48 hours
+Step 5: Subcontractor receives payment directly to their bank account
+
+### Benefits for Each Stakeholder
+**For Subcontractors:**
+- Get paid within 24-48 hours instead of waiting 60-90 days
+- No need for credit history or CIBIL score
+- No collateral required
+- Simple digital process
+- Focus on work, not on chasing payments
+
+**For Infrastructure Companies:**
+- Ensure projects continue smoothly without payment delays
+- Maintain good relationships with subcontractors
+- Reduce project delays caused by financial issues
+- Digital invoice management and tracking
+- Compliance and audit trail
+
+**For NBFCs/Banks:**
+- Low-risk lending backed by company guarantees (LoG - Letter of Guarantee)
+- New market opportunity in infrastructure financing
+- Quick loan processing with verified documents
+- Transparent platform with audit trails
+- Diversified lending portfolio
+
+## ===== SECTION 2: BASIC FINANCE TERMS =====
+
+### What is a Loan?
+A loan is money borrowed from a bank, NBFC, or lender that must be repaid over time, usually with interest. Loans help individuals and businesses access money they don't currently have for various purposes like buying property, starting a business, or managing cash flow. Common types include personal loans, business loans, home loans, and working capital loans.
+
+### What is Interest?
+Interest is the cost of borrowing money, expressed as a percentage of the loan amount. For example, if you borrow ₹1,00,000 at 10% annual interest, you'll pay ₹10,000 per year as interest. Interest rates can be:
+- **Fixed**: Stays the same throughout the loan period
+- **Floating**: Changes based on market conditions
+- **Simple**: Calculated only on principal amount
+- **Compound**: Calculated on principal plus accumulated interest
+
+### What is Collateral?
+Collateral is an asset (like property, gold, or equipment) that a borrower pledges to a lender as security for a loan. If the borrower fails to repay the loan, the lender can seize and sell the collateral to recover their money. Examples include:
+- Property/Real Estate for home loans
+- Vehicle for auto loans
+- Fixed deposits for secured loans
+- Inventory/machinery for business loans
+
+### What is Credit Score?
+A credit score (like CIBIL score in India) is a 3-digit number (300-900) that represents your creditworthiness. It's based on your credit history, payment patterns, outstanding debts, and credit utilization. A higher score (750+) means you're more likely to get loan approvals and better interest rates. Factors affecting credit score:
+- Payment history (35% weightage)
+- Credit utilization (30%)
+- Length of credit history (15%)
+- Types of credit (10%)
+- Recent credit inquiries (10%)
+
+### What is Working Capital?
+Working capital is the money a business needs for day-to-day operations. It's calculated as Current Assets minus Current Liabilities. Positive working capital means a company can pay its short-term obligations. For subcontractors, working capital is crucial for:
+- Paying workers' salaries
+- Buying raw materials
+- Renting equipment
+- Meeting operational expenses while waiting for client payments
+
+### What is Cash Flow?
+Cash flow is the movement of money in and out of a business. Positive cash flow means more money is coming in than going out. Negative cash flow means the opposite. For infrastructure projects:
+- **Inflow**: Payments received from clients
+- **Outflow**: Salaries, materials, equipment, overhead costs
+- **Gap**: Time between spending money and receiving payment creates cash flow problems
+
+### What is EMI?
+EMI (Equated Monthly Installment) is a fixed amount paid every month to repay a loan. It includes both principal (original loan amount) and interest. EMI Formula: [P x R x (1+R)^N]/[(1+R)^N-1]
+Where: P = Principal, R = Monthly interest rate, N = Loan tenure in months
+Example: ₹10,00,000 loan at 10% for 5 years = ₹21,247 EMI
+
+### What is an Invoice?
+An invoice is a commercial document issued by a seller to a buyer. It itemizes the products or services provided and states the amount owed. In construction/infrastructure:
+- Shows work completed by subcontractor
+- Lists quantities, rates, and total amount
+- Includes GST and other charges
+- Serves as proof of work for payment
+- Required for accounting and tax purposes
+
+### What is Bill Discounting?
+Bill discounting is a financing method where businesses sell their unpaid invoices to a bank or financial institution at a discount. Instead of waiting 60-90 days for payment, businesses get immediate cash (minus a small fee). The CWC model is essentially a specialized form of bill discounting for infrastructure projects.
+
+### Difference Between Loan and Bill Discounting
+**Traditional Loan:**
+A loan is borrowed money that must be repaid with interest over a set period. You receive the full loan amount upfront and repay it in installments (EMI). The lender checks your credit score, requires collateral, and you're personally responsible for repayment.
+
+Example: Borrow ₹10 lakhs from a bank at 12% interest for 2 years. You get ₹10 lakhs and repay ₹46,000 per month for 24 months.
+
+**Bill Discounting:**
+Bill discounting is selling your unpaid invoices for immediate cash. You've already done the work and have an invoice, but payment is due in 60-90 days. A financier buys your invoice at a discount (say 90%) and gives you cash immediately. When your client pays the full invoice amount, the financier keeps it.
+
+Example: You have a ₹10 lakh invoice due in 90 days. Financier gives you ₹9 lakhs today and keeps the full ₹10 lakhs when your client pays.
+
+**Key Differences:**
+1. **Basis**: Loan is based on creditworthiness; Bill discounting is based on invoice value and client's credibility
+2. **Collateral**: Loan may need collateral; Bill discounting uses the invoice itself as security
+3. **Amount**: Loan amount is negotiated; Bill discounting is limited to invoice value (usually 80-90%)
+4. **Repayment**: Loan has fixed EMIs; Bill discounting is repaid when client pays the invoice
+5. **Timeline**: Loan can be long-term (years); Bill discounting is short-term (30-90 days)
+6. **Credit Check**: Loan requires good credit score; Bill discounting depends more on client's creditworthiness
+7. **Purpose**: Loan for any purpose; Bill discounting specifically for working capital against receivables
+8. **Cost**: Loan has interest + processing fee; Bill discounting has discount rate + processing fee
+
+**Which is better?**
+- Use **Loan** for: Long-term needs, buying assets, expansion, when you don't have invoices
+- Use **Bill Discounting** for: Working capital, when you have confirmed invoices, avoiding debt on balance sheet, quick cash against work done
+
+For subcontractors, **CWC (a type of bill discounting)** is often better because:
+- No credit score needed
+- Based on work completed
+- Faster approval (24-48 hours)
+- No collateral required
+- Company guarantee reduces risk
+
+### What is a Guarantor?
+A guarantor is a person or entity that promises to repay a loan if the borrower fails to do so. In the CWC model, the infrastructure company acts as a guarantor by issuing a Letter of Guarantee (LoG), assuring the lender that payment will be made from the project funds.
+
+### What is Tenor/Tenure?
+Tenor or tenure is the length of time over which a loan must be repaid. Short-term loans typically have a tenor of less than 1 year, while long-term loans can extend to 20-30 years. In the CWC model, the tenor is usually 30-90 days, matching the typical payment cycle of infrastructure projects.
+
+### What is APR?
+APR (Annual Percentage Rate) is the yearly cost of a loan including interest and fees, expressed as a percentage. It gives a complete picture of how much you'll pay to borrow money. APR is usually higher than the stated interest rate because it includes processing fees, documentation charges, and other costs.
+
+### What is Disbursement?
+Disbursement is the act of releasing loan funds to the borrower. After loan approval, the lender disburses (pays out) the money to the borrower's bank account. In Gryork's system, disbursement happens within 24-48 hours after invoice approval, directly to the subcontractor's account.
+
+## ===== SECTION 3: CREDIT ON WORKING CAPITAL (CWC) MODEL =====
+
+### What is the CWC Model?
+The Credit on Working Capital (CWC) Model is a short-term financing solution specifically designed for subcontractors in the infrastructure sector. It bridges the cash flow gap between when subcontractors complete work and when they receive payment from infrastructure companies. The key innovation is that it doesn't require traditional credit checks or collateral because the infrastructure company provides a Letter of Guarantee (LoG).
+
+### How CWC Differs from Traditional Bank Loans
+Traditional bank loans require:
+- Strong credit history and high CIBIL score (750+)
+- Collateral (property, assets)
+- Extensive documentation
+- Long approval process (weeks or months)
+- Complex eligibility criteria
+
+CWC Model offers:
+- No CIBIL score requirement
+- No collateral needed
+- Minimal documentation (just invoice and work certificate)
+- Quick approval (24-48 hours)
+- Based on work completed, not credit history
+- Infrastructure company's guarantee reduces risk
+
+### What is a Letter of Guarantee (LoG)?
+A Letter of Guarantee (LoG) is a document issued by the infrastructure company to the lender (NBFC/Bank). It legally guarantees that the company will repay the loan amount to the lender from the project funds. This LoG transforms a risky unsecured loan into a low-risk transaction because:
+- Infrastructure companies are established entities with strong credit
+- Payment is guaranteed from project funds
+- Reduces lender's risk significantly
+- Enables quick loan approval without checking subcontractor's credit
+
+### Who is Eligible for CWC Financing?
+Eligible subcontractors must:
+- Be working on an active infrastructure project
+- Have completed billable work with proper documentation
+- Be associated with a registered infrastructure company
+- Provide valid invoices and work certificates
+- Have a bank account for direct credit
+- Be registered with Gryork platform
+
+Note: No minimum credit score, no collateral, and no income proof required - just proof of work completed.
+
+### How Much Can Be Borrowed?
+The loan amount depends on:
+- Value of completed work (invoice amount)
+- Typically 80-90% of invoice value is advanced
+- Remaining 10-20% released after company pays the full invoice
+- Loan amounts typically range from ₹50,000 to ₹50,00,000
+- No fixed minimum or maximum - depends on project size
+
+### CWC Interest Rates and Charges
+Interest rates are competitive and transparent:
+- Typically 12-18% per annum (much lower than personal loans at 18-24%)
+- Interest charged only for the actual days of loan usage
+- Processing fee: Usually 1-2% of loan amount
+- No hidden charges or prepayment penalties
+- Calculated on reducing balance basis
+Example: ₹10,00,000 for 60 days at 15% annual rate = ₹24,658 interest
+
+### CWC Loan Repayment Process
+Step 1: Subcontractor receives loan (80-90% of invoice value)
+Step 2: Infrastructure company receives invoice from Gryork
+Step 3: Company pays the full invoice amount to the lender/NBFC
+Step 4: NBFC deducts the loan amount plus interest
+Step 5: Remaining balance (10-20%) is paid to subcontractor
+Timeline: Entire cycle completes within 30-90 days depending on company's payment schedule
+
+### Benefits of CWC for Subcontractors
+- **Fast Access**: Get money within 24-48 hours instead of waiting months
+- **No Credit History**: Work-based financing, not credit-based
+- **No Collateral**: Don't risk your property or assets
+- **Fair Interest Rates**: Lower than credit cards and personal loans
+- **Simple Process**: Digital platform makes it easy
+- **Continue Projects**: Pay workers on time, keep projects moving
+- **Build Credit**: Successful repayments improve credit history
+- **Flexibility**: Borrow based on actual work done
+
+### CWC vs Traditional Financing Comparison
+**Traditional Bank Loan:**
+- Requires CIBIL 750+: CWC requires no CIBIL
+- Needs collateral: CWC needs no collateral
+- Takes 2-4 weeks: CWC takes 24-48 hours
+- Complex documentation: CWC needs only invoice + work certificate
+- Rigid eligibility: CWC based on work completed
+- Personal liability: CWC protected by company guarantee
+- Any purpose: CWC specific to working capital
+
+**Regular Bill Discounting:**
+- Client creditworthiness critical: CWC has company LoG guarantee
+- Usually 70-80% advance: CWC offers 80-90% advance
+- May need business credit history: CWC based on work completed
+- Higher discount rates: CWC has competitive rates
+- Limited to specific clients: CWC focused on infrastructure projects
+- Processing takes days: CWC via Gryork platform is faster
+
+**Credit Card/Personal Loan:**
+- Interest 18-36% pa: CWC offers 12-18% pa
+- Unsecured, high risk: CWC backed by company guarantee
+- Limited amount: CWC based on project size
+- No business purpose: CWC specifically for working capital
+- Affects personal credit: CWC is business financing
+
+**Why CWC is Better for Subcontractors:**
+CWC combines the best of both loans and bill discounting:
+- Like bill discounting: Based on work done (invoice), not credit score
+- Like loans: Structured repayment, transparent interest, professional process
+- Better than both: Company guarantee eliminates credit risk, faster than loans, higher advance than bill discounting, specifically designed for infrastructure sector
+
+### Risk Management in CWC
+Risks are managed through:
+1. **Company Verification**: Only registered infrastructure companies can issue LoG
+2. **Work Verification**: Physical verification of work completed through photos/site visits
+3. **Document Verification**: Invoice, work certificates, contracts checked
+4. **LoG Guarantee**: Legal backing from infrastructure company
+5. **Platform Monitoring**: Gryork tracks all transactions and maintains audit logs
+6. **NBFC Due Diligence**: Financial institutions verify before disbursement
+
+### What Happens if Payment is Delayed?
+If the infrastructure company delays payment beyond the agreed tenor:
+- Additional interest may be charged to the subcontractor
+- Gryork follows up with the company for payment
+- LoG ensures legal recourse against the company
+- In rare cases, future CWC facilities for that company may be restricted
+- Subcontractor is protected by the LoG - they're not personally liable beyond interest
+
+### CWC Model Success Rate
+The CWC model has proven highly successful because:
+- Default rates are extremely low (less than 2%) due to company guarantees
+- Infrastructure companies have strong incentive to pay (reputation, future projects)
+- Digital platform ensures transparency and accountability
+- Quick turnaround means less time for complications
+- Multiple verification layers reduce fraud risk
+
+### Industries Suitable for CWC
+The CWC model works best in:
+- **Highway Construction**: Road building, toll roads, expressways
+- **Metro Rail Projects**: Underground/elevated metro construction
+- **Pipeline Projects**: Oil, gas, water pipeline laying
+- **Power Plants**: Thermal, solar, hydro power projects
+- **Ports and Airports**: Infrastructure development
+- **Commercial Buildings**: Large-scale construction projects
+- **Railways**: Track laying, station construction
+- **Bridges and Flyovers**: Civil engineering projects
+
+Any sector where established companies hire subcontractors for project work can benefit from the CWC model.
+
+## ===== SECTION 4: INFRASTRUCTURE INDUSTRY CONTEXT =====
+
+### Payment Crisis in Indian Infrastructure
+India's infrastructure sector faces a severe liquidity crisis with ₹1.51 lakh crore locked in pending bills. Key issues:
+- Payment cycles of 60-180 days are common (should be 30 days)
+- Subcontractors complete work but wait months for payment
+- Unable to pay workers, leading to project delays
+- Workers leave sites seeking other opportunities
+- Quality suffers as subcontractors cut corners to survive
+- GDP impact: 2-3% loss due to delayed infrastructure projects
+
+### Typical Infrastructure Project Structure
+**Level 1**: Government/Private Developer awards project
+**Level 2**: Prime Contractor (L&T, Adani, etc.) wins bid
+**Level 3**: Subcontractors hired for specialized work (civil, electrical, mechanical)
+**Level 4**: Workers employed by subcontractors
+**Payment Flow**: Government → Prime Contractor → Subcontractor → Workers
+
+The problem: Each level has payment delays, creating a cascading crisis where workers at the bottom suffer most.
+
+### Common Subcontractor Challenges
+1. **Delayed Payments**: Wait 90-180 days for payment while project costs are immediate
+2. **Working Capital Shortage**: Can't afford to wait, need money for next project
+3. **Worker Attrition**: Workers leave if not paid on time
+4. **Project Delays**: Can't buy materials without cash
+5. **Bank Loan Rejection**: Most subcontractors don't have good credit or collateral
+6. **Informal Lending**: Forced to borrow from money lenders at 36-60% interest
+7. **Business Failure**: Many small subcontractors shut down due to cash flow issues
+
+### Why Infrastructure Companies Delay Payments
+It's not always intentional:
+- They're also waiting for payment from government/developer
+- Large project budgets mean careful financial management
+- Verification processes take time
+- Bureaucratic approval chains
+- Dispute resolution regarding work quality
+- Cash flow management across multiple projects
+- Sometimes, leverage to ensure work quality/completion
+
+### Impact on the Indian Economy
+The ₹1.51 lakh crore payment crisis affects:
+- **Employment**: Millions of construction workers face delayed wages
+- **GDP Growth**: Infrastructure delays slow economic development
+- **Investment**: Foreign investors hesitate due to payment uncertainty
+- **Social Impact**: Worker families face financial hardship
+- **Project Completion**: Delays cascade across entire sector
+- **Government Goals**: Hampers PM Gati Shakti and other initiatives
+
+### Role of NBFCs in Infrastructure Financing
+NBFCs (Non-Banking Financial Companies) are crucial because:
+- More flexible than traditional banks
+- Can assess risk based on project viability, not just credit score
+- Quick decision-making (days, not months)
+- Specialized knowledge in infrastructure sector
+- Fill the gap between banks and informal lenders
+- Examples: Tata Capital, Bajaj Finance, Mahindra Finance
+
+In the CWC model, NBFCs partner with Gryork to provide quick financing based on verified invoices and company guarantees.
+
+### Digital Transformation in Construction
+The infrastructure sector is going digital:
+- **From**: Paper invoices, physical verification, manual tracking
+- **To**: Digital platforms, automated workflows, real-time tracking
+- **Benefits**: Faster processing, transparency, reduced fraud, better relationships
+- **Challenges**: Technology adoption, training, infrastructure in remote sites
+- **Gryork's Role**: Bridging the digital divide with user-friendly platform
+
+### Government Initiatives
+The Indian government has launched several initiatives:
+- **PM Gati Shakti**: ₹100 lakh crore infrastructure plan
+- **Make in India**: Boosting manufacturing and infrastructure
+- **Smart Cities Mission**: Urban infrastructure development
+- **MSME Support**: Financial assistance for small contractors
+- **Digital India**: Promoting technology adoption
+- **RERA**: Ensuring transparency in real estate/construction
+
+However, payment delays remain a challenge that private sector solutions like Gryork are addressing.
+
+### Future of Infrastructure Financing
+Trends shaping the future:
+1. **Digital Platforms**: More fintech solutions for construction financing
+2. **Blockchain**: Transparent, immutable payment records
+3. **Invoice Discounting**: Growing acceptance of bill discounting models
+4. **Data-Driven Lending**: Using project data instead of credit scores
+5. **Faster Payments**: Technology enabling 24-48 hour disbursements
+6. **Ecosystem Approach**: Platforms connecting all stakeholders
+7. **AI & Automation**: Automated verification and risk assessment
+
+Gryork is at the forefront of this transformation, using React 19, Google Gemini AI, and modern tech stack to solve age-old problems.
+
+## ===== SECTION 5: GRYORK PLATFORM USAGE =====
+
+### How to Register on Gryork
+Step 1: Visit www.gryork.com
+Step 2: Click "Sign Up" or "Register"
+Step 3: Choose registration method:
+   - Email and Password
+   - Phone Number (receive OTP via MSG91)
+   - Google Account (OAuth)
+Step 4: Select your role (Subcontractor, Company, NBFC)
+Step 5: Complete your profile with business details
+Step 6: Verify your phone number with OTP
+Step 7: Upload required documents (GST, PAN, Bank details)
+Step 8: Wait for admin approval (usually 24 hours)
+
+### How to Login to Gryork
+Multiple login methods:
+1. **Email + Password**: Standard login
+2. **Phone + OTP**: Request OTP, enter 6-digit code
+3. **Google OAuth**: One-click login with Google account
+
+For admins, there are separate login pages:
+- /admin-login for Gryork admins
+- /super-admin-login for super administrators
+- /sales-login for sales team
+
+### Dashboard Overview
+After login, users see a role-specific dashboard:
+
+**Subcontractor Dashboard:**
+- Overview of all invoices and their status
+- Quick invoice creation button
+- Payment history and statistics
+- CWC request status
+- Profile management
+- Document uploads
+
+**Company Dashboard:**
+- Pending invoices for approval
+- Subcontractor management
+- Project overview
+- Payment analytics
+- Invoice creation for prime contractor
+- Audit logs
+
+**Admin Dashboard:**
+- Platform statistics
+- User management
+- Invoice approvals
+- CWC request management
+- Company onboarding
+- System analytics
+
+### Creating an Invoice
+Step 1: Click "Create Invoice" button
+Step 2: Fill in details:
+   - Company name (select from dropdown)
+   - Project name and location
+   - Work description
+   - Quantity and rates
+   - Total amount
+   - GST details
+Step 3: Upload supporting documents:
+   - Work completion certificate
+   - Photos of completed work
+   - Measurement sheets
+   - Any contracts or agreements
+Step 4: Review and submit
+Step 5: Track status in dashboard
+
+### Applying for CWC Financing
+Step 1: Create and submit invoice (as above)
+Step 2: Wait for company approval (usually 2-7 days)
+Step 3: Once company approves, click "Apply for CWC"
+Step 4: Fill in loan details:
+   - Amount needed (max 90% of invoice)
+   - Bank account details
+   - Expected payment date
+Step 5: Gryork admin reviews (1-2 days)
+Step 6: NBFC approval and disbursement (24-48 hours)
+Step 7: Receive money in your bank account
+Step 8: Automatic repayment when company pays invoice
+
+### Tracking Invoice Status
+Invoices go through multiple statuses:
+1. **Draft**: Created but not submitted
+2. **Pending**: Submitted, waiting for company review
+3. **Approved by Company**: Company verified, waiting for Gryork admin
+4. **Approved by Admin**: Final approval, ready for payment/CWC
+5. **Paid**: Payment completed
+6. **Rejected**: Not approved (with reason)
+7. **In Progress**: CWC processing
+8. **Completed**: Fully paid and closed
+
+Each status change triggers a notification.
+
+### Document Requirements
+For smooth processing, prepare:
+
+**For Registration:**
+- GST Certificate
+- PAN Card
+- Bank account details with cancelled cheque
+- Company registration documents
+- Director/owner ID proof
+
+**For Invoice Submission:**
+- Work completion certificate
+- Measurement sheets
+- Photos of work (before/after)
+- Material bills (if applicable)
+- Previous invoices for reference
+
+**For CWC Application:**
+- Approved invoice
+- LoG from infrastructure company
+- Bank account statement (last 3 months)
+- Project contract copy
+
+### Using the AI Chatbot
+The Gryork chatbot (powered by Google Gemini 2.5 Flash) can help with:
+- Explaining CWC model and how it works
+- Guidance on invoice creation
+- Understanding finance terms
+- Platform navigation help
+- General questions about infrastructure financing
+- Information about Gryork features
+
+To use: Click the floating chat icon in bottom-right corner, type your question, and get instant AI-powered answers.
+
+### Security Features
+Gryork takes security seriously:
+- **Password Encryption**: Bcrypt hashing with 10 salt rounds
+- **JWT Tokens**: Secure authentication with 7-day expiry
+- **OTP Verification**: MSG91 SMS with 5-minute expiry
+- **Role-Based Access**: You can only access features for your role
+- **Audit Logging**: Every action is tracked and logged
+- **Data Encryption**: All sensitive data encrypted in transit and at rest
+- **Regular Backups**: Daily database backups for data protection
+
+### Getting Support
+Need help? Multiple support channels:
+1. **AI Chatbot**: Instant answers 24/7
+2. **Email**: contact@gryork.com
+3. **Phone**: +91 70685 64903
+4. **Contact Form**: On website's contact page
+5. **Help Center**: Documentation and FAQs
+6. **In-app Support**: Chat with admin team
+
+Support hours: Monday-Saturday, 9 AM - 6 PM IST
+Emergency support: Available for critical issues
+
+### Mobile App Usage
+Gryork's web platform is fully mobile-responsive:
+- Works on all smartphones and tablets
+- No app download needed (works in browser)
+- All features available on mobile
+- Touch-friendly interface
+- Camera integration for document uploads
+- Push notifications for status updates
+- Optimized for slow internet connections
+
+## ===== SECTION 6: TROUBLESHOOTING & FAQ =====
+
+### Why is my invoice rejected?
+Common reasons for invoice rejection:
+- Incomplete or unclear work description
+- Missing supporting documents (photos, certificates)
+- Amount doesn't match work described
+- Poor quality photos or unreadable documents
+- Company disputes the work or quantity
+- GST details incorrect
+- Duplicate invoice
+Solution: Check rejection reason, correct the issues, and resubmit
+
+### How long does CWC approval take?
+Typical timeline:
+- Company approval: 2-7 days
+- Gryork admin review: 1-2 days
+- NBFC processing: 1-2 days
+- Disbursement: 24-48 hours after all approvals
+Total: Usually 5-10 working days from invoice submission
+Urgent cases can be expedited by contacting support
+
+### What if I don't have GST registration?
+GST registration is mandatory for:
+- Businesses with turnover above ₹40 lakhs (₹20 lakhs for services)
+- Interstate transactions
+- Working with registered companies
+
+If you're below threshold:
+- You can still register on Gryork
+- May face limitations on invoice amounts
+- Some companies may prefer GST-registered subcontractors
+- Consider getting GST registration for better opportunities
+
+### Can I get CWC without company approval?
+No, CWC requires:
+1. Completed work verified by company
+2. Company-approved invoice
+3. Letter of Guarantee from company
+
+Without company approval, CWC cannot proceed because the company guarantee is essential for the lender's security. However, you can:
+- Follow up with company for faster approval
+- Use Gryork platform to send reminders
+- Escalate to Gryork admin if company is unresponsive
+
+### What if the company doesn't pay?
+The LoG (Letter of Guarantee) protects you:
+- Legal document binding the company
+- Gryork follows up with company
+- NBFC has legal recourse
+- You're not personally liable (beyond interest for extended period)
+- Worst case: Legal action against company
+
+In practice, defaults are rare because:
+- Companies need their reputation for future projects
+- Legal consequences are severe
+- Gryork vets companies before onboarding
+
+### How is interest calculated?
+Interest calculation:
+- Based on actual days of loan usage
+- Calculated on reducing balance
+- Formula: (Principal × Rate × Days) ÷ (365 × 100)
+
+Example:
+- Loan: ₹5,00,000
+- Rate: 15% per annum
+- Period: 45 days
+- Interest: (5,00,000 × 15 × 45) ÷ (365 × 100) = ₹9,247
+
+Processing fee (1-2%) is one-time and separate from interest.
+
+### Can I get multiple CWC loans?
+Yes, you can have multiple CWC loans if:
+- You're working on multiple projects
+- Each project has separate invoices
+- Different companies or same company, different projects
+- Your repayment track record is good
+
+Limits:
+- Total exposure depends on your business size
+- NBFC assesses total risk
+- Good repayment history increases future limits
+
+### What documents are absolutely necessary?
+Minimum required documents:
+**For Registration:**
+1. PAN Card (mandatory)
+2. Bank account details
+3. GST Certificate (if applicable)
+4. One ID proof (Aadhaar/Driving License)
+
+**For Invoice:**
+1. Work completion certificate
+2. At least 3 photos of completed work
+3. Invoice details (can be entered on platform)
+
+**For CWC:**
+1. Company-approved invoice
+2. LoG from company (often arranged by Gryork)
+3. Bank account for disbursement
+
+### How do I improve my chances of approval?
+Best practices:
+1. **Complete Profile**: Fill all details, upload all documents
+2. **Clear Photos**: Take high-quality, well-lit photos of work
+3. **Accurate Details**: Ensure invoice details match work done
+4. **Timely Submission**: Submit invoices promptly after work completion
+5. **Communication**: Respond quickly to queries from Gryork/company
+6. **Documentation**: Maintain good records of all projects
+7. **Relationship**: Build good working relationship with companies
+8. **Repayment**: Ensure timely repayment of previous CWC loans
+
+### Is Gryork safe and legal?
+Yes, absolutely:
+- **Registered Entity**: Gryork is a registered company
+- **RBI Compliant**: Partner NBFCs are RBI-registered
+- **Legal Framework**: All agreements are legally binding
+- **Data Protection**: Follows data privacy laws
+- **Transparent**: All terms and conditions clearly stated
+- **Audited**: Regular financial and system audits
+- **Secure Platform**: Bank-grade security standards
+
+You can verify Gryork's credentials through:
+- Company registration documents
+- NBFC partner licenses
+- Platform security certificates
+- Customer testimonials
+
+## ===== END OF KNOWLEDGE BASE =====
+
+This knowledge base is regularly updated. For the latest information, visit www.gryork.com or contact support@gryork.com.
