@@ -344,82 +344,132 @@ const SidebarNavItem = ({
   exact,
   roleColor,
   sub,
-}: NavItemProps) => (
-  <NavLink
-    to={to}
-    end={exact}
-    style={({ isActive }) => ({
-      display: "flex",
-      alignItems: "center",
-      gap: sub ? 8 : 10,
-      padding: sub ? "7px 12px 7px 36px" : "9px 12px",
-      borderRadius: 9,
-      fontSize: sub ? 13 : 14,
-      fontWeight: isActive ? 600 : 500,
-      color: isActive ? roleColor.primary : "#4b5563",
-      background: isActive ? roleColor.light : "transparent",
-      textDecoration: "none",
-      transition: "all 0.15s",
-      position: "relative",
-    })}
-    onMouseEnter={(e) => {
-      const el = e.currentTarget as HTMLAnchorElement;
-      if (!el.getAttribute("aria-current")) {
-        el.style.background = "#f9fafb";
-        el.style.color = "#111827";
-      }
-    }}
-    onMouseLeave={(e) => {
-      const el = e.currentTarget as HTMLAnchorElement;
-      el.style.background = "";
-      el.style.color = "";
-    }}
-  >
-    {({ isActive }) => (
-      <>
-        {sub && isActive && (
-          <span
-            style={{
-              position: "absolute",
-              left: 22,
-              top: "50%",
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: roleColor.primary,
-              transform: "translateY(-50%)",
-            }}
-          />
-        )}
+}: NavItemProps) => {
+  const isExternal = to.startsWith("http");
+
+  if (isExternal) {
+    return (
+      <a
+        href={to}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: sub ? 8 : 10,
+          padding: sub ? "7px 12px 7px 36px" : "9px 12px",
+          borderRadius: 9,
+          fontSize: sub ? 13 : 14,
+          fontWeight: 500,
+          color: "#4b5563",
+          background: "transparent",
+          textDecoration: "none",
+          transition: "all 0.15s",
+          position: "relative",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "#f9fafb";
+          e.currentTarget.style.color = "#111827";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = "#4b5563";
+        }}
+      >
         <span
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
-            color: isActive ? roleColor.primary : "#9ca3af",
+            color: "#9ca3af",
             transition: "color 0.15s",
           }}
         >
           {icon}
         </span>
         <span>{label}</span>
-        {isActive && !sub && (
+      </a>
+    );
+  }
+
+  return (
+    <NavLink
+      to={to}
+      end={exact}
+      style={({ isActive }) => ({
+        display: "flex",
+        alignItems: "center",
+        gap: sub ? 8 : 10,
+        padding: sub ? "7px 12px 7px 36px" : "9px 12px",
+        borderRadius: 9,
+        fontSize: sub ? 13 : 14,
+        fontWeight: isActive ? 600 : 500,
+        color: isActive ? roleColor.primary : "#4b5563",
+        background: isActive ? roleColor.light : "transparent",
+        textDecoration: "none",
+        transition: "all 0.15s",
+        position: "relative",
+      })}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        if (!el.getAttribute("aria-current")) {
+          el.style.background = "#f9fafb";
+          el.style.color = "#111827";
+        }
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.background = "";
+        el.style.color = "";
+      }}
+    >
+      {({ isActive }) => (
+        <>
+          {sub && isActive && (
+            <span
+              style={{
+                position: "absolute",
+                left: 22,
+                top: "50%",
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: roleColor.primary,
+                transform: "translateY(-50%)",
+              }}
+            />
+          )}
           <span
             style={{
-              marginLeft: "auto",
-              width: 5,
-              height: 5,
-              borderRadius: "50%",
-              background: roleColor.primary,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               flexShrink: 0,
+              color: isActive ? roleColor.primary : "#9ca3af",
+              transition: "color 0.15s",
             }}
-          />
-        )}
-      </>
-    )}
-  </NavLink>
-);
+          >
+            {icon}
+          </span>
+          <span>{label}</span>
+          {isActive && !sub && (
+            <span
+              style={{
+                marginLeft: "auto",
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                background: roleColor.primary,
+                flexShrink: 0,
+              }}
+            />
+          )}
+        </>
+      )}
+    </NavLink>
+  );
+};
 
 // --- Section header -----------------------------------------------------------
 const SidebarSection = ({ label }: { label: string }) => (
@@ -473,6 +523,7 @@ const Layout = () => {
     { to: "/sales/companies", icon: Ico.building, label: "Companies" },
     { to: "/sales/subcontractors", icon: Ico.users, label: "Sub-Contractors" },
     { to: "/sales/grylinks", icon: Ico.link, label: "GryLinks" },
+    { to: "http://localhost:5180/", icon: Ico.grid, label: "BDF Discovery" }, // External portal
   ];
 
   const opsSubNav = [
@@ -483,6 +534,7 @@ const Layout = () => {
     { to: "/ops/cwcrf", icon: Ico.cwcrf, label: "CWC Requests" },
     { to: "/ops/sla", icon: Ico.sla, label: "SLA Tracker" },
     { to: "/ops/nbfc", icon: Ico.building, label: "NBFC Onboarding" },
+    { to: "http://localhost:5180/fpdf", icon: Ico.building, label: "FPDF Discovery" }, // External portal
   ];
 
   return (

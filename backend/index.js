@@ -49,6 +49,7 @@ app.use(
         "https://link-gryork.vercel.app",
         "https://partner-gryork.vercel.app",
         "https://official-gryork.vercel.app",
+        "https://discovery-gryork.vercel.app",
         "https://grylink-backend.vercel.app",
       ];
 
@@ -62,6 +63,7 @@ app.use(
         process.env.PARTNER_PORTAL_URL,
         process.env.ADMIN_PORTAL_URL,
         process.env.OFFICIAL_PORTAL_URL,
+        process.env.DISCOVERY_PORTAL_URL,
         process.env.GRYLINK_FRONTEND_URL,
       ]
         .filter(Boolean)
@@ -103,6 +105,8 @@ app.get("/api/health", (req, res) => {
 // API Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/sales", require("./routes/sales"));
+app.use("/api/bdf", require("./routes/bdf")); // Business Discovery Framework
+app.use("/api/fpdf", require("./routes/fpdf")); // Financial Partner Discovery Framework
 app.use("/api/company", require("./routes/company"));
 app.use("/api/subcontractor", require("./routes/subcontractor"));
 app.use("/api/ops", require("./routes/ops"));
