@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
 
 // BDF Pages
 import BdfDashboard from './pages/BdfDashboard';
@@ -30,7 +31,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<Navigate to="/bdf" replace />} />
+        <Route index element={<HomePage />} />
         
         {/* BDF Routes */}
         <Route path="bdf" element={<BdfDashboard />} />
@@ -54,7 +55,7 @@ function App() {
       <AuthProvider>
         <AppRoutes />
         <Toaster position="top-right" toastOptions={{ 
-          style: { background: '#1e293b', color: '#f1f5f9', border: '1px solid #334155' } 
+          style: { background: '#ffffff', color: '#0f172a', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' } 
         }} />
       </AuthProvider>
     </Router>

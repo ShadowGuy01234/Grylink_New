@@ -20,6 +20,10 @@ const Layout: React.FC = () => {
         </div>
 
         <nav className="sidebar-nav">
+          <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <span className="nav-icon"><Building size={18} /></span> Overview
+          </NavLink>
+
           <span className="nav-section-label">Business Discovery</span>
           <NavLink to="/bdf" end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <span className="nav-icon"><Building size={18} /></span> BDF Dashboard
