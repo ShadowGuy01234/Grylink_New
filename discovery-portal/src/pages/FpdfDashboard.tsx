@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fpdfApi } from '../api';
 import toast from 'react-hot-toast';
 import { Plus, BarChart, Landmark } from 'lucide-react';
+import { FPDF_FULL_FORM } from '../constants/discoveryLabels';
 
 interface DashboardStats {
   total: number;
@@ -46,7 +47,7 @@ const FpdfDashboard: React.FC = () => {
   return (
     <div>
       <div className="page-header">
-        <h1>Financial Partner Discovery Framework</h1>
+        <h1>{FPDF_FULL_FORM}</h1>
         <p>Identify, qualify, and prioritise NBFCs and Banks for strategic partnerships</p>
       </div>
 
@@ -108,7 +109,7 @@ const FpdfDashboard: React.FC = () => {
           <div className="empty-state">
             <div className="empty-icon"><Landmark size={48} /></div>
             <h3>No FPDF entries yet</h3>
-            <p>Start by creating your first Financial Partner Discovery entry to begin qualifying NBFCs.</p>
+            <p>Start by creating your first {FPDF_FULL_FORM} entry to begin qualifying NBFCs.</p>
             <button className="btn btn-primary" onClick={() => navigate('/fpdf/new')}><Plus size={16} /> Create First Entry</button>
           </div>
         ) : (

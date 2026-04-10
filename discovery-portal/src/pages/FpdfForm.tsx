@@ -147,7 +147,7 @@ const FpdfForm: React.FC = () => {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
         <div>
           {/* Step 0: Basic Info */}
           {step === 0 && (
@@ -312,16 +312,22 @@ const FpdfForm: React.FC = () => {
         {/* Live Score Preview sidebar */}
          <div>
           <div className="card" style={{ position: 'sticky', top: 32 }}>
-            <h3 style={{ fontSize: 14, marginBottom: 12, color: 'var(--color-text-secondary)' }}>Live Score Preview</h3>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4, color: 'var(--color-text-primary)' }}>
+              Live Score Preview
+            </h3>
+            <p style={{ fontSize: 13, marginBottom: 12, color: 'var(--color-text-secondary)' }}>
+              Updated on every save step
+            </p>
             {liveScore ? (
               <ConversionMeter
                 angle={liveScore.scores.conversionAngle}
                 score={liveScore.scores.totalScore}
                 classification={liveScore.classification}
-                size="sm"
+                size="md"
+                showReadout
               />
             ) : (
-              <div style={{ textAlign: 'center', padding: 20, color: 'var(--color-text-muted)', fontSize: 13 }}>
+              <div style={{ textAlign: 'center', padding: 20, color: 'var(--color-text-secondary)', fontSize: 13 }}>
                 Score will appear after saving
               </div>
             )}

@@ -518,12 +518,16 @@ const Layout = () => {
     founder: "Founder",
   };
 
+  const discoveryPortalBaseUrl = (
+    import.meta.env.VITE_DISCOVERY_PORTAL_URL || "https://discovery.gryork.com"
+  ).replace(/\/+$/, "");
+
   const salesSubNav = [
     { to: "/sales", icon: Ico.grid, label: "Overview", exact: true },
     { to: "/sales/companies", icon: Ico.building, label: "Companies" },
     { to: "/sales/subcontractors", icon: Ico.users, label: "Sub-Contractors" },
     { to: "/sales/grylinks", icon: Ico.link, label: "GryLinks" },
-    { to: "http://localhost:5180/", icon: Ico.grid, label: "BDF Discovery" }, // External portal
+    { to: `${discoveryPortalBaseUrl}/`, icon: Ico.grid, label: "BDF Discovery" }, // External portal
   ];
 
   const opsSubNav = [
@@ -534,7 +538,7 @@ const Layout = () => {
     { to: "/ops/cwcrf", icon: Ico.cwcrf, label: "CWC Requests" },
     { to: "/ops/sla", icon: Ico.sla, label: "SLA Tracker" },
     { to: "/ops/nbfc", icon: Ico.building, label: "NBFC Onboarding" },
-    { to: "http://localhost:5180/fpdf", icon: Ico.building, label: "FPDF Discovery" }, // External portal
+    { to: `${discoveryPortalBaseUrl}/fpdf`, icon: Ico.building, label: "FPDF Discovery" }, // External portal
   ];
 
   return (

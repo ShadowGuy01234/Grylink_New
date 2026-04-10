@@ -51,7 +51,11 @@ type GrybotWidgetProps = {
   zIndex?: number;
 };
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV
+    ? "http://localhost:5000/api"
+    : "https://api.gryork.com/api");
 const MAX_INPUT_CHARS = 2000;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 

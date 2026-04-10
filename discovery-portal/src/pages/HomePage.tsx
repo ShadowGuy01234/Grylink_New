@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building, Landmark, Target, ArrowRight, ShieldCheck, Phone, GitPullRequest, Search, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { FPDF_FULL_FORM } from '../constants/discoveryLabels';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const HomePage: React.FC = () => {
           <div className="fc-header" style={{ borderColor: 'var(--color-green-accent)' }}>
             <div className="fc-icon"><Landmark size={32} color="var(--color-green-accent)" /></div>
             <h2>FPDF Pipeline</h2>
-            <span>Financial Partner Discovery Framework</span>
+            <span>{FPDF_FULL_FORM}</span>
           </div>
           <p className="fc-desc">Identify and onboard NBFCs, Banks, and Fintech lenders looking to disburse capital via the Grylink LSP network.</p>
 

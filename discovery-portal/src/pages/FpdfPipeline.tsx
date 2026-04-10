@@ -4,6 +4,7 @@ import { fpdfApi } from '../api';
 import ConversionMeter from '../components/ConversionMeter';
 import toast from 'react-hot-toast';
 import { Plus, BarChart2, MapPin, Building2, Info } from 'lucide-react';
+import { FPDF_FULL_FORM } from '../constants/discoveryLabels';
 
 interface FpdfEntry {
   _id: string;
@@ -49,7 +50,7 @@ const FpdfPipeline: React.FC = () => {
     <div>
       <div className="page-header">
         <h1>FPDF Pipeline</h1>
-        <p>All Financial Partner Discovery entries across all pipeline stages</p>
+        <p>{FPDF_FULL_FORM}</p>
       </div>
 
       <div className="filters-bar">
