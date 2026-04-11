@@ -225,53 +225,79 @@ The FPDF system streamlines identifying and converting financial institution par
 
 ## 3. FPDF Form Structure
 
-### Section A — Basic Info
+### Section A — Basic Information
 
-| Field | Options |
+| Field | Input Type / Options |
 |------|--------|
-| Company Name | Text |
-| Type | NBFC / Bank / Fintech |
-| Location | NCR / Non-NCR |
+| Company Name | Text input (free text) |
+| Institution Type | Dropdown: NBFC / Bank / Fintech |
+| Headquarters Location | Radio: Delhi NCR / Non-NCR |
 
 ---
 
-### Section B — Lending Fit
+### Section B — Lending Fit (Core Filter)
 
-**Segments**
-- MSME Lending  
-- Vendor Financing  
-- Infrastructure  
+**Sub-section: Lending Segment**
 
-**Products**
-- Working Capital  
-- Invoice Financing  
+| Field | Input Options |
+|------|--------|
+| MSME Lending | Yes / No |
+| Vendor / Contractor Financing | Yes / No |
+| Infrastructure Exposure | Yes / No |
 
-**Ticket Size**
-- ₹10L–₹2Cr / Higher  
+**Sub-section: Product Type**
 
-**Geography**
-- NCR / Pan India / Restricted  
+| Field | Input Options |
+|------|--------|
+| Working Capital Loans | Yes / No |
+| Invoice / Receivable Financing | Yes / No |
+
+**Sub-section: Ticket Size Fit**
+
+| Field | Input Options |
+|------|--------|
+| Ticket Size Compatibility | Radio: Matches Rs10L-<2Cr / Higher Only |
+
+**Sub-section: Geographic Preference**
+
+| Field | Input Options |
+|------|--------|
+| Delhi NCR Active | Yes / No |
+| Pan India Coverage | Yes / No |
+| Region Restricted | Yes / No |
 
 ---
 
 ### Section C — Outreach Tracking
 
+**Sub-section: LinkedIn Outreach**
+
 | Field | Options |
 |------|--------|
-| LinkedIn Outreach | Yes / No |
-| Response | Yes / No |
+| Outreach Attempted | Yes / No |
+| Response Received | Yes / No |
+
+**Sub-section: Call Interaction**
+
+| Field | Options |
+|------|--------|
 | Call Attempted | Yes / No |
-| Connected | Yes / No |
-| Conversation Quality | None / Basic / Meaningful |
+| Connected Successfully | Yes / No |
+
+**Sub-section: Conversation Quality**
+
+| Field | Options |
+|------|--------|
+| Conversation Quality | Radio: No Conversation / Basic Conversation / Meaningful Conversation |
 
 ---
 
-### Section D — Engagement
+### Section D — Engagement Status
 
 | Field | Options |
 |------|--------|
-| Meeting Status | Offline / Online / None |
-| Willingness | Open / Maybe / Not Interested |
+| Meeting Status | Radio: Offline Meeting Confirmed / Online Meeting Confirmed / Not Confirmed |
+| Partnership Willingness | Radio: Open / Maybe / Not Interested |
 
 ---
 

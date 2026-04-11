@@ -4,6 +4,29 @@ const User = require('../models/User');
 const { calculateFpdfScore } = require('./scoringEngine');
 const emailService = require('./emailService');
 
+const REQUIRED_CHECKLIST_CODES = [
+  'q01', 'q02', 'q03', 'q04', 'q05', 'q06', 'q07', 'q08', 'q09a', 'q09b',
+  'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16', 'q17', 'q18', 'q19',
+  'q20', 'q21', 'q22', 'q23', 'q24', 'q25', 'q26', 'q27', 'q28', 'q29',
+  'q30', 'q31', 'q32', 'q33', 'q34', 'q35',
+];
+const CHECKLIST_NOTE_REQUIRED_CODES = ['q33', 'q34', 'q35'];
+const CHECKLIST_RESPONSE_VALUES = new Set(['YES', 'NO', 'TO_CHECK_CONFIRM']);
+
+function resolveCoverageGeographies(entry) {
+  const preference = entry.geographicPreference || {};
+  const hasPanIndia = Boolean(preference.panIndiaCoverage) || entry.geography === 'PAN_INDIA';
+  const hasDelhiNcr = Boolean(preference.delhiNcrActive) || entry.geography === 'NCR' || hasPanIndia;
+  const isRestrictedOnly = Boolean(preference.regionRestricted) || entry.geography === 'RESTRICTED';
+
+  const geographies = [];
+  if (hasPanIndia) geographies.push('PAN_INDIA');
+  if (hasDelhiNcr) geographies.push('NCR');
+  if (!hasPanIndia && !hasDelhiNcr && isRestrictedOnly) geographies.push('RESTRICTED');
+
+  return geographies;
+}
+
 /**
  * Create a new FPDF entry (draft)
  */
@@ -73,6 +96,18 @@ async function updateEntry(id, data, userId) {
     if (data[field] !== undefined) entry[field] = data[field];
   }
 
+  // Update geographic preferences (new structure)
+  if (data.geographicPreference) {
+    const currentPreference = entry.geographicPreference?.toObject
+      ? entry.geographicPreference.toObject()
+      : (entry.geographicPreference || {});
+
+    entry.geographicPreference = {
+      ...currentPreference,
+      ...data.geographicPreference,
+    };
+  }
+
   // Update outreach
   if (data.outreach) {
     entry.outreach = { ...entry.outreach.toObject(), ...data.outreach };
@@ -81,6 +116,11 @@ async function updateEntry(id, data, userId) {
   // Update engagement
   if (data.engagement) {
     entry.engagement = { ...entry.engagement.toObject(), ...data.engagement };
+  }
+
+  // Update consultant checklist responses
+  if (Array.isArray(data.complianceChecklist)) {
+    entry.complianceChecklist = data.complianceChecklist;
   }
 
   if (entry.status === 'DRAFT') {
@@ -119,7 +159,8 @@ async function submitEntry(id, userId) {
   }
 
   // ≥1 human interaction
-  const hasHumanInteraction = o.callConnected || (e.meetingStatus && e.meetingStatus !== 'NONE');
+  const meetingConducted = Boolean(e.meetingStatus) && !['NONE', 'NOT_CONFIRMED'].includes(e.meetingStatus);
+  const hasHumanInteraction = o.callConnected || meetingConducted;
   if (!hasHumanInteraction) {
     errors.push('At least 1 human interaction required (call connected or meeting conducted)');
   }
@@ -127,6 +168,26 @@ async function submitEntry(id, userId) {
   // Required fields
   if (!entry.companyName || !entry.companyType || !entry.location) {
     errors.push('All Section A fields are required');
+  }
+
+  // Section E checklist validation
+  const checklistItems = Array.isArray(entry.complianceChecklist) ? entry.complianceChecklist : [];
+  const checklistByCode = new Map(checklistItems.map(item => [item.code, item]));
+
+  const pendingChecklistCodes = REQUIRED_CHECKLIST_CODES.filter((code) => {
+    const response = checklistByCode.get(code)?.response;
+    return !CHECKLIST_RESPONSE_VALUES.has(response);
+  });
+  if (pendingChecklistCodes.length > 0) {
+    errors.push(`All checklist questions must be answered (${pendingChecklistCodes.join(', ')})`);
+  }
+
+  const missingChecklistWriteups = CHECKLIST_NOTE_REQUIRED_CODES.filter((code) => {
+    const notes = checklistByCode.get(code)?.notes;
+    return !notes || !notes.trim();
+  });
+  if (missingChecklistWriteups.length > 0) {
+    errors.push(`Write-up is required for checklist questions (${missingChecklistWriteups.join(', ')})`);
   }
 
   if (errors.length > 0) {
@@ -169,8 +230,7 @@ async function convertToNbfc(id, userId, overrideData = {}) {
     address: entry.location === 'NCR' ? 'NCR Region' : '',
     status: 'ACTIVE',
     coverage: {
-      geographies: entry.geography === 'PAN_INDIA' ? ['PAN_INDIA'] :
-                   entry.geography === 'NCR' ? ['NCR'] : [],
+      geographies: resolveCoverageGeographies(entry),
     },
     statusHistory: [{ status: 'ACTIVE', changedBy: userId, notes: `Converted from FPDF Entry (Score: ${entry.scores.totalScore})` }],
   });

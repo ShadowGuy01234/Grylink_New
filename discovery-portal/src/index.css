@@ -427,6 +427,67 @@ body {
   color: white;
 }
 
+/* Checklist */
+.checklist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.checklist-card {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-dark-700);
+  padding: 14px;
+}
+
+.checklist-question {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+
+.checklist-serial {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-right: 4px;
+}
+
+.checklist-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checklist-detail-item {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-dark-700);
+  padding: 12px;
+}
+
+.checklist-detail-question {
+  margin: 0;
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+
+.checklist-detail-serial {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-right: 4px;
+}
+
+.checklist-detail-notes {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
 /* ─── TABLE ─────────────────────────────────────────────────────── */
 .data-table {
   width: 100%;

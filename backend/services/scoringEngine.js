@@ -179,7 +179,15 @@ function calculateFpdfEngagement(entry) {
   const e = entry.engagement || {};
 
   // Meeting status
-  const meetingMap = { 'OFFLINE': 40, 'ONLINE': 30, 'NONE': 0 };
+  const meetingMap = {
+    'OFFLINE_CONFIRMED': 40,
+    'ONLINE_CONFIRMED': 30,
+    'NOT_CONFIRMED': 0,
+    // Legacy values for backward compatibility
+    'OFFLINE': 40,
+    'ONLINE': 30,
+    'NONE': 0,
+  };
   score += meetingMap[e.meetingStatus] || 0;
 
   // Willingness
@@ -210,6 +218,12 @@ function calculateFpdfAccessibility(entry) {
 }
 
 function calculateFpdfGeography(entry) {
+  const preference = entry.geographicPreference || {};
+  if (preference.panIndiaCoverage) return 100;
+  if (preference.delhiNcrActive) return 70;
+  if (preference.regionRestricted) return 30;
+
+  // Legacy fallback for older entries.
   const map = { 'PAN_INDIA': 100, 'NCR': 70, 'RESTRICTED': 30 };
   return map[entry.geography] || 0;
 }

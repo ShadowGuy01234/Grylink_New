@@ -1,5 +1,20 @@
 const mongoose = require('mongoose');
 
+const CHECKLIST_RESPONSE_OPTIONS = ['YES', 'NO', 'TO_CHECK_CONFIRM'];
+
+const complianceChecklistItemSchema = new mongoose.Schema(
+  {
+    code: { type: String, required: true, trim: true },
+    question: { type: String, required: true, trim: true },
+    response: {
+      type: String,
+      enum: CHECKLIST_RESPONSE_OPTIONS,
+    },
+    notes: { type: String, trim: true, default: '' },
+  },
+  { _id: false }
+);
+
 const fpdfEntrySchema = new mongoose.Schema(
   {
     // ─── Section A — Basic Info ─────────────────────────────────────
@@ -32,6 +47,12 @@ const fpdfEntrySchema = new mongoose.Schema(
       type: String,
       enum: ['10L_2CR', 'HIGHER'],
     },
+    geographicPreference: {
+      delhiNcrActive: { type: Boolean, default: false },
+      panIndiaCoverage: { type: Boolean, default: false },
+      regionRestricted: { type: Boolean, default: false },
+    },
+    // Legacy geography field retained for backward compatibility.
     geography: {
       type: String,
       enum: ['NCR', 'PAN_INDIA', 'RESTRICTED'],
@@ -54,14 +75,20 @@ const fpdfEntrySchema = new mongoose.Schema(
     engagement: {
       meetingStatus: {
         type: String,
-        enum: ['OFFLINE', 'ONLINE', 'NONE'],
-        default: 'NONE',
+        enum: ['OFFLINE_CONFIRMED', 'ONLINE_CONFIRMED', 'NOT_CONFIRMED', 'OFFLINE', 'ONLINE', 'NONE'],
+        default: 'NOT_CONFIRMED',
       },
       willingness: {
         type: String,
         enum: ['OPEN', 'MAYBE', 'NOT_INTERESTED'],
         default: 'NOT_INTERESTED',
       },
+    },
+
+    // ─── Section E — Consultant Checklist (PDF) ───────────────────
+    complianceChecklist: {
+      type: [complianceChecklistItemSchema],
+      default: [],
     },
 
     // ─── Scores (auto-calculated) ───────────────────────────────────

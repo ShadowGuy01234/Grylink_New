@@ -3,18 +3,95 @@ import { useNavigate } from 'react-router-dom';
 import { fpdfApi } from '../api';
 import toast from 'react-hot-toast';
 import ConversionMeter from '../components/ConversionMeter';
-import { Landmark, Coins, Phone, Handshake, CheckCircle2, Check, Rocket } from 'lucide-react';
+import { Landmark, Coins, Phone, Handshake, CheckCircle2, Rocket, ClipboardList } from 'lucide-react';
+import {
+  CHECKLIST_RESPONSE_LABELS,
+  FPDF_CHECKLIST_QUESTIONS,
+  FPDF_CHECKLIST_RESPONSE_VALUES,
+  type ChecklistResponse,
+} from '../constants/fpdfChecklist';
+
+type GeographicPreferenceKey = 'delhiNcrActive' | 'panIndiaCoverage' | 'regionRestricted';
 
 const LENDING_SEGMENTS = [
   { value: 'MSME_LENDING', label: 'MSME Lending' },
   { value: 'VENDOR_FINANCING', label: 'Vendor Financing' },
-  { value: 'INFRASTRUCTURE', label: 'Infrastructure' },
+  { value: 'INFRASTRUCTURE', label: 'Infrastructure Exposure' },
 ];
 
 const PRODUCTS = [
-  { value: 'WORKING_CAPITAL', label: 'Working Capital' },
-  { value: 'INVOICE_FINANCING', label: 'Invoice Financing' },
+  { value: 'WORKING_CAPITAL', label: 'Working Capital Loans' },
+  { value: 'INVOICE_FINANCING', label: 'Invoice / Receivable Financing' },
 ];
+
+const TICKET_SIZE_OPTIONS = [
+  { value: '10L_2CR', label: 'Matches Rs10L-<2Cr' },
+  { value: 'HIGHER', label: 'Higher Only' },
+];
+
+const CONVERSATION_QUALITY_OPTIONS = [
+  { value: 'NONE', label: 'No Conversation' },
+  { value: 'BASIC', label: 'Basic Conversation' },
+  { value: 'MEANINGFUL', label: 'Meaningful Conversation' },
+];
+
+const MEETING_STATUS_OPTIONS = [
+  { value: 'OFFLINE_CONFIRMED', label: 'Offline Meeting Confirmed' },
+  { value: 'ONLINE_CONFIRMED', label: 'Online Meeting Confirmed' },
+  { value: 'NOT_CONFIRMED', label: 'Not Confirmed' },
+];
+
+const PARTNERSHIP_WILLINGNESS_OPTIONS = [
+  { value: 'OPEN', label: 'Open' },
+  { value: 'MAYBE', label: 'Maybe' },
+  { value: 'NOT_INTERESTED', label: 'Not Interested' },
+];
+
+const GEOGRAPHY_FIELDS: Array<{ key: GeographicPreferenceKey; label: string }> = [
+  { key: 'delhiNcrActive', label: 'Delhi NCR Active' },
+  { key: 'panIndiaCoverage', label: 'Pan India Coverage' },
+  { key: 'regionRestricted', label: 'Region Restricted' },
+];
+
+type ChecklistAnswer = {
+  response?: ChecklistResponse;
+  notes: string;
+};
+
+type ChecklistState = Record<string, ChecklistAnswer>;
+
+const createChecklistState = (): ChecklistState => {
+  const initial: ChecklistState = {};
+  for (const question of FPDF_CHECKLIST_QUESTIONS) {
+    initial[question.code] = { notes: '' };
+  }
+  return initial;
+};
+
+const mapChecklistStateToPayload = (state: ChecklistState) => {
+  return FPDF_CHECKLIST_QUESTIONS.map((question) => {
+    const answer = state[question.code];
+    const item: {
+      code: string;
+      question: string;
+      response?: ChecklistResponse;
+      notes?: string;
+    } = {
+      code: question.code,
+      question: question.text,
+    };
+
+    if (answer?.response) {
+      item.response = answer.response;
+    }
+
+    if (answer?.notes?.trim()) {
+      item.notes = answer.notes.trim();
+    }
+
+    return item;
+  });
+};
 
 const FpdfForm: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +109,11 @@ const FpdfForm: React.FC = () => {
   const [lendingSegments, setLendingSegments] = useState<string[]>([]);
   const [products, setProducts] = useState<string[]>([]);
   const [ticketSize, setTicketSize] = useState('10L_2CR');
-  const [geography, setGeography] = useState('NCR');
+  const [geographicPreference, setGeographicPreference] = useState({
+    delhiNcrActive: false,
+    panIndiaCoverage: false,
+    regionRestricted: false,
+  });
 
   // Section C
   const [linkedinOutreach, setLinkedinOutreach] = useState(false);
@@ -42,14 +123,18 @@ const FpdfForm: React.FC = () => {
   const [conversationQuality, setConversationQuality] = useState('NONE');
 
   // Section D
-  const [meetingStatus, setMeetingStatus] = useState('NONE');
+  const [meetingStatus, setMeetingStatus] = useState('NOT_CONFIRMED');
   const [willingness, setWillingness] = useState('NOT_INTERESTED');
+
+  // Section E
+  const [complianceChecklist, setComplianceChecklist] = useState<ChecklistState>(createChecklistState);
 
   const steps = [
     { label: 'Basic Info', icon: '🏦' },
     { label: 'Lending Fit', icon: '💰' },
     { label: 'Outreach', icon: '📞' },
     { label: 'Engagement', icon: '🤝' },
+    { label: 'Checklist', icon: '📋' },
     { label: 'Review', icon: '✅' },
   ];
 
@@ -58,9 +143,10 @@ const FpdfForm: React.FC = () => {
     try {
       const data = {
         companyName, companyType, location,
-        lendingSegments, products, ticketSize, geography,
+        lendingSegments, products, ticketSize, geographicPreference,
         outreach: { linkedinOutreach, linkedinResponse, callAttempted, callConnected, conversationQuality },
-        engagement: { meetingStatus, willingness }
+        engagement: { meetingStatus, willingness },
+        complianceChecklist: mapChecklistStateToPayload(complianceChecklist),
       };
 
       let res;
@@ -90,7 +176,18 @@ const FpdfForm: React.FC = () => {
         return toast.error('Please fill all Section A fields');
       }
     }
-    if (step <= 3) {
+
+    if (step === 4) {
+      const checklistValidation = getChecklistValidationErrors();
+      if (checklistValidation.unanswered.length > 0) {
+        return toast.error(`Please answer checklist questions: ${formatSerialList(checklistValidation.unanswered)}`);
+      }
+      if (checklistValidation.missingNotes.length > 0) {
+        return toast.error(`Write-up required for: ${formatSerialList(checklistValidation.missingNotes)}`);
+      }
+    }
+
+    if (step <= 4) {
       await saveOrCreate();
     }
     setStep(s => Math.min(s + 1, steps.length - 1));
@@ -99,6 +196,14 @@ const FpdfForm: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!entryId) return toast.error('Save the entry first');
+
+    const checklistValidation = getChecklistValidationErrors();
+    if (checklistValidation.unanswered.length > 0) {
+      return toast.error(`Please answer checklist questions: ${formatSerialList(checklistValidation.unanswered)}`);
+    }
+    if (checklistValidation.missingNotes.length > 0) {
+      return toast.error(`Write-up required for: ${formatSerialList(checklistValidation.missingNotes)}`);
+    }
 
     let outreachCount = 0;
     if (linkedinOutreach) outreachCount++;
@@ -119,13 +224,92 @@ const FpdfForm: React.FC = () => {
     }
   };
 
-  const toggleArray = (val: string, arr: string[], setArr: (val: string[]) => void) => {
-    if (arr.includes(val)) {
-      setArr(arr.filter(v => v !== val));
-    } else {
-      setArr([...arr, val]);
+  const setArrayYesNo = (
+    value: string,
+    nextValue: boolean,
+    arr: string[],
+    setArr: (next: string[]) => void
+  ) => {
+    if (nextValue) {
+      if (!arr.includes(value)) setArr([...arr, value]);
+      return;
+    }
+    if (arr.includes(value)) {
+      setArr(arr.filter(item => item !== value));
     }
   };
+
+  const setGeoPreferenceValue = (field: GeographicPreferenceKey, nextValue: boolean) => {
+    setGeographicPreference(prev => ({ ...prev, [field]: nextValue }));
+  };
+
+  const getOptionLabel = (options: Array<{ value: string; label: string }>, value: string) => {
+    return options.find(option => option.value === value)?.label || value;
+  };
+
+  const setChecklistResponse = (code: string, response: ChecklistResponse) => {
+    setComplianceChecklist(prev => ({
+      ...prev,
+      [code]: {
+        ...prev[code],
+        response,
+      },
+    }));
+  };
+
+  const setChecklistNotes = (code: string, notes: string) => {
+    setComplianceChecklist(prev => ({
+      ...prev,
+      [code]: {
+        ...prev[code],
+        notes,
+      },
+    }));
+  };
+
+  const getChecklistValidationErrors = () => {
+    const unanswered: string[] = [];
+    const missingNotes: string[] = [];
+
+    for (const question of FPDF_CHECKLIST_QUESTIONS) {
+      const answer = complianceChecklist[question.code];
+      if (!answer?.response) {
+        unanswered.push(question.serial);
+        continue;
+      }
+
+      if (question.requiresNotes && !answer.notes.trim()) {
+        missingNotes.push(question.serial);
+      }
+    }
+
+    return { unanswered, missingNotes };
+  };
+
+  const formatSerialList = (serials: string[]) => {
+    const maxShown = 5;
+    const head = serials.slice(0, maxShown).join(', ');
+    if (serials.length <= maxShown) return head;
+    return `${head} +${serials.length - maxShown} more`;
+  };
+
+  const checklistAnsweredCount = FPDF_CHECKLIST_QUESTIONS.filter(
+    question => Boolean(complianceChecklist[question.code]?.response)
+  ).length;
+  const checklistNotesRequiredCount = FPDF_CHECKLIST_QUESTIONS.filter(question => question.requiresNotes).length;
+  const checklistNotesCompletedCount = FPDF_CHECKLIST_QUESTIONS.filter(
+    question => question.requiresNotes && Boolean(complianceChecklist[question.code]?.notes.trim())
+  ).length;
+
+  const renderYesNoField = (label: string, value: boolean, onChange: (nextValue: boolean) => void) => (
+    <div className="form-group" key={label}>
+      <label>{label}</label>
+      <div className="toggle-group">
+        <div className={`toggle-option ${value ? 'active' : ''}`} onClick={() => onChange(true)}>Yes</div>
+        <div className={`toggle-option ${!value ? 'active' : ''}`} onClick={() => onChange(false)}>No</div>
+      </div>
+    </div>
+  );
 
   return (
     <div>
@@ -152,25 +336,25 @@ const FpdfForm: React.FC = () => {
           {/* Step 0: Basic Info */}
           {step === 0 && (
             <div className="form-section">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Landmark size={20} /> Section A — Basic Info</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Landmark size={20} /> Section A — Basic Information</h3>
               <div className="form-group">
                 <label>Company Name *</label>
                 <input value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Enter institution name" />
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Company Type *</label>
+                  <label>Institution Type *</label>
                   <div className="toggle-group">
-                    {['NBFC', 'BANK', 'FINTECH'].map(t => (
-                      <div key={t} className={`toggle-option ${companyType === t ? 'active' : ''}`} onClick={() => setCompanyType(t)}>{t}</div>
+                    {[{ value: 'NBFC', label: 'NBFC' }, { value: 'BANK', label: 'Bank' }, { value: 'FINTECH', label: 'Fintech' }].map(t => (
+                      <div key={t.value} className={`toggle-option ${companyType === t.value ? 'active' : ''}`} onClick={() => setCompanyType(t.value)}>{t.label}</div>
                     ))}
                   </div>
                 </div>
                 <div className="form-group">
-                  <label>Location *</label>
+                  <label>Headquarters Location *</label>
                   <div className="toggle-group">
-                    {['NCR', 'NON_NCR'].map(t => (
-                      <div key={t} className={`toggle-option ${location === t ? 'active' : ''}`} onClick={() => setLocation(t)}>{t.replace('_', ' ')}</div>
+                    {[{ value: 'NCR', label: 'Delhi NCR' }, { value: 'NON_NCR', label: 'Non-NCR' }].map(t => (
+                      <div key={t.value} className={`toggle-option ${location === t.value ? 'active' : ''}`} onClick={() => setLocation(t.value)}>{t.label}</div>
                     ))}
                   </div>
                 </div>
@@ -181,44 +365,55 @@ const FpdfForm: React.FC = () => {
           {/* Step 1: Lending Fit */}
           {step === 1 && (
             <div className="form-section">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Coins size={20} /> Section B — Lending Fit</h3>
-              <div className="form-group">
-                <label>Lending Segments</label>
-                <div className="toggle-group">
-                  {LENDING_SEGMENTS.map(s => (
-                    <div key={s.value} className={`toggle-option ${lendingSegments.includes(s.value) ? 'active' : ''}`} onClick={() => toggleArray(s.value, lendingSegments, setLendingSegments)}>
-                      {s.label}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Products</label>
-                <div className="toggle-group">
-                  {PRODUCTS.map(p => (
-                    <div key={p.value} className={`toggle-option ${products.includes(p.value) ? 'active' : ''}`} onClick={() => toggleArray(p.value, products, setProducts)}>
-                      {p.label}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Coins size={20} /> Section B — Lending Fit (Core Filter)</h3>
+
+              <p className="section-desc" style={{ marginBottom: 10, marginTop: 12 }}>Sub-section: Lending Segment</p>
               <div className="form-row">
-                 <div className="form-group">
-                  <label>Ticket Size</label>
-                  <div className="toggle-group">
-                    {[{value: '10L_2CR', label: '10 Lakhs - 2 Cr'}, {value: 'HIGHER', label: 'Higher (> 2Cr)'}].map(t => (
-                      <div key={t.value} className={`toggle-option ${ticketSize === t.value ? 'active' : ''}`} onClick={() => setTicketSize(t.value)}>{t.label}</div>
-                    ))}
-                  </div>
+                {LENDING_SEGMENTS.map(segment => (
+                  renderYesNoField(
+                    segment.label,
+                    lendingSegments.includes(segment.value),
+                    (nextValue) => setArrayYesNo(segment.value, nextValue, lendingSegments, setLendingSegments)
+                  )
+                ))}
+              </div>
+
+              <p className="section-desc" style={{ marginBottom: 10, marginTop: 16 }}>Sub-section: Product Type</p>
+              <div className="form-row">
+                {PRODUCTS.map(product => (
+                  renderYesNoField(
+                    product.label,
+                    products.includes(product.value),
+                    (nextValue) => setArrayYesNo(product.value, nextValue, products, setProducts)
+                  )
+                ))}
+              </div>
+
+              <p className="section-desc" style={{ marginBottom: 10, marginTop: 16 }}>Sub-section: Ticket Size Fit</p>
+              <div className="form-group">
+                <label>Ticket Size Compatibility</label>
+                <div className="toggle-group">
+                  {TICKET_SIZE_OPTIONS.map(option => (
+                    <div
+                      key={option.value}
+                      className={`toggle-option ${ticketSize === option.value ? 'active' : ''}`}
+                      onClick={() => setTicketSize(option.value)}
+                    >
+                      {option.label}
+                    </div>
+                  ))}
                 </div>
-                <div className="form-group">
-                  <label>Geography focus</label>
-                  <div className="toggle-group">
-                    {[{value: 'PAN_INDIA', label: 'Pan India'}, {value: 'NCR', label: 'NCR Only'}, {value: 'RESTRICTED', label: 'Restricted'}].map(g => (
-                      <div key={g.value} className={`toggle-option ${geography === g.value ? 'active' : ''}`} onClick={() => setGeography(g.value)}>{g.label}</div>
-                    ))}
-                  </div>
-                </div>
+              </div>
+
+              <p className="section-desc" style={{ marginBottom: 10, marginTop: 16 }}>Sub-section: Geographic Preference</p>
+              <div className="form-row">
+                {GEOGRAPHY_FIELDS.map(field => (
+                  renderYesNoField(
+                    field.label,
+                    geographicPreference[field.key],
+                    (nextValue) => setGeoPreferenceValue(field.key, nextValue)
+                  )
+                ))}
               </div>
             </div>
           )}
@@ -227,31 +422,30 @@ const FpdfForm: React.FC = () => {
           {step === 2 && (
             <div className="form-section">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Phone size={20} /> Section C — Outreach Tracking</h3>
+              <p className="section-desc" style={{ marginBottom: 10, marginTop: 12 }}>Sub-section: LinkedIn Outreach</p>
               <div className="form-row">
-                 <div className="form-group">
-                  <label>LinkedIn</label>
-                  <div className={`checkbox-toggle ${linkedinOutreach ? 'checked' : ''} mb-2`} onClick={() => setLinkedinOutreach(!linkedinOutreach)}>
-                    <div className="check-icon">{linkedinOutreach ? <Check size={14} /> : ''}</div> <span>Outreach attempt made</span>
-                  </div>
-                  <div className={`checkbox-toggle ${linkedinResponse ? 'checked' : ''}`} onClick={() => setLinkedinResponse(!linkedinResponse)}>
-                    <div className="check-icon">{linkedinResponse ? <Check size={14} /> : ''}</div> <span>Response received</span>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Cold Calling</label>
-                  <div className={`checkbox-toggle ${callAttempted ? 'checked' : ''} mb-2`} onClick={() => setCallAttempted(!callAttempted)}>
-                    <div className="check-icon">{callAttempted ? <Check size={14} /> : ''}</div> <span>Call attempted</span>
-                  </div>
-                   <div className={`checkbox-toggle ${callConnected ? 'checked' : ''}`} onClick={() => setCallConnected(!callConnected)}>
-                    <div className="check-icon">{callConnected ? <Check size={14} /> : ''}</div> <span>Call successfully connected</span>
-                  </div>
-                </div>
+                {renderYesNoField('Outreach Attempted', linkedinOutreach, setLinkedinOutreach)}
+                {renderYesNoField('Response Received', linkedinResponse, setLinkedinResponse)}
               </div>
-              <div className="form-group mt-4">
+
+              <p className="section-desc" style={{ marginBottom: 10, marginTop: 16 }}>Sub-section: Call Interaction</p>
+              <div className="form-row">
+                {renderYesNoField('Call Attempted', callAttempted, setCallAttempted)}
+                {renderYesNoField('Connected Successfully', callConnected, setCallConnected)}
+              </div>
+
+              <p className="section-desc" style={{ marginBottom: 10, marginTop: 16 }}>Sub-section: Conversation Quality</p>
+              <div className="form-group">
                 <label>Conversation Quality</label>
                 <div className="toggle-group">
-                  {['NONE', 'BASIC', 'MEANINGFUL'].map(c => (
-                    <div key={c} className={`toggle-option ${conversationQuality === c ? 'active' : ''}`} onClick={() => setConversationQuality(c)}>{c}</div>
+                  {CONVERSATION_QUALITY_OPTIONS.map(option => (
+                    <div
+                      key={option.value}
+                      className={`toggle-option ${conversationQuality === option.value ? 'active' : ''}`}
+                      onClick={() => setConversationQuality(option.value)}
+                    >
+                      {option.label}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -261,21 +455,33 @@ const FpdfForm: React.FC = () => {
           {/* Step 3: Engagement */}
           {step === 3 && (
             <div className="form-section">
-               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Handshake size={20} /> Section D — Engagement</h3>
+               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Handshake size={20} /> Section D — Engagement Status</h3>
                <div className="form-row">
                 <div className="form-group">
                   <label>Meeting Status</label>
                   <div className="toggle-group">
-                    {['NONE', 'ONLINE', 'OFFLINE'].map(m => (
-                      <div key={m} className={`toggle-option ${meetingStatus === m ? 'active' : ''}`} onClick={() => setMeetingStatus(m)}>{m}</div>
+                    {MEETING_STATUS_OPTIONS.map(option => (
+                      <div
+                        key={option.value}
+                        className={`toggle-option ${meetingStatus === option.value ? 'active' : ''}`}
+                        onClick={() => setMeetingStatus(option.value)}
+                      >
+                        {option.label}
+                      </div>
                     ))}
                   </div>
                 </div>
                 <div className="form-group">
-                  <label>Partner Willingness</label>
+                  <label>Partnership Willingness</label>
                   <div className="toggle-group">
-                    {['NOT_INTERESTED', 'MAYBE', 'OPEN'].map(w => (
-                      <div key={w} className={`toggle-option ${willingness === w ? 'active' : ''}`} onClick={() => setWillingness(w)}>{w.replace('_', ' ')}</div>
+                    {PARTNERSHIP_WILLINGNESS_OPTIONS.map(option => (
+                      <div
+                        key={option.value}
+                        className={`toggle-option ${willingness === option.value ? 'active' : ''}`}
+                        onClick={() => setWillingness(option.value)}
+                      >
+                        {option.label}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -286,15 +492,68 @@ const FpdfForm: React.FC = () => {
           {/* Step 4: Review */}
           {step === 4 && (
             <div className="form-section">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><ClipboardList size={20} /> Section E — Consultant Checklist (PDF)</h3>
+              <p className="section-desc">All questions from the consultant checklist PDF. Mark each one before submission.</p>
+              <p className="section-desc" style={{ marginBottom: 12 }}>
+                Responses completed: <strong>{checklistAnsweredCount}/{FPDF_CHECKLIST_QUESTIONS.length}</strong>
+              </p>
+
+              <div className="checklist-list">
+                {FPDF_CHECKLIST_QUESTIONS.map((question) => {
+                  const answer = complianceChecklist[question.code] || { notes: '' };
+                  return (
+                    <div className="checklist-card" key={question.code}>
+                      <p className="checklist-question">
+                        <span className="checklist-serial">{question.serial}.</span> {question.text}
+                      </p>
+
+                      <div className="toggle-group">
+                        {FPDF_CHECKLIST_RESPONSE_VALUES.map((responseValue) => (
+                          <div
+                            key={`${question.code}-${responseValue}`}
+                            className={`toggle-option ${answer.response === responseValue ? 'active' : ''}`}
+                            onClick={() => setChecklistResponse(question.code, responseValue)}
+                          >
+                            {CHECKLIST_RESPONSE_LABELS[responseValue]}
+                          </div>
+                        ))}
+                      </div>
+
+                      {(question.requiresNotes || question.notesHint || answer.notes) && (
+                        <div className="form-group" style={{ marginTop: 12 }}>
+                          <label>{question.requiresNotes ? 'Write-up (required)' : 'Notes (optional)'}</label>
+                          <textarea
+                            value={answer.notes}
+                            onChange={(e) => setChecklistNotes(question.code, e.target.value)}
+                            placeholder={question.notesHint || 'Add notes for this question'}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: Review */}
+          {step === 5 && (
+            <div className="form-section">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CheckCircle2 size={20} /> Review & Submit</h3>
               <p className="section-desc">Review FPDF information before final submission</p>
               <div className="info-grid mb-6">
                 <div className="info-item"><label>Company</label><p>{companyName}</p></div>
-                <div className="info-item"><label>Type</label><p>{companyType}</p></div>
-                <div className="info-item"><label>Location</label><p>{location}</p></div>
-                <div className="info-item"><label>Ticket Size</label><p>{ticketSize}</p></div>
-                <div className="info-item"><label>Geography</label><p>{geography}</p></div>
-                <div className="info-item"><label>Convo Quality</label><p>{conversationQuality}</p></div>
+                <div className="info-item"><label>Institution Type</label><p>{getOptionLabel([{ value: 'NBFC', label: 'NBFC' }, { value: 'BANK', label: 'Bank' }, { value: 'FINTECH', label: 'Fintech' }], companyType)}</p></div>
+                <div className="info-item"><label>Headquarters Location</label><p>{location === 'NCR' ? 'Delhi NCR' : 'Non-NCR'}</p></div>
+                <div className="info-item"><label>Ticket Size Fit</label><p>{getOptionLabel(TICKET_SIZE_OPTIONS, ticketSize)}</p></div>
+                <div className="info-item"><label>Delhi NCR Active</label><p>{geographicPreference.delhiNcrActive ? 'Yes' : 'No'}</p></div>
+                <div className="info-item"><label>Pan India Coverage</label><p>{geographicPreference.panIndiaCoverage ? 'Yes' : 'No'}</p></div>
+                <div className="info-item"><label>Region Restricted</label><p>{geographicPreference.regionRestricted ? 'Yes' : 'No'}</p></div>
+                <div className="info-item"><label>Convo Quality</label><p>{getOptionLabel(CONVERSATION_QUALITY_OPTIONS, conversationQuality)}</p></div>
+                <div className="info-item"><label>Meeting Status</label><p>{getOptionLabel(MEETING_STATUS_OPTIONS, meetingStatus)}</p></div>
+                <div className="info-item"><label>Partnership Willingness</label><p>{getOptionLabel(PARTNERSHIP_WILLINGNESS_OPTIONS, willingness)}</p></div>
+                <div className="info-item"><label>Checklist Responses</label><p>{checklistAnsweredCount}/{FPDF_CHECKLIST_QUESTIONS.length}</p></div>
+                <div className="info-item"><label>Checklist Write-ups</label><p>{checklistNotesCompletedCount}/{checklistNotesRequiredCount}</p></div>
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
@@ -336,13 +595,13 @@ const FpdfForm: React.FC = () => {
 
       </div>
 
-      {step < 4 && (
+      {step < 5 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
           <button className="btn btn-outline" onClick={() => setStep(s => Math.max(s - 1, 0))} disabled={step === 0}>
             ← Previous
           </button>
           <button className="btn btn-primary" onClick={handleNext} disabled={saving}>
-            {saving ? 'Saving...' : step === 3 ? 'Review →' : 'Save & Next →'}
+            {saving ? 'Saving...' : step === 4 ? 'Review →' : 'Save & Next →'}
           </button>
         </div>
       )}
