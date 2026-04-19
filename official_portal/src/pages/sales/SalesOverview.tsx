@@ -80,6 +80,13 @@ const timeSince = (d: string) => {
   return `${days}d ago`;
 };
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 2,
+  }).format(Number.isFinite(value) ? value : 0);
+
 // ─── Subcomponents ───────────────────────────────────────────────────────────
 
 const KpiCard = ({
@@ -223,6 +230,11 @@ const SalesOverview = () => {
   const [feedbackItems, setFeedbackItems] = useState<PublicFeedback[]>([]);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [updatingFeedbackId, setUpdatingFeedbackId] = useState<string | null>(null);
+  const [billAmount, setBillAmount] = useState<number>(0);
+  const [interestRatePa, setInterestRatePa] = useState<number>(16);
+  const [tenureValue, setTenureValue] = useState<number>(30);
+  const [tenureUnit, setTenureUnit] = useState<'months' | 'days'>('days');
+  const [repaymentMode, setRepaymentMode] = useState<'simple' | 'emi'>('simple');
 
   const fetchStats = async () => {
     try {
@@ -293,6 +305,33 @@ const SalesOverview = () => {
     : mom?.thisMonth
     ? 100
     : 0;
+
+  const discountedAmount = billAmount * 0.8;
+  const processingFeeRate = 3;
+  const processingFeeAmount = discountedAmount * (processingFeeRate / 100);
+  const netDisbursal = Math.max(discountedAmount - processingFeeAmount, 0);
+
+  const totalDays = tenureUnit === 'days' ? tenureValue : tenureValue * 30;
+  const totalMonths = tenureUnit === 'months' ? tenureValue : Math.max(1, Math.ceil(totalDays / 30));
+
+  const dailyInterest = discountedAmount * (interestRatePa / 100) / 365;
+  const monthlyInterest = discountedAmount * (interestRatePa / 100) / 12;
+  const simpleInterestTotal = discountedAmount * (interestRatePa / 100) * (totalDays / 365);
+
+  const monthlyRate = interestRatePa / 1200;
+  const emiAmount =
+    repaymentMode === 'emi'
+      ? monthlyRate > 0
+        ? (discountedAmount * monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) /
+          (Math.pow(1 + monthlyRate, totalMonths) - 1)
+        : discountedAmount / Math.max(totalMonths, 1)
+      : 0;
+  const emiTotalPayable = emiAmount * totalMonths;
+  const emiInterestTotal = Math.max(emiTotalPayable - discountedAmount, 0);
+
+  const selectedInterestTotal = repaymentMode === 'emi' ? emiInterestTotal : simpleInterestTotal;
+  const totalCharges = selectedInterestTotal + processingFeeAmount;
+  const maturityPayable = discountedAmount + selectedInterestTotal;
 
   if (loading) return <div className="page-loading">Loading dashboard…</div>;
 
@@ -368,6 +407,149 @@ const SalesOverview = () => {
           color={(stats?.totals.pendingContact ?? 0) > 0 ? 'red' : 'green'}
           onClick={() => navigate('/sales/subcontractors?contacted=false')}
         />
+      </div>
+
+      {/* ── Sales Calculator ── */}
+      <div
+        style={{
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: 14,
+          padding: '20px 22px',
+          marginBottom: 24,
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0a2463', margin: 0 }}>Sales Calculator</h3>
+            <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+              Bill discounting at 80%, interest/EMI projection, 3% processing fee, and estimated payable summary.
+            </p>
+          </div>
+          <span style={{ fontSize: 11, color: '#1E5AAF', background: 'rgba(30,90,175,0.08)', padding: '4px 10px', borderRadius: 999, fontWeight: 600 }}>
+            Discount Rate: 80%
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12, marginBottom: 16 }}>
+          <div>
+            <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Total Bill Amount</label>
+            <input
+              type="number"
+              min={0}
+              value={billAmount || ''}
+              onChange={(e) => setBillAmount(Math.max(Number(e.target.value) || 0, 0))}
+              placeholder="Enter bill amount"
+              style={{ width: '100%', marginTop: 6, border: '1px solid #d1d5db', borderRadius: 10, padding: '10px 12px', fontSize: 14 }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Interest Rate (% p.a.)</label>
+            <input
+              type="number"
+              min={0}
+              step={0.1}
+              value={interestRatePa || ''}
+              onChange={(e) => setInterestRatePa(Math.max(Number(e.target.value) || 0, 0))}
+              placeholder="e.g. 16"
+              style={{ width: '100%', marginTop: 6, border: '1px solid #d1d5db', borderRadius: 10, padding: '10px 12px', fontSize: 14 }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Tenure</label>
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              <input
+                type="number"
+                min={1}
+                value={tenureValue || ''}
+                onChange={(e) => setTenureValue(Math.max(Number(e.target.value) || 1, 1))}
+                style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: 10, padding: '10px 12px', fontSize: 14 }}
+              />
+              <select
+                value={tenureUnit}
+                onChange={(e) => setTenureUnit(e.target.value as 'months' | 'days')}
+                style={{ border: '1px solid #d1d5db', borderRadius: 10, padding: '10px 12px', fontSize: 14 }}
+              >
+                <option value="days">Days</option>
+                <option value="months">Months</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, color: '#6b7280', fontWeight: 600 }}>Repayment Projection</label>
+            <select
+              value={repaymentMode}
+              onChange={(e) => setRepaymentMode(e.target.value as 'simple' | 'emi')}
+              style={{ width: '100%', marginTop: 6, border: '1px solid #d1d5db', borderRadius: 10, padding: '10px 12px', fontSize: 14 }}
+            >
+              <option value="simple">Simple Interest</option>
+              <option value="emi">EMI (Reducing Balance)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
+          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: 10 }}>
+            <div style={{ fontSize: 11, color: '#1E5AAF', fontWeight: 600 }}>80% Bill Discounted Amount</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#1e3a8a', marginTop: 4 }}>{formatCurrency(discountedAmount)}</div>
+          </div>
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: 10 }}>
+            <div style={{ fontSize: 11, color: '#b91c1c', fontWeight: 600 }}>Processing Fee (3%)</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#7f1d1d', marginTop: 4 }}>{formatCurrency(processingFeeAmount)}</div>
+          </div>
+          <div style={{ background: '#ecfdf5', border: '1px solid #bbf7d0', borderRadius: 10, padding: 10 }}>
+            <div style={{ fontSize: 11, color: '#15803d', fontWeight: 600 }}>Net Estimated Disbursal</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#14532d', marginTop: 4 }}>{formatCurrency(netDisbursal)}</div>
+          </div>
+          <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 10, padding: 10 }}>
+            <div style={{ fontSize: 11, color: '#7c3aed', fontWeight: 600 }}>Total Interest ({repaymentMode === 'emi' ? 'EMI' : 'Simple'})</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#5b21b6', marginTop: 4 }}>{formatCurrency(selectedInterestTotal)}</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 8 }}>Monthly / Daily Estimate</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4b5563', marginBottom: 6 }}>
+              <span>Interest per month</span>
+              <strong style={{ color: '#111827' }}>{formatCurrency(monthlyInterest)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4b5563' }}>
+              <span>Interest per day</span>
+              <strong style={{ color: '#111827' }}>{formatCurrency(dailyInterest)}</strong>
+            </div>
+          </div>
+
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 8 }}>Overall Estimated Charges</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4b5563', marginBottom: 6 }}>
+              <span>Interest + Processing Fee</span>
+              <strong style={{ color: '#111827' }}>{formatCurrency(totalCharges)}</strong>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4b5563' }}>
+              <span>Estimated maturity payable</span>
+              <strong style={{ color: '#111827' }}>{formatCurrency(maturityPayable)}</strong>
+            </div>
+          </div>
+
+          {repaymentMode === 'emi' && (
+            <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 8 }}>EMI Projection</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4b5563', marginBottom: 6 }}>
+                <span>Estimated monthly EMI</span>
+                <strong style={{ color: '#111827' }}>{formatCurrency(emiAmount)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4b5563' }}>
+                <span>Total payable across {totalMonths} month(s)</span>
+                <strong style={{ color: '#111827' }}>{formatCurrency(emiTotalPayable)}</strong>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Row: Funnel + This Month + Action Required ── */}
