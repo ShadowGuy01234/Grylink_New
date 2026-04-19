@@ -31,7 +31,7 @@ const variantConfig: Record<DiagramVariant, DiagramConfig> = {
     ],
     stages: [
       { title: "KYC", status: "Completed", detail: "Business and identity checks verified" },
-      { title: "Bill Upload", status: "Completed", detail: "RA bill and CWCRF submitted" },
+      { title: "Bill Upload", status: "Completed", detail: "RA bill and Requesting Form submitted" },
       { title: "EPC Verify", status: "In Review", detail: "PO/GRN work-match validation running" },
       { title: "NBFC Bid", status: "Queued", detail: "Offer window opens after EPC verify" },
       { title: "Disburse", status: "Pending", detail: "Triggered after acceptance" },

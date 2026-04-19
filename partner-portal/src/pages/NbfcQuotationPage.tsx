@@ -122,7 +122,7 @@ const NbfcQuotationPage: React.FC = () => {
       setCwcafData(res.data.cwcaf);
       setShowCwcaf(true);
     } catch (err) {
-      toast.error("Failed to load CWCAF");
+      toast.error("Failed to load Approved Form");
     }
   };
 
@@ -340,7 +340,7 @@ const NbfcQuotationPage: React.FC = () => {
         <main className="main-content-area flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
-            <p className="text-sm text-gray-500">Loading available CWCRFs…</p>
+            <p className="text-sm text-gray-500">Loading available Requesting Forms…</p>
           </div>
         </main>
       </div>
@@ -352,7 +352,7 @@ const NbfcQuotationPage: React.FC = () => {
       {sidebarContent}
       <main className="main-content-area">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">CWCRF Quotations</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Requesting Form Quotations</h1>
           <p className="text-gray-600">
             Review CWC requests and submit your quotations
           </p>
@@ -387,15 +387,15 @@ const NbfcQuotationPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* CWCRF List */}
+          {/* Requesting Form List */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow">
               <div className="p-4 border-b">
-                <h2 className="text-lg font-semibold">Available CWCRFs</h2>
+                <h2 className="text-lg font-semibold">Available Requesting Forms</h2>
               </div>
               {availableCwcrfs.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
-                  <p>No CWCRFs available for quotation</p>
+                  <p>No Requesting Forms available for quotation</p>
                 </div>
               ) : (
                 <div className="divide-y max-h-[600px] overflow-y-auto">
@@ -435,7 +435,7 @@ const NbfcQuotationPage: React.FC = () => {
               )}
             </div>
 
-            {/* Already Quoted CWCRFs */}
+            {/* Already Quoted Requesting Forms */}
             {quotedCwcrfs.length > 0 && (
               <div className="bg-white rounded-lg shadow mt-4">
                 <div className="p-4 border-b">
@@ -490,15 +490,15 @@ const NbfcQuotationPage: React.FC = () => {
           <div className="lg:col-span-2">
             {selectedCwcrf ? (
               <div className="space-y-6">
-                {/* CWCRF Details */}
+                {/* Requesting Form Details */}
                 <div className="bg-white rounded-lg shadow p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold">CWCRF Details</h2>
+                    <h2 className="text-lg font-semibold">Requesting Form Details</h2>
                     <button
                       onClick={() => loadCwcaf(selectedCwcrf._id)}
                       className="text-blue-600 hover:text-blue-800 text-sm"
                     >
-                      {showCwcaf ? "Hide CWCAF" : "View CWCAF"}
+                      {showCwcaf ? "Hide Approved Form" : "View Approved Form"}
                     </button>
                   </div>
 
@@ -563,11 +563,11 @@ const NbfcQuotationPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* CWCAF Panel */}
+                  {/* Approved Form Panel */}
                   {showCwcaf && cwcafData && (
                     <div className="border-t pt-4 mt-4">
                       <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                        CWCAF Summary
+                        Approved Form Summary
                       </h3>
                       <div className="bg-gray-50 p-4 rounded">
                         <div className="grid grid-cols-3 gap-4 mb-3">
@@ -793,10 +793,10 @@ const NbfcQuotationPage: React.FC = () => {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-700 mb-2">
-                  Select a CWCRF
+                  Select a Requesting Form
                 </h3>
                 <p className="text-gray-500">
-                  Click on a CWCRF from the list to review details and submit
+                  Click on a Requesting Form from the list to review details and submit
                   your quotation
                 </p>
               </div>

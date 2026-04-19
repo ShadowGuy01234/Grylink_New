@@ -40,33 +40,33 @@ const FAQ_ITEMS = [
   },
   {
     id: "cwcrf-1",
-    category: "CWCRF & Financing",
-    question: "What is a CWCRF and how do I submit one?",
-    answer: "CWCRF stands for Credit on Working Capital Request Form. It is your financing application to request funds against an invoice raised to an EPC company. To submit: go to 'CWC RF' tab, fill in buyer (EPC) details, invoice details, credit request amount, tenure, and interest preference. Attach the RA Bill and any work completion certificates.",
+    category: "Requesting Form & Financing",
+    question: "What is a Requesting Form and how do I submit one?",
+    answer: "Requesting Form stands for Credit on Working Capital Request Form. It is your financing application to request funds against an invoice raised to an EPC company. To submit: go to 'Requesting Form' tab, fill in buyer (EPC) details, invoice details, credit request amount, tenure, and interest preference. Attach the RA Bill and any work completion certificates.",
   },
   {
     id: "cwcrf-2",
-    category: "CWCRF & Financing",
+    category: "Requesting Form & Financing",
     question: "What is the platform fee and why is it charged?",
-    answer: "A one-time non-refundable platform processing fee of ₹1,000 is charged per CWCRF submission. This covers Gryork's document review, verification, and NBFC coordination services. Payment confirmation is required before your CWCRF can be submitted.",
+    answer: "A one-time non-refundable platform processing fee of ₹1,000 is charged per Requesting Form submission. This covers Gryork's document review, verification, and NBFC coordination services. Payment confirmation is required before your Requesting Form can be submitted.",
   },
   {
     id: "cwcrf-3",
-    category: "CWCRF & Financing",
-    question: "How long before I receive funding after submitting a CWCRF?",
+    category: "Requesting Form & Financing",
+    question: "How long before I receive funding after submitting a Requesting Form?",
     answer: "The typical timeline is: Day 1–2: Ops verification; Day 3–4: EPC buyer verification; Day 5–7: RMT risk assessment; Day 8–10: NBFC bids arrive; Day 11–12: You select an offer and funds are disbursed. Total: approximately 10–14 business days. Urgent cases may be fast-tracked.",
   },
   {
     id: "cwcrf-4",
-    category: "CWCRF & Financing",
-    question: "Can I cancel a submitted CWCRF?",
-    answer: "Once a CWCRF is submitted and under review, it cannot be cancelled directly. Please contact Ops support through the Contact Us section below to discuss withdrawal. Note that the ₹1,000 platform fee is non-refundable once the CWCRF is submitted.",
+    category: "Requesting Form & Financing",
+    question: "Can I cancel a submitted Requesting Form?",
+    answer: "Once a Requesting Form is submitted and under review, it cannot be cancelled directly. Please contact Ops support through the Contact Us section below to discuss withdrawal. Note that the ₹1,000 platform fee is non-refundable once the Requesting Form is submitted.",
   },
   {
     id: "bids-1",
     category: "Bids & Offers",
     question: "How do NBFC bids work?",
-    answer: "After your CWCRF is risk-assessed and approved, multiple NBFCs will place bids offering different funding amounts, interest rates, and tenures. You will see these in the 'Bids' tab. You can accept a bid, negotiate a counter-offer, or reject it. The NBFC whose bid you accept will disburse the funds.",
+    answer: "After your Requesting Form is risk-assessed and approved, multiple NBFCs will place bids offering different funding amounts, interest rates, and tenures. You will see these in the 'Bids' tab. You can accept a bid, negotiate a counter-offer, or reject it. The NBFC whose bid you accept will disburse the funds.",
   },
   {
     id: "bids-2",
@@ -89,7 +89,7 @@ const FAQ_ITEMS = [
   {
     id: "status-1",
     category: "Status & Tracking",
-    question: "What do the different CWCRF status stages mean?",
+    question: "What do the different Requesting Form status stages mean?",
     answer: "SUBMITTED: Received by Ops → OPS_REVIEW: Being verified by Ops → EPC_VERIFICATION: Buyer (EPC) is confirming the invoice → RMT_REVIEW: Risk assessment in progress → NBFC_BIDDING: Listed for NBFC bids → COMMERCIAL_LOCKED: You've accepted a bid → DISBURSED: Funds sent to your account.",
   },
   {
@@ -122,19 +122,19 @@ const BOT_KNOWLEDGE: BotResponse[] = [
   },
   {
     keywords: ["cwcrf", "cwc rf", "credit request", "working capital", "application", "submit"],
-    response: "A CWCRF is your working capital financing application. Go to 'CWC RF' tab → fill Sections A (buyer), B (invoice), C (credit amount & tenure), D (interest preference) → upload your RA Bill → pay the ₹1,000 platform fee → Submit. The processing takes about 10–14 business days.",
+    response: "A Requesting Form is your working capital financing application. Go to 'Requesting Form' tab → fill Sections A (buyer), B (invoice), C (credit amount & tenure), D (interest preference) → upload your RA Bill → pay the ₹1,000 platform fee → Submit. The processing takes about 10–14 business days.",
   },
   {
     keywords: ["fee", "1000", "platform fee", "payment", "charge"],
-    response: "The Gryork platform fee is ₹1,000 per CWCRF submission. It is non-refundable and covers document verification, risk assessment, and NBFC coordination. You must pay this before submitting your CWCRF.",
+    response: "The Gryork platform fee is ₹1,000 per Requesting Form submission. It is non-refundable and covers document verification, risk assessment, and NBFC coordination. You must pay this before submitting your Requesting Form.",
   },
   {
     keywords: ["bid", "bids", "nbfc", "offer", "interest rate", "tenure", "negotiate"],
-    response: "After your CWCRF is approved, NBFCs place bids in your 'Bids' tab. Each bid shows the offer amount, interest rate, and repayment duration. You can Accept (immediate), Negotiate (counter-offer), or Reject. Accepted bids proceed to fund disbursement.",
+    response: "After your Requesting Form is approved, NBFCs place bids in your 'Bids' tab. Each bid shows the offer amount, interest rate, and repayment duration. You can Accept (immediate), Negotiate (counter-offer), or Reject. Accepted bids proceed to fund disbursement.",
   },
   {
     keywords: ["status", "stage", "progress", "track", "where", "how long"],
-    response: "CWCRF stages: SUBMITTED → OPS_REVIEW (1–2 days) → EPC_VERIFICATION (1–2 days) → RMT_REVIEW (2–3 days) → NBFC_BIDDING (2–3 days) → COMMERCIAL_LOCKED → DISBURSED. Total: ~10–14 business days. Check your 'Cases' tab for real-time status.",
+    response: "Requesting Form stages: SUBMITTED → OPS_REVIEW (1–2 days) → EPC_VERIFICATION (1–2 days) → RMT_REVIEW (2–3 days) → NBFC_BIDDING (2–3 days) → COMMERCIAL_LOCKED → DISBURSED. Total: ~10–14 business days. Check your 'Cases' tab for real-time status.",
   },
   {
     keywords: ["profile", "update", "company name", "phone", "address", "gstin"],
@@ -150,7 +150,7 @@ const BOT_KNOWLEDGE: BotResponse[] = [
   },
   {
     keywords: ["cancel", "withdraw", "abort", "stop"],
-    response: "Once a CWCRF is submitted, it cannot be self-cancelled. Contact our Ops support team (use Contact Us below) to request withdrawal. Note the ₹1,000 platform fee is non-refundable.",
+    response: "Once a Requesting Form is submitted, it cannot be self-cancelled. Contact our Ops support team (use Contact Us below) to request withdrawal. Note the ₹1,000 platform fee is non-refundable.",
   },
   {
     keywords: ["password", "login", "otp", "forgot", "reset"],
@@ -190,7 +190,7 @@ const HelpCenterTab = () => {
     {
       id: "welcome",
       role: "bot",
-      text: "Hi! I'm Gryork's virtual assistant. Ask me anything about KYC, CWCRF, bids, payments, or your account. If I can't help, I'll connect you to our support team.",
+      text: "Hi! I'm Gryork's virtual assistant. Ask me anything about KYC, Requesting Form, bids, payments, or your account. If I can't help, I'll connect you to our support team.",
       timestamp: new Date(),
     },
   ]);
@@ -368,7 +368,7 @@ const HelpCenterTab = () => {
             <CardTitle className="text-base">Virtual Assistant</CardTitle>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Ask questions about KYC, CWCRF, bids, payments, or your account status.
+            Ask questions about KYC, Requesting Form, bids, payments, or your account status.
           </p>
         </CardHeader>
         <CardContent>
@@ -426,7 +426,7 @@ const HelpCenterTab = () => {
             </Button>
           </div>
           <p className="text-xs text-center text-gray-400 mt-2">
-            Tip: Ask about KYC, CWCRF, bids, platform fee, disbursement, or account issues
+            Tip: Ask about KYC, Requesting Form, bids, platform fee, disbursement, or account issues
           </p>
         </CardContent>
       </Card>
@@ -515,7 +515,7 @@ const HelpCenterTab = () => {
                     <Textarea
                       value={supportMsg}
                       onChange={(e) => setSupportMsg(e.target.value)}
-                      placeholder="Describe your issue in detail — include your CWCRF number, document type, or case number if relevant..."
+                      placeholder="Describe your issue in detail — include your Requesting Form number, document type, or case number if relevant..."
                       className="min-h-[100px] resize-none bg-white"
                     />
                     <div className="flex justify-end">

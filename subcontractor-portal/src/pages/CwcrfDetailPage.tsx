@@ -112,7 +112,7 @@ const statusSteps = [
   { key: 'BUYER_PENDING', label: 'Awaiting Buyer', icon: Clock },
   { key: 'BUYER_APPROVED', label: 'Buyer Approved', icon: CheckCircle2 },
   { key: 'UNDER_RISK_REVIEW', label: 'Risk Review', icon: Target },
-  { key: 'CWCAF_READY', label: 'CWCAF Ready', icon: FileText },
+  { key: 'CWCAF_READY', label: 'Approved Form Ready', icon: FileText },
   { key: 'SHARED_WITH_NBFC', label: 'Shared with NBFCs', icon: Building2 },
   { key: 'QUOTATIONS_RECEIVED', label: 'Quotes Received', icon: Banknote },
   { key: 'NBFC_SELECTED', label: 'NBFC Selected', icon: CheckCircle2 },
@@ -127,7 +127,7 @@ const statusLabels: Record<string, string> = {
   BUYER_APPROVED: 'Buyer Approved',
   BUYER_REJECTED: 'Buyer Rejected',
   UNDER_RISK_REVIEW: 'Under Risk Review',
-  CWCAF_READY: 'CWCAF Generated',
+  CWCAF_READY: 'Approved Form Generated',
   SHARED_WITH_NBFC: 'Shared with NBFCs',
   QUOTATIONS_RECEIVED: 'Quotations Received',
   NBFC_SELECTED: 'NBFC Selected',
@@ -158,7 +158,7 @@ const CwcrfDetailPage = () => {
       const res = await cwcrfApi.getById(id);
       setCwcrf(res.data.cwcrf || res.data);
     } catch {
-      toast.error('Failed to load CWCRF details');
+      toast.error('Failed to load Requesting Form details');
       navigate('/my-cwcrfs');
     } finally {
       setLoading(false);
@@ -220,7 +220,7 @@ const CwcrfDetailPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-          <p className="text-gray-500 font-medium">Loading CWCRF details...</p>
+          <p className="text-gray-500 font-medium">Loading Requesting Form details...</p>
         </motion.div>
       </div>
     );
@@ -232,10 +232,10 @@ const CwcrfDetailPage = () => {
         <Card className="text-center">
           <CardContent className="pt-8 pb-6">
             <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">CWCRF Not Found</h3>
-            <p className="text-gray-500 mb-6">The requested CWCRF could not be found.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Requesting Form Not Found</h3>
+            <p className="text-gray-500 mb-6">The requested Requesting Form could not be found.</p>
             <Button onClick={() => navigate('/my-cwcrfs')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />Back to My CWCRFs
+              <ArrowLeft className="h-4 w-4 mr-2" />Back to My Requesting Forms
             </Button>
           </CardContent>
         </Card>
@@ -256,7 +256,7 @@ const CwcrfDetailPage = () => {
           </Button>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-gray-900">
-              CWCRF #{cwcrf.cwcrfNumber || cwcrf._id.slice(-8).toUpperCase()}
+              Requesting Form #{cwcrf.cwcrfNumber || cwcrf._id.slice(-8).toUpperCase()}
             </h1>
             <Badge variant={getStatusVariant(cwcrf.status)}>
               {statusLabels[cwcrf.status] || cwcrf.status}

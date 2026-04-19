@@ -16,21 +16,21 @@ const FAQ_ITEMS = [
     category: "EPC - Onboarding",
     audience: "epc",
     question: "How long does EPC company verification take?",
-    answer: "Company document verification typically takes 2–4 business days after all documents are submitted. You will receive an email notification once your company is verified. After verification, you can add Sub-Contractors and manage CWCRF requests.",
+    answer: "Company document verification typically takes 2–4 business days after all documents are submitted. You will receive an email notification once your company is verified. After verification, you can add Sub-Contractors and manage Requesting Form requests.",
   },
   {
     id: "epc-3",
     category: "EPC - Sub-Contractors",
     audience: "epc",
     question: "How do I add a Sub-Contractor to my account?",
-    answer: "Go to the 'Sub-Contractors' tab in your dashboard. Click 'Add Sub-Contractor' and enter their email address. They will receive an onboarding invitation link. Once they complete onboarding and KYC, they will appear in your Sub-Contractors list and can submit CWCRF requests linked to your company.",
+    answer: "Go to the 'Sub-Contractors' tab in your dashboard. Click 'Add Sub-Contractor' and enter their email address. They will receive an onboarding invitation link. Once they complete onboarding and KYC, they will appear in your Sub-Contractors list and can submit Requesting Form requests linked to your company.",
   },
   {
     id: "epc-4",
     category: "EPC - Sub-Contractors",
     audience: "epc",
-    question: "What is the CWCRF buyer verification step?",
-    answer: "When a Sub-Contractor raises a CWCRF (Credit on Working Capital Request Form) citing your company as the buyer, Ops will forward it to you for buyer verification. In the 'CWC Requests' tab, you confirm the invoice amount, approve the declared amount, set the repayment timeline, and submit your buyer declaration. This is a mandatory compliance step.",
+    question: "What is the Requesting Form buyer verification step?",
+    answer: "When a Sub-Contractor raises a Requesting Form (Credit on Working Capital Request Form) citing your company as the buyer, Ops will forward it to you for buyer verification. In the 'CWC Requests' tab, you confirm the invoice amount, approve the declared amount, set the repayment timeline, and submit your buyer declaration. This is a mandatory compliance step.",
   },
   {
     id: "epc-5",
@@ -51,7 +51,7 @@ const FAQ_ITEMS = [
     category: "EPC - Cases",
     audience: "epc",
     question: "What is a 'Case' in the Gryork platform?",
-    answer: "A case is created after a CWCRF is approved and risk-assessed. It tracks the entire financing lifecycle: from NBFC bidding to fund disbursement and repayment. As the EPC buyer, your case shows the financing amount tied to your Sub-Contractor's invoice and the current repayment status.",
+    answer: "A case is created after a Requesting Form is approved and risk-assessed. It tracks the entire financing lifecycle: from NBFC bidding to fund disbursement and repayment. As the EPC buyer, your case shows the financing amount tied to your Sub-Contractor's invoice and the current repayment status.",
   },
   {
     id: "epc-8",
@@ -66,28 +66,28 @@ const FAQ_ITEMS = [
     category: "NBFC - LPS Settings",
     audience: "nbfc",
     question: "What is the Lending Parameters Setup (LPS)?",
-    answer: "LPS allows your NBFC to define your financing preferences so Gryork can match you to suitable CWCRF cases. Parameters include: minimum and maximum loan amount, interest rate range, preferred tenure range, geographic preferences, and industry sectors you finance. Configure these in the 'LPS Settings' tab.",
+    answer: "LPS allows your NBFC to define your financing preferences so Gryork can match you to suitable Requesting Form cases. Parameters include: minimum and maximum loan amount, interest rate range, preferred tenure range, geographic preferences, and industry sectors you finance. Configure these in the 'LPS Settings' tab.",
   },
   {
     id: "nbfc-2",
     category: "NBFC - LPS Settings",
     audience: "nbfc",
-    question: "How does Gryork match CWCRFs to our NBFC?",
-    answer: "After the RMT team generates a CWCAF (Credit on Working Capital Assessment Form), suitable cases are shared with NBFCs whose LPS settings match the case parameters (amount, sector, risk level). Your NBFC receives a notification and the case appears in your 'Quotations' tab.",
+    question: "How does Gryork match Requesting Forms to our NBFC?",
+    answer: "After the RMT team generates an Approved Form (Credit on Working Capital Assessment Form), suitable cases are shared with NBFCs whose LPS settings match the case parameters (amount, sector, risk level). Your NBFC receives a notification and the case appears in your 'Quotations' tab.",
   },
   {
     id: "nbfc-3",
     category: "NBFC - Quotations",
     audience: "nbfc",
-    question: "How do I submit a quotation/bid for a CWCRF case?",
-    answer: "In the 'Quotations' tab, you will see all cases shared with your NBFC. Click on a case to view the CWCAF — it contains the risk score, SC profile, EPC details, and invoice information. Submit your bid with: offer amount (₹), interest rate (%), tenure (days), and any conditions. The SC will then review and respond.",
+    question: "How do I submit a quotation/bid for a Requesting Form case?",
+    answer: "In the 'Quotations' tab, you will see all cases shared with your NBFC. Click on a case to view the Approved Form — it contains the risk score, SC profile, EPC details, and invoice information. Submit your bid with: offer amount (₹), interest rate (%), tenure (days), and any conditions. The SC will then review and respond.",
   },
   {
     id: "nbfc-4",
     category: "NBFC - Quotations",
     audience: "nbfc",
-    question: "What does the CWCAF contain?",
-    answer: "The CWCAF (Credit on Working Capital Assessment Form) is generated by the RMT team and includes: Sub-Contractor company profile and KYC summary, EPC buyer details and verification status, invoice details, credit risk score (0–100), risk category (LOW/MEDIUM/HIGH), payment behavior assessment, legal compliance score, and the RMT's recommendation.",
+    question: "What does the Approved Form contain?",
+    answer: "The Approved Form (Credit on Working Capital Assessment Form) is generated by the RMT team and includes: Sub-Contractor company profile and KYC summary, EPC buyer details and verification status, invoice details, credit risk score (0–100), risk category (LOW/MEDIUM/HIGH), payment behavior assessment, legal compliance score, and the RMT's recommendation.",
   },
   {
     id: "nbfc-5",
@@ -116,7 +116,7 @@ const FAQ_ITEMS = [
     category: "Platform",
     audience: "both",
     question: "How do I raise an issue or report a discrepancy?",
-    answer: "Use the 'Message Ops Team' option in the Contact Support section below. Describe the issue in detail — include case number, CWCRF number, or invoice number for faster resolution.",
+    answer: "Use the 'Message Ops Team' option in the Contact Support section below. Describe the issue in detail — include case number, Requesting Form number, or invoice number for faster resolution.",
   },
 ];
 
@@ -134,11 +134,11 @@ const BOT_KNOWLEDGE: BotResponse[] = [
   },
   {
     keywords: ["sub-contractor", "subcontractor", "add sc", "invite", "onboard"],
-    response: "To add a Sub-Contractor: go to 'Sub-Contractors' tab → 'Add Sub-Contractor' → enter their email. They receive an invitation link to complete onboarding and KYC. Once verified, they can submit CWCRF requests linked to your EPC company.",
+    response: "To add a Sub-Contractor: go to 'Sub-Contractors' tab → 'Add Sub-Contractor' → enter their email. They receive an invitation link to complete onboarding and KYC. Once verified, they can submit Requesting Form requests linked to your EPC company.",
   },
   {
     keywords: ["cwcrf", "buyer verification", "cwc request", "approve invoice", "buyer declaration"],
-    response: "CWCRF buyer verification: when a Sub-Contractor submits a financing request citing your company, you need to verify the invoice in the 'CWC Requests' tab. Confirm the approved amount, set the repayment timeline, and submit your buyer declaration. This is mandatory.",
+    response: "Requesting Form buyer verification: when a Sub-Contractor submits a financing request citing your company, you need to verify the invoice in the 'CWC Requests' tab. Confirm the approved amount, set the repayment timeline, and submit your buyer declaration. This is mandatory.",
   },
   {
     keywords: ["invoice", "bill", "review", "ra bill", "work completion", "reject"],
@@ -146,11 +146,11 @@ const BOT_KNOWLEDGE: BotResponse[] = [
   },
   {
     keywords: ["lps", "lending parameters", "lending preference", "finance preference", "min", "max", "interest"],
-    response: "LPS (Lending Parameters Setup) lets your NBFC define financing preferences: min/max loan amount, interest rate range, preferred tenure, geographic and sector focus. Gryork uses these settings to match you with suitable CWCRF cases. Configure in the 'LPS Settings' tab.",
+    response: "LPS (Lending Parameters Setup) lets your NBFC define financing preferences: min/max loan amount, interest rate range, preferred tenure, geographic and sector focus. Gryork uses these settings to match you with suitable Requesting Form cases. Configure in the 'LPS Settings' tab.",
   },
   {
     keywords: ["quotation", "bid", "cwcaf", "assessment form", "risk score", "offer"],
-    response: "In the 'Quotations' tab, review CWCAF documents shared with your NBFC. Each CWCAF includes a risk score, SC profile, EPC details, and invoice info. Submit your bid with offer amount, interest rate, and tenure. The Sub-Contractor will accept, negotiate, or reject.",
+    response: "In the 'Quotations' tab, review Approved Form documents shared with your NBFC. Each Approved Form includes a risk score, SC profile, EPC details, and invoice info. Submit your bid with offer amount, interest rate, and tenure. The Sub-Contractor will accept, negotiate, or reject.",
   },
   {
     keywords: ["case", "status", "stage", "track", "progress", "where"],
@@ -207,8 +207,8 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
       role: "bot",
       text: `Hi! I'm Gryork's virtual assistant. I can help you with questions about ${
         userRole === "epc"
-          ? "document verification, Sub-Contractor management, invoice review, and CWCRF buyer verification"
-          : "LPS settings, CWCAF review, quotation submission, and case tracking"
+          ? "document verification, Sub-Contractor management, invoice review, and Requesting Form buyer verification"
+          : "LPS settings, Approved Form review, quotation submission, and case tracking"
       }.`,
     },
   ]);
@@ -285,8 +285,8 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
         </div>
         <p style={{ color: "#c7d2fe", fontSize: 13, margin: 0 }}>
           {userRole === "epc"
-            ? "Find answers about company verification, Sub-Contractor management, invoice review, and CWCRF processes."
-            : "Find answers about LPS configuration, CWCAF review, quotations, and case management."}
+            ? "Find answers about company verification, Sub-Contractor management, invoice review, and Requesting Form processes."
+            : "Find answers about LPS configuration, Approved Form review, quotations, and case management."}
         </p>
       </div>
 
@@ -422,7 +422,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
           <h3>Virtual Assistant</h3>
         </div>
         <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
-          Ask questions about {userRole === "epc" ? "verification, CWCRF processes, invoices, and Sub-Contractors" : "LPS settings, quotations, CWCAF, and cases"}.
+          Ask questions about {userRole === "epc" ? "verification, Requesting Form processes, invoices, and Sub-Contractors" : "LPS settings, quotations, Approved Form, and cases"}.
         </p>
 
         {/* Chat messages */}
@@ -616,7 +616,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
               <textarea
                 value={supportMsg}
                 onChange={(e) => setSupportMsg(e.target.value)}
-                placeholder="Describe your issue — include case number, CWCRF number, or invoice ID if relevant..."
+                placeholder="Describe your issue — include case number, Requesting Form number, or invoice ID if relevant..."
                 style={{
                   width: "100%",
                   minHeight: 96,

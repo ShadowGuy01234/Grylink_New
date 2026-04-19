@@ -85,9 +85,9 @@ export const ROLES: RoleDetail[] = [
     type: "Full-time / Internship",
     experience: "1–3 years",
     description:
-      "Analyse credit and operational risk for infrastructure bill discounting deals. Build and maintain risk assessment frameworks, review CWCRF applications, and support NBFC due diligence processes.",
+      "Analyse credit and operational risk for infrastructure bill discounting deals. Build and maintain risk assessment frameworks, review Requesting Form applications, and support NBFC due diligence processes.",
     responsibilities: [
-      "Review and assess CWCRF and RA Bill applications for credit risk",
+      "Review and assess Requesting Form and RA Bill applications for credit risk",
       "Develop and maintain risk scoring frameworks for sub-contractor profiles",
       "Coordinate with NBFC partners during due diligence processes",
       "Monitor portfolio performance and flag early-warning indicators",

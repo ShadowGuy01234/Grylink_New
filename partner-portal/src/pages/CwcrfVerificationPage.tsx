@@ -96,7 +96,7 @@ const CwcrfVerificationPage: React.FC = () => {
         repaymentArrangement: verificationForm.repaymentArrangement,
         notes: verificationForm.notes,
       });
-      toast.success("CWCRF verified successfully!");
+      toast.success("Requesting Form verified successfully!");
       setSelectedCwcrf(null);
       loadPendingCwcrfs();
     } catch (err: any) {
@@ -117,7 +117,7 @@ const CwcrfVerificationPage: React.FC = () => {
     setRejecting(true);
     try {
       await cwcrfApi.rejectCwcrf(selectedCwcrf._id, { reason: rejectionReason });
-      toast.success("CWCRF rejected");
+      toast.success("Requesting Form rejected");
       setShowRejectModal(false);
       setSelectedCwcrf(null);
       setRejectionReason("");
@@ -173,7 +173,7 @@ const CwcrfVerificationPage: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
-            CWCRF Verification
+            Requesting Form Verification
           </h1>
           <p className="text-gray-600">
             Verify CWC Request Forms from your sub-contractors
@@ -215,7 +215,7 @@ const CwcrfVerificationPage: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow">
               <div className="p-4 border-b">
-                <h2 className="text-lg font-semibold">Pending CWCRFs</h2>
+                <h2 className="text-lg font-semibold">Pending Requesting Forms</h2>
               </div>
               {pendingCwcrfs.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
@@ -258,7 +258,7 @@ const CwcrfVerificationPage: React.FC = () => {
             {selectedCwcrf ? (
               <div className="bg-white rounded-lg shadow">
                 <div className="p-4 border-b flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">Verify CWCRF</h2>
+                  <h2 className="text-lg font-semibold">Verify Requesting Form</h2>
                   <button
                     onClick={() => setSelectedCwcrf(null)}
                     className="text-gray-400 hover:text-gray-600"
@@ -495,10 +495,10 @@ const CwcrfVerificationPage: React.FC = () => {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-700 mb-2">
-                  Select a CWCRF to Verify
+                  Select a Requesting Form to Verify
                 </h3>
                 <p className="text-gray-500">
-                  Click on a pending CWCRF from the list to review and verify
+                  Click on a pending Requesting Form from the list to review and verify
                 </p>
               </div>
             )}
@@ -510,7 +510,7 @@ const CwcrfVerificationPage: React.FC = () => {
       {showRejectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Reject CWCRF</h3>
+            <h3 className="text-lg font-semibold mb-4">Reject Requesting Form</h3>
             <p className="text-gray-600 mb-4">
               Please provide a reason for rejecting this CWC Request Form.
             </p>

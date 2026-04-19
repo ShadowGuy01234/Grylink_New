@@ -59,7 +59,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const DEFAULT_PROMPTS: QuickPrompt[] = [
   { id: "quick_start", text: "How do I get started on GryLink?", intent: "onboarding" },
-  { id: "quick_docs", text: "What documents are needed for CWCRF?", intent: "workflow" },
+  { id: "quick_docs", text: "What documents are needed for Requesting Form?", intent: "workflow" },
   { id: "quick_track", text: "How can I track disbursement status?", intent: "tracking" },
 ];
 

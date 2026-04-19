@@ -90,7 +90,7 @@ export const HOW_IT_WORKS_STEPS = [
   },
   {
     step: 2,
-    title: "Submit Bill + CWCRF",
+    title: "Submit Bill + Requesting Form",
     description: "Upload your RA Bill, Work Completion Certificate, and Measurement Sheet digitally.",
     time: "10 min",
     icon: "FileText",

@@ -3,7 +3,7 @@ import { WorkflowDiagramMock } from "./WorkflowDiagramMock";
 
 const steps = [
   { title: "Register & KYC", time: "30 min", detail: "Digital onboarding for business and identity checks." },
-  { title: "Submit Bill + CWCRF", time: "10 min", detail: "Upload validated RA bill and required project documents." },
+  { title: "Submit Bill + Requesting Form", time: "10 min", detail: "Upload validated RA bill and required project documents." },
   { title: "EPC Verifies Work", time: "1-2 days", detail: "EPC confirms completion and invoice authenticity." },
   { title: "NBFCs Submit Offers", time: "24-48 hrs", detail: "Competing lenders share offer terms for selection." },
   { title: "Accept & Get Funded", time: "48 hrs target", detail: "Select best offer and receive disbursement in account." },

@@ -131,7 +131,7 @@ export const opsApi = {
     api.post("/ops/nbfc/invite", data),
   getNbfcs: () => api.get("/nbfc"),
 
-  // CWCRF Queue — Phase 6 (SUBMITTED/OPS_REVIEW) + Phase 8 (RMT_APPROVED triage) + Phase 10 (EPC_VERIFIED → NBFC dispatch)
+  // Requesting Form Queue — Phase 6 (SUBMITTED/OPS_REVIEW) + Phase 8 (RMT_APPROVED triage) + Phase 10 (EPC_VERIFIED → NBFC dispatch)
   getCwcrfQueue: () => api.get("/cwcrf/ops/queue"),
   getCwcrfTriageQueue: () => api.get("/cwcrf/ops/queue?phase=triage"),
   getCwcrfNbfcQueue: () => api.get("/cwcrf/ops/queue?phase=epc_verified"),
@@ -177,16 +177,16 @@ export const bidsApi = {
   getBidsForCase: (caseId: string) => api.get(`/bids/case/${caseId}`),
 };
 
-// CWCRF/CWCAF APIs for RMT
+// Requesting Form/Approved Form APIs for RMT
 export const cwcrfApi = {
-  // Get CWCRFs in RMT queue
+  // Get Requesting Forms in RMT queue
   getRmtQueue: () => api.get("/cwcrf/rmt/queue"),
 
   // Download full case as PDF (Phase 7.2)
   downloadCasePdf: (cwcrfId: string) =>
     api.get(`/cwcrf/${cwcrfId}/pdf`, { responseType: "blob" }),
 
-  // Generate CWCAF for a CWCRF — Ops & RMT (Phase 10.1)
+  // Generate Approved Form for a Requesting Form — Ops & RMT (Phase 10.1)
   generateCwcaf: (
     cwcrfId: string,
     cwcafData: {
@@ -212,7 +212,7 @@ export const cwcrfApi = {
   rmtForwardToOps: (cwcrfId: string, notes?: string) =>
     api.post(`/cwcrf/${cwcrfId}/rmt/forward-to-ops`, { notes }),
 
-  // Get CWCAF details
+  // Get Approved Form details
   getCwcaf: (cwcrfId: string) => api.get(`/cwcrf/${cwcrfId}/cwcaf`),
 };
 

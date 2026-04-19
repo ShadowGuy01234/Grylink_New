@@ -14,7 +14,7 @@ const points = [
 const nbfcFlow = [
   "Register and onboard with compliance details",
   "Set deal size, sector, and risk preferences",
-  "Receive pre-verified CWCRF opportunities",
+  "Receive pre-verified Requesting Form opportunities",
   "Submit offers and manage disbursement cycle",
 ];
 

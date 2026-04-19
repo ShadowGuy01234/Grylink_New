@@ -280,8 +280,8 @@ const DashboardPage = () => {
   const tabs = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "profile", label: "Profile", icon: User },
-    { id: "bills", label: "CWC RF", icon: FileText },
-    { id: "cwcaf", label: "CWC AF", icon: ClipboardList },
+    { id: "bills", label: "Requesting Form", icon: FileText },
+    { id: "cwcaf", label: "Approved Form", icon: ClipboardList },
     {
       id: "nbfc-quotes",
       label: "NBFC Quotes",
@@ -345,8 +345,8 @@ const DashboardPage = () => {
   const tabTitles: Record<string, string> = {
     overview: "Dashboard",
     profile: "My Profile",
-    bills: "CWC RF Form",
-    cwcaf: "CWC AF Form",
+    bills: "Requesting Form",
+    cwcaf: "Approved Form",
     "additional-docs": "Additional Documents",
     cases: "Cases",
     bids: "My Bids",
@@ -357,8 +357,8 @@ const DashboardPage = () => {
     overview: "Manage your bills, cases, and bids",
     profile: "Update your business information",
     bills:
-      "Submit invoice — each submission automatically creates a CWC RF request for ops review",
-    cwcaf: "Submit your CWC Agreement Form for working capital financing",
+      "Submit invoice — each submission automatically creates a Requesting Form request for ops review",
+    cwcaf: "Submit your Approved Form for working capital financing",
     "additional-docs": "Upload documents requested by the operations team",
     cases: "Track your financing cases",
     bids: "View and respond to bid offers",
@@ -541,14 +541,14 @@ const DashboardPage = () => {
                   {[
                     {
                       id: "bills",
-                      label: "Start CWC RF Form",
-                      desc: "Submit invoice & CWC RF",
+                      label: "Start Requesting Form",
+                      desc: "Submit invoice & Requesting Form",
                       icon: FilePlus2,
                       color: "blue",
                     },
                     {
                       id: "cwcaf",
-                      label: "Start CWC AF Form",
+                      label: "Start Approved Form",
                       desc: "Working capital agreement",
                       icon: ClipboardList,
                       color: "teal",
@@ -746,7 +746,7 @@ const DashboardPage = () => {
             </motion.div>
           )}
 
-          {/* ── Bills & CWC RF ── */}
+          {/* ── Bills & Requesting Form ── */}
           {activeTab === "bills" && (
             <motion.div
               key="bills"
@@ -756,7 +756,7 @@ const DashboardPage = () => {
               transition={{ duration: 0.18 }}
               className="space-y-4"
             >
-              {/* CTA to full 4-section CWCRF form */}
+              {/* CTA to full 4-section Requesting Form */}
               <Card className="border border-blue-200 bg-blue-50/40 shadow-none">
                 <CardContent className="flex items-center justify-between gap-4 py-5">
                   <div className="flex items-start gap-3">
@@ -765,7 +765,7 @@ const DashboardPage = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        Submit New CWC RF
+                        Submit New Requesting Form
                       </p>
                       <p className="text-sm text-gray-500 mt-0.5">
                         Complete the 4-section form — Buyer details, Invoice,
@@ -821,7 +821,7 @@ const DashboardPage = () => {
                             {bill.status === "VERIFIED" && (
                               <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-0.5">
                                 <Send className="h-2.5 w-2.5" />
-                                CWC RF Active
+                                Requesting Form Active
                               </span>
                             )}
                             {bill.status === "REJECTED" &&
@@ -1097,7 +1097,7 @@ const DashboardPage = () => {
                     NBFC Quotations
                   </p>
                   <p className="text-xs text-blue-700 mt-0.5">
-                    NBFCs have submitted funding offers for your CWCRFs. Review
+                    NBFCs have submitted funding offers for your Requesting Forms. Review
                     the interest rates, offered amounts, and select the best
                     deal.
                   </p>
@@ -1120,13 +1120,13 @@ const DashboardPage = () => {
                       className="border border-gray-200 shadow-none"
                     >
                       <CardContent className="p-5">
-                        {/* CWCRF Header */}
+                        {/* Requesting Form Header */}
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <p className="font-semibold text-gray-900">
                               {cwcrf.cwcRfNumber ||
                                 cwcrf.cwcrfNumber ||
-                                "CWCRF"}
+                                "Requesting Form"}
                             </p>
                             <p className="text-xs text-gray-500 mt-0.5">
                               Buyer:{" "}
@@ -1290,7 +1290,7 @@ const DashboardPage = () => {
                     <Banknote className="h-8 w-8 text-gray-200 mb-2" />
                     <p className="text-sm text-gray-500">No NBFC quotes yet</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      Once your CWCRF is shared with NBFCs and they submit bids,
+                      Once your Requesting Form is shared with NBFCs and they submit bids,
                       they will appear here
                     </p>
                   </div>
@@ -1513,7 +1513,7 @@ const DashboardPage = () => {
             </motion.div>
           )}
 
-          {/* ── CWC AF ── */}
+          {/* ── Approved Form ── */}
           {activeTab === "cwcaf" && (
             <motion.div
               key="cwcaf"
@@ -1528,11 +1528,11 @@ const DashboardPage = () => {
                 <ClipboardList className="h-5 w-5 text-teal-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-teal-900">
-                    CWC Agreement Form
+                    Approved Form
                   </p>
                   <p className="text-xs text-teal-700 mt-0.5">
-                    Complete the CWC AF to finalise your working capital
-                    financing agreement. This is required after your CWC RF has
+                    Complete the Approved Form to finalise your working capital
+                    financing agreement. This is required after your Requesting Form has
                     been approved by the operations team.
                   </p>
                 </div>
@@ -1541,7 +1541,7 @@ const DashboardPage = () => {
               <Card className="border border-gray-200 shadow-none">
                 <CardHeader>
                   <CardTitle className="text-base">
-                    CWC Agreement Form
+                    Approved Form
                   </CardTitle>
                   <CardDescription>
                     Fill in the agreement details for working capital financing
@@ -1552,7 +1552,7 @@ const DashboardPage = () => {
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="cwcaf-ref">
-                          CWC RF Reference Number{" "}
+                          Requesting Form Reference Number{" "}
                           <span className="text-red-500">*</span>
                         </Label>
                         <Input id="cwcaf-ref" placeholder="RF-00001" />
@@ -1612,7 +1612,7 @@ const DashboardPage = () => {
                         type="submit"
                         className="bg-teal-600 hover:bg-teal-700 text-white"
                       >
-                        Submit CWC AF
+                        Submit Approved Form
                       </Button>
                     </div>
                   </form>

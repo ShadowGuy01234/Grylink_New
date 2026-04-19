@@ -276,7 +276,7 @@ const RmtDashboard: React.FC = () => {
     try {
       await cwcrfApi.generateCwcaf(selectedCwcrf._id, cwcafForm);
 
-      toast.success("CWCAF generated successfully");
+      toast.success("Approved Form generated successfully");
       setShowCwcafModal(false);
       fetchData();
 
@@ -299,7 +299,7 @@ const RmtDashboard: React.FC = () => {
       });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || "Failed to generate CWCAF");
+      toast.error(error.response?.data?.message || "Failed to generate Approved Form");
     }
   };
 
@@ -534,18 +534,18 @@ const RmtDashboard: React.FC = () => {
                 : "bg-white text-gray-700"
             }`}
           >
-            CWCRF Queue ({cwcrfs.length})
+            Requesting Form Queue ({cwcrfs.length})
           </button>
         </div>
 
-        {/* CWCRF Queue Tab */}
+        {/* Requesting Form Queue Tab */}
         {activeTab === "cwcrf" && (
           <div className="bg-white rounded-lg shadow">
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    CWCRF #
+                    Requesting Form #
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Seller
@@ -574,7 +574,7 @@ const RmtDashboard: React.FC = () => {
                       colSpan={7}
                       className="px-6 py-4 text-center text-gray-500"
                     >
-                      No CWCRFs pending review
+                      No Requesting Forms pending review
                     </td>
                   </tr>
                 ) : (
@@ -1007,14 +1007,14 @@ const RmtDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* CWCAF Generation Modal */}
+        {/* Approved Form Generation Modal */}
         {showCwcafModal && selectedCwcrf && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold">
-                    Generate CWCAF - {selectedCwcrf.cwcRfNumber}
+                    Generate Approved Form - {selectedCwcrf.cwcRfNumber}
                   </h2>
                   <button
                     onClick={() => setShowCwcafModal(false)}
@@ -1024,9 +1024,9 @@ const RmtDashboard: React.FC = () => {
                   </button>
                 </div>
 
-                {/* CWCRF Summary */}
+                {/* Requesting Form Summary */}
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                  <h3 className="font-semibold mb-2">CWCRF Summary</h3>
+                  <h3 className="font-semibold mb-2">Requesting Form Summary</h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Seller:</span>{" "}
@@ -1391,7 +1391,7 @@ const RmtDashboard: React.FC = () => {
                       onClick={handleGenerateCwcaf}
                       className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     >
-                      Generate CWCAF
+                      Generate Approved Form
                     </button>
                   </div>
                 </div>
@@ -1517,7 +1517,7 @@ const RmtDashboard: React.FC = () => {
                         margin: "0 0 4px",
                       }}
                     >
-                      Gryork Platform — CWCRF Case Report
+                      Gryork Platform — Requesting Form Case Report
                     </h1>
                     <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
                       Credit on Working Capital Request Form — Detailed
@@ -2453,7 +2453,7 @@ const RmtDashboard: React.FC = () => {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold">
-                    Share CWCRF with NBFCs - {selectedCwcrf.cwcRfNumber}
+                    Share Requesting Form with NBFCs - {selectedCwcrf.cwcRfNumber}
                   </h2>
                   <button
                     onClick={() => {

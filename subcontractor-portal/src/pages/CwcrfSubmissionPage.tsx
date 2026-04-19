@@ -43,6 +43,22 @@ interface CwcrfFormData {
   };
 }
 
+type RequestKycDocType = 'panCard' | 'aadhaarCard' | 'gstCertificate' | 'cancelledCheque';
+
+const REQUEST_FORM_KYC_DOCUMENTS: Array<{
+  type: RequestKycDocType;
+  label: string;
+  hint: string;
+}> = [
+  { type: 'panCard', label: 'PAN Card', hint: 'Company or proprietor PAN copy' },
+  { type: 'aadhaarCard', label: 'Aadhaar Card', hint: 'Owner/director Aadhaar (front and back)' },
+  { type: 'gstCertificate', label: 'GST Certificate', hint: 'GST registration certificate' },
+  { type: 'cancelledCheque', label: 'Cancelled Cheque', hint: 'Cancelled cheque for account validation' },
+];
+
+const getMissingRequestKycDocs = (files: Record<RequestKycDocType, File | null>) =>
+  REQUEST_FORM_KYC_DOCUMENTS.filter((doc) => !files[doc.type]);
+
 const initialFormData: CwcrfFormData = {
   sectionA: { buyerName: '', buyerGstin: '', buyerAddress: '', buyerContactPerson: '', buyerContactPhone: '', buyerContactEmail: '', buyerCreditRating: '', projectName: '', projectLocation: '' },
   sectionB: { invoiceNumber: '', invoiceDate: '', invoiceAmount: 0, invoiceDueDate: '', purchaseOrderNumber: '', purchaseOrderDate: '', workDescription: '', workCompletionDate: '', gstAmount: 0, netInvoiceAmount: 0 },
@@ -162,6 +178,12 @@ const CwcrfSubmissionPage = () => {
   const [billFiles, setBillFiles] = useState<{
     raBill: File | null; wcc: File | null; measurementSheet: File | null;
   }>({ raBill: null, wcc: null, measurementSheet: null });
+  const [requestKycFiles, setRequestKycFiles] = useState<Record<RequestKycDocType, File | null>>({
+    panCard: null,
+    aadhaarCard: null,
+    gstCertificate: null,
+    cancelledCheque: null,
+  });
 
   useEffect(() => { checkEligibilityAndLoadData(); }, []);
 
@@ -181,22 +203,21 @@ const CwcrfSubmissionPage = () => {
         reasons: [] as string[],
       };
       if (!eligibility.declarationAccepted) eligibility.reasons.push('Seller Declaration not accepted');
-      if (!eligibility.kycCompleted)        eligibility.reasons.push('KYC verification pending');
-      if (!eligibility.bankDetailsVerified) eligibility.reasons.push('Bank details not verified');
       eligibility.canSubmit = eligibility.reasons.length === 0;
       setEligibilityStatus(eligibility);
-      if (sc?.company) {
+      const epcCompany = sc?.linkedEpcId || sc?.selectedEpcId || sc?.company;
+      if (epcCompany) {
         setFormData(prev => ({
           ...prev,
           sectionA: {
             ...prev.sectionA,
-            buyerName: sc.company.name || '',
-            buyerGstin: sc.company.gstin || '',
-            buyerAddress: sc.company.address || '',
-            buyerContactPerson: sc.company.contactPerson || '',
-            buyerContactPhone: sc.company.contactPhone || '',
-            buyerContactEmail: sc.company.contactEmail || '',
-            buyerCreditRating: sc.company.creditRating || 'NOT_RATED',
+            buyerName: epcCompany.companyName || epcCompany.name || '',
+            buyerGstin: epcCompany.gstin || '',
+            buyerAddress: epcCompany.address || '',
+            buyerContactPerson: epcCompany.ownerName || epcCompany.contactPerson || '',
+            buyerContactPhone: epcCompany.phone || epcCompany.contactPhone || '',
+            buyerContactEmail: epcCompany.email || epcCompany.contactEmail || '',
+            buyerCreditRating: epcCompany.creditRating || 'NOT_RATED',
           },
         }));
       }
@@ -223,6 +244,11 @@ const CwcrfSubmissionPage = () => {
       }
     }
     if (step === 3) {
+      const missingRequestKycDocs = getMissingRequestKycDocs(requestKycFiles);
+      if (missingRequestKycDocs.length > 0) {
+        toast.error(`Please upload all required Requesting Form KYC documents: ${missingRequestKycDocs.map((doc) => doc.label).join(', ')}`);
+        return false;
+      }
       if (!formData.sectionC.requestedAmount || !formData.sectionC.requestedTenure || !formData.sectionC.reasonForFunding) {
         toast.error('Please fill all required funding request fields'); return false;
       }
@@ -247,6 +273,9 @@ const CwcrfSubmissionPage = () => {
       if (billFiles.raBill)          fd.append('raBill', billFiles.raBill);
       if (billFiles.wcc)             fd.append('wcc', billFiles.wcc);
       if (billFiles.measurementSheet) fd.append('measurementSheet', billFiles.measurementSheet);
+      (Object.entries(requestKycFiles) as Array<[RequestKycDocType, File | null]>).forEach(([docType, file]) => {
+        if (file) fd.append(docType, file);
+      });
       fd.append('cwcrfData', JSON.stringify({
         buyerDetails: {
           projectName: formData.sectionA.projectName || '',
@@ -289,10 +318,10 @@ const CwcrfSubmissionPage = () => {
         },
       }));
       await scApi.submitBillWithCwcrf(fd);
-      toast.success('CWCRF submitted successfully!');
+      toast.success('Requesting Form submitted successfully!');
       navigate('/');
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Failed to submit CWCRF');
+      toast.error(err.response?.data?.error || 'Failed to submit Requesting Form');
     } finally {
       setSubmitting(false);
     }
@@ -314,8 +343,6 @@ const CwcrfSubmissionPage = () => {
   if (!eligibilityStatus?.canSubmit) {
     const actionMap: Record<string, { label: string; path: string; icon: any }> = {
       'Seller Declaration not accepted': { label: 'Accept Declaration', path: '/declaration', icon: PenLine },
-      'KYC verification pending':        { label: 'Complete KYC',        path: '/kyc',         icon: Shield },
-      'Bank details not verified':       { label: 'Update Bank Details', path: '/kyc',         icon: IndianRupee },
     };
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto space-y-4 pt-10">
@@ -324,7 +351,7 @@ const CwcrfSubmissionPage = () => {
             <AlertCircle className="h-7 w-7 text-amber-600" />
           </div>
           <h2 className="text-xl font-bold text-gray-900">Action Required</h2>
-          <p className="text-sm text-gray-500">Complete the steps below to unlock CWCRF submission</p>
+          <p className="text-sm text-gray-500">Complete the steps below to unlock Requesting Form submission</p>
         </div>
         <div className="space-y-3">
           {eligibilityStatus?.reasons.map((reason, idx) => {
@@ -365,7 +392,7 @@ const CwcrfSubmissionPage = () => {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <h1 className="text-lg font-bold text-gray-900 leading-tight">CWC Request Form <span className="text-gray-400 font-normal text-base">(CWCRF)</span></h1>
+          <h1 className="text-lg font-bold text-gray-900 leading-tight">Requesting Form</h1>
           <p className="text-xs text-gray-400">Working capital financing against your RA Bill</p>
         </div>
       </div>
@@ -574,6 +601,27 @@ const CwcrfSubmissionPage = () => {
               <Field label="Existing Loan / Credit Details" hint="(optional)" col2>
                 <Textarea value={formData.sectionC.existingLoanDetails} onChange={(e) => update('sectionC', 'existingLoanDetails', e.target.value)} placeholder="List any active loans, credit limits, or overdraft facilities" rows={2} className="resize-none" />
               </Field>
+
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">KYC Document List</p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {REQUEST_FORM_KYC_DOCUMENTS.map((doc) => (
+                    <UploadCard
+                      key={doc.type}
+                      label={doc.label}
+                      hint={doc.hint}
+                      required
+                      file={requestKycFiles[doc.type]}
+                      colorClass="border-blue-300 bg-blue-50/50"
+                      onChange={(f) => setRequestKycFiles((prev) => ({ ...prev, [doc.type]: f }))}
+                    />
+                  ))}
+                </div>
+                <div className="mt-3 flex items-start gap-3 rounded-xl p-4 bg-blue-50 border border-blue-100 text-blue-800">
+                  <Info className="h-4 w-4 shrink-0 mt-0.5 opacity-70" />
+                  <p className="text-sm">Initial KYC page is optional, but all documents listed here are mandatory for Requesting Form submission.</p>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -682,6 +730,22 @@ const CwcrfSubmissionPage = () => {
                 ))}
               </div>
 
+              <div className="flex flex-wrap gap-2 pb-5 border-b border-gray-100">
+                {REQUEST_FORM_KYC_DOCUMENTS.map((doc) => {
+                  const file = requestKycFiles[doc.type];
+                  return (
+                    <span
+                      key={doc.type}
+                      className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border font-medium
+                    ${file ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-400 border-gray-200'}`}
+                    >
+                      {file ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+                      {doc.label}{!file && '  not uploaded'}
+                    </span>
+                  );
+                })}
+              </div>
+
               <div className="space-y-3">
                 <ReviewBlock icon={Building2} title="Buyer & Project Details" headerBg="bg-blue-50 text-blue-800">
                   <ReviewItem label="Company" value={formData.sectionA.buyerName} />
@@ -766,7 +830,7 @@ const CwcrfSubmissionPage = () => {
               className="gap-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-70 min-w-[130px]">
               {submitting
                 ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting</>
-                : <><Zap className="h-4 w-4" />Submit CWCRF</>}
+                : <><Zap className="h-4 w-4" />Submit Requesting Form</>}
             </Button>
           )}
         </div>

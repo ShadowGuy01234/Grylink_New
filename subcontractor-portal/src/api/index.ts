@@ -78,12 +78,12 @@ export const scApi = {
   }) => api.put("/subcontractor/bank-details", data),
 };
 
-// CWCRF APIs (Workflow Section 4 - Phase 2)
+// Requesting Form APIs (Workflow Section 4 - Phase 2)
 export const cwcrfApi = {
-  // Get all my CWCRFs
+  // Get all my Requesting Forms
   getMyCwcrfs: () => api.get("/cwcrf/my"),
 
-  // Get single CWCRF details
+  // Get single Requesting Form details
   getById: (id: string) => api.get(`/cwcrf/${id}`),
 
   // Select NBFC (Workflow Step 10)

@@ -325,9 +325,7 @@ subContractorSchema.index({ kycStatus: 1 });
 
 // Helper method to check if seller can submit CWCRF
 subContractorSchema.methods.canSubmitCwcRf = function () {
-  return (
-    this.kycStatus === "COMPLETED" && this.sellerDeclaration?.accepted === true
-  );
+  return this.sellerDeclaration?.accepted === true;
 };
 
 module.exports = mongoose.model("SubContractor", subContractorSchema);

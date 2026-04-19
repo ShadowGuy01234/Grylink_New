@@ -301,7 +301,7 @@ const NbfcDashboard: React.FC = () => {
 
   const tabTitles: Record<string, { heading: string; sub: string }> = {
     overview:     { heading: 'Overview',           sub: 'Your NBFC dashboard summary' },
-    cwcafs:       { heading: 'Available CWCAFs',   sub: 'CWCAFs shared with your NBFC — submit quotes' },
+    cwcafs:       { heading: 'Available Approved Forms',   sub: 'Approved Forms shared with your NBFC — submit quotes' },
     process:      { heading: 'Active Process',     sub: 'Due diligence, sanction, and disbursement' },
     cases:        { heading: 'My Cases',            sub: 'Cases you have reviewed and responded to' },
     transactions: { heading: 'Transactions',        sub: 'Disbursed and active transactions' },
@@ -321,7 +321,7 @@ const NbfcDashboard: React.FC = () => {
     },
     {
       id: 'cwcafs',
-      label: 'Available CWCAFs',
+      label: 'Available Approved Forms',
       badge: availableCount > 0 ? availableCount : undefined,
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -498,7 +498,7 @@ const NbfcDashboard: React.FC = () => {
               {/* Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Available CWCAFs', value: availableCount, color: 'bg-emerald-50 text-emerald-600', action: () => setActiveTab('cwcafs'), actionLabel: 'View →' },
+                  { label: 'Available Approved Forms', value: availableCount, color: 'bg-emerald-50 text-emerald-600', action: () => setActiveTab('cwcafs'), actionLabel: 'View →' },
                   { label: 'Pending Review', value: pendingCases.length, color: 'bg-amber-50 text-amber-600', action: () => setActiveTab('cases'), actionLabel: 'Review →' },
                   { label: 'Approved Cases', value: dashboard?.approvedCases || 0, color: 'bg-blue-50 text-blue-600', action: undefined, actionLabel: '' },
                   { label: 'Total Disbursed', value: fmt(dashboard?.totalDisbursed || 0), color: 'bg-purple-50 text-purple-600', action: () => setActiveTab('transactions'), actionLabel: 'View →', isStr: true },
@@ -529,7 +529,7 @@ const NbfcDashboard: React.FC = () => {
                 <p className="text-sm font-medium text-gray-500 mb-3">Quick Actions</p>
                 <div className="grid sm:grid-cols-3 gap-3">
                   {[
-                    { label: 'Browse Available CWCAFs', desc: `${availableCount} waiting for quotes`, tab: 'cwcafs', color: 'emerald' },
+                    { label: 'Browse Available Approved Forms', desc: `${availableCount} waiting for quotes`, tab: 'cwcafs', color: 'emerald' },
                     { label: 'Pending Case Reviews', desc: `${pendingCases.length} need your response`, tab: 'cases', color: 'amber' },
                     { label: 'Update LPS Settings', desc: 'Adjust your lending parameters', lps: true, color: 'violet' },
                   ].map((action) => {
@@ -589,7 +589,7 @@ const NbfcDashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* ── Available CWCAFs Tab ── */}
+          {/* ── Available Approved Forms Tab ── */}
           {activeTab === 'cwcafs' && (
             <motion.div key="cwcafs" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
               {availableCwcrfs.length === 0 ? (
@@ -597,7 +597,7 @@ const NbfcDashboard: React.FC = () => {
                   <svg className="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <p className="text-lg font-medium text-gray-500">No CWCAFs available right now</p>
+                  <p className="text-lg font-medium text-gray-500">No Approved Forms available right now</p>
                   <p className="text-sm text-gray-400 mt-1">Gryork will notify you when new cases match your LPS criteria</p>
                   <button onClick={() => navigate('/nbfc/lps')} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">
                     Review LPS Settings
@@ -729,7 +729,7 @@ const NbfcDashboard: React.FC = () => {
               {processCwcrfs.length === 0 ? (
                 <div className="text-center py-16 text-gray-400">
                   <p className="text-lg font-medium text-gray-500">No active processes</p>
-                  <p className="text-sm mt-1">CWCRFs will appear here once sellers select you as their NBFC.</p>
+                  <p className="text-sm mt-1">Requesting Forms will appear here once sellers select you as their NBFC.</p>
                 </div>
               ) : (
                 <div className="space-y-4">

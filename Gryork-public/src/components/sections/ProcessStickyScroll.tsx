@@ -7,7 +7,7 @@ import { trackProcessStep } from "@/lib/analytics";
 
 const STEPS = [
   { title: "Register & KYC", time: "30 min", visual: "PAN/Aadhaar upload completed" },
-  { title: "Submit Bill + CWCRF", time: "10 min", visual: "RA Bill + WCC + Measurement Sheet attached" },
+  { title: "Submit Bill + Requesting Form", time: "10 min", visual: "RA Bill + WCC + Measurement Sheet attached" },
   { title: "EPC Verifies Work", time: "1-2 days", visual: "Status moved from Pending to Verified" },
   { title: "NBFCs Submit Offers", time: "24-48 hrs", visual: "Competing bids table received" },
   { title: "Accept & Get Funded", time: "48 hrs", visual: "Bank balance updated with disbursement" },

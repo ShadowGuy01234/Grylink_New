@@ -977,9 +977,9 @@ input[type="file"] {
   font-size: 14px;
 }
 
-/* =============== CWCRF PAGES =============== */
+/* =============== Requesting Form PAGES =============== */
 
-/* CWCRF Page Layout */
+/* Requesting Form Page Layout */
 .cwcrf-page {
   max-width: 900px;
 }
@@ -1335,7 +1335,7 @@ input[type="file"] {
   transform: none;
 }
 
-/* =============== MY CWCRFs PAGE =============== */
+/* =============== MY Requesting Forms PAGE =============== */
 .my-cwcrfs-page {
   max-width: 1000px;
 }
@@ -1375,7 +1375,7 @@ input[type="file"] {
   margin-bottom: 20px;
 }
 
-/* CWCRFs List */
+/* Requesting Forms List */
 .cwcrfs-list {
   display: flex;
   flex-direction: column;
@@ -1497,7 +1497,7 @@ input[type="file"] {
   color: var(--text-primary);
 }
 
-/* CWCRF Details */
+/* Requesting Form Details */
 .cwcrf-details {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1614,7 +1614,7 @@ input[type="file"] {
   cursor: not-allowed;
 }
 
-/* CWCRF Actions */
+/* Requesting Form Actions */
 .cwcrf-actions {
   display: flex;
   justify-content: space-between;
@@ -1732,7 +1732,7 @@ input[type="file"] {
   color: var(--accent);
 }
 
-/* =============== CWCRF DETAIL PAGE =============== */
+/* =============== Requesting Form DETAIL PAGE =============== */
 .cwcrf-detail-page {
   max-width: 1200px;
 }

@@ -72,31 +72,16 @@ const AppRoutes = () => {
     );
   }
 
-  // KYC not yet completed — force fullscreen KYC page (no Layout)
-  if (
-    profileStatus === "PROFILE_COMPLETED" ||
-    profileStatus === "KYC_PENDING" ||
-    profileStatus === "KYC_IN_PROGRESS" ||
-    profileStatus === "UNDER_REVIEW"
-  ) {
-    return (
-      <Routes>
-        <Route path="/kyc" element={<KycUploadPage />} />
-        <Route path="*" element={<Navigate to="/kyc" replace />} />
-      </Routes>
-    );
-  }
-
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<DashboardPage />} />
         <Route path="declaration" element={<SellerDeclarationPage />} />
+        <Route path="kyc" element={<KycUploadPage />} />
         <Route path="cwcrf" element={<CwcrfSubmissionPage />} />
         <Route path="cwcrf/:id" element={<CwcrfDetailPage />} />
         <Route path="my-cwcrfs" element={<MyCwcrfsPage />} />
         <Route path="complete-profile" element={<Navigate to="/" replace />} />
-        <Route path="kyc" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

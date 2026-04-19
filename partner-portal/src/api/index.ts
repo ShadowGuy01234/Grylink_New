@@ -103,7 +103,7 @@ export const nbfcApi = {
   }) => api.post(`/cwcrf/${cwcrfId}/nbfc/confirm-disbursement`, data),
 };
 
-// ============= CWCRF APIs (EPC Buyer Verification) =============
+// ============= Requesting Form APIs (EPC Buyer Verification) =============
 export const cwcrfApi = {
   // For EPC/Buyer
   getPendingVerifications: () => api.get("/cwcrf/buyer/pending"),
@@ -137,7 +137,7 @@ export const cwcrfApi = {
     },
   ) => api.post(`/cwcrf/${cwcrfId}/nbfc/quote`, quotation),
 
-  // CWCAF viewing
+  // Approved Form viewing
   getCwcaf: (cwcrfId: string) => api.get(`/cwcrf/${cwcrfId}/cwcaf`),
 };
 

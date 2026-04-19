@@ -113,6 +113,10 @@ router.post(
     { name: "raBill", maxCount: 1 },
     { name: "wcc", maxCount: 1 },
     { name: "measurementSheet", maxCount: 1 },
+    { name: "panCard", maxCount: 1 },
+    { name: "aadhaarCard", maxCount: 1 },
+    { name: "gstCertificate", maxCount: 1 },
+    { name: "cancelledCheque", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
@@ -122,6 +126,10 @@ router.post(
       }
       const wcc = req.files?.wcc?.[0] || null;
       const measSheet = req.files?.measurementSheet?.[0] || null;
+      const panCard = req.files?.panCard?.[0] || null;
+      const aadhaarCard = req.files?.aadhaarCard?.[0] || null;
+      const gstCertificate = req.files?.gstCertificate?.[0] || null;
+      const cancelledCheque = req.files?.cancelledCheque?.[0] || null;
 
       // Parse CWCRF JSON data sent alongside files
       let cwcrfData = {};
@@ -131,7 +139,15 @@ router.post(
 
       const result = await subContractorService.uploadBillWithCwcrf(
         req.user._id,
-        { raBill, wcc, measurementSheet: measSheet },
+        {
+          raBill,
+          wcc,
+          measurementSheet: measSheet,
+          panCard,
+          aadhaarCard,
+          gstCertificate,
+          cancelledCheque,
+        },
         cwcrfData,
       );
       res.status(201).json(result);

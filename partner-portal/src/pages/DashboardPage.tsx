@@ -46,7 +46,7 @@ const DashboardPage = () => {
   const [billNotes, setBillNotes] = useState("");
   const [billDecisionLoading, setBillDecisionLoading] = useState(false);
 
-  // CWCRF Verification State
+  // Requesting Form Verification State
   const [pendingCwcrfs, setPendingCwcrfs] = useState<any[]>([]);
   const [selectedCwcrf, setSelectedCwcrf] = useState<any | null>(null);
   const [cwcrfActionMode, setCwcrfActionMode] = useState<"approve" | "reject" | null>(null);
@@ -89,7 +89,7 @@ const DashboardPage = () => {
         // ignore if not EPC or endpoint not ready
       }
 
-      // Fetch CWCRFs pending buyer verification (only for EPC users)
+      // Fetch Requesting Forms pending buyer verification (only for EPC users)
       try {
         const cwcrfsRes = await cwcrfApi.getPendingVerifications();
         setPendingCwcrfs(cwcrfsRes.data?.cwcrfs || cwcrfsRes.data || []);
@@ -228,12 +228,12 @@ const DashboardPage = () => {
         notes: cwcrfVerifyForm.notes,
         buyerDeclaration: { accepted: cwcrfVerifyForm.buyerDeclarationAccepted },
       });
-      toast.success("CWCRF approved successfully");
+      toast.success("Requesting Form approved successfully");
       setSelectedCwcrf(null);
       setCwcrfActionMode(null);
       fetchData();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to approve CWCRF");
+      toast.error(err.response?.data?.error || "Failed to approve Requesting Form");
     } finally {
       setCwcrfDecisionLoading(false);
     }
@@ -247,12 +247,12 @@ const DashboardPage = () => {
     setCwcrfDecisionLoading(true);
     try {
       await cwcrfApi.rejectCwcrf(selectedCwcrf._id, { reason: cwcrfVerifyForm.rejectionReason });
-      toast.success("CWCRF rejected");
+      toast.success("Requesting Form rejected");
       setSelectedCwcrf(null);
       setCwcrfActionMode(null);
       fetchData();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to reject CWCRF");
+      toast.error(err.response?.data?.error || "Failed to reject Requesting Form");
     } finally {
       setCwcrfDecisionLoading(false);
     }
@@ -1069,7 +1069,7 @@ const DashboardPage = () => {
                     <table className="w-full">
                       <thead>
                         <tr className="bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                          <th className="px-6 py-3 text-left">CWCRF #</th>
+                          <th className="px-6 py-3 text-left">Requesting Form #</th>
                           <th className="px-6 py-3 text-left">Seller</th>
                           <th className="px-6 py-3 text-left">Invoice Amt</th>
                           <th className="px-6 py-3 text-left">Requested Amt</th>
@@ -1139,7 +1139,7 @@ const DashboardPage = () => {
                 )}
               </div>
 
-              {/* CWCRF Review Modal */}
+              {/* Requesting Form Review Modal */}
               {selectedCwcrf && (
                 <div
                   className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -1228,7 +1228,7 @@ const DashboardPage = () => {
                           </div>
                           {/* Supporting docs */}
                           <div>
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Supporting Documents (from CWCRF)</p>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Supporting Documents (from Requesting Form)</p>
                             <div className="grid grid-cols-3 gap-3">
                               {[
                                 { label: "RA Bill", url: selectedCwcrf.documents?.raBill },
@@ -1323,7 +1323,7 @@ const DashboardPage = () => {
                                 <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                               </div>
                               <p className="text-sm font-medium text-slate-600">RMT assessment not yet available</p>
-                              <p className="text-xs text-slate-400 mt-1">This CWCRF may still be awaiting RMT review. You can proceed to review the declaration and bid terms.</p>
+                              <p className="text-xs text-slate-400 mt-1">This Requesting Form may still be awaiting RMT review. You can proceed to review the declaration and bid terms.</p>
                             </div>
                           )}
                         </div>
@@ -1337,7 +1337,7 @@ const DashboardPage = () => {
                             <p className="text-sm font-bold text-amber-900">Before confirming your bid terms, you must read and accept the following declaration:</p>
                             <ul className="space-y-2 text-sm text-amber-800">
                               {[
-                                "The sub-contractor named in this CWCRF is a registered and active vendor on our rolls.",
+                                "The sub-contractor named in this Requesting Form is a registered and active vendor on our rolls.",
                                 "The invoice referenced is genuine and represents actual work executed and accepted.",
                                 "The work described has been completed or is in progress as per the contract terms.",
                                 "I authorise the disbursement of the approved amount to this vendor through the GryLink CWC facility.",
@@ -1356,7 +1356,7 @@ const DashboardPage = () => {
                               className="mt-0.5 w-5 h-5 accent-emerald-600 cursor-pointer flex-shrink-0"
                             />
                             <span className={`text-sm font-semibold leading-relaxed ${cwcrfVerifyForm.buyerDeclarationAccepted ? "text-emerald-800" : "text-slate-700"}`}>
-                              I have read and accept all the above terms and declare that the information in this CWCRF is accurate.
+                              I have read and accept all the above terms and declare that the information in this Requesting Form is accurate.
                             </span>
                           </label>
                           {!cwcrfVerifyForm.buyerDeclarationAccepted && (
@@ -1432,7 +1432,7 @@ const DashboardPage = () => {
                               <textarea className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none" rows={3}
                                 value={cwcrfVerifyForm.rejectionReason}
                                 onChange={(e) => setCwcrfVerifyForm(prev => ({ ...prev, rejectionReason: e.target.value }))}
-                                placeholder="Explain why this CWCRF is being rejected..." />
+                                placeholder="Explain why this Requesting Form is being rejected..." />
                             </div>
                           )}
 

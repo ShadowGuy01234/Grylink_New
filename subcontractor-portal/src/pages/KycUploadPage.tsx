@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   Upload, CheckCircle2, XCircle, Clock, FileText, CreditCard, Building2,
-  ExternalLink, AlertCircle, Shield, Landmark, RefreshCw, Hourglass, LogOut, Send
+  ExternalLink, AlertCircle, Shield, Landmark, RefreshCw, Hourglass, LogOut, Send, Info
 } from 'lucide-react';
 
 interface KycDocument {
@@ -42,6 +42,8 @@ const KYC_DOCUMENTS: KycDocument[] = [
   { type: 'incorporationCertificate', label: 'Certificate of Incorporation', description: 'Required for Pvt Ltd, LLP, or Partnership firms', required: false, icon: FileText },
   { type: 'bankStatement', label: 'Bank Statement (6 months)', description: 'Last 6 months bank statement for financial assessment', required: false, icon: Landmark }
 ];
+
+const KYC_DOC_UPLOAD_MOVED = true;
 
 const KycUploadPage = () => {
   const { logout } = useAuth();
@@ -262,7 +264,7 @@ const KycUploadPage = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Gryork</span>
           <div className="flex items-center gap-3">
-            <Badge variant="warning" className="gap-1"><Shield className="h-3 w-3" />KYC Verification Required</Badge>
+            <Badge variant="secondary" className="gap-1"><Shield className="h-3 w-3" />KYC Optional</Badge>
             <Button variant="ghost" size="sm" onClick={logout} className="text-gray-500 hover:text-red-600">
               <LogOut className="h-4 w-4 mr-2" />Logout
             </Button>
@@ -274,8 +276,8 @@ const KycUploadPage = () => {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">KYC Document Upload</h1>
-        <p className="text-gray-500">Complete your Know Your Customer (KYC) verification to access the platform</p>
+        <h1 className="text-2xl font-bold text-gray-900">KYC & Bank Details</h1>
+        <p className="text-gray-500">KYC is optional. You can submit Requesting Form directly from the Request form.</p>
       </div>
 
       {/* Progress Card */}
@@ -308,7 +310,7 @@ const KycUploadPage = () => {
                 </div>
                 <div>
                   <p className="font-medium text-green-800">KYC Verified!</p>
-                  <p className="text-sm text-green-600">You can now submit CWCRF</p>
+                  <p className="text-sm text-green-600">You can now submit Requesting Form</p>
                 </div>
               </motion.div>
             )}
@@ -316,8 +318,22 @@ const KycUploadPage = () => {
         </CardContent>
       </Card>
 
+      {KYC_DOC_UPLOAD_MOVED && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Info className="h-5 w-5 text-blue-600" />KYC Documents Moved to Request Form</CardTitle>
+            <CardDescription>Upload PAN, Aadhaar, GST Certificate, and Cancelled Cheque directly while submitting Requesting Form.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
+              Go to Requesting Form to upload KYC documents as part of the request flow. This KYC page remains optional.
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Required Documents */}
-      <Card>
+      {!KYC_DOC_UPLOAD_MOVED && <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-blue-600" />Required Documents</CardTitle>
           <CardDescription>Upload all required documents for KYC verification</CardDescription>
@@ -414,10 +430,10 @@ const KycUploadPage = () => {
             })}
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* Optional Documents */}
-      <Card>
+      {!KYC_DOC_UPLOAD_MOVED && <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-gray-500" />Optional Documents</CardTitle>
           <CardDescription>These documents may speed up your verification process</CardDescription>
@@ -478,7 +494,7 @@ const KycUploadPage = () => {
             })}
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* Bank Details */}
       <Card>
@@ -543,7 +559,7 @@ const KycUploadPage = () => {
       </Card>
 
       {/* Submit KYC for Review */}
-      {canSubmit && (
+      {!KYC_DOC_UPLOAD_MOVED && canSubmit && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

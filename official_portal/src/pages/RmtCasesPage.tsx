@@ -42,7 +42,7 @@ const RMT_FILTER_TABS = [
   { key: "RMT_QUEUE",           label: "In Queue" },
   { key: "RMT_DOCUMENT_REVIEW,RMT_RISK_ANALYSIS,RMT_PENDING_DOCS", label: "Under Review" },
   { key: "RMT_APPROVED",        label: "Approved" },
-  { key: "CWCAF_READY",         label: "CWCAF Ready" },
+  { key: "CWCAF_READY",         label: "Approved Form Ready" },
   { key: "RMT_REJECTED",        label: "Rejected" },
 ];
 
@@ -173,7 +173,7 @@ const RmtCasesPage: React.FC = () => {
           { label: "In Queue",    count: countFor("RMT_QUEUE"),    color: "#1d4ed8" },
           { label: "Under Review", count: countFor("RMT_DOCUMENT_REVIEW,RMT_RISK_ANALYSIS,RMT_PENDING_DOCS"), color: "#92400e" },
           { label: "Approved",   count: countFor("RMT_APPROVED"),  color: "#15803d" },
-          { label: "CWCAF Ready", count: countFor("CWCAF_READY"),  color: "#0369a1" },
+          { label: "Approved Form Ready", count: countFor("CWCAF_READY"),  color: "#0369a1" },
           { label: "Rejected",   count: countFor("RMT_REJECTED"),  color: "#991b1b" },
         ].map(s => (
           <div key={s.label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 2 }}>
@@ -286,11 +286,11 @@ const RmtCasesPage: React.FC = () => {
                   <InfoRow label="Measurement Sheet" value={selected.billId?.measurementSheet?.uploaded ? (selected.billId.measurementSheet.fileUrl ? <a href={selected.billId.measurementSheet.fileUrl} target="_blank" rel="noreferrer" style={{ color: "#2563eb", textDecoration: "underline" }}>View ↗</a> : "Uploaded") : "Not uploaded"} />
                 </Section>
 
-                {/* CWCRF Request */}
+                {/* Requesting Form Request */}
                 {selected.cwcRfId && (
-                  <Section title="CWCRF Details">
-                    <InfoRow label="CWCRF #" value={selected.cwcRfId.cwcRfNumber} />
-                    <InfoRow label="CWCRF Status" value={<StatusBadge status={selected.cwcRfId.status || ""} />} />
+                  <Section title="Requesting Form Details">
+                    <InfoRow label="Requesting Form #" value={selected.cwcRfId.cwcRfNumber} />
+                    <InfoRow label="Requesting Form Status" value={<StatusBadge status={selected.cwcRfId.status || ""} />} />
                     <InfoRow label="Invoice No." value={selected.cwcRfId.invoiceDetails?.invoiceNumber} />
                     <InfoRow label="Invoice Amount" value={fmtAmt(selected.cwcRfId.invoiceDetails?.invoiceAmount)} />
                     <InfoRow label="Invoice Date" value={fmtDate(selected.cwcRfId.invoiceDetails?.invoiceDate)} />
@@ -324,9 +324,9 @@ const RmtCasesPage: React.FC = () => {
                   </Section>
                 )}
 
-                {/* CWCAF */}
+                {/* Approved Form */}
                 {selected.cwcaf && (
-                  <Section title="CWCAF">
+                  <Section title="Approved Form">
                     <InfoRow label="Risk Category" value={
                       <span style={{ fontWeight: 700, color: selected.cwcaf.riskCategory === "HIGH" ? "#ef4444" : selected.cwcaf.riskCategory === "MEDIUM" ? "#f59e0b" : "#10b981" }}>
                         {selected.cwcaf.riskCategory}

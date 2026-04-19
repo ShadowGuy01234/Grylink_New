@@ -102,6 +102,68 @@ const uploadBillWithCwcrf = async (userId, files, cwcrfData) => {
     measResult = await uploadToCloudinary(files.measurementSheet.buffer, files.measurementSheet.mimetype, { folder: "gryork/bills" });
   }
 
+  // KYC docs are now optionally accepted through the request form.
+  // If provided, persist them to the seller KYC document store for ops review.
+  const requestFormKycDocTypes = [
+    "panCard",
+    "aadhaarCard",
+    "gstCertificate",
+    "cancelledCheque",
+  ];
+
+  const missingRequestFormKycDocs = requestFormKycDocTypes.filter(
+    (docType) => !files[docType],
+  );
+  if (missingRequestFormKycDocs.length > 0) {
+    throw new Error(
+      `Missing required Requesting Form KYC documents: ${missingRequestFormKycDocs.join(", ")}`,
+    );
+  }
+
+  const uploadedKycDocTypes = [];
+
+  if (!subContractor.kycDocuments) {
+    subContractor.kycDocuments = {};
+  }
+
+  for (const docType of requestFormKycDocTypes) {
+    const docFile = files[docType];
+    if (!docFile) continue;
+
+    const docUpload = await uploadToCloudinary(docFile.buffer, docFile.mimetype, {
+      folder: `gryork/kyc/${subContractor._id}`,
+    });
+
+    subContractor.kycDocuments[docType] = {
+      fileName: docFile.originalname,
+      fileUrl: docUpload.secure_url,
+      cloudinaryPublicId: docUpload.public_id,
+      uploadedAt: new Date(),
+      verified: false,
+      verifiedBy: undefined,
+      verifiedAt: undefined,
+    };
+
+    uploadedKycDocTypes.push(docType);
+  }
+
+  if (uploadedKycDocTypes.length > 0) {
+    if (!["UNDER_REVIEW", "COMPLETED"].includes(subContractor.kycStatus)) {
+      subContractor.kycStatus = "DOCUMENTS_PENDING";
+    }
+
+    if (!Array.isArray(subContractor.statusHistory)) {
+      subContractor.statusHistory = [];
+    }
+    subContractor.statusHistory.push({
+      status: "KYC_DOCS_ATTACHED_WITH_CWCRF",
+      changedBy: userId,
+      notes: `KYC docs attached in request form: ${uploadedKycDocTypes.join(", ")}`,
+    });
+
+    await subContractor.save();
+  }
+
   // Derive bill number and amount from CWCRF invoice data
   const inv = cwcrfData.invoiceDetails || {};
   const billNumber = inv.invoiceNumber || `BILL-${Date.now()}`;
@@ -322,8 +384,8 @@ const respondToBid = async (userId, bidId, decision, counterOffer) => {
 // Get sub-contractor dashboard data
 const getDashboard = async (userId) => {
   const subContractor = await SubContractor.findOne({ userId })
-    .populate("linkedEpcId", "companyName")
-    .populate("selectedEpcId", "companyName");
+    .populate("linkedEpcId", "companyName ownerName email phone address gstin")
+    .populate("selectedEpcId", "companyName ownerName email phone address gstin");
 
   if (!subContractor) throw new Error("Sub-contractor not found");
 

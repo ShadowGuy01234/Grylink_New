@@ -571,11 +571,11 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
             setCwcrfForwardingId(id);
             try {
               await opsApi.forwardCwcrfToRmt(id);
-              toast.success("CWCRF forwarded to RMT queue");
+              toast.success("Requesting Form forwarded to RMT queue");
               fetchData();
             } catch (err: any) {
               toast.error(
-                err.response?.data?.error || "Failed to forward CWCRF",
+                err.response?.data?.error || "Failed to forward Requesting Form",
               );
             } finally {
               setCwcrfForwardingId(null);
@@ -611,13 +611,13 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
               });
               toast.success(
                 action === "forward_to_epc"
-                  ? "CWCRF forwarded to EPC for buyer verification"
-                  : "CWCRF rejected",
+                  ? "Requesting Form forwarded to EPC for buyer verification"
+                  : "Requesting Form rejected",
               );
               fetchData();
             } catch (err: any) {
               toast.error(
-                err.response?.data?.error || "Failed to triage CWCRF",
+                err.response?.data?.error || "Failed to triage Requesting Form",
               );
             } finally {
               setCwcrfTriageId(null);
@@ -628,11 +628,11 @@ const OpsDashboardNew = ({ defaultTab }: { defaultTab?: TabType } = {}) => {
           onShareWithNbfcs={async (id: string, nbfcIds: string[]) => {
             try {
               await opsApi.shareWithNbfcs(id, nbfcIds);
-              toast.success("CWCAF shared with selected NBFCs");
+              toast.success("Approved Form shared with selected NBFCs");
               fetchData();
             } catch (err: any) {
               toast.error(
-                err.response?.data?.error || "Failed to share CWCAF with NBFCs",
+                err.response?.data?.error || "Failed to share Approved Form with NBFCs",
               );
             }
           }}
@@ -3746,7 +3746,7 @@ const NbfcInviteTab = () => {
 export default OpsDashboardNew;
 
 // ========================================
-// CWCRF Ops Tab Component
+// Requesting Form Ops Tab Component
 // ========================================
 interface CwcrfOpsTabProps {
   cwcrfs: any[]; // Phase 6: SUBMITTED / OPS_REVIEW
@@ -3782,7 +3782,7 @@ interface CwcrfOpsTabProps {
   statusBadge: (status: string) => React.JSX.Element;
 }
 
-const CWCRF_SECTIONS = [
+const REQUESTING_FORM_SECTIONS = [
   {
     key: "sectionA",
     apiKey: "sectionA",
@@ -3880,7 +3880,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
       { field?: string; value?: string; reason?: string; message?: string }
     >
   >({});
-  // Phase 10.1: CWCAF generation state
+  // Phase 10.1: Approved Form generation state
   const [showCwcafModal, setShowCwcafModal] = React.useState<string | null>(
     null,
   );
@@ -3905,7 +3905,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
           CWC Request Forms — Ops Dashboard
         </h2>
         <p style={{ fontSize: 14, color: "#64748b", marginTop: 4 }}>
-          Phase 6: Verify CWCRF sections &bull; Phase 8: Risk triage after RMT
+          Phase 6: Verify Requesting Form sections &bull; Phase 8: Risk triage after RMT
           assessment
         </p>
       </div>
@@ -3998,10 +3998,10 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                 }}
               />
               <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>
-                No CWCRFs pending section verification
+                No Requesting Forms pending section verification
               </p>
               <p style={{ fontSize: 13, marginTop: 4 }}>
-                Submitted CWCRFs will appear here
+                Submitted Requesting Forms will appear here
               </p>
             </div>
           ) : (
@@ -4343,7 +4343,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                             gap: 12,
                           }}
                         >
-                          {CWCRF_SECTIONS.map((sec) => {
+                          {REQUESTING_FORM_SECTIONS.map((sec) => {
                             const isBool = sec.key.endsWith("Verified");
                             const isVerified = isBool
                               ? ov[sec.key] === true
@@ -5531,10 +5531,10 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                 }}
               />
               <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>
-                No CWCRFs in triage queue
+                No Requesting Forms in triage queue
               </p>
               <p style={{ fontSize: 13, marginTop: 4 }}>
-                RMT-assessed CWCRFs will appear here
+                RMT-assessed Requesting Forms will appear here
               </p>
             </div>
           ) : (
@@ -5853,7 +5853,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                           </div>
                         </div>
 
-                        {/* Full CWCRF Form Sections A–D */}
+                        {/* Full Requesting Form Sections A-D */}
                         {(() => {
                           const fmt = (v: unknown) =>
                             v != null && v !== "" ? String(v) : "—";
@@ -5938,7 +5938,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   marginBottom: 10,
                                 }}
                               >
-                                Full CWCRF Details
+                                Full Requesting Form Details
                               </p>
                               <div
                                 style={{
@@ -6262,7 +6262,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               marginTop: 6,
                             }}
                           >
-                            * Notes are required to reject a CWCRF
+                            * Notes are required to reject a Requesting Form
                           </p>
                         )}
                       </div>
@@ -6287,10 +6287,10 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
             >
               <div style={{ fontSize: 40, marginBottom: 12 }}></div>
               <p style={{ fontWeight: 600, fontSize: 15, margin: 0 }}>
-                No CWCRFs pending NBFC dispatch
+                No Requesting Forms pending NBFC dispatch
               </p>
               <p style={{ fontSize: 13, marginTop: 4 }}>
-                EPC-verified CWCRFs will appear here for NBFC matching
+                EPC-verified Requesting Forms will appear here for NBFC matching
               </p>
             </div>
           ) : (
@@ -6579,7 +6579,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                           </div>
                         </div>
 
-                        {/* Phase 10.1: CWCAF Generation (for BUYER_APPROVED CWCRFs) */}
+                        {/* Phase 10.1: Approved Form Generation (for BUYER_APPROVED Requesting Forms) */}
                         {cwcrf.status === "BUYER_APPROVED" && (
                           <div
                             style={{
@@ -6607,7 +6607,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                     margin: 0,
                                   }}
                                 >
-                                  Step 1: Generate CWCAF
+                                  Step 1: Generate Approved Form
                                 </p>
                                 <p
                                   style={{
@@ -6633,13 +6633,13 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   cursor: "pointer",
                                 }}
                               >
-                                Generate CWCAF
+                                Generate Approved Form
                               </button>
                             </div>
                           </div>
                         )}
 
-                        {/* CWCAF Generation Modal */}
+                        {/* Approved Form Generation Modal */}
                         {showCwcafModal === cwcrf._id && (
                           <div
                             style={{
@@ -6658,7 +6658,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                 margin: "0 0 16px",
                               }}
                             >
-                              Generate CWCAF — {cwcrf.cwcRfNumber}
+                              Generate Approved Form — {cwcrf.cwcRfNumber}
                             </p>
                             <div
                               style={{
@@ -6886,7 +6886,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                   }))
                                 }
                                 rows={2}
-                                placeholder="Additional notes for CWCAF..."
+                                placeholder="Additional notes for Approved Form..."
                                 style={{
                                   width: "100%",
                                   fontSize: 13,
@@ -6956,14 +6956,14 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                       rmtNotes: cwcafForm.rmtNotes,
                                     });
                                     toast.success(
-                                      "CWCAF generated successfully",
+                                      "Approved Form generated successfully",
                                     );
                                     setShowCwcafModal(null);
                                     // Refresh data would be handled by parent
                                   } catch (err: any) {
                                     toast.error(
                                       err.response?.data?.error ||
-                                        "Failed to generate CWCAF",
+                                        "Failed to generate Approved Form",
                                     );
                                   } finally {
                                     setCwcafGenerating(false);
@@ -6984,13 +6984,13 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                               >
                                 {cwcafGenerating
                                   ? "Generating..."
-                                  : " Generate CWCAF"}
+                                  : " Generate Approved Form"}
                               </button>
                             </div>
                           </div>
                         )}
 
-                        {/* CWCAF Ready badge */}
+                        {/* Approved Form Ready badge */}
                         {(cwcrf.status === "CWCAF_READY" ||
                           cwcrf.status === "SHARED_WITH_NBFC") && (
                           <div
@@ -7013,7 +7013,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                                 color: "#065f46",
                               }}
                             >
-                              CWCAF generated — ready for NBFC dispatch
+                              Approved Form generated — ready for NBFC dispatch
                             </span>
                           </div>
                         )}
@@ -7293,7 +7293,7 @@ const CwcrfOpsTab: React.FC<CwcrfOpsTabProps> = ({
                             }}
                           >
                             Click "Get Matching NBFCs" to load eligible lenders
-                            for this CWCAF
+                            for this Approved Form
                           </p>
                         )}
                       </div>

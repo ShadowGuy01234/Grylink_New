@@ -71,7 +71,7 @@ const statusLabels: Record<string, string> = {
   BUYER_APPROVED: "Buyer Approved",
   BUYER_REJECTED: "Buyer Rejected",
   UNDER_RISK_REVIEW: "Risk Review",
-  CWCAF_READY: "CWCAF Ready",
+  CWCAF_READY: "Approved Form Ready",
   SHARED_WITH_NBFC: "With NBFCs",
   QUOTATIONS_RECEIVED: "Quotes Received",
   NBFC_SELECTED: "NBFC Selected",
@@ -96,7 +96,7 @@ const MyCwcrfsPage = () => {
       const res = await cwcrfApi.getMyCwcrfs();
       setCwcrfs(res.data.cwcrfs || []);
     } catch {
-      toast.error("Failed to load your CWCRFs");
+      toast.error("Failed to load your Requesting Forms");
     } finally {
       setLoading(false);
     }
@@ -154,7 +154,7 @@ const MyCwcrfsPage = () => {
           className="flex flex-col items-center gap-4"
         >
           <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-          <p className="text-gray-500 font-medium">Loading your CWCRFs...</p>
+          <p className="text-gray-500 font-medium">Loading your Requesting Forms...</p>
         </motion.div>
       </div>
     );
@@ -176,7 +176,7 @@ const MyCwcrfsPage = () => {
         </div>
         <Button onClick={() => navigate("/cwcrf")} variant="gradient">
           <Plus className="h-4 w-4 mr-2" />
-          New CWCRF
+          New Requesting Form
         </Button>
       </div>
 
@@ -191,14 +191,14 @@ const MyCwcrfsPage = () => {
             <CardContent>
               <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No CWCRFs Yet
+                No Requesting Forms Yet
               </h3>
               <p className="text-gray-500 mb-6">
                 You haven't submitted any CWC Request Forms yet.
               </p>
               <Button onClick={() => navigate("/cwcrf")} variant="gradient">
                 <Plus className="h-4 w-4 mr-2" />
-                Submit Your First CWCRF
+                Submit Your First Requesting Form
               </Button>
             </CardContent>
           </Card>
@@ -233,7 +233,7 @@ const MyCwcrfsPage = () => {
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900">
-                              CWCRF #
+                              Requesting Form #
                               {cwcrf.cwcrfNumber ||
                                 cwcrf._id.slice(-8).toUpperCase()}
                             </p>

@@ -177,7 +177,7 @@ const SellerDeclarationPage = () => {
         <CardContent className="pt-0">
           <div className="bg-amber-100/50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800">This is a mandatory step. You cannot submit CWCRF without accepting this declaration.</p>
+            <p className="text-sm text-amber-800">This is a mandatory step. You cannot submit Requesting Form without accepting this declaration.</p>
           </div>
         </CardContent>
       </Card>
