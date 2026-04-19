@@ -209,6 +209,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
         userRole === "epc"
           ? "document verification, Sub-Contractor management, invoice review, and Requesting Form buyer verification"
           : "LPS settings, Approved Form review, quotation submission, and case tracking"
+          : "LPS settings, Approved Form review, quotation submission, and case tracking"
       }.`,
     },
   ]);
@@ -286,6 +287,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
         <p style={{ color: "#c7d2fe", fontSize: 13, margin: 0 }}>
           {userRole === "epc"
             ? "Find answers about company verification, Sub-Contractor management, invoice review, and Requesting Form processes."
+            : "Find answers about LPS configuration, Approved Form review, quotations, and case management."}
             : "Find answers about LPS configuration, Approved Form review, quotations, and case management."}
         </p>
       </div>
@@ -422,6 +424,7 @@ const HelpCenterTab = ({ userRole }: HelpCenterTabProps) => {
           <h3>Virtual Assistant</h3>
         </div>
         <p style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+          Ask questions about {userRole === "epc" ? "verification, Requesting Form processes, invoices, and Sub-Contractors" : "LPS settings, quotations, Approved Form, and cases"}.
           Ask questions about {userRole === "epc" ? "verification, Requesting Form processes, invoices, and Sub-Contractors" : "LPS settings, quotations, Approved Form, and cases"}.
         </p>
 
