@@ -1,0 +1,684 @@
+﻿\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{parskip}
+\setlist[itemize]{leftmargin=*,itemsep=2pt,topsep=2pt}
+\setlist[enumerate]{leftmargin=*,itemsep=2pt,topsep=2pt}
+\begin{document}
+
+\section*{GRYORK LSP Phasewise Implementation Plan}
+
+
+\section{1) Purpose}
+
+
+This document converts the full diagnostic in Gryork\_LSP\_Technical\_Diagnostic\_Report.md into an execution-grade, phasewise implementation plan for the LSP Compliance Transformation Programme.
+
+
+Primary objective:
+
+\begin{itemize}
+\item Make Gryork NBFC-ready under RBI Digital Lending Guidelines (DLG), DPDPA-aligned consent architecture, and regulated audit/document standards.
+\end{itemize}
+
+Time horizon:
+
+\begin{itemize}
+\item Phase 1 (Weeks 1-12): Minimum NBFC-Ready State
+\item Phase 2 (Weeks 13-28): Compliance Maturity
+\item Phase 3 (Weeks 29-52): Scale Infrastructure
+\end{itemize}
+
+\section{2) Non-Negotiable Compliance Principles (Apply In All Phases)}
+
+
+\begin{enumerate}
+\item Compliance is architectural, not manual.
+\item No disbursement without CEE gate pass.
+\item No data sharing without purpose-specific valid consent.
+\item No legal reliance on mutable logs.
+\item NBFC operations must remain possible even if Gryork core systems are degraded.
+\item Borrower rights (KFS disclosure, cooling-off, exit) must be system-enforced.
+\item All API failures must enter auditable fallback states.
+\item Separation of borrower, NBFC, and Gryork data/identity/access domains is mandatory.
+\end{enumerate}
+
+\section{3) Coverage Matrix (Source Section -> Plan Coverage)}
+
+
+\begin{itemize}
+\item Section 1 (Executive Diagnostic): Program baseline, risk mitigation sequencing, readiness gates.
+\item Section 2 (LSP Requirements): Target controls embedded in architecture and backlog.
+\item Section 3 (Gap A-H): Each gap mapped to mandatory implementation tracks.
+\item Section 4 (Target Architecture): Multi-interface + GRYLINK Core + API Gateway design implemented in phases.
+\item Section 5 (Core Modules): Module-by-module engineering backlog and acceptance criteria.
+\item Section 6 (API Integration Layer): Integration catalog, trigger points, standards, resilience, and test requirements.
+\item Section 7 (CEE): Hard-gate enforcement for DLG controls, direct disbursement, fee separation, consent checks.
+\item Section 8 (IDR + Platform Failure): Independent WORM/TSA repository and 30-minute NBFC access SLA.
+\item Section 9 (Audit): Hash-chain + WORM + TSA architecture, event completeness, retention requirements.
+\item Section 10 (Escrow): Real-time monitoring, reconciliation, mismatch alerts, NBFC visibility.
+\item Section 11 (Security): RBAC, data segregation, encryption, mTLS, key rotation, consent-gated data flow.
+\item Section 12 (CTO Responsibility): certification checkpoints and audit-readiness governance.
+\item Section 13 (Roadmap): Phase-by-phase implementation schedule aligned to diagnostic.
+\item Section 14 (Team Instructions): backend/frontend/devops/product execution rules and quality bars.
+\end{itemize}
+
+\section{4) Gap-to-Workstream Mapping (A-H)}
+
+
+\begin{itemize}
+\item Gap A (No Compliance Enforcement Engine) -> Workstream WS-CEE
+\item Gap B (Non-Immutable Audit Log) -> Workstream WS-AUDIT
+\item Gap C (No Independent Document Repository) -> Workstream WS-IDR
+\item Gap D (Absent Consent Management) -> Workstream WS-CONSENT
+\item Gap E (No DLG Workflow Controls) -> Workstream WS-DLG
+\item Gap F (Weak Escrow Monitoring) -> Workstream WS-ESCROW
+\item Gap G (No Independent NBFC Access Layer) -> Workstream WS-NBFC
+\item Gap H (Incomplete API Integration Architecture) -> Workstream WS-API
+\end{itemize}
+
+\section{5) Program Structure}
+
+
+\subsection{5.1 Workstreams}
+
+
+\begin{itemize}
+\item WS-ARCH: Target architecture and service boundaries.
+\item WS-CEE: Compliance Enforcement Engine and hard gates.
+\item WS-CONSENT: Consent capture, storage, revocation, validation.
+\item WS-KFS: KFS generation, delivery proof, cooling-off orchestration.
+\item WS-IDR: Independent Document Repository with WORM + TSA.
+\item WS-AUDIT: Immutable audit engine and evidence exports.
+\item WS-API: External integrations and fallback/error architecture.
+\item WS-KYC: CKYC/Aadhaar/PAN/MCA21 and identity controls.
+\item WS-GST: GSTN validation and duplicate invoice checks.
+\item WS-EPC: EPC confirmation with digital signatures.
+\item WS-DOC: OCR + document validation + fraud detection.
+\item WS-ESCROW: Escrow/NPCI monitoring and reconciliation.
+\item WS-NBFC: Independent NBFC dashboard and APIs.
+\item WS-SEC: RBAC, segregation, encryption, mTLS, key/secrets lifecycle.
+\item WS-SRE: Reliability, observability, DR/BCP, SLA operations.
+\item WS-PRODUCT: Regulatory communication, UX compliance, RIA governance.
+\end{itemize}
+
+\subsection{5.2 Milestone Gates}
+
+
+\begin{itemize}
+\item Gate G0 (Week 2): Architecture and control blueprint approved.
+\item Gate G1 (Week 12): Minimum NBFC-ready controls live and certified.
+\item Gate G2 (Week 28): Compliance maturity stack complete and walkthrough passed.
+\item Gate G3 (Week 52): Scale, security certification, inspection readiness achieved.
+\end{itemize}
+
+\section{6) Phase 1 - Minimum NBFC-Ready State (Weeks 1-12)}
+
+
+\section{6.1 Phase Goal}
+
+
+Deliver the minimum enforceable compliance architecture before onboarding any NBFC.
+
+
+\section{6.2 Mandatory Outcomes (From Diagnostic)}
+
+
+\begin{enumerate}
+\item Independent Document Repository live (WORM + TSA + NBFC direct credentials).
+\item Consent Management System live (purpose-specific capture and revocation).
+\item KFS generation and delivery proof live in RBI-compliant format.
+\item Cooling-off enforcement as hard workflow stop.
+\item Bank account verification integrated for disbursement routing.
+\item Audit Trail Engine live with hash-chain and first TSA anchors.
+\item Independent NBFC Access Dashboard live.
+\item DLG direct-disbursement routing validation enforced.
+\item CKYC/PAN/Aadhaar integrations live in KYC module.
+\item CEE gate checks for KFS/cooling-off/consent live.
+\item Internal compliance walkthrough and CTO sign-off completed.
+\end{enumerate}
+
+\section{6.3 Detailed Backlog (By Sprint)}
+
+
+\subsection{Sprint 1 (Weeks 1-2): Foundation and control architecture}
+
+
+\begin{itemize}
+\item P1-ARCH-01: Define service boundaries for GRYLINK Core services.
+\item P1-ARCH-02: Finalize event taxonomy for end-to-end audit logging.
+\item P1-ARCH-03: Define authoritative state machine and transition contract.
+\item P1-SEC-01: Define identity domains (Borrower/NBFC/Gryork/Admin).
+\item P1-SEC-02: Secrets vault baseline, certificate policy, key rotation schedules.
+\item P1-SRE-01: Environments separation policy (dev/stage/prod), deployment approvals.
+\item P1-PROD-01: Regulatory communication templates and content governance model.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item Architecture decision records approved.
+\item Transition catalog includes all regulated steps.
+\item No direct state mutation path bypassing orchestrator.
+\end{itemize}
+
+\subsection{Sprint 2 (Weeks 3-4): CEE + Consent + KFS foundations}
+
+
+\begin{itemize}
+\item P1-CEE-01: Implement CEE as mandatory pre-transition gate service.
+\item P1-CEE-02: Enforce consent validity check before any cross-context data transfer.
+\item P1-CEE-03: Implement direct-disbursement account validation gate.
+\item P1-CEE-04: Implement fee-separation disbursement amount check.
+\item P1-CMS-01: Purpose-specific consent schema with timestamp, IP, device/session.
+\item P1-CMS-02: Consent revocation API with immediate effect.
+\item P1-KFS-01: KFS template engine per RBI-required fields.
+\item P1-KFS-02: Delivery proof ingestion (email/SMS/in-app acknowledgement).
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item Disbursement cannot proceed when consent/KFS/cooling-off gates fail.
+\item Consent revocation instantly blocks future sharing for that purpose.
+\item KFS payload completeness validation implemented.
+\end{itemize}
+
+\subsection{Sprint 3 (Weeks 5-6): IDR + Audit core}
+
+
+\begin{itemize}
+\item P1-IDR-01: Stand up independent IDR infra domain, auth, metadata store.
+\item P1-IDR-02: Enable WORM policy and immutable retention controls.
+\item P1-IDR-03: Implement document SHA-256 fingerprinting pipeline.
+\item P1-IDR-04: Integrate TSA RFC 3161 timestamp token generation at upload.
+\item P1-IDR-05: NBFC credentialed read APIs independent of Gryork auth.
+\item P1-IDR-06: Enforce minimum 8-year retention policy with lifecycle controls.
+\item P1-IDR-07: Implement indexed retrieval and delivery workflow to meet <=30-minute NBFC access SLA.
+\item P1-AUD-01: Hash-chain append-only event store.
+\item P1-AUD-02: TSA anchoring job for audit batches.
+\item P1-AUD-03: Event integrity verifier tool (chain + TSA checks).
+\item P1-AUD-04: Implement retention/search/archive policy enabling <=48-hour retrieval across retention window.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item Document modification/delete attempts are blocked and audited.
+\item NBFC can retrieve documents directly without Gryork admin involvement.
+\item Audit chain verification passes end-to-end test.
+\item IDR retention, retrieval, and access SLAs validated in controlled test runs.
+\end{itemize}
+
+\subsection{Sprint 4 (Weeks 7-8): KYC and mandatory API integrations}
+
+
+\begin{itemize}
+\item P1-KYC-01: CKYC integration with consent checks and refresh logic.
+\item P1-KYC-02: Aadhaar authentication integration (masked storage only).
+\item P1-KYC-03: PAN verification integration and mismatch handling.
+\item P1-KYC-04: KYC signed result record pushed to IDR.
+\item P1-API-01: Bank account verification integration and verified-account registry.
+\item P1-API-02: API circuit breaker, timeout/retry, fallback state framework.
+\item P1-API-03: API request/response metadata logging to audit engine.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item Raw PII responses not persisted in plain logs.
+\item All integration failures create auditable fallback states.
+\item Verified account registry used by CEE disbursement gate.
+\end{itemize}
+
+\subsection{Sprint 5 (Weeks 9-10): NBFC independent access and DLG enforcement}
+
+
+\begin{itemize}
+\item P1-NBFC-01: Launch independent NBFC dashboard auth and role model.
+\item P1-NBFC-02: Portfolio view, document fetch, event notifications.
+\item P1-DLG-01: Cooling-off countdown and immutable start trigger from KFS confirmation.
+\item P1-DLG-02: Exit request flow that hard-cancels disbursement path.
+\item P1-DLG-03: Disbursement routing proof record and signed compliance certificate.
+\item P1-DLG-04: CEE enforcement for KFS term mismatch vs disbursement payload.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item NBFC can perform core review actions without Gryork operator support.
+\item Any non-compliant disbursement instruction is blocked.
+\item Exit during cooling-off immediately transitions to cancellation state.
+\end{itemize}
+
+\subsection{Sprint 6 (Weeks 11-12): Hardening, walkthrough, certification}
+
+
+\begin{itemize}
+\item P1-QA-01: Compliance regression suite for all CEE hard gates.
+\item P1-QA-02: Audit completeness validation against event taxonomy.
+\item P1-QA-03: IDR access SLA drill and failure-mode tests.
+\item P1-CTO-01: Internal compliance walkthrough with evidence pack.
+\item P1-CTO-02: CTO readiness certification for minimum NBFC onboarding state.
+\end{itemize}
+
+Evidence required at Gate G1:
+
+\begin{itemize}
+\item CEE pass/fail logs for controlled test scenarios.
+\item KFS delivery evidence and cooling-off enforcement logs.
+\item Consent lifecycle evidence (capture/revoke/deny).
+\item IDR independent access demonstration logs.
+\item Audit chain integrity verification report.
+\end{itemize}
+
+\section{7) Phase 2 - Compliance Maturity (Weeks 13-28)}
+
+
+\section{7.1 Phase Goal}
+
+
+Complete full regulated operating capabilities required for scaled NBFC due diligence.
+
+
+\section{7.2 Mandatory Outcomes (From Diagnostic)}
+
+
+\begin{enumerate}
+\item Account Aggregator consent-gated integration.
+\item Credit bureau integrations with consent gate enforcement.
+\item GSTN validation with duplicate detection.
+\item EPC confirmation engine with digital signatures.
+\item CERSAI search/registration integration.
+\item Document Validation Engine (OCR + cross-reference).
+\item Fraud Rule Engine with escalation workflows.
+\item MCA21 entity verification integration.
+\item Escrow Monitoring Engine with real-time reconciliation.
+\item Field-level PII encryption and mTLS rollout.
+\item Quarterly internal audit review process operational.
+\item First full NBFC compliance walkthrough completed.
+\end{enumerate}
+
+\section{7.3 Detailed Backlog (By Capability Track)}
+
+
+\subsection{Track A: Integration completion and reliability}
+
+
+\begin{itemize}
+\item P2-API-01: Implement Account Aggregator data pull and consent linkage.
+\item P2-API-02: Integrate CIBIL/Equifax/CRIF with stage-gated triggers.
+\item P2-API-03: Integrate GSTN APIs and invoice cross-match checks.
+\item P2-API-04: Integrate MCA21 entity/charge lookup and refresh policy.
+\item P2-API-05: Integrate CERSAI pre-decision search and post-sanction registration.
+\item P2-API-06: Expand e-sign/DSC/eStamp service orchestration.
+\item P2-API-07: Standardize integration telemetry, error classes, and operational dashboards.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item Each API has success, timeout, malformed, and partial-data test coverage.
+\item All API output artifacts are traceable in audit + IDR references.
+\end{itemize}
+
+\subsection{Track B: Document, fraud, and underwriting quality}
+
+
+\begin{itemize}
+\item P2-DOC-01: OCR extraction pipeline for invoices/certificates/statements.
+\item P2-DOC-02: Data consistency rules (GSTIN, dates, amounts, entity links).
+\item P2-DOC-03: Fraud Rules Engine with anomaly scoring and escalation queues.
+\item P2-DOC-04: Duplicate invoice detection within Gryork platform context.
+\item P2-EPC-01: EPC confirmation workflow with legally valid digital signatures.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item Document acceptance requires validation report artifact.
+\item Fraud flags generate traceable workflow states and escalation events.
+\end{itemize}
+
+\subsection{Track C: Escrow integrity and NBFC transparency}
+
+
+\begin{itemize}
+\item P2-ESC-01: Integrate escrow/bank/NPCI webhooks for debit/credit events.
+\item P2-ESC-02: Matching engine vs expected transaction schedule.
+\item P2-ESC-03: Unmatched/late transaction alerts to NBFC and Gryork ops.
+\item P2-ESC-04: Daily reconciliation report generation and IDR archival.
+\item P2-NBFC-01: NBFC dashboard expansion for escrow views and compliance reports.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item NBFC can independently download daily reconciliations from IDR.
+\item Alerting SLOs defined and monitored for transaction mismatch events.
+\end{itemize}
+
+\subsection{Track D: Security and governance maturity}
+
+
+\begin{itemize}
+\item P2-SEC-01: Field-level encryption rollout for Aadhaar/PAN/account/mobile PII.
+\item P2-SEC-02: mTLS between internal microservices.
+\item P2-SEC-03: RBAC hardening with least privilege and privileged action approvals.
+\item P2-SEC-04: Consent gate enforced in all cross-context data access paths.
+\item P2-GOV-01: Quarterly internal audit process (engineering + compliance + ops).
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item No unencrypted PII fields in primary stores.
+\item Inter-service traffic without mTLS is blocked.
+\item Privilege escalation is dual-authorized and fully audited.
+\end{itemize}
+
+\subsection{Track E: Controlled readiness and assurance}
+
+
+\begin{itemize}
+\item P2-QA-01: End-to-end compliance test harness across full loan lifecycle.
+\item P2-QA-02: Failure-injection tests for API/provider outages.
+\item P2-QA-03: First NBFC compliance walkthrough with evidence closure.
+\end{itemize}
+
+Evidence required at Gate G2:
+
+\begin{itemize}
+\item API integration conformance matrix and failover test results.
+\item Escrow reconciliation completeness metrics.
+\item Security control verification (field encryption + mTLS + RBAC).
+\item Internal audit report and closure logs.
+\end{itemize}
+
+\section{8) Phase 3 - Scale Infrastructure (Weeks 29-52)}
+
+
+\section{8.1 Phase Goal}
+
+
+Scale from compliant platform to inspection-ready, high-resilience, multi-NBFC infrastructure.
+
+
+\section{8.2 Mandatory Outcomes (From Diagnostic)}
+
+
+\begin{enumerate}
+\item Video KYC for high-value/non-OTP scenarios.
+\item Multi-NBFC portfolio segregation and controls.
+\item Advanced ML fraud detection with retraining pipeline.
+\item Automated RBI-format regulatory reporting.
+\item Cross-region DR for IDR and Audit with tested recovery.
+\item ISO 27001 certification completion.
+\item Rate limiting, DDoS protection, and WAF on external endpoints.
+\item Borrower consent dashboard with full history and revocation.
+\item Portfolio-level risk analytics for NBFC credit committees.
+\item Bug bounty and external penetration testing.
+\item Certified BCP/DR procedures.
+\item RBI inspection readiness evidence pack complete.
+\end{enumerate}
+
+\section{8.3 Detailed Backlog (By Quarter)}
+
+
+\subsection{Q3 (Weeks 29-40): Scale capability build-out}
+
+
+\begin{itemize}
+\item P3-KYC-01: Video KYC orchestration and evidence retention.
+\item P3-NBFC-01: Tenant-aware, fully segregated multi-NBFC architecture.
+\item P3-DOC-01: ML fraud model pipeline with drift detection/retraining.
+\item P3-REP-01: Automated regulatory report generator (RBI-aligned formats).
+\item P3-SEC-01: Edge security stack (WAF, DDoS controls, API rate limits).
+\item P3-CONSENT-01: Borrower self-service consent dashboard.
+\item P3-ANALYTICS-01: NBFC portfolio risk insights and committee views.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item Multi-tenant segregation tests pass for data and access boundaries.
+\item Regulatory reports are reproducible and audit-linked.
+\item Fraud model retraining events are logged and reviewable.
+\end{itemize}
+
+\subsection{Q4 (Weeks 41-52): Resilience, certification, and inspection readiness}
+
+
+\begin{itemize}
+\item P3-SRE-01: Cross-region replication for IDR and audit stores.
+\item P3-SRE-02: DR drills with RTO/RPO measurement and remediation.
+\item P3-GRC-01: ISO 27001 control implementation and certification audit.
+\item P3-GRC-02: Bug bounty launch and external penetration test remediation.
+\item P3-GRC-03: BCP/DR documentation finalization and sign-offs.
+\item P3-CTO-01: RBI inspection evidence pack assembly and dry-run review.
+\end{itemize}
+
+Acceptance criteria:
+
+\begin{itemize}
+\item DR test results meet target RTO/RPO commitments.
+\item External assessment findings closed or risk-accepted via governance.
+\item Inspection package includes traceable evidence for all mandatory controls.
+\end{itemize}
+
+Evidence required at Gate G3:
+
+\begin{itemize}
+\item ISO 27001 certification artifacts.
+\item DR and failover evidence.
+\item Pen-test and bug bounty closure report.
+\item End-to-end compliance evidence index for regulator/NBFC review.
+\end{itemize}
+
+\section{9) External API Integration Plan (From Section 6)}
+
+
+\section{9.1 API Catalog and Trigger Points}
+
+
+\begin{itemize}
+\item GST/GSTN API: invoice submission and pre-committee re-validation.
+\item CKYC Registry: onboarding and 12-month refresh.
+\item UIDAI Aadhaar Auth: individual KYC and threshold-based requirements.
+\item NSDL PAN Verify: onboarding, pre-assessment, pre-execution checks.
+\item Account Aggregator: post-credit-assessment consented data pull.
+\item Credit Bureau (CIBIL/Equifax/CRIF): post-KYC and consented pre-sanction checks.
+\item MCA21: entity onboarding and pre-disbursement refresh.
+\item CERSAI: pre-decision search and post-execution registration.
+\item E-Sign/DSC/eStamp: KFS/loan/consent execution events.
+\item TSA (RFC 3161): document upload and audit batch anchoring.
+\item Bank Account Verify: onboarding and mandatory disbursement routing validation.
+\item Escrow/NPCI APIs: pre-disbursement and continuous reconciliation events.
+\item OCR/Document AI: document ingestion and lifecycle validation.
+\item Fraud Detection Engine: KYC/doc/data inconsistency events.
+\end{itemize}
+
+\section{9.2 Integration Engineering Standards (Mandatory)}
+
+
+\begin{itemize}
+\item Credentials only in secrets vault; never in source code or committed env files.
+\item Certificate-based auth where possible; shared secrets rotate <= 90 days.
+\item Circuit breakers, retries, timeout budgets, and explicit fallback states.
+\item Full audit records for request metadata, response status, trigger context, and timestamps.
+\item PII-safe logging and encrypted partition storage.
+\item Test suites: success, provider error, timeout, malformed response, partial-data handling.
+\end{itemize}
+
+\section{10) Team-Wise Responsibilities (From Section 14)}
+
+
+\section{10.1 Backend Engineering}
+
+
+\begin{itemize}
+\item Enforce authN/authZ/input validation/audit logging/error discipline on all endpoints.
+\item Keep workflow orchestrator as sole state-transition authority.
+\item Ensure no silent failures on external API errors.
+\item Implement schema-level data sovereignty and field-level PII encryption.
+\end{itemize}
+
+\section{10.2 Frontend/Mobile}
+
+
+\begin{itemize}
+\item Build plain-language consent UX with symmetric accept/reject paths.
+\item Ensure KFS disclosure readability and delivery acknowledgement integrity.
+\item Display cooling-off countdown and accessible exit actions.
+\item Emit frontend action events for critical NBFC and borrower actions.
+\end{itemize}
+
+\section{10.3 DevOps/Infrastructure}
+
+
+\begin{itemize}
+\item Enforce strict environment isolation and production deployment approvals.
+\item Deploy dedicated infra domains for IDR and Audit engines.
+\item Maintain 99.99\% reliability posture for compliance-critical components.
+\item Operate secrets management, monitoring, alerting, and DR drills.
+\end{itemize}
+
+\section{10.4 Product}
+
+
+\begin{itemize}
+\item Run Regulatory Impact Assessment for every feature.
+\item Prioritize compliance controls above UX enhancements when conflict exists.
+\item Co-own regulated borrower communications with compliance sign-off.
+\item Treat KFS/consent/cooling-off messages as controlled regulatory artifacts.
+\end{itemize}
+
+\section{11) Definition of Done (DoD) for Regulated Features}
+
+
+A feature is complete only when all are true:
+
+
+\begin{enumerate}
+\item Functional behavior implemented and validated.
+\item Compliance gate logic encoded and passing required checks.
+\item Audit events emitted with required identity/session/context fields.
+\item Artifacts persisted to IDR/audit references where required.
+\item Security controls (RBAC, encryption, consent gate) verified.
+\item Failure modes tested with auditable fallback behavior.
+\item Monitoring and alerting configured with ownership.
+\item Compliance and product sign-off captured for regulated user communication changes.
+\end{enumerate}
+
+\section{12) Program Risk Register and Mitigations}
+
+
+\begin{itemize}
+\item Risk: Delayed external API onboarding.
+\begin{itemize}
+\item Mitigation: Sandbox-first integration, provider SLAs, fallback manual-review queues with audit coverage.
+\end{itemize}
+\end{itemize}
+
+\begin{itemize}
+\item Risk: Partial compliance implementation mistaken as ready state.
+\begin{itemize}
+\item Mitigation: Hard gate checklists for G1/G2/G3 and CTO written certifications.
+\end{itemize}
+\end{itemize}
+
+\begin{itemize}
+\item Risk: Data leakage via logs or cross-context queries.
+\begin{itemize}
+\item Mitigation: PII redaction pipeline, field-level encryption, consent-guarded data access middleware.
+\end{itemize}
+\end{itemize}
+
+\begin{itemize}
+\item Risk: IDR/Audit availability gaps undermine trust.
+\begin{itemize}
+\item Mitigation: Dedicated infra, independent auth, cross-region replication, regular failover tests.
+\end{itemize}
+\end{itemize}
+
+\begin{itemize}
+\item Risk: Team drift from regulated build practices.
+\begin{itemize}
+\item Mitigation: Section-14-aligned engineering standards baked into PR checks, release gates, and architecture review.
+\end{itemize}
+\end{itemize}
+
+\section{13) Readiness Gate Checklists}
+
+
+\section{13.1 Gate G1 (Week 12) - NBFC Onboarding Eligibility}
+
+
+Must be live and validated:
+
+\begin{itemize}
+\item CEE
+\item CMS
+\item KFS + Cooling-off enforcement
+\item IDR with NBFC direct access
+\item Audit hash-chain + TSA anchors
+\item Independent NBFC dashboard
+\item Critical APIs: KYC, bank verification, e-sign
+\item CTO certification and internal walkthrough evidence
+\end{itemize}
+
+\section{13.2 Gate G2 (Week 28) - Compliance Maturity}
+
+
+Must be live and validated:
+
+\begin{itemize}
+\item AA, bureau, GSTN, MCA21, CERSAI
+\item Document validation + fraud rules
+\item Escrow monitoring + daily reconciliation
+\item Field-level encryption + mTLS + RBAC hardening
+\item Quarterly internal audit operation
+\item First full NBFC walkthrough closure
+\end{itemize}
+
+\section{13.3 Gate G3 (Week 52) - Scale and Inspection Readiness}
+
+
+Must be live and validated:
+
+\begin{itemize}
+\item Video KYC
+\item Multi-NBFC segregation
+\item Advanced ML fraud and retraining governance
+\item Automated RBI-format reporting
+\item DR/BCP and cross-region resilience
+\item ISO 27001 certification
+\item WAF/DDoS/rate limiting controls
+\item Pen-test and bug bounty closure
+\item Full regulator-ready evidence pack
+\end{itemize}
+
+\section{14) Immediate Execution Plan (Next 14 Days)}
+
+
+\begin{enumerate}
+\item Approve architecture and control blueprint (WS-ARCH, WS-SEC, WS-CEE).
+\item Freeze authoritative workflow state machine and transition gate contract.
+\item Create compliance event taxonomy and evidence index schema.
+\item Stand up IDR and audit infrastructure foundations in staging.
+\item Implement first CEE gate bundle (consent + KFS + cooling-off placeholders).
+\item Start KYC integration adapters (CKYC/PAN/Aadhaar) with audit wrappers.
+\item Define CTO readiness dashboard with Gate G1 criteria status.
+\end{enumerate}
+
+\section{15) Final Instruction}
+
+
+If any design choice creates ambiguity between speed and compliance, choose the stricter compliance path and escalate to compliance review before implementation.
+
+\end{document}
+
+
