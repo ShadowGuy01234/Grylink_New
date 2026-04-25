@@ -45,6 +45,8 @@ import {
   Paperclip,
   HelpCircle,
   Banknote,
+  Menu,
+  X,
 } from "lucide-react";
 import HelpCenterTab from "../components/HelpCenterTab";
 
@@ -54,6 +56,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Profile form
@@ -365,10 +368,34 @@ const DashboardPage = () => {
     help: "FAQ, virtual assistant, and support contact",
   };
 
+  const handleTabChange = (tabId: string) => {
+    if (tabId === "bills") {
+      navigate("/cwcrf");
+    } else {
+      setActiveTab(tabId);
+    }
+    setIsSidebarOpen(false);
+  };
+
   return (
     <div className="app-container">
+      <div
+        className={`sidebar-backdrop ${isSidebarOpen ? "show" : ""}`}
+        onClick={() => setIsSidebarOpen(false)}
+        aria-hidden="true"
+      />
+
       {/* ── Sidebar ── */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+        <button
+          type="button"
+          className="mobile-sidebar-close"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
         <div className="mb-8 px-2 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
             {sc?.companyName?.[0]?.toUpperCase() || "S"}
@@ -393,9 +420,7 @@ const DashboardPage = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() =>
-                  tab.id === "bills" ? navigate("/cwcrf") : setActiveTab(tab.id)
-                }
+                onClick={() => handleTabChange(tab.id)}
                 className={`nav-item ${activeTab === tab.id ? "active" : ""}`}
               >
                 <Icon className="w-5 h-5" />
@@ -448,7 +473,20 @@ const DashboardPage = () => {
 
       {/* ── Main Content ── */}
       <main className="main-content-area">
-        <header className="flex justify-between items-center mb-8">
+        <div className="mb-4 flex items-center justify-between lg:hidden">
+          <Button
+            type="button"
+            variant="outline"
+            className="gap-2"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <Menu className="h-4 w-4" />
+            Menu
+          </Button>
+          {sc && getStatusBadge(sc.status)}
+        </div>
+
+        <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-800">
               {tabTitles[activeTab] || "Dashboard"}
@@ -457,7 +495,7 @@ const DashboardPage = () => {
               {tabDescriptions[activeTab]}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 lg:flex">
             {sc && getStatusBadge(sc.status)}
           </div>
         </header>

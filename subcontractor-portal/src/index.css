@@ -54,6 +54,7 @@ h1, h2, h3, h4, h5, h6 {
 .app-container {
   display: flex;
   min-height: 100vh;
+  overflow-x: hidden;
   background: #f0f4f8;
   background-image:
     radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%),
@@ -80,6 +81,14 @@ h1, h2, h3, h4, h5, h6 {
   padding: 32px;
   max-width: 1600px;
   overflow-y: auto;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.mobile-sidebar-close {
+  display: none;
 }
 
 .nav-item {
@@ -2112,6 +2121,67 @@ input[type="file"] {
   margin-top: 4px;
 }
 
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: min(84vw, 320px);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    z-index: 90;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 80;
+  }
+
+  .sidebar-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobile-sidebar-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+  }
+
+  .main-content-area {
+    width: 100%;
+    max-width: 100%;
+    padding: 24px 16px;
+    overflow-x: hidden;
+  }
+
+  .nav-item:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .form-grid {
@@ -2122,6 +2192,9 @@ input[type="file"] {
   }
   .main-content {
     padding: 16px;
+  }
+  .main-content-area {
+    padding: 20px 14px;
   }
   .chat-message {
     max-width: 90%;
