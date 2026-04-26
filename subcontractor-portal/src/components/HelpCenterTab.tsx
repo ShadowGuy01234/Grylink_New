@@ -455,11 +455,11 @@ const HelpCenterTab = () => {
               </div>
             </div>
             <a
-              href="tel:+918000000000"
+              href="tel:7068564903"
               className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
             >
               <Phone className="h-4 w-4" />
-              +91 80000 00000
+              7068564903
             </a>
           </div>
 
@@ -475,10 +475,10 @@ const HelpCenterTab = () => {
               </div>
             </div>
             <a
-              href="mailto:support@gryork.com"
+              href="mailto:contact@gryork.com"
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
             >
-              support@gryork.com
+              contact@gryork.com
             </a>
           </div>
 
