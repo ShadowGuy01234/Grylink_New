@@ -29,12 +29,12 @@ export function Navbar() {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="flex-shrink-0 bg-white p-1.5 rounded-lg border border-white/10">
+              <div className="flex-shrink-0 bg-black p-1.5 rounded-lg border border-white/10">
                 <img src="/logo.png" alt="Gryork" className="h-8 w-auto object-contain" />
               </div>
-              <div className="hidden sm:block">
+              <div className="block">
                 <span className="font-display font-bold text-lg text-white group-hover:text-gry-blue-light transition-colors">
-                  Gryork <span className="font-light opacity-80">TechPreneur 2026</span>
+                  Gryork <span className="hidden sm:inline font-light opacity-80">TechPreneur 2026</span>
                 </span>
               </div>
             </Link>
@@ -109,7 +109,7 @@ export function Navbar() {
               className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-[#0A0A0A] shadow-2xl z-[70] md:hidden flex flex-col border-l border-white/10"
             >
               <div className="p-5 flex items-center justify-between border-b border-white/10">
-                <div className="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-slate-200">
+                <div className="flex items-center gap-2 bg-black p-1.5 rounded-lg border border-white/10">
                   <img src="/logo.png" alt="Gryork" className="h-6 w-auto" />
                 </div>
                 <button
