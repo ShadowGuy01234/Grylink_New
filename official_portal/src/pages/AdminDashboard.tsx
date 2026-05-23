@@ -230,9 +230,14 @@ const AdminDashboard = () => {
     <div className="dashboard">
       <div className="dashboard-header">
         <h1>Admin Dashboard</h1>
-        <button className="btn-primary" onClick={openCreateModal}>
-          + Create User
-        </button>
+        <div className="flex gap-4">
+          <button className="btn-secondary" onClick={() => window.location.href='/admin/techpreneur'}>
+            Manage TechPreneur Registrations
+          </button>
+          <button className="btn-primary" onClick={openCreateModal}>
+            + Create User
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}

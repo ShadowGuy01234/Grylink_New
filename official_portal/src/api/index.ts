@@ -408,6 +408,29 @@ export const careerApi = {
   deleteApplication: (id: string) => api.delete(`/careers/applications/${id}`),
 };
 
+// TechPreneur
+export const techpreneurApi = {
+  getRegistrations: (params?: {
+    status?: string;
+    trackPreference?: string;
+    registrationPhase?: string;
+    paymentVerified?: boolean;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) => api.get("/techpreneur/registrations", { params }),
+  updateRegistration: (
+    id: string,
+    data: {
+      status?: string;
+      paymentVerified?: boolean;
+      assignedSPOC?: string;
+      assignedGroup?: string;
+      notes?: string;
+    }
+  ) => api.patch(`/techpreneur/registrations/${id}`, data),
+};
+
 export { api };
 
 export default api;
