@@ -5,12 +5,9 @@ import { getCurrentPricing } from "../lib/api";
 export function HomePricingBanner() {
   const { phase: currentPhase } = getCurrentPricing();
   
-  let price = "₹999";
-  let label = "Standard Registration";
-  if (currentPhase === "early") {
-    price = "₹799";
-    label = "Early Bird Registration";
-  }
+  let price = currentPhase?.amount ? `₹${currentPhase.amount}` : "₹799";
+  let originalPrice = currentPhase?.originalAmount ? `₹${currentPhase.originalAmount}` : "₹5999";
+  let label = currentPhase?.label || "Early Bird Offer";
 
   return (
     <div className="bg-gradient-to-r from-gry-blue-dark via-gry-blue-main to-gry-blue-dark text-white py-10 relative overflow-hidden">
@@ -40,7 +37,10 @@ export function HomePricingBanner() {
           <div className="flex flex-col sm:flex-row items-center gap-4 flex-shrink-0">
             <div className="text-center md:text-right">
               <div className="text-sm text-blue-200 mb-1">One-time fee</div>
-              <div className="font-display text-4xl font-bold">{price}</div>
+              <div className="flex items-end gap-2 justify-center md:justify-end">
+                <span className="text-xl text-blue-300/70 line-through font-semibold mb-1">{originalPrice}</span>
+                <div className="font-display text-4xl font-bold">{price}</div>
+              </div>
             </div>
             
             <Link 

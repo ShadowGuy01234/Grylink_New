@@ -3,6 +3,7 @@ export interface PricingPhase {
   phase: "upcoming" | "early" | "standard" | "closed";
   label: string;
   amount: number | null;
+  originalAmount: number | null;
   deadline: Date | null;
   deadlineLabel: string;
   urgencyText: string;
@@ -10,45 +11,26 @@ export interface PricingPhase {
 
 export function getCurrentPricing(): PricingPhase {
   const earlyBirdEnd  = new Date("2026-05-24T18:29:59Z");
-  const standardEnd   = new Date("2026-05-31T18:29:59Z");
   const programEnd    = new Date("2026-06-28T18:30:00Z");
 
   const now = new Date();
 
-  if (now < earlyBirdEnd) {
-    return {
-      phase: "early",
-      label: "Early Bird",
-      amount: 799,
-      deadline: earlyBirdEnd,
-      deadlineLabel: "Early Bird ends",
-      urgencyText: "⚡ TODAY ONLY — Grab ₹799 before midnight!",
-    };
-  }
-  if (now < standardEnd) {
-    return {
-      phase: "standard",
-      label: "Standard",
-      amount: 999,
-      deadline: standardEnd,
-      deadlineLabel: "Standard registration ends",
-      urgencyText: "Standard pricing — Register before May 31",
-    };
-  }
   if (now < programEnd) {
     return {
-      phase: "closed",
-      label: "Registration Closed",
-      amount: null,
-      deadline: null,
-      deadlineLabel: "",
-      urgencyText: "Program is in progress",
+      phase: "early",
+      label: "Early Bird Offer",
+      amount: 799,
+      originalAmount: 5999,
+      deadline: earlyBirdEnd,
+      deadlineLabel: "Join fast!",
+      urgencyText: "⚡ TODAY ONLY — Grab ₹799 before it's gone!",
     };
   }
   return {
     phase: "closed",
     label: "Program Completed",
     amount: null,
+    originalAmount: null,
     deadline: null,
     deadlineLabel: "",
     urgencyText: "TechPreneur 2026 has concluded.",

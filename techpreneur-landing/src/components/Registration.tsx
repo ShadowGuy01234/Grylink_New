@@ -23,8 +23,8 @@ export default function Registration() {
   const [error, setError] = useState<string | null>(null);
 
   // Price calculation based on phase
-  let price = 999;
-  if (currentPhase === "early") price = 799;
+  let price = currentPhase?.amount || 799;
+  let originalPrice = currentPhase?.originalAmount || 5999;
 
   const handleCopy = () => {
     navigator.clipboard.writeText("gryork@paytm");
@@ -119,7 +119,10 @@ export default function Registration() {
               <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4 flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-gry-blue-main flex-shrink-0 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-slate-900 dark:text-white">Amount to pay: ₹{price}</p>
+                  <p className="font-medium text-slate-900 dark:text-white">
+                    Amount to pay: <span className="line-through text-slate-400 mr-2">₹{originalPrice}</span>
+                    <span className="text-gry-green font-bold">₹{price}</span>
+                  </p>
                   <p className="text-slate-500 dark:text-slate-400 mt-1">Please take a screenshot of the successful transaction. You will need to upload it below.</p>
                 </div>
               </div>

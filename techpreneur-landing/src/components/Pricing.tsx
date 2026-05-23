@@ -20,17 +20,11 @@ export default function Pricing({ showHeader = true }: { showHeader?: boolean })
 
   const plans = [
     {
-      name: "Early Bird",
+      name: "Early Bird Offer",
       price: "₹799",
-      date: "Valid 24 May Only",
-      active: currentPhase === "early",
-      past: currentPhase !== "early" && currentPhase !== "standard",
-    },
-    {
-      name: "Standard",
-      price: "₹999",
-      date: "25 May – 31 May",
-      active: currentPhase === "standard",
+      originalPrice: "₹5999",
+      date: "Join fast! Limited Time Offer",
+      active: true,
       past: false,
     }
   ];
@@ -55,7 +49,7 @@ export default function Pricing({ showHeader = true }: { showHeader?: boolean })
           </motion.div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 gap-6 max-w-lg mx-auto">
           {plans.map((plan, i) => (
             <motion.div
               key={i}
@@ -88,8 +82,14 @@ export default function Pricing({ showHeader = true }: { showHeader?: boolean })
               </div>
 
               <div className="mb-8">
-                <span className="font-display text-4xl sm:text-5xl font-bold">{plan.price}</span>
-                <span className={`ml-2 text-sm ${plan.active ? "text-blue-200" : "text-slate-500"}`}>/ student</span>
+                <div className="flex items-end gap-2 justify-start mb-1">
+                  <span className="text-xl line-through font-semibold text-blue-300/70">{plan.originalPrice}</span>
+                  <span className="text-xs bg-red-500/20 text-red-100 px-2 py-0.5 rounded-full font-bold uppercase">86% Off</span>
+                </div>
+                <div className="flex items-baseline">
+                  <span className="font-display text-4xl sm:text-5xl font-bold">{plan.price}</span>
+                  <span className={`ml-2 text-sm ${plan.active ? "text-blue-200" : "text-slate-500"}`}>/ student</span>
+                </div>
               </div>
 
               <ul className="space-y-4 mb-8">
