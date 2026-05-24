@@ -8,10 +8,15 @@ const { uploadBills } = require("../middleware/upload");
 const { uploadToCloudinary } = require("../services/cloudinaryService");
 const TechPreneurRegistration = require("../models/TechPreneurRegistration");
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || "dummy",
-  key_secret: process.env.RAZORPAY_KEY_SECRET || "dummy",
-});
+// Razorpay is instantiated per-request to ensure fresh env vars on Vercel serverless
+const getRazorpay = () => {
+  const key_id = process.env.RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!key_id || !key_secret) {
+    throw new Error("Razorpay keys are not configured in environment variables.");
+  }
+  return new Razorpay({ key_id, key_secret });
+};
 
 /**
  * POST /api/techpreneur/create-order
@@ -22,6 +27,7 @@ router.post("/create-order", async (req, res) => {
     const { amount } = req.body;
     if (!amount) return res.status(400).json({ error: "Amount is required" });
 
+    const razorpay = getRazorpay();
     const options = {
       amount: amount * 100, // amount in paise
       currency: "INR",
@@ -30,8 +36,8 @@ router.post("/create-order", async (req, res) => {
     const order = await razorpay.orders.create(options);
     res.json(order);
   } catch (error) {
-    console.error("[TechPreneur] Create order error:", error);
-    res.status(500).json({ error: "Could not create Razorpay order" });
+    console.error("[TechPreneur] Create order error:", error.message || error);
+    res.status(500).json({ error: error.message || "Could not create Razorpay order" });
   }
 });
 
@@ -63,7 +69,9 @@ router.post("/register", async (req, res) => {
     }
 
     // Verify Razorpay signature
-    const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "dummy");
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) throw new Error("Razorpay key secret is not configured.");
+    const hmac = crypto.createHmac("sha256", secret);
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
     const generatedSignature = hmac.digest("hex");
 
