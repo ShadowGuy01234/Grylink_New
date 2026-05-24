@@ -18,7 +18,7 @@ const techPreneurRegistrationSchema = new mongoose.Schema(
     phone: {
       type: String,
       required: [true, "Phone number is required"],
-      match: [/^[6-9]\d{9}$/, "Invalid Indian mobile number"],
+      match: [/^[6-9]\d{9}$/, "Please enter a valid 10-digit Indian mobile number"],
     },
     college: {
       type: String,
@@ -64,12 +64,10 @@ const techPreneurRegistrationSchema = new mongoose.Schema(
     feeAmount: {
       type: Number,
       required: true,
-      enum: [799, 999, 1299],
     },
     registrationPhase: {
       type: String,
       required: true,
-      enum: ["early", "standard", "late", "upcoming", "closed"],
     },
     // Admin-managed fields
     paymentVerified: {

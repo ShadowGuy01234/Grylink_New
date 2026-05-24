@@ -87,10 +87,13 @@ router.post("/register", async (req, res) => {
       });
     }
 
+    // Sanitize phone — strip +91, spaces, dashes, parentheses
+    const sanitizedPhone = phone.trim().replace(/^\+91/, "").replace(/\D/g, "");
+
     const registration = new TechPreneurRegistration({
       name: name.trim(),
       email: email.toLowerCase().trim(),
-      phone: phone.trim(),
+      phone: sanitizedPhone,
       college: college.trim(),
       branch,
       year,
@@ -99,8 +102,8 @@ router.post("/register", async (req, res) => {
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       message: message?.trim(),
-      feeAmount: feeAmount || 999,
-      registrationPhase: registrationPhase || "standard",
+      feeAmount: feeAmount || 799,
+      registrationPhase: registrationPhase || "early",
       status: "confirmed",
       paymentVerified: true,
       paymentVerifiedAt: new Date(),
