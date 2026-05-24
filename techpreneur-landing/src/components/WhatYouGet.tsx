@@ -30,29 +30,14 @@ export default function WhatYouGet() {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-gry-blue-main/20 to-gry-blue-light/20 blur-3xl rounded-full" />
             
-            <div className="relative card p-8 sm:p-10 bg-white dark:bg-[#060C1A] border-2 border-slate-100 dark:border-white/10 shadow-2xl">
-              <div className="flex justify-between items-start mb-12">
-                <img src="/logo.png" alt="Gryork" className="h-8 w-auto grayscale opacity-80 dark:opacity-60" />
-                <Award className="w-12 h-12 text-gry-blue-main opacity-20" />
-              </div>
-              
-              <div className="text-center space-y-4 mb-12">
-                <p className="font-display text-sm font-bold text-slate-500 uppercase tracking-widest">Certificate of Completion</p>
-                <div className="w-3/4 h-8 bg-slate-100 dark:bg-white/5 mx-auto rounded animate-pulse" />
-                <p className="text-sm text-slate-500">has successfully completed the 4-week</p>
-                <p className="font-display text-xl font-bold text-slate-800 dark:text-slate-200">TechPreneur Industrial Training</p>
-              </div>
-
-              <div className="flex justify-between items-end border-t border-slate-200 dark:border-white/10 pt-6">
-                <div>
-                  <div className="w-24 h-4 bg-slate-100 dark:bg-white/5 rounded mb-2" />
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Authorized Signatory</p>
-                </div>
-                <div className="w-16 h-16 rounded-full border-2 border-gry-blue-main/30 flex items-center justify-center">
-                  <Award className="w-8 h-8 text-gry-blue-main" />
-                </div>
-              </div>
+            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-100 dark:border-white/10 shadow-2xl">
+              <img 
+                src="/Gryork_Certificate.png" 
+                alt="TechPreneur Industrial Training Certificate" 
+                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500"
+              />
             </div>
+
             
             {/* Floating badge */}
             <motion.div
