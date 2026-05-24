@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
-const PDFDocument = require("pdfkit");
 const { authenticate, authorize } = require("../middleware/auth");
 const { uploadBills } = require("../middleware/upload");
 const { uploadToCloudinary } = require("../services/cloudinaryService");
 const TechPreneurRegistration = require("../models/TechPreneurRegistration");
+const { generateInvoicePDF } = require("../services/invoiceService");
+const { sendTechPreneurConfirmation } = require("../services/emailService");
 
 // Razorpay is instantiated per-request to ensure fresh env vars on Vercel serverless
 const getRazorpay = () => {
@@ -113,6 +114,11 @@ router.post("/register", async (req, res) => {
     await registration.save();
 
     console.log(`[TechPreneur] New registration (Razorpay): ${name} (${email}) — Track: ${trackPreference} — Phase: ${registrationPhase} — ₹${feeAmount}`);
+
+    // Generate invoice PDF and send confirmation email (non-blocking)
+    generateInvoicePDF(registration)
+      .then((pdfBuffer) => sendTechPreneurConfirmation(registration, pdfBuffer))
+      .catch((err) => console.error("[TechPreneur] Email/invoice error:", err.message));
 
     res.status(201).json({
       success: true,
@@ -356,6 +362,11 @@ router.post(
 
       console.log(`[TechPreneur] Manual registration by ${req.user?.email}: ${name} (${email}) — PayID: ${razorpayPaymentId}`);
 
+      // Generate invoice PDF and send confirmation email (non-blocking)
+      generateInvoicePDF(registration)
+        .then((pdfBuffer) => sendTechPreneurConfirmation(registration, pdfBuffer))
+        .catch((err) => console.error("[TechPreneur] Manual email/invoice error:", err.message));
+
       res.status(201).json({
         success: true,
         message: "Registration saved successfully.",
@@ -377,58 +388,20 @@ router.post(
 
 /**
  * GET /api/techpreneur/invoice/:id
- * Generate and download invoice PDF
+ * Generate and stream a professional invoice PDF
  */
 router.get("/invoice/:id", async (req, res) => {
   try {
     const reg = await TechPreneurRegistration.findById(req.params.id);
     if (!reg) return res.status(404).json({ error: "Registration not found" });
 
-    const doc = new PDFDocument({ margin: 50 });
-    
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Gryork-Invoice-${reg.razorpayPaymentId || reg.transactionId || reg._id}.pdf"`);
-    
-    doc.pipe(res);
-    
-    // Header
-    doc.fontSize(20).text('Gryork Consultants', { align: 'right' });
-    doc.fontSize(10).text('TechPreneur Industrial Training', { align: 'right' });
-    doc.moveDown(2);
-    
-    // Invoice Title
-    doc.fontSize(25).text('PAYMENT INVOICE', { align: 'center' });
-    doc.moveDown(2);
+    const pdfBuffer = await generateInvoicePDF(reg);
+    const filename = `Gryork-Invoice-${reg.razorpayPaymentId || reg.transactionId || reg._id}.pdf`;
 
-    // Bill To
-    doc.fontSize(14).text('Bill To:');
-    doc.fontSize(12)
-       .text(`Name: ${reg.name}`)
-       .text(`Email: ${reg.email}`)
-       .text(`Phone: ${reg.phone}`)
-       .text(`College: ${reg.college}`);
-    doc.moveDown(2);
-
-    // Payment Details
-    doc.fontSize(14).text('Payment Details:');
-    doc.fontSize(12)
-       .text(`Date: ${new Date(reg.createdAt).toLocaleString()}`)
-       .text(`Transaction ID: ${reg.razorpayPaymentId || reg.transactionId || "N/A"}`)
-       .text(`Order ID: ${reg.razorpayOrderId || "N/A"}`)
-       .text(`Status: ${reg.paymentVerified ? "PAID / VERIFIED" : "PENDING"}`);
-    doc.moveDown(2);
-
-    // Item Details
-    doc.fontSize(14).text('Item Details:');
-    doc.fontSize(12)
-       .text(`Program: TechPreneur Industrial Training 2026`)
-       .text(`Selected Track: ${reg.trackPreference}`)
-       .text(`Amount Paid: Rs. ${reg.feeAmount}`);
-    
-    doc.moveDown(4);
-    doc.fontSize(14).text('Thank you for your registration!', { align: 'center' });
-    
-    doc.end();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", pdfBuffer.length);
+    res.end(pdfBuffer);
   } catch (error) {
     console.error("[TechPreneur] Invoice generation error", error);
     res.status(500).json({ error: "Unable to generate invoice" });

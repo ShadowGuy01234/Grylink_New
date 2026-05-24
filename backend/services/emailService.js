@@ -1,12 +1,13 @@
 const createTransporter = require("../config/email");
 
-const sendEmail = async (to, subject, html) => {
+const sendEmail = async (to, subject, html, attachments = []) => {
   const transporter = createTransporter();
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: `"Gryork Consultants" <${process.env.SMTP_FROM}>`,
     to,
     subject,
     html,
+    attachments,
   };
 
   try {
@@ -17,6 +18,162 @@ const sendEmail = async (to, subject, html) => {
     // Don't throw - email failure shouldn't block workflows
   }
 };
+
+/**
+ * Send TechPreneur registration confirmation with invoice PDF attached
+ */
+const sendTechPreneurConfirmation = async (reg, invoicePdfBuffer) => {
+  const paymentId = reg.razorpayPaymentId || reg.transactionId || "N/A";
+  const paymentDate = new Date(reg.createdAt).toLocaleDateString("en-IN", {
+    day: "2-digit", month: "long", year: "numeric",
+  });
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- HEADER -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:36px 40px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">
+              GRYORK <span style="color:#93c5fd;">Consultants</span>
+            </div>
+            <div style="color:rgba(255,255,255,0.7);font-size:13px;margin-top:6px;">TechPreneur Industrial Training 2026</div>
+          </td>
+        </tr>
+
+        <!-- SUCCESS BANNER -->
+        <tr>
+          <td style="background:#d1fae5;padding:20px 40px;text-align:center;border-bottom:2px solid #a7f3d0;">
+            <div style="font-size:32px;">🎉</div>
+            <div style="font-size:18px;font-weight:700;color:#065f46;margin-top:6px;">You're Officially Registered!</div>
+            <div style="font-size:13px;color:#047857;margin-top:4px;">Payment confirmed. Your seat is secured.</div>
+          </td>
+        </tr>
+
+        <!-- BODY -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="color:#374151;font-size:15px;margin:0 0 8px 0;">Hey <strong>${reg.name}</strong>, 👋</p>
+            <p style="color:#6b7280;font-size:14px;line-height:1.7;margin:0 0 28px 0;">
+              We're thrilled to confirm your registration for <strong>TechPreneur Industrial Training 2026</strong>. 
+              Your payment has been received and verified. Your invoice is attached to this email.
+            </p>
+
+            <!-- BOOKING SUMMARY CARD -->
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin-bottom:28px;">
+              <div style="font-size:12px;font-weight:700;color:#64748b;letter-spacing:0.08em;margin-bottom:16px;">BOOKING SUMMARY</div>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#64748b;font-size:13px;">Name</span>
+                  </td>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;">
+                    <strong style="color:#0f172a;font-size:13px;">${reg.name}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#64748b;font-size:13px;">Selected Track</span>
+                  </td>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;">
+                    <strong style="color:#0f172a;font-size:13px;">${reg.trackPreference}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#64748b;font-size:13px;">College</span>
+                  </td>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;">
+                    <strong style="color:#0f172a;font-size:13px;">${reg.college}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#64748b;font-size:13px;">Payment ID</span>
+                  </td>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;">
+                    <code style="color:#1e40af;font-size:12px;background:#eff6ff;padding:2px 6px;border-radius:4px;">${paymentId}</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#64748b;font-size:13px;">Payment Date</span>
+                  </td>
+                  <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;">
+                    <strong style="color:#0f172a;font-size:13px;">${paymentDate}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 0 0 0;">
+                    <span style="color:#64748b;font-size:13px;">Amount Paid</span>
+                  </td>
+                  <td style="padding:12px 0 0 0;text-align:right;">
+                    <span style="background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;font-size:15px;font-weight:800;padding:4px 14px;border-radius:20px;">₹${reg.feeAmount}</span>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- WHAT'S NEXT -->
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:24px;margin-bottom:28px;">
+              <div style="font-size:12px;font-weight:700;color:#1e40af;letter-spacing:0.08em;margin-bottom:14px;">📅 WHAT HAPPENS NEXT?</div>
+              <ul style="margin:0;padding-left:20px;color:#1e40af;font-size:13px;line-height:2;">
+                <li>The <strong>session schedule</strong> will be shared on your email & WhatsApp within 24 hours.</li>
+                <li>You'll receive <strong>joining links & batch details</strong> before the program starts.</li>
+                <li>Our team will reach out for any onboarding queries.</li>
+              </ul>
+            </div>
+
+            <!-- INVOICE NOTE -->
+            <div style="text-align:center;background:#fafafa;border:1px dashed #d1d5db;border-radius:10px;padding:16px;margin-bottom:24px;">
+              <div style="font-size:13px;color:#6b7280;">📎 Your <strong>payment invoice</strong> is attached to this email as a PDF.</div>
+              <div style="font-size:12px;color:#9ca3af;margin-top:4px;">Keep it safe for your records.</div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="background:#1e3a8a;padding:24px 40px;text-align:center;">
+            <div style="color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;margin-bottom:6px;">Gryork Consultants</div>
+            <div style="color:rgba(255,255,255,0.5);font-size:11px;">
+              📧 contact@gryork.com &nbsp;|&nbsp; 🌐 training.gryork.com
+            </div>
+            <div style="color:rgba(255,255,255,0.3);font-size:10px;margin-top:12px;">
+              This is an automated confirmation. Please do not reply to this email.
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const attachments = [];
+  if (invoicePdfBuffer) {
+    attachments.push({
+      filename: `Gryork-Invoice-${paymentId}.pdf`,
+      content: invoicePdfBuffer,
+      contentType: "application/pdf",
+    });
+  }
+
+  await sendEmail(
+    reg.email,
+    `✅ Registration Confirmed – TechPreneur 2026 | Gryork`,
+    html,
+    attachments
+  );
+};
+
 
 const sendOnboardingLink = async (email, ownerName, link) => {
   const html = `
@@ -247,6 +404,7 @@ const sendCriticalOverdueAlert = async (transaction) => {
 
 module.exports = {
   sendEmail,
+  sendTechPreneurConfirmation,
   sendOnboardingLink,
   sendNbfcOnboardingLink,
   sendStatusUpdate,
