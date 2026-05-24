@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { techpreneurApi } from "../../api";
-import { CheckCircle2, Search, Filter, XCircle, Clock, FileText } from "lucide-react";
+import { CheckCircle2, Search, Filter, XCircle, Clock, FileText, PlusCircle, AlertCircle } from "lucide-react";
 
 interface Registration {
   _id: string;
@@ -25,6 +25,15 @@ export default function TechPreneurRegistrationsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [manualSuccess, setManualSuccess] = useState<string | null>(null);
+  const [manualForm, setManualForm] = useState({
+    name: "", email: "", phone: "", college: "", branch: "",
+    year: "1st Year", trackPreference: "AI + Web Development",
+    razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 799,
+  });
 
   const fetchRegistrations = async () => {
     try {
@@ -62,12 +71,27 @@ export default function TechPreneurRegistrationsPage() {
   const handleReject = async (id: string) => {
     if (!window.confirm("Reject this registration?")) return;
     try {
-      await techpreneurApi.updateRegistration(id, {
-        status: "rejected",
-      });
+      await techpreneurApi.updateRegistration(id, { status: "rejected" });
       fetchRegistrations();
     } catch (err) {
       alert("Failed to reject registration");
+    }
+  };
+
+  const handleManualRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setManualError(null);
+    setManualSuccess(null);
+    setManualLoading(true);
+    try {
+      await techpreneurApi.manualRegister(manualForm);
+      setManualSuccess(`✅ Registration saved for ${manualForm.name} (${manualForm.email})`);
+      setManualForm({ name: "", email: "", phone: "", college: "", branch: "", year: "1st Year", trackPreference: "AI + Web Development", razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 799 });
+      fetchRegistrations();
+    } catch (err: any) {
+      setManualError(err.response?.data?.error || "Failed to save registration.");
+    } finally {
+      setManualLoading(false);
     }
   };
 
@@ -78,6 +102,12 @@ export default function TechPreneurRegistrationsPage() {
           <h1 className="text-2xl font-bold text-gray-900">TechPreneur Registrations</h1>
           <p className="text-gray-500 text-sm mt-1">Manage attendees and view Razorpay transactions for the 2026 Industrial Training</p>
         </div>
+        <button
+          onClick={() => { setShowManualModal(true); setManualError(null); setManualSuccess(null); }}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+        >
+          <PlusCircle className="w-4 h-4" /> Add Manual Registration
+        </button>
       </div>
 
       {/* Stats row */}
@@ -224,6 +254,101 @@ export default function TechPreneurRegistrationsPage() {
           </table>
         </div>
       </div>
+
+      {/* ── Manual Registration Modal ── */}
+      {showManualModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowManualModal(false)}>
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Add Manual Registration</h2>
+                <p className="text-sm text-orange-600 font-medium mt-0.5">For students who already paid but registration failed</p>
+              </div>
+              <button onClick={() => setShowManualModal(false)} className="text-gray-400 hover:text-gray-600"><XCircle className="w-6 h-6" /></button>
+            </div>
+
+            {manualError && (
+              <div className="flex items-start gap-2 bg-red-50 text-red-600 border border-red-200 rounded-lg p-3 mb-4 text-sm">
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />{manualError}
+              </div>
+            )}
+            {manualSuccess && (
+              <div className="flex items-start gap-2 bg-green-50 text-green-700 border border-green-200 rounded-lg p-3 mb-4 text-sm">
+                <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />{manualSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleManualRegister} className="space-y-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs text-orange-700">
+                ⚠️ Get the student details from your <strong>Razorpay Dashboard → Payments</strong>. The Payment ID is mandatory.
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Razorpay Payment ID *</label>
+                  <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono" placeholder="pay_xxxxxxxxxxxxxxx" value={manualForm.razorpayPaymentId} onChange={e => setManualForm(p => ({ ...p, razorpayPaymentId: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Razorpay Order ID (optional)</label>
+                  <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono" placeholder="order_xxxxxxxxxxxxxxx" value={manualForm.razorpayOrderId} onChange={e => setManualForm(p => ({ ...p, razorpayOrderId: e.target.value }))} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Full Name *</label>
+                  <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Student Name" value={manualForm.name} onChange={e => setManualForm(p => ({ ...p, name: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
+                  <input required type="email" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="student@example.com" value={manualForm.email} onChange={e => setManualForm(p => ({ ...p, email: e.target.value }))} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Phone (10 digits) *</label>
+                  <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="9876543210" value={manualForm.phone} onChange={e => setManualForm(p => ({ ...p, phone: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Fee Amount (₹) *</label>
+                  <input required type="number" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={manualForm.feeAmount} onChange={e => setManualForm(p => ({ ...p, feeAmount: Number(e.target.value) }))} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">College *</label>
+                <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="College Name" value={manualForm.college} onChange={e => setManualForm(p => ({ ...p, college: e.target.value }))} />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Branch *</label>
+                  <input required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="CSE" value={manualForm.branch} onChange={e => setManualForm(p => ({ ...p, branch: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Year *</label>
+                  <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={manualForm.year} onChange={e => setManualForm(p => ({ ...p, year: e.target.value }))}>
+                    <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Track *</label>
+                  <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" value={manualForm.trackPreference} onChange={e => setManualForm(p => ({ ...p, trackPreference: e.target.value }))}>
+                    <option>AI + Web Development</option>
+                    <option>Startup &amp; Entrepreneurship</option>
+                    <option>Industry Productivity Tools</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" disabled={manualLoading} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2">
+                {manualLoading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</> : "Save Registration"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

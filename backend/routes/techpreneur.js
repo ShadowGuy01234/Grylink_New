@@ -300,6 +300,82 @@ router.delete(
 );
 
 /**
+ * POST /api/techpreneur/manual-register
+ * Protected — Admin manually registers a student who already paid via Razorpay
+ * Used to recover failed registrations where payment went through but DB save failed
+ */
+router.post(
+  "/manual-register",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const {
+        name, email, phone, college, branch, year,
+        trackPreference, razorpayPaymentId, razorpayOrderId, feeAmount,
+      } = req.body;
+
+      if (!name || !email || !phone || !college || !branch || !year || !trackPreference || !razorpayPaymentId) {
+        return res.status(400).json({ error: "All fields including Razorpay Payment ID are required." });
+      }
+
+      // Sanitize phone
+      const sanitizedPhone = phone.trim().replace(/^\+91/, "").replace(/\D/g, "");
+
+      // Check if already registered by email or payment ID
+      const existing = await TechPreneurRegistration.findOne({
+        $or: [
+          { email: email.toLowerCase().trim() },
+          { razorpayPaymentId: razorpayPaymentId.trim() },
+        ],
+      });
+      if (existing) {
+        return res.status(409).json({ error: "A registration with this email or Payment ID already exists." });
+      }
+
+      const registration = new TechPreneurRegistration({
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        phone: sanitizedPhone,
+        college: college.trim(),
+        branch,
+        year,
+        trackPreference,
+        transactionId: razorpayPaymentId.trim(),
+        razorpayOrderId: razorpayOrderId?.trim() || "",
+        razorpayPaymentId: razorpayPaymentId.trim(),
+        feeAmount: feeAmount || 799,
+        registrationPhase: "early",
+        status: "confirmed",
+        paymentVerified: true,
+        paymentVerifiedAt: new Date(),
+        paymentVerifiedBy: req.user?.name || req.user?.email || "admin-manual",
+      });
+
+      await registration.save();
+
+      console.log(`[TechPreneur] Manual registration by ${req.user?.email}: ${name} (${email}) — PayID: ${razorpayPaymentId}`);
+
+      res.status(201).json({
+        success: true,
+        message: "Registration saved successfully.",
+        registrationId: registration._id,
+      });
+    } catch (error) {
+      if (error.code === 11000) {
+        return res.status(409).json({ error: "A registration with this email or Payment ID already exists." });
+      }
+      if (error.name === "ValidationError") {
+        const messages = Object.values(error.errors).map((e) => e.message);
+        return res.status(400).json({ error: messages.join(". ") });
+      }
+      console.error("[TechPreneur] Manual registration error:", error);
+      res.status(500).json({ error: "Failed to save registration. Please try again." });
+    }
+  }
+);
+
+/**
  * GET /api/techpreneur/invoice/:id
  * Generate and download invoice PDF
  */

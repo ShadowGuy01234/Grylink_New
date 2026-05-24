@@ -429,6 +429,18 @@ export const techpreneurApi = {
       notes?: string;
     }
   ) => api.patch(`/techpreneur/registrations/${id}`, data),
+  manualRegister: (data: {
+    name: string;
+    email: string;
+    phone: string;
+    college: string;
+    branch: string;
+    year: string;
+    trackPreference: string;
+    razorpayPaymentId: string;
+    razorpayOrderId?: string;
+    feeAmount: number;
+  }) => api.post("/techpreneur/manual-register", data),
 };
 
 export { api };
