@@ -45,30 +45,44 @@ export interface RegistrationPayload {
   branch: string;
   year: string;
   trackPreference: string;
-  transactionId: string;
   message?: string;
   feeAmount: number;
   registrationPhase: string;
-  screenshot: File;
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+export async function createRazorpayOrder(amount: number) {
+  const apiUrl = import.meta.env.VITE_API_URL || "https://grylink-backend.vercel.app";
+  const res = await fetch(`${apiUrl}/api/techpreneur/create-order`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ amount }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Network error" }));
+    throw new Error(err.error || "Failed to create order");
+  }
+  return res.json();
 }
 
 export async function submitRegistration(data: RegistrationPayload) {
   const apiUrl = import.meta.env.VITE_API_URL || "https://grylink-backend.vercel.app";
   
-  const formData = new FormData();
-  Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined) {
-      formData.append(key, value instanceof File ? value : String(value));
-    }
-  });
-
   const res = await fetch(`${apiUrl}/api/techpreneur/register`, {
     method: "POST",
-    body: formData,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Network error" }));
     throw new Error(err.error || "Registration failed");
   }
   return res.json();
+}
+
+export function getInvoiceUrl(registrationId: string) {
+  const apiUrl = import.meta.env.VITE_API_URL || "https://grylink-backend.vercel.app";
+  return `${apiUrl}/api/techpreneur/invoice/${registrationId}`;
 }

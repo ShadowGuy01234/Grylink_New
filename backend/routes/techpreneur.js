@@ -1,15 +1,45 @@
 const express = require("express");
 const router = express.Router();
+const crypto = require("crypto");
+const Razorpay = require("razorpay");
+const PDFDocument = require("pdfkit");
 const { authenticate, authorize } = require("../middleware/auth");
 const { uploadBills } = require("../middleware/upload");
 const { uploadToCloudinary } = require("../services/cloudinaryService");
 const TechPreneurRegistration = require("../models/TechPreneurRegistration");
 
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || "dummy",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "dummy",
+});
+
+/**
+ * POST /api/techpreneur/create-order
+ * Initialize a Razorpay order
+ */
+router.post("/create-order", async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount) return res.status(400).json({ error: "Amount is required" });
+
+    const options = {
+      amount: amount * 100, // amount in paise
+      currency: "INR",
+      receipt: `rcpt_${Date.now()}`,
+    };
+    const order = await razorpay.orders.create(options);
+    res.json(order);
+  } catch (error) {
+    console.error("[TechPreneur] Create order error:", error);
+    res.status(500).json({ error: "Could not create Razorpay order" });
+  }
+});
+
 /**
  * POST /api/techpreneur/register
  * Public — Submit a registration for TechPreneur Industrial Training 2026
  */
-router.post("/register", uploadBills.single("screenshot"), async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const {
       name,
@@ -19,17 +49,26 @@ router.post("/register", uploadBills.single("screenshot"), async (req, res) => {
       branch,
       year,
       trackPreference,
-      transactionId,
       message,
       feeAmount,
       registrationPhase,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
     } = req.body;
-    
-    const screenshot = req.file;
 
     // Basic presence validation
-    if (!name || !email || !phone || !college || !branch || !year || !trackPreference || !transactionId || !screenshot) {
-      return res.status(400).json({ error: "All required fields (including payment screenshot) must be provided." });
+    if (!name || !email || !phone || !college || !branch || !year || !trackPreference || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: "All required fields (including payment details) must be provided." });
+    }
+
+    // Verify Razorpay signature
+    const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "dummy");
+    hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+    const generatedSignature = hmac.digest("hex");
+
+    if (generatedSignature !== razorpay_signature) {
+      return res.status(400).json({ error: "Payment verification failed. Invalid signature." });
     }
 
     // Check for duplicate email
@@ -40,11 +79,6 @@ router.post("/register", uploadBills.single("screenshot"), async (req, res) => {
       });
     }
 
-    // Upload screenshot to Cloudinary
-    const cloudResult = await uploadToCloudinary(screenshot.buffer, screenshot.mimetype, {
-      folder: "gryork/techpreneur/screenshots",
-    });
-
     const registration = new TechPreneurRegistration({
       name: name.trim(),
       email: email.toLowerCase().trim(),
@@ -53,20 +87,25 @@ router.post("/register", uploadBills.single("screenshot"), async (req, res) => {
       branch,
       year,
       trackPreference,
-      transactionId: transactionId.trim(),
+      transactionId: razorpay_payment_id,
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
       message: message?.trim(),
       feeAmount: feeAmount || 999,
       registrationPhase: registrationPhase || "standard",
-      screenshotUrl: cloudResult.secure_url,
+      status: "confirmed",
+      paymentVerified: true,
+      paymentVerifiedAt: new Date(),
+      paymentVerifiedBy: "Razorpay",
     });
 
     await registration.save();
 
-    console.log(`[TechPreneur] New registration: ${name} (${email}) — Track: ${trackPreference} — Phase: ${registrationPhase} — ₹${feeAmount}`);
+    console.log(`[TechPreneur] New registration (Razorpay): ${name} (${email}) — Track: ${trackPreference} — Phase: ${registrationPhase} — ₹${feeAmount}`);
 
     res.status(201).json({
       success: true,
-      message: "Registration submitted successfully! Our team will verify your payment and send confirmation within 24 hours.",
+      message: "Registration and payment successful!",
       registrationId: registration._id,
     });
   } catch (error) {
@@ -248,5 +287,65 @@ router.delete(
     }
   }
 );
+
+/**
+ * GET /api/techpreneur/invoice/:id
+ * Generate and download invoice PDF
+ */
+router.get("/invoice/:id", async (req, res) => {
+  try {
+    const reg = await TechPreneurRegistration.findById(req.params.id);
+    if (!reg) return res.status(404).json({ error: "Registration not found" });
+
+    const doc = new PDFDocument({ margin: 50 });
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Gryork-Invoice-${reg.razorpayPaymentId || reg.transactionId || reg._id}.pdf"`);
+    
+    doc.pipe(res);
+    
+    // Header
+    doc.fontSize(20).text('Gryork Consultants', { align: 'right' });
+    doc.fontSize(10).text('TechPreneur Industrial Training', { align: 'right' });
+    doc.moveDown(2);
+    
+    // Invoice Title
+    doc.fontSize(25).text('PAYMENT INVOICE', { align: 'center' });
+    doc.moveDown(2);
+
+    // Bill To
+    doc.fontSize(14).text('Bill To:');
+    doc.fontSize(12)
+       .text(`Name: ${reg.name}`)
+       .text(`Email: ${reg.email}`)
+       .text(`Phone: ${reg.phone}`)
+       .text(`College: ${reg.college}`);
+    doc.moveDown(2);
+
+    // Payment Details
+    doc.fontSize(14).text('Payment Details:');
+    doc.fontSize(12)
+       .text(`Date: ${new Date(reg.createdAt).toLocaleString()}`)
+       .text(`Transaction ID: ${reg.razorpayPaymentId || reg.transactionId || "N/A"}`)
+       .text(`Order ID: ${reg.razorpayOrderId || "N/A"}`)
+       .text(`Status: ${reg.paymentVerified ? "PAID / VERIFIED" : "PENDING"}`);
+    doc.moveDown(2);
+
+    // Item Details
+    doc.fontSize(14).text('Item Details:');
+    doc.fontSize(12)
+       .text(`Program: TechPreneur Industrial Training 2026`)
+       .text(`Selected Track: ${reg.trackPreference}`)
+       .text(`Amount Paid: Rs. ${reg.feeAmount}`);
+    
+    doc.moveDown(4);
+    doc.fontSize(14).text('Thank you for your registration!', { align: 'center' });
+    
+    doc.end();
+  } catch (error) {
+    console.error("[TechPreneur] Invoice generation error", error);
+    res.status(500).json({ error: "Unable to generate invoice" });
+  }
+});
 
 module.exports = router;

@@ -45,12 +45,16 @@ const techPreneurRegistrationSchema = new mongoose.Schema(
     },
     transactionId: {
       type: String,
-      required: [true, "Transaction ID is required"],
       trim: true,
     },
     screenshotUrl: {
       type: String,
-      required: [true, "Payment screenshot is required"],
+    },
+    razorpayOrderId: {
+      type: String,
+    },
+    razorpayPaymentId: {
+      type: String,
     },
     message: {
       type: String,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { techpreneurApi } from "../../api";
-import { CheckCircle2, Search, Filter, Image as ImageIcon, XCircle, Clock } from "lucide-react";
+import { CheckCircle2, Search, Filter, XCircle, Clock, FileText } from "lucide-react";
 
 interface Registration {
   _id: string;
@@ -10,7 +10,8 @@ interface Registration {
   college: string;
   trackPreference: string;
   transactionId: string;
-  screenshotUrl: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
   feeAmount: number;
   registrationPhase: string;
   paymentVerified: boolean;
@@ -24,7 +25,6 @@ export default function TechPreneurRegistrationsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const fetchRegistrations = async () => {
     try {
@@ -76,7 +76,7 @@ export default function TechPreneurRegistrationsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">TechPreneur Registrations</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage attendees and verify payments for the 2026 Industrial Training</p>
+          <p className="text-gray-500 text-sm mt-1">Manage attendees and view Razorpay transactions for the 2026 Industrial Training</p>
         </div>
       </div>
 
@@ -91,7 +91,7 @@ export default function TechPreneurRegistrationsPage() {
           <p className="text-2xl font-bold text-green-600 mt-1">{stats.confirmed || 0}</p>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-500 font-medium">Pending Verification</p>
+          <p className="text-sm text-gray-500 font-medium">Pending</p>
           <p className="text-2xl font-bold text-orange-500 mt-1">{stats.pending || 0}</p>
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
@@ -106,7 +106,7 @@ export default function TechPreneurRegistrationsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search by name, email, or UTR..."
+              placeholder="Search by name, email, or Payment ID..."
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -134,8 +134,8 @@ export default function TechPreneurRegistrationsPage() {
                 <th className="px-6 py-3 font-medium">Student</th>
                 <th className="px-6 py-3 font-medium">Contact</th>
                 <th className="px-6 py-3 font-medium">Track</th>
-                <th className="px-6 py-3 font-medium">Payment (UTR)</th>
-                <th className="px-6 py-3 font-medium">Screenshot</th>
+                <th className="px-6 py-3 font-medium">Payment Info</th>
+                <th className="px-6 py-3 font-medium">Invoice</th>
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium text-right">Actions</th>
               </tr>
@@ -170,20 +170,19 @@ export default function TechPreneurRegistrationsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="font-mono text-gray-900">{reg.transactionId}</p>
-                      <p className="text-gray-500 text-xs">₹{reg.feeAmount} ({reg.registrationPhase})</p>
+                      <p className="font-mono text-gray-900 font-medium">PID: {reg.razorpayPaymentId || reg.transactionId}</p>
+                      <p className="text-gray-500 text-xs font-mono">OID: {reg.razorpayOrderId || "N/A"}</p>
+                      <p className="text-green-600 text-xs font-medium mt-0.5">₹{reg.feeAmount} ({reg.registrationPhase})</p>
                     </td>
                     <td className="px-6 py-4">
-                      {reg.screenshotUrl ? (
-                        <button 
-                          onClick={() => setSelectedImage(reg.screenshotUrl)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium"
-                        >
-                          <ImageIcon className="w-4 h-4" /> View
-                        </button>
-                      ) : (
-                        <span className="text-gray-400 text-xs">N/A</span>
-                      )}
+                      <a 
+                        href={`https://grylink-backend.vercel.app/api/techpreneur/invoice/${reg._id}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      >
+                        <FileText className="w-4 h-4" /> View Invoice
+                      </a>
                     </td>
                     <td className="px-6 py-4">
                       {reg.status === "confirmed" ? (
@@ -225,21 +224,6 @@ export default function TechPreneurRegistrationsPage() {
           </table>
         </div>
       </div>
-
-      {/* Image Modal */}
-      {selectedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setSelectedImage(null)}>
-          <div className="relative max-w-3xl w-full bg-white rounded-2xl shadow-2xl p-2" onClick={(e) => e.stopPropagation()}>
-            <button 
-              onClick={() => setSelectedImage(null)}
-              className="absolute -top-10 right-0 text-white hover:text-gray-300"
-            >
-              <XCircle className="w-8 h-8" />
-            </button>
-            <img src={selectedImage} alt="Payment Screenshot" className="w-full h-auto max-h-[80vh] object-contain rounded-xl" />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

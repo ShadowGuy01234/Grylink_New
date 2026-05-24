@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { ChevronDown, Trophy } from "lucide-react";
+import { ChevronDown, Trophy, AlertCircle } from "lucide-react";
 
 const weeks = [
   {
@@ -181,6 +181,12 @@ export default function WeeklyPlan() {
                 <p className="text-xs text-slate-500 mt-1 font-medium">{s.label}</p>
               </div>
             ))}
+          </div>
+          <div className="mt-6 flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-xl">
+            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
+              Detailed session schedule will be provided after registration and will be shared via email.
+            </p>
           </div>
         </motion.div>
       </div>
