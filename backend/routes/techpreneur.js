@@ -11,7 +11,7 @@ const TechPreneurRegistration = require("../models/TechPreneurRegistration");
 // Razorpay is instantiated per-request to ensure fresh env vars on Vercel serverless
 const getRazorpay = () => {
   const key_id = process.env.RAZORPAY_KEY_ID;
-  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+  const key_secret = process.env.RAZORPAY_SECRET_KEY;
   if (!key_id || !key_secret) {
     throw new Error("Razorpay keys are not configured in environment variables.");
   }
@@ -69,7 +69,7 @@ router.post("/register", async (req, res) => {
     }
 
     // Verify Razorpay signature
-    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const secret = process.env.RAZORPAY_SECRET_KEY;
     if (!secret) throw new Error("Razorpay key secret is not configured.");
     const hmac = crypto.createHmac("sha256", secret);
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
