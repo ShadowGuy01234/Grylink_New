@@ -10,7 +10,7 @@ export interface PricingPhase {
 }
 
 export function getCurrentPricing(): PricingPhase {
-  const earlyBirdEnd  = new Date("2026-05-24T18:29:59Z");
+  const earlyBirdEnd  = new Date("2026-05-25T14:30:00Z"); // 25 May, 8:00 PM IST
   const programEnd    = new Date("2026-06-28T18:30:00Z");
 
   const now = new Date();
