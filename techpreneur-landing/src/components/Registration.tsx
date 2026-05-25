@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, Download, CreditCard, Phone } from "lucide-react";
-import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl, submitPreRegistration } from "../lib/api";
+import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl } from "../lib/api";
 
 declare global {
   interface Window {
@@ -27,9 +27,7 @@ export default function Registration() {
     signature: string;
   } | null>(null);
 
-  // Pay Later mode
-  const [mode, setMode] = useState<"pay_now" | "pay_later">("pay_now");
-  const [payLaterDone, setPayLaterDone] = useState(false);
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -255,72 +253,26 @@ export default function Registration() {
     );
   }
 
-  // ── Pay Later handler ──
-  const handlePayLater = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!validateStep1()) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await submitPreRegistration({
-        ...formData,
-        phone: sanitizePhone(formData.phone),
-      });
-      setPayLaterDone(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err: any) {
-      setError(err.message || "Failed to reserve spot. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-
-  // ── PAY LATER DONE ──
-  if (payLaterDone) {
-    return (
-      <div className="page-container max-w-2xl">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center bg-white dark:bg-[#0A0A0A] rounded-3xl p-10 sm:p-14 border border-slate-200 dark:border-white/10 shadow-xl"
-        >
-          <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-gry-blue-main" />
-          </div>
-          <h2 className="font-display text-3xl font-bold text-slate-900 dark:text-white mb-3">Spot Reserved! 🎉</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-            Hey <strong className="text-slate-700 dark:text-slate-300">{formData.name}</strong>, your spot has been reserved for TechPreneur 2026.
-            Our team will reach out to <strong className="text-slate-700 dark:text-slate-300">{formData.email}</strong> shortly with a payment link to confirm your seat.
-          </p>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 rounded-xl p-4 text-sm text-blue-700 dark:text-blue-300">
-            📞 You can also WhatsApp us to pay immediately and confirm your registration.
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="page-container max-w-3xl">
-      {/* Progress Indicator — only for pay_now mode */}
-      {mode === "pay_now" && (
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors ${step >= 1 ? "bg-gry-blue-main text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500"}`}>1</div>
-            <span className={`text-sm font-medium ${step >= 1 ? "text-slate-900 dark:text-white" : "text-slate-500"}`}>Details</span>
-          </div>
-          <div className={`w-12 h-1 mx-3 rounded-full transition-colors ${step >= 2 ? "bg-gry-blue-main" : "bg-slate-200 dark:bg-white/10"}`} />
-          <div className="flex items-center gap-3">
-            <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors ${step >= 2 ? "bg-gry-blue-main text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500"}`}>2</div>
-            <span className={`text-sm font-medium ${step >= 2 ? "text-slate-900 dark:text-white" : "text-slate-500"}`}>Checkout</span>
-          </div>
+      {/* Progress Indicator */}
+      <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors ${step >= 1 ? "bg-gry-blue-main text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500"}`}>1</div>
+          <span className={`text-sm font-medium ${step >= 1 ? "text-slate-900 dark:text-white" : "text-slate-500"}`}>Details</span>
         </div>
-      )}
+        <div className={`w-12 h-1 mx-3 rounded-full transition-colors ${step >= 2 ? "bg-gry-blue-main" : "bg-slate-200 dark:bg-white/10"}`} />
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors ${step >= 2 ? "bg-gry-blue-main text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500"}`}>2</div>
+          <span className={`text-sm font-medium ${step >= 2 ? "text-slate-900 dark:text-white" : "text-slate-500"}`}>Checkout</span>
+        </div>
+      </div>
 
       <AnimatePresence mode="wait">
         {/* ── Step 1: Student Details ── */}
-        {(step === 1 || mode === "pay_later") && (
+        {step === 1 && (
           <motion.div
             key="step1"
             initial={{ opacity: 0, x: -20 }}
@@ -328,37 +280,7 @@ export default function Registration() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Mode toggle tabs */}
-            <div className="flex gap-2 mb-5 bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setMode("pay_now")}
-                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
-                  mode === "pay_now"
-                    ? "bg-white dark:bg-gry-blue-main text-gry-blue-main dark:text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                }`}
-              >
-                💳 Pay Now — ₹799
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("pay_later")}
-                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
-                  mode === "pay_later"
-                    ? "bg-white dark:bg-amber-600 text-amber-700 dark:text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                }`}
-              >
-                🔖 Reserve Spot (Pay Later)
-              </button>
-            </div>
-            {mode === "pay_later" && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-xl px-4 py-3 mb-5 text-sm text-amber-700 dark:text-amber-300">
-                ⚠️ <strong>Payment gateway is temporarily down.</strong> Reserve your spot now — our team will send you a payment link shortly to confirm your seat at ₹799.
-              </div>
-            )}
-            <form onSubmit={mode === "pay_now" ? handleProceedToCheckout : handlePayLater} className="bg-white dark:bg-[#0A0A0A] rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 shadow-sm" noValidate>
+            <form onSubmit={handleProceedToCheckout} className="bg-white dark:bg-[#0A0A0A] rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 shadow-sm" noValidate>
               <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-6">Student Details</h3>
 
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
@@ -444,15 +366,9 @@ export default function Registration() {
                 </select>
               </div>
 
-              <button type="submit" disabled={loading} className={`w-full justify-center py-4 text-base relative overflow-hidden group flex items-center gap-2 rounded-xl font-bold transition-all ${
-                mode === "pay_later"
-                  ? "bg-amber-500 hover:bg-amber-600 text-white"
-                  : "btn-primary"
-              }`}>
+              <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-4 text-base relative overflow-hidden group flex items-center gap-2 rounded-xl font-bold transition-all">
                 {loading ? (
                   <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Reserving...</span></>
-                ) : mode === "pay_later" ? (
-                  <><span>🔖 Reserve My Spot</span></>
                 ) : (
                   <><span>Proceed to Checkout</span><ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
                 )}
