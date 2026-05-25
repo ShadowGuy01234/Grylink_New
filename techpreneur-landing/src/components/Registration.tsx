@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, Download, CreditCard } from "lucide-react";
+import { AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, Download, CreditCard, Phone } from "lucide-react";
 import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl, submitPreRegistration } from "../lib/api";
 
 declare global {
