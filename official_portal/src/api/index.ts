@@ -441,6 +441,13 @@ export const techpreneurApi = {
     razorpayOrderId?: string;
     feeAmount: number;
   }) => api.post("/techpreneur/manual-register", data),
+  getSettings: () => api.get("/techpreneur/settings"),
+  updateSettings: (data: { registrationOpen?: boolean; maintenanceMessage?: string }) =>
+    api.patch("/techpreneur/settings", data),
+  preRegister: (data: {
+    name: string; email: string; phone: string; college: string;
+    branch: string; year: string; trackPreference: string;
+  }) => api.post("/techpreneur/pre-register", data),
 };
 
 export { api };

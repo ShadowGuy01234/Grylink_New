@@ -86,3 +86,34 @@ export function getInvoiceUrl(registrationId: string) {
   const apiUrl = import.meta.env.VITE_API_URL || "https://grylink-backend.vercel.app";
   return `${apiUrl}/api/techpreneur/invoice/${registrationId}`;
 }
+
+export async function getRegistrationSettings(): Promise<{ registrationOpen: boolean; maintenanceMessage: string }> {
+  const apiUrl = import.meta.env.VITE_API_URL || "https://grylink-backend.vercel.app";
+  const res = await fetch(`${apiUrl}/api/techpreneur/settings`);
+  if (!res.ok) return { registrationOpen: true, maintenanceMessage: "" };
+  return res.json();
+}
+
+export interface PreRegisterPayload {
+  name: string;
+  email: string;
+  phone: string;
+  college: string;
+  branch: string;
+  year: string;
+  trackPreference: string;
+}
+
+export async function submitPreRegistration(data: PreRegisterPayload) {
+  const apiUrl = import.meta.env.VITE_API_URL || "https://grylink-backend.vercel.app";
+  const res = await fetch(`${apiUrl}/api/techpreneur/pre-register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Network error" }));
+    throw new Error(err.error || "Pre-registration failed");
+  }
+  return res.json();
+}

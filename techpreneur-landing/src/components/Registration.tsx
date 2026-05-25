@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, Download, CreditCard, Phone } from "lucide-react";
-import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl } from "../lib/api";
+import { AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, Download, CreditCard, Clock, Wrench } from "lucide-react";
+import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl, getRegistrationSettings, submitPreRegistration } from "../lib/api";
 
 declare global {
   interface Window {
@@ -21,12 +21,29 @@ export default function Registration() {
   const [loading, setLoading] = useState(false);
   const { phase: currentPhase } = getCurrentPricing();
   const [registrationId, setRegistrationId] = useState<string | null>(null);
-  // Stores payment details if payment succeeded but registration failed
   const [paymentFallback, setPaymentFallback] = useState<{
     paymentId: string;
     orderId: string;
     signature: string;
   } | null>(null);
+
+  // Registration settings (maintenance mode)
+  const [registrationSettings, setRegistrationSettings] = useState<{
+    registrationOpen: boolean;
+    maintenanceMessage: string;
+  }>({ registrationOpen: true, maintenanceMessage: "" });
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  // Pay Later mode
+  const [mode, setMode] = useState<"pay_now" | "pay_later">("pay_now");
+  const [payLaterDone, setPayLaterDone] = useState(false);
+
+  useEffect(() => {
+    getRegistrationSettings()
+      .then((s) => setRegistrationSettings(s))
+      .catch(() => {})
+      .finally(() => setSettingsLoaded(true));
+  }, []);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -251,24 +268,114 @@ export default function Registration() {
     );
   }
 
+  // ── Pay Later handler ──
+  const handlePayLater = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!validateStep1()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await submitPreRegistration({
+        ...formData,
+        phone: sanitizePhone(formData.phone),
+      });
+      setPayLaterDone(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err: any) {
+      setError(err.message || "Failed to reserve spot. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Loading state ──
+  if (!settingsLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-2 border-gry-blue-main border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // ── MAINTENANCE SCREEN ──
+  if (!registrationSettings.registrationOpen) {
+    return (
+      <div className="page-container max-w-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center bg-white dark:bg-[#0A0A0A] rounded-3xl p-10 sm:p-14 border border-slate-200 dark:border-white/10 shadow-xl"
+        >
+          <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Wrench className="w-10 h-10 text-amber-500 animate-pulse" />
+          </div>
+          <span className="inline-block bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+            Maintenance Break
+          </span>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
+            We'll be back shortly!  🔧
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed mb-8 max-w-md mx-auto">
+            {registrationSettings.maintenanceMessage || "We're currently doing some maintenance. Registration will reopen soon!"}
+          </p>
+          <div className="flex items-center justify-center gap-3 text-slate-400 text-sm">
+            <Clock className="w-4 h-4" />
+            <span>Registration will resume shortly. Please check back soon.</span>
+          </div>
+          <div className="mt-8 pt-8 border-t border-slate-100 dark:border-white/10">
+            <p className="text-xs text-slate-400">Questions? Reach us at <a href="mailto:contact@gryork.com" className="text-gry-blue-main hover:underline">contact@gryork.com</a></p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ── PAY LATER DONE ──
+  if (payLaterDone) {
+    return (
+      <div className="page-container max-w-2xl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center bg-white dark:bg-[#0A0A0A] rounded-3xl p-10 sm:p-14 border border-slate-200 dark:border-white/10 shadow-xl"
+        >
+          <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-gry-blue-main" />
+          </div>
+          <h2 className="font-display text-3xl font-bold text-slate-900 dark:text-white mb-3">Spot Reserved! 🎉</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+            Hey <strong className="text-slate-700 dark:text-slate-300">{formData.name}</strong>, your spot has been reserved for TechPreneur 2026.
+            Our team will reach out to <strong className="text-slate-700 dark:text-slate-300">{formData.email}</strong> shortly with a payment link to confirm your seat.
+          </p>
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 rounded-xl p-4 text-sm text-blue-700 dark:text-blue-300">
+            📞 You can also WhatsApp us to pay immediately and confirm your registration.
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container max-w-3xl">
-      {/* Progress Indicator */}
-      <div className="flex items-center justify-center mb-8">
-        <div className="flex items-center gap-3">
-          <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors ${step >= 1 ? "bg-gry-blue-main text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500"}`}>1</div>
-          <span className={`text-sm font-medium ${step >= 1 ? "text-slate-900 dark:text-white" : "text-slate-500"}`}>Details</span>
+      {/* Progress Indicator — only for pay_now mode */}
+      {mode === "pay_now" && (
+        <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors ${step >= 1 ? "bg-gry-blue-main text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500"}`}>1</div>
+            <span className={`text-sm font-medium ${step >= 1 ? "text-slate-900 dark:text-white" : "text-slate-500"}`}>Details</span>
+          </div>
+          <div className={`w-12 h-1 mx-3 rounded-full transition-colors ${step >= 2 ? "bg-gry-blue-main" : "bg-slate-200 dark:bg-white/10"}`} />
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors ${step >= 2 ? "bg-gry-blue-main text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500"}`}>2</div>
+            <span className={`text-sm font-medium ${step >= 2 ? "text-slate-900 dark:text-white" : "text-slate-500"}`}>Checkout</span>
+          </div>
         </div>
-        <div className={`w-12 h-1 mx-3 rounded-full transition-colors ${step >= 2 ? "bg-gry-blue-main" : "bg-slate-200 dark:bg-white/10"}`} />
-        <div className="flex items-center gap-3">
-          <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors ${step >= 2 ? "bg-gry-blue-main text-white" : "bg-slate-200 dark:bg-white/10 text-slate-500"}`}>2</div>
-          <span className={`text-sm font-medium ${step >= 2 ? "text-slate-900 dark:text-white" : "text-slate-500"}`}>Checkout</span>
-        </div>
-      </div>
+      )}
 
       <AnimatePresence mode="wait">
         {/* ── Step 1: Student Details ── */}
-        {step === 1 && (
+        {(step === 1 || mode === "pay_later") && (
           <motion.div
             key="step1"
             initial={{ opacity: 0, x: -20 }}
@@ -276,7 +383,37 @@ export default function Registration() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <form onSubmit={handleProceedToCheckout} className="bg-white dark:bg-[#0A0A0A] rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 shadow-sm" noValidate>
+            {/* Mode toggle tabs */}
+            <div className="flex gap-2 mb-5 bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setMode("pay_now")}
+                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
+                  mode === "pay_now"
+                    ? "bg-white dark:bg-gry-blue-main text-gry-blue-main dark:text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
+              >
+                💳 Pay Now — ₹799
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("pay_later")}
+                className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
+                  mode === "pay_later"
+                    ? "bg-white dark:bg-amber-600 text-amber-700 dark:text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                }`}
+              >
+                🔖 Reserve Spot (Pay Later)
+              </button>
+            </div>
+            {mode === "pay_later" && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-xl px-4 py-3 mb-5 text-sm text-amber-700 dark:text-amber-300">
+                ⚠️ <strong>Payment gateway is temporarily down.</strong> Reserve your spot now — our team will send you a payment link shortly to confirm your seat at ₹799.
+              </div>
+            )}
+            <form onSubmit={mode === "pay_now" ? handleProceedToCheckout : handlePayLater} className="bg-white dark:bg-[#0A0A0A] rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/10 shadow-sm" noValidate>
               <h3 className="font-display font-bold text-2xl text-slate-900 dark:text-white mb-6">Student Details</h3>
 
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
@@ -362,11 +499,18 @@ export default function Registration() {
                 </select>
               </div>
 
-              <button type="submit" className="btn-primary w-full justify-center py-4 text-base relative overflow-hidden group">
-                <div className="flex items-center gap-2">
-                  <span>Proceed to Checkout</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </div>
+              <button type="submit" disabled={loading} className={`w-full justify-center py-4 text-base relative overflow-hidden group flex items-center gap-2 rounded-xl font-bold transition-all ${
+                mode === "pay_later"
+                  ? "bg-amber-500 hover:bg-amber-600 text-white"
+                  : "btn-primary"
+              }`}>
+                {loading ? (
+                  <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Reserving...</span></>
+                ) : mode === "pay_later" ? (
+                  <><span>🔖 Reserve My Spot</span></>
+                ) : (
+                  <><span>Proceed to Checkout</span><ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
+                )}
               </button>
             </form>
           </motion.div>

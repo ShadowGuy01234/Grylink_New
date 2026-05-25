@@ -6,6 +6,7 @@ const { authenticate, authorize } = require("../middleware/auth");
 const { uploadBills } = require("../middleware/upload");
 const { uploadToCloudinary } = require("../services/cloudinaryService");
 const TechPreneurRegistration = require("../models/TechPreneurRegistration");
+const TechPreneurSettings = require("../models/TechPreneurSettings");
 const { generateInvoicePDF } = require("../services/invoiceService");
 const { sendTechPreneurConfirmation } = require("../services/emailService");
 
@@ -18,6 +19,98 @@ const getRazorpay = () => {
   }
   return new Razorpay({ key_id, key_secret });
 };
+
+/**
+ * GET /api/techpreneur/settings
+ * Public — Returns registration open/closed status and maintenance message
+ */
+router.get("/settings", async (req, res) => {
+  try {
+    const settings = await TechPreneurSettings.getSettings();
+    res.json({
+      registrationOpen: settings.registrationOpen,
+      maintenanceMessage: settings.maintenanceMessage,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch settings" });
+  }
+});
+
+/**
+ * PATCH /api/techpreneur/settings
+ * Protected — Admin toggles registration on/off or updates maintenance message
+ */
+router.patch(
+  "/settings",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { registrationOpen, maintenanceMessage } = req.body;
+      const settings = await TechPreneurSettings.getSettings();
+      if (typeof registrationOpen === "boolean") settings.registrationOpen = registrationOpen;
+      if (maintenanceMessage !== undefined) settings.maintenanceMessage = maintenanceMessage;
+      await settings.save();
+      console.log(`[TechPreneur] Settings updated by ${req.user?.email}: registrationOpen=${settings.registrationOpen}`);
+      res.json({ success: true, registrationOpen: settings.registrationOpen, maintenanceMessage: settings.maintenanceMessage });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to update settings" });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur/pre-register
+ * Public — Reserve a spot (pay later). Saves student info without payment.
+ */
+router.post("/pre-register", async (req, res) => {
+  try {
+    const { name, email, phone, college, branch, year, trackPreference } = req.body;
+    if (!name || !email || !phone || !college || !branch || !year || !trackPreference) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+    const sanitizedPhone = phone.trim().replace(/^\+91/, "").replace(/\D/g, "");
+    if (sanitizedPhone.length !== 10) {
+      return res.status(400).json({ error: "Enter a valid 10-digit phone number." });
+    }
+    // Prevent duplicates by email
+    const existing = await TechPreneurRegistration.findOne({ email: email.toLowerCase().trim() });
+    if (existing) {
+      const type = existing.paymentVerified ? "a confirmed registration" : "a reservation";
+      return res.status(409).json({ error: `This email already has ${type}.` });
+    }
+    const registration = new TechPreneurRegistration({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      phone: sanitizedPhone,
+      college: college.trim(),
+      branch,
+      year,
+      trackPreference,
+      feeAmount: 799,
+      registrationPhase: "early",
+      status: "pending_payment",
+      paymentVerified: false,
+    });
+    await registration.save();
+    console.log(`[TechPreneur] Pre-registration (Pay Later): ${name} (${email})`);
+    res.status(201).json({
+      success: true,
+      message: "Spot reserved! Payment link will be sent shortly.",
+      registrationId: registration._id,
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ error: "This email is already registered." });
+    }
+    if (err.name === "ValidationError") {
+      const messages = Object.values(err.errors).map((e) => e.message);
+      return res.status(400).json({ error: messages.join(". ") });
+    }
+    console.error("[TechPreneur] Pre-register error:", err);
+    res.status(500).json({ error: "Failed to save reservation. Please try again." });
+  }
+});
 
 /**
  * POST /api/techpreneur/create-order
