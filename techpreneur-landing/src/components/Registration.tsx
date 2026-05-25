@@ -125,7 +125,8 @@ export default function Registration() {
       const order = await createRazorpayOrder(price);
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        // key_id comes from backend create-order response — safest approach
+        key: order.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         name: "Gryork Consultants",

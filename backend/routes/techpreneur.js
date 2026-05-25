@@ -13,7 +13,8 @@ const { sendTechPreneurConfirmation } = require("../services/emailService");
 // Razorpay is instantiated per-request to ensure fresh env vars on Vercel serverless
 const getRazorpay = () => {
   const key_id = process.env.RAZORPAY_KEY_ID;
-  const key_secret = process.env.RAZORPAY_SECRET_KEY;
+  // Accept both naming conventions
+  const key_secret = process.env.RAZORPAY_SECRET_KEY || process.env.RAZORPAY_KEY_SECRET;
   if (!key_id || !key_secret) {
     throw new Error("Razorpay keys are not configured in environment variables.");
   }
@@ -120,15 +121,18 @@ router.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;
     if (!amount) return res.status(400).json({ error: "Amount is required" });
+    if (amount * 100 < 100) return res.status(400).json({ error: "Amount must be at least ₹1" });
 
     const razorpay = getRazorpay();
     const options = {
-      amount: amount * 100, // amount in paise
+      amount: amount * 100, // convert to paise
       currency: "INR",
       receipt: `rcpt_${Date.now()}`,
     };
     const order = await razorpay.orders.create(options);
-    res.json(order);
+
+    // Return key_id so frontend never needs to hardcode or expose it via env
+    res.json({ ...order, key_id: process.env.RAZORPAY_KEY_ID });
   } catch (error) {
     console.error("[TechPreneur] Create order error:", error.message || error);
     res.status(500).json({ error: error.message || "Could not create Razorpay order" });
