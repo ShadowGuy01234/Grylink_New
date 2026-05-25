@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, Download, CreditCard, Clock, Wrench } from "lucide-react";
-import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl, getRegistrationSettings, submitPreRegistration } from "../lib/api";
+import { AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, Download, CreditCard } from "lucide-react";
+import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl, submitPreRegistration } from "../lib/api";
 
 declare global {
   interface Window {
@@ -27,23 +27,9 @@ export default function Registration() {
     signature: string;
   } | null>(null);
 
-  // Registration settings (maintenance mode)
-  const [registrationSettings, setRegistrationSettings] = useState<{
-    registrationOpen: boolean;
-    maintenanceMessage: string;
-  }>({ registrationOpen: true, maintenanceMessage: "" });
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
-
   // Pay Later mode
   const [mode, setMode] = useState<"pay_now" | "pay_later">("pay_now");
   const [payLaterDone, setPayLaterDone] = useState(false);
-
-  useEffect(() => {
-    getRegistrationSettings()
-      .then((s) => setRegistrationSettings(s))
-      .catch(() => {})
-      .finally(() => setSettingsLoaded(true));
-  }, []);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -289,48 +275,6 @@ export default function Registration() {
     }
   };
 
-  // ── Loading state ──
-  if (!settingsLoaded) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-2 border-gry-blue-main border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // ── MAINTENANCE SCREEN ──
-  if (!registrationSettings.registrationOpen) {
-    return (
-      <div className="page-container max-w-2xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center bg-white dark:bg-[#0A0A0A] rounded-3xl p-10 sm:p-14 border border-slate-200 dark:border-white/10 shadow-xl"
-        >
-          <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Wrench className="w-10 h-10 text-amber-500 animate-pulse" />
-          </div>
-          <span className="inline-block bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
-            Maintenance Break
-          </span>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            We'll be back shortly!  🔧
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed mb-8 max-w-md mx-auto">
-            {registrationSettings.maintenanceMessage || "We're currently doing some maintenance. Registration will reopen soon!"}
-          </p>
-          <div className="flex items-center justify-center gap-3 text-slate-400 text-sm">
-            <Clock className="w-4 h-4" />
-            <span>Registration will resume shortly. Please check back soon.</span>
-          </div>
-          <div className="mt-8 pt-8 border-t border-slate-100 dark:border-white/10">
-            <p className="text-xs text-slate-400">Questions? Reach us at <a href="mailto:contact@gryork.com" className="text-gry-blue-main hover:underline">contact@gryork.com</a></p>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   // ── PAY LATER DONE ──
   if (payLaterDone) {

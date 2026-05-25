@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { techpreneurApi } from "../../api";
-import { CheckCircle2, Search, Filter, XCircle, Clock, FileText, PlusCircle, AlertCircle, Power, RefreshCw } from "lucide-react";
+import { CheckCircle2, Search, Filter, XCircle, Clock, FileText, PlusCircle, AlertCircle } from "lucide-react";
 
 interface Registration {
   _id: string;
@@ -35,11 +35,6 @@ export default function TechPreneurRegistrationsPage() {
     razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 799,
   });
 
-  // Registration open/closed toggle
-  const [regOpen, setRegOpen] = useState<boolean | null>(null);
-  const [regMessage, setRegMessage] = useState("");
-  const [toggleLoading, setToggleLoading] = useState(false);
-
   const fetchRegistrations = async () => {
     try {
       setLoading(true);
@@ -59,36 +54,6 @@ export default function TechPreneurRegistrationsPage() {
   useEffect(() => {
     fetchRegistrations();
   }, [search, statusFilter]);
-
-  // Fetch registration settings on mount
-  useEffect(() => {
-    techpreneurApi.getSettings().then((res) => {
-      setRegOpen(res.data.registrationOpen);
-      setRegMessage(res.data.maintenanceMessage || "");
-    }).catch(() => {});
-  }, []);
-
-  const handleToggleRegistration = async () => {
-    if (regOpen === null) return;
-    setToggleLoading(true);
-    try {
-      const res = await techpreneurApi.updateSettings({ registrationOpen: !regOpen });
-      setRegOpen(res.data.registrationOpen);
-    } catch (err) {
-      alert("Failed to update registration status");
-    } finally {
-      setToggleLoading(false);
-    }
-  };
-
-  const handleUpdateMessage = async () => {
-    try {
-      await techpreneurApi.updateSettings({ maintenanceMessage: regMessage });
-      alert("Maintenance message updated!");
-    } catch {
-      alert("Failed to update message");
-    }
-  };
 
   const handleVerify = async (id: string) => {
     if (!window.confirm("Mark this payment as verified?")) return;
@@ -132,58 +97,6 @@ export default function TechPreneurRegistrationsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* ── REGISTRATION CONTROL BAR ── */}
-      <div className={`mb-6 rounded-2xl border-2 p-4 ${
-        regOpen === false
-          ? "bg-red-50 border-red-200"
-          : "bg-green-50 border-green-200"
-      }`}>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex items-center gap-3 flex-1">
-            <div className={`w-3 h-3 rounded-full ${
-              regOpen === false ? "bg-red-500 animate-pulse" : "bg-green-500"
-            }`} />
-            <div>
-              <p className="font-semibold text-gray-900 text-sm">
-                Registration is currently{" "}
-                <span className={regOpen === false ? "text-red-600" : "text-green-600"}>
-                  {regOpen === false ? "CLOSED (Maintenance Mode)" : regOpen === true ? "OPEN" : "Loading..."}
-                </span>
-              </p>
-              <p className="text-xs text-gray-500 mt-0.5">Toggle below to open/close the registration window on the website</p>
-            </div>
-          </div>
-          <button
-            onClick={handleToggleRegistration}
-            disabled={toggleLoading || regOpen === null}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-              regOpen === false
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-red-600 hover:bg-red-700 text-white"
-            }`}
-          >
-            {toggleLoading
-              ? <><RefreshCw className="w-4 h-4 animate-spin" /> Updating...</>
-              : regOpen === false
-                ? <><Power className="w-4 h-4" /> Turn Registration ON</>
-                : <><Power className="w-4 h-4" /> Turn Registration OFF (Maintenance)</>}
-          </button>
-        </div>
-        {regOpen === false && (
-          <div className="mt-3 flex gap-2">
-            <input
-              className="flex-1 border border-red-200 rounded-lg px-3 py-2 text-sm bg-white"
-              placeholder="Maintenance message shown to students..."
-              value={regMessage}
-              onChange={e => setRegMessage(e.target.value)}
-            />
-            <button onClick={handleUpdateMessage} className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors">
-              Update
-            </button>
-          </div>
-        )}
-      </div>
-
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">TechPreneur Registrations</h1>
