@@ -48,17 +48,31 @@ router.patch(
   async (req, res) => {
     try {
       const { registrationOpen, maintenanceMessage } = req.body;
-      const settings = await TechPreneurSettings.getSettings();
-      if (typeof registrationOpen === "boolean") settings.registrationOpen = registrationOpen;
-      if (maintenanceMessage !== undefined) settings.maintenanceMessage = maintenanceMessage;
-      await settings.save();
+
+      const update = {};
+      // Explicitly set boolean — avoids issues with falsy values not being persisted
+      if (typeof registrationOpen === "boolean") update.registrationOpen = registrationOpen;
+      if (maintenanceMessage !== undefined) update.maintenanceMessage = maintenanceMessage;
+
+      const settings = await TechPreneurSettings.findOneAndUpdate(
+        { key: "global" },
+        { $set: update },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      );
+
       console.log(`[TechPreneur] Settings updated by ${req.user?.email}: registrationOpen=${settings.registrationOpen}`);
-      res.json({ success: true, registrationOpen: settings.registrationOpen, maintenanceMessage: settings.maintenanceMessage });
+      res.json({
+        success: true,
+        registrationOpen: settings.registrationOpen,
+        maintenanceMessage: settings.maintenanceMessage,
+      });
     } catch (err) {
+      console.error("[TechPreneur] Settings update error:", err);
       res.status(500).json({ error: "Failed to update settings" });
     }
   }
 );
+
 
 /**
  * POST /api/techpreneur/pre-register
