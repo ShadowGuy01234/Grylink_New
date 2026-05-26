@@ -41,8 +41,8 @@ export default function Registration() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const price = currentPhase?.amount || 799;
-  const originalPrice = currentPhase?.originalAmount || 5999;
+  const price = currentPhase?.amount || 1299;
+  const originalPrice = currentPhase?.originalAmount || 5200;
 
   const validateStep1 = () => {
     const errors: Record<string, string> = {};

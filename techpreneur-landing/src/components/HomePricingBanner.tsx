@@ -5,9 +5,9 @@ import { getCurrentPricing } from "../lib/api";
 export function HomePricingBanner() {
   const { phase: currentPhase } = getCurrentPricing();
   
-  let price = currentPhase?.amount ? `₹${currentPhase.amount}` : "₹799";
-  let originalPrice = currentPhase?.originalAmount ? `₹${currentPhase.originalAmount}` : "₹5999";
-  let label = currentPhase?.label || "Early Bird Offer";
+  let price = currentPhase?.amount ? `₹${currentPhase.amount}` : "₹1299";
+  let originalPrice = currentPhase?.originalAmount ? `₹${currentPhase.originalAmount}` : "₹5200";
+  let label = currentPhase?.label || "Founding Batch Registrations Now Live";
 
   return (
     <div className="bg-gradient-to-r from-gry-blue-dark via-gry-blue-main to-gry-blue-dark text-white py-10 relative overflow-hidden">
