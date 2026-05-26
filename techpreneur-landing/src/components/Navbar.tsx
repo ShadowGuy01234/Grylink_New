@@ -58,6 +58,20 @@ export function Navbar() {
                   )}
                 </Link>
               ))}
+              <Link
+                to="/login"
+                className={`text-sm font-medium transition-colors hover:text-gry-blue-light relative ${
+                  isActive('/login') ? "text-gry-blue-light" : "text-slate-300"
+                }`}
+              >
+                Student Login
+                {isActive('/login') && (
+                  <motion.div
+                    layoutId="nav-indicator"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gry-blue-light rounded-full"
+                  />
+                )}
+              </Link>
             </nav>
 
             {/* Actions */}

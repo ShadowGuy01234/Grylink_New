@@ -497,6 +497,7 @@ router.post(
   }
 );
 
+
 /**
  * GET /api/techpreneur/invoice/:id
  * Generate and stream a professional invoice PDF
@@ -519,4 +520,304 @@ router.get("/invoice/:id", async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────
+//  STUDENT AUTH ROUTES
+// ─────────────────────────────────────────────────────────────────────
+
+const jwt = require("jsonwebtoken");
+const TechPreneurOTP = require("../models/TechPreneurOTP");
+const createTransporter = require("../config/email");
+
+const TP_JWT_SECRET = process.env.TP_JWT_SECRET || process.env.JWT_SECRET || "tp_secret_change_me";
+
+function hashOTP(otp) {
+  return crypto.createHash("sha256").update(otp).digest("hex");
+}
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
+ * POST /api/techpreneur/auth/send-otp
+ * Public — Send 6-digit OTP to a registered & payment-verified student email
+ */
+router.post("/auth/send-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required." });
+
+    const student = await TechPreneurRegistration.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (!student) {
+      return res.status(404).json({ error: "No registration found with this email." });
+    }
+
+    if (!student.paymentVerified) {
+      return res.status(403).json({
+        error: "Your payment is not yet verified. Please contact support.",
+      });
+    }
+
+    // Rate limit: delete old OTPs for this email and create a fresh one
+    await TechPreneurOTP.deleteMany({ email: student.email });
+
+    const otp = generateOTP();
+    const otpRecord = new TechPreneurOTP({
+      email: student.email,
+      otpHash: hashOTP(otp),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min
+    });
+    await otpRecord.save();
+
+    // Send email
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: `"TechPreneur 2026 | Gryork" <${process.env.SMTP_USER}>`,
+      to: student.email,
+      subject: "Your TechPreneur Dashboard Login OTP",
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#fff;border-radius:12px;border:1px solid #e5e7eb">
+          <h2 style="color:#1a1a2e;margin-bottom:4px">TechPreneur Dashboard</h2>
+          <p style="color:#6b7280;font-size:14px;margin-bottom:24px">Your one-time login code</p>
+          <div style="background:#f0f4ff;border-radius:8px;padding:24px;text-align:center;margin-bottom:24px">
+            <p style="margin:0;font-size:12px;color:#6b7280;margin-bottom:8px">Your OTP</p>
+            <p style="margin:0;font-size:40px;font-weight:700;letter-spacing:8px;color:#2563eb">${otp}</p>
+          </div>
+          <p style="font-size:13px;color:#6b7280">This code expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
+          <p style="font-size:13px;color:#6b7280">Hi <strong>${student.name}</strong>, welcome back to your TechPreneur learning portal.</p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+          <p style="font-size:11px;color:#9ca3af;margin:0">Gryork Consultants Pvt Ltd · training.gryork.com</p>
+        </div>
+      `,
+    });
+
+    console.log(`[TechPreneur Auth] OTP sent to ${student.email}`);
+    res.json({ success: true, message: "OTP sent to your registered email." });
+  } catch (err) {
+    console.error("[TechPreneur Auth] send-otp error:", err);
+    res.status(500).json({ error: "Failed to send OTP. Please try again." });
+  }
+});
+
+/**
+ * POST /api/techpreneur/auth/verify-otp
+ * Public — Verify OTP and return JWT token
+ */
+router.post("/auth/verify-otp", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: "Email and OTP are required." });
+
+    const otpRecord = await TechPreneurOTP.findOne({
+      email: email.toLowerCase().trim(),
+      used: false,
+      expiresAt: { $gt: new Date() },
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({ error: "OTP expired or not found. Please request a new one." });
+    }
+
+    // Increment attempts
+    otpRecord.attempts += 1;
+    if (otpRecord.attempts > 5) {
+      await TechPreneurOTP.deleteMany({ email: email.toLowerCase().trim() });
+      return res.status(429).json({ error: "Too many attempts. Please request a new OTP." });
+    }
+    await otpRecord.save();
+
+    if (otpRecord.otpHash !== hashOTP(otp)) {
+      return res.status(400).json({ error: "Invalid OTP. Please try again." });
+    }
+
+    // Mark OTP as used
+    otpRecord.used = true;
+    await otpRecord.save();
+
+    const student = await TechPreneurRegistration.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (!student) {
+      return res.status(404).json({ error: "Student not found." });
+    }
+
+    const token = jwt.sign(
+      {
+        studentId: student._id,
+        email: student.email,
+        name: student.name,
+        track: student.trackPreference,
+      },
+      TP_JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    console.log(`[TechPreneur Auth] Login successful: ${student.email}`);
+    res.json({
+      success: true,
+      token,
+      student: {
+        name: student.name,
+        email: student.email,
+        college: student.college,
+        branch: student.branch,
+        year: student.year,
+        track: student.trackPreference,
+        referralCode: student.referralCode,
+      },
+    });
+  } catch (err) {
+    console.error("[TechPreneur Auth] verify-otp error:", err);
+    res.status(500).json({ error: "Verification failed. Please try again." });
+  }
+});
+
+/**
+ * GET /api/techpreneur/auth/me
+ * Protected (student JWT) — Return current student profile
+ */
+router.get("/auth/me", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ error: "No token provided." });
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, TP_JWT_SECRET);
+    } catch {
+      return res.status(401).json({ error: "Invalid or expired token." });
+    }
+
+    const student = await TechPreneurRegistration.findById(decoded.studentId).select(
+      "name email phone college branch year trackPreference status paymentVerified dashboardAccess referralCode createdAt"
+    );
+    if (!student) return res.status(404).json({ error: "Student not found." });
+
+    res.json({ student });
+  } catch (err) {
+    console.error("[TechPreneur Auth] me error:", err);
+    res.status(500).json({ error: "Failed to fetch profile." });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────
+//  ADMIN: EDIT STUDENT REGISTRATION
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * PATCH /api/techpreneur/registrations/:id/edit
+ * Admin — Edit any field of a student registration
+ */
+router.patch(
+  "/registrations/:id/edit",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const allowedFields = [
+        "name", "email", "phone", "college", "branch", "year", "trackPreference",
+        "feeAmount", "razorpayPaymentId", "razorpayOrderId", "transactionId",
+        "status", "paymentVerified", "dashboardAccess", "assignedSPOC",
+        "assignedGroup", "notes", "registrationPhase",
+      ];
+
+      const update = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          update[field] = req.body[field];
+        }
+      }
+
+      if (update.paymentVerified === true && !update.status) {
+        update.status = "confirmed";
+      }
+
+      // Auto-assign dashboard access when confirmed
+      if (update.status === "confirmed") {
+        update.dashboardAccess = true;
+      }
+
+      const reg = await TechPreneurRegistration.findByIdAndUpdate(
+        req.params.id,
+        { $set: update },
+        { new: true, runValidators: true }
+      );
+
+      if (!reg) return res.status(404).json({ error: "Registration not found." });
+
+      // Auto-generate referral code when confirmed for the first time
+      if ((update.status === "confirmed" || update.paymentVerified === true) && !reg.referralCode) {
+        const TechPreneurReferral = require("../models/TechPreneurReferral");
+        const namePrefix = reg.name.replace(/[^a-zA-Z]/g, "").slice(0, 4).toUpperCase();
+        let code;
+        let tries = 0;
+        do {
+          const suffix = require("crypto").randomBytes(3).toString("hex").toUpperCase();
+          code = `${namePrefix}${suffix}`;
+          const existing = await TechPreneurRegistration.findOne({ referralCode: code });
+          if (!existing) break;
+          tries++;
+        } while (tries < 10);
+
+        await TechPreneurRegistration.findByIdAndUpdate(reg._id, { $set: { referralCode: code } });
+        reg.referralCode = code;
+
+        // If this student used a referral code, record it and update referral status
+        if (reg.usedReferralCode) {
+          const referrer = await TechPreneurRegistration.findOne({ referralCode: reg.usedReferralCode });
+          if (referrer) {
+            await TechPreneurReferral.findOneAndUpdate(
+              { referrerId: referrer._id, referredEmail: reg.email },
+              {
+                $set: {
+                  referrerId: referrer._id,
+                  referrerEmail: referrer.email,
+                  referrerCode: reg.usedReferralCode,
+                  referredEmail: reg.email,
+                  referredId: reg._id,
+                  status: "verified",
+                },
+              },
+              { upsert: true, new: true }
+            );
+
+            // Check if referrer now has 2+ successful referrals → mark eligible for cashback
+            const TechPreneurReferral2 = require("../models/TechPreneurReferral");
+            const successfulCount = await TechPreneurReferral2.countDocuments({
+              referrerId: referrer._id,
+              status: "verified",
+            });
+            if (successfulCount >= 2) {
+              await TechPreneurReferral2.updateMany(
+                { referrerId: referrer._id, cashbackStatus: "not_eligible" },
+                { $set: { cashbackStatus: "eligible" } }
+              );
+            }
+          }
+        }
+
+        console.log(`[TechPreneur] Referral code ${code} auto-generated for ${reg.email}`);
+      }
+
+      console.log(`[TechPreneur] Registration ${req.params.id} edited by ${req.user?.email}`);
+      res.json({ success: true, registration: reg });
+    } catch (err) {
+      if (err.name === "ValidationError") {
+        const messages = Object.values(err.errors).map((e) => e.message);
+        return res.status(400).json({ error: messages.join(". ") });
+      }
+      if (err.code === 11000) {
+        return res.status(409).json({ error: "Email already exists for another registration." });
+      }
+      console.error("[TechPreneur] Edit registration error:", err);
+      res.status(500).json({ error: "Failed to update registration." });
+    }
+  }
+);
+
 module.exports = router;
+

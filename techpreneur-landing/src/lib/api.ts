@@ -133,3 +133,56 @@ export async function submitPreRegistration(data: PreRegisterPayload) {
   }
   return res.json();
 }
+
+// ─── Referral Code Validation ──────────────────────────────────────────────────
+export async function validateReferralCode(code: string): Promise<{ valid: boolean; referrerName?: string; discount?: number; error?: string }> {
+  const apiUrl = import.meta.env.VITE_API_URL || "https://grylink-backend.vercel.app";
+  const res = await fetch(`${apiUrl}/api/techpreneur-v2/referrals/validate/${encodeURIComponent(code.toUpperCase())}`);
+  return res.json();
+}
+
+// ─── Student Dashboard API ─────────────────────────────────────────────────────
+const API_BASE = import.meta.env.VITE_API_URL || "https://grylink-backend.vercel.app";
+
+function studentHeaders() {
+  const token = localStorage.getItem("tp_token");
+  return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+}
+
+export async function fetchSessions() {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/sessions`, { headers: studentHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch sessions");
+  return res.json();
+}
+
+export async function fetchAnnouncements() {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/announcements`, { headers: studentHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch announcements");
+  return res.json();
+}
+
+export async function fetchMyProject() {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/my`, { headers: studentHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch project");
+  return res.json();
+}
+
+export async function submitProject(data: { githubUrl?: string; driveUrl?: string; projectTitle?: string; description?: string }) {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/submit`, {
+    method: "POST",
+    headers: studentHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Network error" }));
+    throw new Error(err.error || "Submission failed");
+  }
+  return res.json();
+}
+
+export async function fetchReferralStats() {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/referrals/my-stats`, { headers: studentHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch referral stats");
+  return res.json();
+}
+

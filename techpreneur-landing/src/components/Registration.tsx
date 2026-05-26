@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, Download, CreditCard, Phone } from "lucide-react";
-import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl } from "../lib/api";
+import { getCurrentPricing, submitRegistration, createRazorpayOrder, getInvoiceUrl, validateReferralCode } from "../lib/api";
 
 declare global {
   interface Window {
@@ -41,7 +41,15 @@ export default function Registration() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const price = currentPhase?.amount || 1299;
+  // Referral State
+  const [referralInput, setReferralInput] = useState("");
+  const [validReferralCode, setValidReferralCode] = useState<string | null>(null);
+  const [referralDiscount, setReferralDiscount] = useState(0);
+  const [referralStatus, setReferralStatus] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
+  const [referralMessage, setReferralMessage] = useState("");
+
+  const basePrice = currentPhase?.amount || 1299;
+  const price = Math.max(0, basePrice - referralDiscount);
   const originalPrice = currentPhase?.originalAmount || 5200;
 
   const validateStep1 = () => {
@@ -78,6 +86,7 @@ export default function Registration() {
         ...formData,
         phone: sanitizePhone(formData.phone),
         feeAmount: price,
+        usedReferralCode: validReferralCode || undefined,
         registrationPhase: currentPhase?.phase || "early",
         razorpay_order_id: paymentResponse.razorpay_order_id,
         razorpay_payment_id: paymentResponse.razorpay_payment_id,
@@ -97,6 +106,31 @@ export default function Registration() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApplyReferral = async () => {
+    if (!referralInput.trim()) return;
+    setReferralStatus("loading");
+    setReferralMessage("");
+    try {
+      const res = await validateReferralCode(referralInput.trim());
+      if (res.valid) {
+        setValidReferralCode(referralInput.trim().toUpperCase());
+        setReferralDiscount(res.discount || 100);
+        setReferralStatus("valid");
+        setReferralMessage(`Referral applied! Referred by ${res.referrerName}`);
+      } else {
+        setValidReferralCode(null);
+        setReferralDiscount(0);
+        setReferralStatus("invalid");
+        setReferralMessage(res.error || "Invalid referral code.");
+      }
+    } catch (err) {
+      setValidReferralCode(null);
+      setReferralDiscount(0);
+      setReferralStatus("invalid");
+      setReferralMessage("Failed to validate code.");
     }
   };
 
@@ -403,6 +437,34 @@ export default function Registration() {
                 </div>
               )}
 
+              {/* Referral Code Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Referral Code (Optional)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter code"
+                    value={referralInput}
+                    onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
+                    disabled={referralStatus === "valid" || referralStatus === "loading"}
+                    className="tp-input flex-1 uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyReferral}
+                    disabled={!referralInput || referralStatus === "valid" || referralStatus === "loading"}
+                    className="px-4 py-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                  >
+                    {referralStatus === "loading" ? "..." : referralStatus === "valid" ? "Applied" : "Apply"}
+                  </button>
+                </div>
+                {referralMessage && (
+                  <p className={`text-xs mt-1.5 ${referralStatus === "valid" ? "text-green-600 dark:text-green-400" : "text-red-500"}`}>
+                    {referralMessage}
+                  </p>
+                )}
+              </div>
+
               {/* Bill Summary */}
               <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-5 mb-6">
                 <div className="flex justify-between items-center mb-3">
@@ -419,13 +481,20 @@ export default function Registration() {
                   <>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-slate-500 dark:text-slate-400 text-sm">Base Price</span>
-                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{(price / 1.18).toFixed(2)}</span>
+                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{(basePrice / 1.18).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-200 dark:border-white/10">
                       <span className="text-slate-500 dark:text-slate-400 text-sm">GST (18%)</span>
-                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{(price - (price / 1.18)).toFixed(2)}</span>
+                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{(basePrice - (basePrice / 1.18)).toFixed(2)}</span>
                     </div>
                   </>
+                )}
+
+                {referralStatus === "valid" && (
+                  <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-200 dark:border-white/10">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium">✨ Referral Discount</span>
+                    <span className="text-green-600 dark:text-green-400 font-medium">- ₹{referralDiscount}</span>
+                  </div>
                 )}
 
                 <div className="flex justify-between items-end">

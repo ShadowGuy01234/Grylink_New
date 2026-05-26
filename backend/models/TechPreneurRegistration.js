@@ -94,6 +94,21 @@ const techPreneurRegistrationSchema = new mongoose.Schema(
     notes: {
       type: String,
     },
+    // Dashboard access — enabled by admin after payment verification
+    dashboardAccess: {
+      type: Boolean,
+      default: false,
+    },
+    // Unique referral code assigned after payment confirmed
+    referralCode: {
+      type: String,
+      trim: true,
+    },
+    // Referral code this student used at checkout
+    usedReferralCode: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

@@ -137,6 +137,7 @@ app.use("/api/careers", require("./routes/careers"));
 app.use("/api/public", require("./routes/public"));
 app.use("/api/chatbot", require("./routes/chatbot"));
 app.use("/api/techpreneur", require("./routes/techpreneur")); // TechPreneur Industrial Training 2026
+app.use("/api/techpreneur-v2", require("./routes/techpreneur-v2")); // TechPreneur Extended: Sessions, Announcements, Projects, Referrals
 
 // 404 handler
 app.use((req, res) => {

@@ -448,6 +448,33 @@ export const techpreneurApi = {
     name: string; email: string; phone: string; college: string;
     branch: string; year: string; trackPreference: string;
   }) => api.post("/techpreneur/pre-register", data),
+  editRegistration: (id: string, data: Record<string, any>) =>
+    api.patch(`/techpreneur/registrations/${id}/edit`, data),
+    
+  // --- Extended V2 Admin Endpoints ---
+  getAnalytics: () => api.get("/techpreneur-v2/analytics"),
+  
+  // Sessions
+  getSessions: () => api.get("/techpreneur-v2/sessions/all"),
+  createSession: (data: any) => api.post("/techpreneur-v2/sessions", data),
+  updateSession: (id: string, data: any) => api.patch(`/techpreneur-v2/sessions/${id}`, data),
+  deleteSession: (id: string) => api.delete(`/techpreneur-v2/sessions/${id}`),
+
+  // Announcements
+  getAnnouncements: () => api.get("/techpreneur-v2/announcements/all"),
+  createAnnouncement: (data: any) => api.post("/techpreneur-v2/announcements", data),
+  updateAnnouncement: (id: string, data: any) => api.patch(`/techpreneur-v2/announcements/${id}`, data),
+  deleteAnnouncement: (id: string) => api.delete(`/techpreneur-v2/announcements/${id}`),
+
+  // Projects
+  getProjects: (params?: { track?: string; status?: string; search?: string }) => 
+    api.get("/techpreneur-v2/projects", { params }),
+  reviewProject: (id: string, data: { feedback: string; status: string }) => 
+    api.patch(`/techpreneur-v2/projects/${id}/review`, data),
+
+  // Referrals
+  getReferrals: () => api.get("/techpreneur-v2/referrals"),
+  payCashback: (id: string) => api.patch(`/techpreneur-v2/referrals/${id}/pay-cashback`),
 };
 
 export { api };
