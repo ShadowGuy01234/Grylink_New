@@ -10,12 +10,14 @@ export interface PricingPhase {
 }
 
 export function getCurrentPricing(): PricingPhase {
-  const earlyBirdEnd  = new Date("2026-05-26T06:30:00Z"); // 26 May, 12:00 PM IST
+  const earlyBirdEnd  = new Date("2026-05-26T06:30:00Z"); // 26 May, 12:00 PM IST (Past)
+  const foundingEnd   = new Date("2026-06-05T18:30:00Z"); // Some future date for next increase
   const programEnd    = new Date("2026-06-28T18:30:00Z");
 
   const now = new Date();
 
-  if (now < programEnd) {
+  // If before early bird end (already passed, but kept for logic)
+  if (now < earlyBirdEnd) {
     return {
       phase: "early",
       label: "Early Bird Offer",
@@ -26,6 +28,19 @@ export function getCurrentPricing(): PricingPhase {
       urgencyText: "⚡ TODAY ONLY — Grab ₹799 before it's gone!",
     };
   }
+  
+  if (now < foundingEnd) {
+    return {
+      phase: "standard",
+      label: "Founding Batch Registrations Now Live",
+      amount: 1299,
+      originalAmount: 5200,
+      deadline: foundingEnd,
+      deadlineLabel: "EARLY BIRD SOLD OUT",
+      urgencyText: "⏳ Limited Seats Available",
+    };
+  }
+
   return {
     phase: "closed",
     label: "Program Completed",

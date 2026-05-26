@@ -5,12 +5,18 @@ import { Link } from "react-router-dom";
 import { getCurrentPricing } from "../lib/api";
 
 const features = [
-  "Full 4-Week Training Program",
-  "Access to all 3 Tracks",
-  "Industry Mentorship Sessions",
-  "Real-World Project Building",
-  "Demo Day Participation",
-  "Certificate of Completion",
+  "Live Industry Training",
+  "Practical Learning",
+  "Certification Included",
+  "Networking Opportunities",
+  "Real Project Exposure",
+];
+
+const bonuses = [
+  "Resume Review",
+  "LinkedIn Optimization",
+  "Startup Networking Group and guidance",
+  "Internship Guidance",
 ];
 
 export default function Pricing({ showHeader = true }: { showHeader?: boolean }) {
@@ -20,10 +26,10 @@ export default function Pricing({ showHeader = true }: { showHeader?: boolean })
 
   const plans = [
     {
-      name: "Early Bird Offer",
-      price: "₹799",
-      originalPrice: "₹5999",
-      date: "Join fast! Limited Time Offer",
+      name: currentPhase?.label || "Founding Batch Registrations Now Live",
+      price: currentPhase?.amount ? `₹${currentPhase.amount}` : "₹1299",
+      originalPrice: currentPhase?.originalAmount ? `₹${currentPhase.originalAmount}` : "₹5200",
+      date: currentPhase?.deadlineLabel || "EARLY BIRD SOLD OUT",
       active: true,
       past: false,
     }
@@ -100,6 +106,29 @@ export default function Pricing({ showHeader = true }: { showHeader?: boolean })
                   </li>
                 ))}
               </ul>
+
+              <div className="mb-8 p-4 rounded-xl bg-white/10 border border-white/20">
+                <h4 className="text-sm font-bold text-white mb-3 uppercase tracking-wider flex items-center gap-2">
+                  <span className="text-xl">🎁</span> Bonuses Worth ₹3,000 Included FREE
+                </h4>
+                <ul className="space-y-2">
+                  {bonuses.map((b, j) => (
+                    <li key={j} className="flex items-start gap-2">
+                      <span className="text-blue-300 text-sm">✦</span>
+                      <span className="text-sm text-blue-50">{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mb-6 text-center">
+                <p className="text-amber-300 font-bold text-sm bg-amber-900/40 inline-block px-3 py-1 rounded-full border border-amber-500/30">
+                  {currentPhase?.urgencyText || "⏳ Limited Seats Available"}
+                </p>
+                <p className="text-xs text-blue-200 mt-2">
+                  ⚠ Next Price Increase: ₹1,999
+                </p>
+              </div>
 
               {plan.active ? (
                 <Link to="/register" className="btn-green w-full justify-center">

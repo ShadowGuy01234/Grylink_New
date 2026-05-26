@@ -409,10 +409,25 @@ export default function Registration() {
                   <span className="text-slate-600 dark:text-slate-400 font-medium">TechPreneur Industrial Training 2026</span>
                   <span className="text-slate-400 line-through text-sm">₹{originalPrice}</span>
                 </div>
-                <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-200 dark:border-white/10">
-                  <span className="text-slate-600 dark:text-slate-400 font-medium">🎉 Early Bird Discount</span>
-                  <span className="text-green-600 dark:text-green-400 font-medium">- ₹{originalPrice - price}</span>
-                </div>
+                
+                {currentPhase?.phase === "early" ? (
+                  <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-200 dark:border-white/10">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium">🎉 Early Bird Discount</span>
+                    <span className="text-green-600 dark:text-green-400 font-medium">- ₹{originalPrice - price}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-500 dark:text-slate-400 text-sm">Base Price</span>
+                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{(price / 1.18).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-200 dark:border-white/10">
+                      <span className="text-slate-500 dark:text-slate-400 text-sm">GST (18%)</span>
+                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{(price - (price / 1.18)).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+
                 <div className="flex justify-between items-end">
                   <span className="text-slate-900 dark:text-white font-bold text-lg">Total to Pay</span>
                   <span className="font-display font-bold text-3xl text-gry-blue-main dark:text-gry-blue-light">₹{price}</span>
