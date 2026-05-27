@@ -117,7 +117,7 @@ export default function Registration() {
       const res = await validateReferralCode(referralInput.trim());
       if (res.valid) {
         setValidReferralCode(referralInput.trim().toUpperCase());
-        setReferralDiscount(res.discount || 100);
+        setReferralDiscount(res.discount || 200);
         setReferralStatus("valid");
         setReferralMessage(`Referral applied! Referred by ${res.referrerName}`);
       } else {

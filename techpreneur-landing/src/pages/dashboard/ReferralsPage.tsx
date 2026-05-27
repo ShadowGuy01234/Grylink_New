@@ -58,8 +58,8 @@ export function ReferralsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { step: "1", title: "Share Your Code", desc: "Send your unique referral code to friends interested in TechPreneur." },
-            { step: "2", title: "They Get ₹100 Off", desc: "Your friend uses your code at checkout and gets an instant ₹100 discount." },
-            { step: "3", title: "You Earn ₹50", desc: "After 2 paid referrals, you're eligible for ₹50 cashback. Admin will contact you." },
+            { step: "2", title: "They Get ₹200 Off", desc: "Your friend uses your code at checkout and gets an instant ₹200 discount." },
+            { step: "3", title: "You Earn ₹100", desc: "After 2 paid referrals, you're eligible for ₹100 cashback. Admin will contact you." },
           ].map((s) => (
             <div key={s.step} className="text-center">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center mx-auto mb-2">

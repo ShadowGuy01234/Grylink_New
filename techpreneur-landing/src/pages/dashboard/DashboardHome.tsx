@@ -17,7 +17,7 @@ export function DashboardHome() {
     { to: "/dashboard/meetings", icon: Video, label: "Meeting Links", color: "from-indigo-500 to-indigo-700", desc: "Today's Google Meet links" },
     { to: "/dashboard/announcements", icon: Bell, label: "Announcements", color: "from-amber-500 to-orange-600", desc: "Latest updates from admin" },
     { to: "/dashboard/projects", icon: BookOpen, label: "Submit Project", color: "from-emerald-500 to-green-700", desc: "GitHub & Drive link upload" },
-    { to: "/dashboard/referrals", icon: Gift, label: "Referral Rewards", color: "from-purple-500 to-violet-700", desc: "Earn ₹50 per referral" },
+    { to: "/dashboard/referrals", icon: Gift, label: "Referral Rewards", color: "from-purple-500 to-violet-700", desc: "Earn ₹100 per referral" },
   ];
 
   const sessionTiming = [
@@ -119,7 +119,7 @@ export function DashboardHome() {
             <Gift className="w-4 h-4 text-purple-400" />
             <h3 className="text-white font-semibold text-sm">Your Referral Code</h3>
           </div>
-          <p className="text-slate-400 text-xs mb-3">Share this code with friends. They get ₹100 off, you earn ₹50 cashback after 2 successful referrals!</p>
+          <p className="text-slate-400 text-xs mb-3">Share this code with friends. They get ₹200 off, you earn ₹100 cashback after 2 successful referrals!</p>
           <div className="flex items-center gap-3">
             <code className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-purple-300 font-mono font-bold text-lg tracking-widest">
               {student.referralCode}

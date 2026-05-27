@@ -159,10 +159,10 @@ const run = async () => {
         
         <div style="text-align: left; background-color: rgba(3, 7, 18, 0.6); border-radius: 8px; padding: 15px; border: 1px solid #1f2937;">
           <div style="font-size: 13px; color: #e5e7eb; margin-bottom: 8px;">
-            🎁 <strong>Your Peers Get:</strong> An immediate <strong>₹100 discount</strong> on registration when they use your code.
+            🎁 <strong>Your Peers Get:</strong> An immediate <strong>₹200 discount</strong> on registration when they use your code.
           </div>
           <div style="font-size: 13px; color: #e5e7eb;">
-            💸 <strong>You Get:</strong> A direct cashback reward of <strong>₹50</strong> for <em>every</em> successful registration. Cashbacks will be credited directly to you. No limits!
+            💸 <strong>You Get:</strong> A direct cashback reward of <strong>₹100</strong> for <em>every</em> successful registration. Cashbacks will be credited directly to you. No limits!
           </div>
         </div>
       </div>

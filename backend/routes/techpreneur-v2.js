@@ -337,7 +337,7 @@ router.get("/referrals/validate/:code", async (req, res) => {
     if (!referrer) {
       return res.status(404).json({ valid: false, error: "Invalid or expired code." });
     }
-    res.json({ valid: true, referrerName: referrer.name, discount: 100 });
+    res.json({ valid: true, referrerName: referrer.name, discount: 200 });
   } catch (err) {
     res.status(500).json({ error: "Failed to validate code." });
   }
@@ -360,7 +360,7 @@ router.get("/referrals/my-stats", requireStudent, async (req, res) => {
     const total = referrals.length;
     const successful = referrals.filter(r => r.status === "verified" || r.status === "paid").length;
     const cashbackEarned = referrals.filter(r => r.cashbackStatus === "paid").reduce((s, r) => s + (r.cashbackAmount || 0), 0);
-    const cashbackPending = successful >= 2 && referrals.some(r => r.cashbackStatus === "eligible") ? 50 : 0;
+    const cashbackPending = successful >= 2 ? (referrals.filter(r => r.cashbackStatus === "eligible").length * 100) : 0;
 
     res.json({
       referralCode: student.referralCode,
@@ -403,7 +403,7 @@ router.patch("/referrals/:id/pay-cashback", authenticate, authorize("admin", "fo
       {
         $set: {
           cashbackStatus: "paid",
-          cashbackAmount: 50,
+          cashbackAmount: 100,
           cashbackPaidAt: new Date(),
           cashbackPaidBy: req.user?.email,
         },
