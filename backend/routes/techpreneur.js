@@ -402,15 +402,13 @@ router.patch(
   async (req, res) => {
     try {
       const {
-        status,
-        paymentVerified,
-        assignedSPOC,
-        assignedGroup,
-        notes,
+        status, paymentVerified, assignedSPOC, assignedGroup, notes, dashboardAccess,
+        name, email, phone, feeAmount, college, branch, year, trackPreference,
+        razorpayPaymentId, razorpayOrderId, registrationPhase, usedReferralCode
       } = req.body;
 
       const update = {};
-      if (status) update.status = status;
+      if (status !== undefined) update.status = status;
       if (paymentVerified !== undefined) {
         update.paymentVerified = paymentVerified;
         if (paymentVerified) {
@@ -421,6 +419,21 @@ router.patch(
       if (assignedSPOC !== undefined) update.assignedSPOC = assignedSPOC;
       if (assignedGroup !== undefined) update.assignedGroup = assignedGroup;
       if (notes !== undefined) update.notes = notes;
+      if (dashboardAccess !== undefined) update.dashboardAccess = dashboardAccess;
+      if (name !== undefined) update.name = name;
+      if (email !== undefined) update.email = email.toLowerCase().trim();
+      if (phone !== undefined) update.phone = phone.replace(/^\+91/, "").replace(/\D/g, "");
+      if (feeAmount !== undefined) update.feeAmount = feeAmount;
+      if (college !== undefined) update.college = college;
+      if (branch !== undefined) update.branch = branch;
+      if (year !== undefined) update.year = year;
+      if (trackPreference !== undefined) update.trackPreference = trackPreference;
+      if (razorpayPaymentId !== undefined) update.razorpayPaymentId = razorpayPaymentId;
+      if (razorpayOrderId !== undefined) update.razorpayOrderId = razorpayOrderId;
+      if (registrationPhase !== undefined) update.registrationPhase = registrationPhase;
+      if (usedReferralCode !== undefined) {
+        update.usedReferralCode = usedReferralCode ? usedReferralCode.toUpperCase().trim() : "";
+      }
 
       const item = await TechPreneurRegistration.findByIdAndUpdate(
         req.params.id,
@@ -470,7 +483,7 @@ router.post(
     try {
       const {
         name, email, phone, college, branch, year,
-        trackPreference, razorpayPaymentId, razorpayOrderId, feeAmount,
+        trackPreference, razorpayPaymentId, razorpayOrderId, feeAmount, usedReferralCode
       } = req.body;
 
       if (!name || !email || !phone || !college || !branch || !year || !trackPreference || !razorpayPaymentId) {
@@ -508,9 +521,43 @@ router.post(
         paymentVerified: true,
         paymentVerifiedAt: new Date(),
         paymentVerifiedBy: req.user?.name || req.user?.email || "admin-manual",
+        usedReferralCode: usedReferralCode ? usedReferralCode.toUpperCase().trim() : undefined,
       });
 
       await registration.save();
+
+      // Process used code (Promo or Referral)
+      if (registration.usedReferralCode) {
+        const TechPreneurPromoCode = require("../models/TechPreneurPromoCode");
+        const promo = await TechPreneurPromoCode.findOne({ code: registration.usedReferralCode, isUsed: false });
+        if (promo) {
+          promo.isUsed = true;
+          promo.usedByEmail = registration.email;
+          promo.usedById = registration._id;
+          promo.usedAt = new Date();
+          await promo.save();
+        } else {
+          const TechPreneurReferral = require("../models/TechPreneurReferral");
+          const referrer = await TechPreneurRegistration.findOne({ referralCode: registration.usedReferralCode });
+          if (referrer) {
+            await TechPreneurReferral.findOneAndUpdate(
+              { referrerId: referrer._id, referredEmail: registration.email },
+              {
+                $set: {
+                  referrerId: referrer._id,
+                  referrerEmail: referrer.email,
+                  referrerCode: registration.usedReferralCode,
+                  referredEmail: registration.email,
+                  referredId: registration._id,
+                  status: "verified",
+                  cashbackStatus: "eligible",
+                },
+              },
+              { upsert: true, new: true }
+            );
+          }
+        }
+      }
 
       console.log(`[TechPreneur] Manual registration by ${req.user?.email}: ${name} (${email}) — PayID: ${razorpayPaymentId}`);
 
@@ -759,11 +806,14 @@ router.patch(
   authorize("admin", "founder", "ops"),
   async (req, res) => {
     try {
+      const oldReg = await TechPreneurRegistration.findById(req.params.id);
+      if (!oldReg) return res.status(404).json({ error: "Registration not found." });
+
       const allowedFields = [
         "name", "email", "phone", "college", "branch", "year", "trackPreference",
         "feeAmount", "razorpayPaymentId", "razorpayOrderId", "transactionId",
         "status", "paymentVerified", "dashboardAccess", "assignedSPOC",
-        "assignedGroup", "notes", "registrationPhase",
+        "assignedGroup", "notes", "registrationPhase", "usedReferralCode"
       ];
 
       const update = {};
@@ -807,44 +857,45 @@ router.patch(
         await TechPreneurRegistration.findByIdAndUpdate(reg._id, { $set: { referralCode: code } });
         reg.referralCode = code;
 
-        // If this student used a referral code or promo code, record/process it
-        if (reg.usedReferralCode) {
-          const TechPreneurPromoCode = require("../models/TechPreneurPromoCode");
-          const promo = await TechPreneurPromoCode.findOne({
-            code: reg.usedReferralCode,
-            isUsed: false
-          });
+      }
 
-          if (promo) {
-            promo.isUsed = true;
-            promo.usedByEmail = reg.email;
-            promo.usedById = reg._id;
-            promo.usedAt = new Date();
-            await promo.save();
-            console.log(`[TechPreneur] Manual Confirm: Promo code ${promo.code} marked as USED by ${reg.email}`);
-          } else {
-            const referrer = await TechPreneurRegistration.findOne({ referralCode: reg.usedReferralCode });
-            if (referrer) {
-              await TechPreneurReferral.findOneAndUpdate(
-                { referrerId: referrer._id, referredEmail: reg.email },
-                {
-                  $set: {
-                    referrerId: referrer._id,
-                    referrerEmail: referrer.email,
-                    referrerCode: reg.usedReferralCode,
-                    referredEmail: reg.email,
-                    referredId: reg._id,
-                    status: "verified",
-                    cashbackStatus: "eligible",
-                  },
+      // If usedReferralCode was just added or changed, process it
+      if (update.usedReferralCode && update.usedReferralCode !== oldReg.usedReferralCode) {
+        const TechPreneurPromoCode = require("../models/TechPreneurPromoCode");
+        const promo = await TechPreneurPromoCode.findOne({
+          code: update.usedReferralCode,
+          isUsed: false
+        });
+
+        if (promo) {
+          promo.isUsed = true;
+          promo.usedByEmail = reg.email;
+          promo.usedById = reg._id;
+          promo.usedAt = new Date();
+          await promo.save();
+          console.log(`[TechPreneur] Manual Edit: Promo code ${promo.code} marked as USED by ${reg.email}`);
+        } else {
+          const TechPreneurReferral = require("../models/TechPreneurReferral");
+          const referrer = await TechPreneurRegistration.findOne({ referralCode: update.usedReferralCode });
+          if (referrer) {
+            await TechPreneurReferral.findOneAndUpdate(
+              { referrerId: referrer._id, referredEmail: reg.email },
+              {
+                $set: {
+                  referrerId: referrer._id,
+                  referrerEmail: referrer.email,
+                  referrerCode: update.usedReferralCode,
+                  referredEmail: reg.email,
+                  referredId: reg._id,
+                  status: "verified",
+                  cashbackStatus: "eligible",
                 },
-                { upsert: true, new: true }
-              );
-            }
+              },
+              { upsert: true, new: true }
+            );
+            console.log(`[TechPreneur] Manual Edit: Referral tracked for ${reg.email}`);
           }
         }
-
-        console.log(`[TechPreneur] Referral code ${code} auto-generated for ${reg.email}`);
       }
 
       console.log(`[TechPreneur] Registration ${req.params.id} edited by ${req.user?.email}`);
@@ -859,6 +910,157 @@ router.patch(
       }
       console.error("[TechPreneur] Edit registration error:", err);
       res.status(500).json({ error: "Failed to update registration." });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur/registrations/:id/send-welcome
+ * Admin - Send the premium welcome email with referral code
+ */
+router.post(
+  "/registrations/:id/send-welcome",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const student = await TechPreneurRegistration.findById(req.params.id);
+      if (!student) return res.status(404).json({ error: "Registration not found." });
+
+      // Generate referral code if not exists
+      if (!student.referralCode) {
+        const crypto = require("crypto");
+        const prefix = student.name.replace(/[^a-zA-Z]/g, "").slice(0, 4).toUpperCase();
+        let code;
+        let isUnique = false;
+        let tries = 0;
+        while (!isUnique && tries < 20) {
+          const suffix = crypto.randomBytes(3).toString("hex").toUpperCase();
+          code = `${prefix}${suffix}`;
+          const existing = await TechPreneurRegistration.findOne({ referralCode: code });
+          if (!existing) isUnique = true;
+          tries++;
+        }
+        student.referralCode = code;
+        await student.save();
+      }
+
+      const createTransporter = require("../config/email");
+      const transporter = createTransporter();
+      const loginUrl = "https://training.gryork.com/login";
+
+      const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to TechPreneur 2026! 🚀</title>
+</head>
+<body style="background-color: #030712; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px 0; margin: 0; color: #f3f4f6; -webkit-font-smoothing: antialiased;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #0b0f19; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    
+    <!-- Top Decorative Gradient Header -->
+    <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 45px 30px; text-align: center;">
+      <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">Welcome to TechPreneur 2026! 🚀</h1>
+      <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 16px; font-weight: 500;">Your Journey to Master AI, Web Dev & Startup Begins Now</p>
+    </div>
+    
+    <!-- Content Body -->
+    <div style="padding: 40px 35px;">
+      <div style="font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 20px;">Hey ${student.name},</div>
+      
+      <div style="font-size: 15px; line-height: 1.6; color: #d1d5db; margin-bottom: 30px;">
+        We are absolutely thrilled to welcome you to the <strong>TechPreneur 2026 Program</strong>! Your payment has been verified, and your registration is officially confirmed. 
+        <br/><br/>
+        You are now part of an elite cohort of developers and aspiring founders. Over the next few weeks, you will master top industry skills, build real-world products, and receive exclusive mentorship.
+      </div>
+      
+      <!-- Registration Details Card -->
+      <div style="background-color: #111827; border: 1px solid #374151; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+        <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 15px; border-bottom: 1px solid #1f2937; padding-bottom: 8px;">Your Verified Details</div>
+        
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 10px 0; font-size: 14px; color: #9ca3af; font-weight: 500; width: 40%;">Track Preference</td>
+            <td style="padding: 10px 0; font-size: 14px; color: #ffffff; font-weight: 600; width: 60%;">${student.trackPreference}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 10px 0; font-size: 14px; color: #9ca3af; font-weight: 500;">College</td>
+            <td style="padding: 10px 0; font-size: 14px; color: #ffffff; font-weight: 600;">${student.college}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #1f2937;">
+            <td style="padding: 10px 0; font-size: 14px; color: #9ca3af; font-weight: 500;">Branch & Year</td>
+            <td style="padding: 10px 0; font-size: 14px; color: #ffffff; font-weight: 600;">${student.branch} (${student.year})</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; font-size: 14px; color: #9ca3af; font-weight: 500;">Registered Phone</td>
+            <td style="padding: 10px 0; font-size: 14px; color: #ffffff; font-weight: 600;">${student.phone}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <!-- Referral Program Card -->
+      <div style="background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%); border: 1px solid #4f46e5; border-radius: 12px; padding: 25px; text-align: center; margin-bottom: 30px;">
+        <h3 style="margin: 0 0 10px 0; color: #a78bfa; font-size: 18px; font-weight: 700;">✨ Earn While You Learn: Referral Rewards</h3>
+        <p style="margin: 0 0 20px 0; color: #d1d5db; font-size: 14px; line-height: 1.5;">
+          We want to reward you for bringing your friends on this journey. Share your unique referral code below:
+        </p>
+        
+        <div style="background-color: #030712; border: 2px dashed #7c3aed; border-radius: 8px; padding: 12px 25px; display: inline-block; margin-bottom: 20px;">
+          <span style="font-family: monospace; font-size: 24px; font-weight: 800; color: #10b981; letter-spacing: 2px;">${student.referralCode}</span>
+        </div>
+        
+        <div style="text-align: left; background-color: rgba(3, 7, 18, 0.6); border-radius: 8px; padding: 15px; border: 1px solid #1f2937;">
+          <div style="font-size: 13px; color: #e5e7eb; margin-bottom: 8px;">
+            🎁 <strong>Your Peers Get:</strong> An immediate <strong>₹200 discount</strong> on registration when they use your code.
+          </div>
+          <div style="font-size: 13px; color: #e5e7eb; line-height: 1.5;">
+            💸 <strong>You Get:</strong> A direct cashback reward of <strong>₹100</strong> for <em>every</em> successful registration.<br/>
+            <span style="color: #34d399; font-weight: 600;">1 Referral = ₹100 | 2 Referrals = ₹200 | 10 Referrals = ₹1,000</span><br/>
+            Whatever number of students you refer, you get that much × ₹100! Cashbacks will be credited directly to you. There are absolutely no limits! 🚀
+          </div>
+        </div>
+      </div>
+      
+      <!-- Call to Action -->
+      <div style="text-align: center; margin: 40px 0 20px 0;">
+        <a href="${loginUrl}" target="_blank" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 16px 36px; font-size: 16px; font-weight: 700; border-radius: 8px; display: inline-block; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4); text-align: center;">Access Student Dashboard</a>
+      </div>
+      
+      <div style="font-size: 13px; color: #9ca3af; text-align: center; margin-top: 15px;">
+        To log in, simply enter your registered email on the portal and verify via OTP.
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div style="background-color: #070a13; padding: 30px; text-align: center; border-top: 1px solid #1f2937;">
+      <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; line-height: 1.5;">
+        You received this email because your registration is verified for the TechPreneur 2026 Cohort.
+      </p>
+      <p style="margin: 0; color: #4b5563; font-size: 12px;">
+        &copy; 2026 Gryork Consultants Pvt Ltd. All rights reserved.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+      `;
+
+      await transporter.sendMail({
+        to: student.email,
+        subject: "Official Welcome to TechPreneur 2026! 🚀 Your Dashboard & Referral Details inside",
+        html: htmlContent,
+        text: `Welcome to TechPreneur 2026, ${student.name}! Your registration is officially confirmed. Track: ${student.trackPreference}. Referral Code: ${student.referralCode}. Log in to your dashboard here: ${loginUrl}`
+      });
+
+      student.welcomeEmailSent = true;
+      await student.save();
+
+      res.json({ success: true, message: "Welcome email sent successfully!" });
+    } catch (err) {
+      console.error("[TechPreneur] Error sending welcome email:", err);
+      res.status(500).json({ error: "Failed to send email." });
     }
   }
 );

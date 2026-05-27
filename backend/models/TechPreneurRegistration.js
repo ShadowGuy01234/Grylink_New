@@ -80,6 +80,10 @@ const techPreneurRegistrationSchema = new mongoose.Schema(
     paymentVerifiedAt: {
       type: Date,
     },
+    welcomeEmailSent: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: ["pending", "confirmed", "rejected", "cancelled"],

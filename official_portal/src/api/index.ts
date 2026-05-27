@@ -440,7 +440,9 @@ export const techpreneurApi = {
     razorpayPaymentId: string;
     razorpayOrderId?: string;
     feeAmount: number;
+    usedReferralCode?: string;
   }) => api.post("/techpreneur/manual-register", data),
+  sendWelcomeEmail: (id: string) => api.post(`/techpreneur/registrations/${id}/send-welcome`),
   getSettings: () => api.get("/techpreneur/settings"),
   updateSettings: (data: { registrationOpen?: boolean; maintenanceMessage?: string }) =>
     api.patch("/techpreneur/settings", data),

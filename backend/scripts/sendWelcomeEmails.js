@@ -161,8 +161,10 @@ const run = async () => {
           <div style="font-size: 13px; color: #e5e7eb; margin-bottom: 8px;">
             🎁 <strong>Your Peers Get:</strong> An immediate <strong>₹200 discount</strong> on registration when they use your code.
           </div>
-          <div style="font-size: 13px; color: #e5e7eb;">
-            💸 <strong>You Get:</strong> A direct cashback reward of <strong>₹100</strong> for <em>every</em> successful registration. Cashbacks will be credited directly to you. No limits!
+          <div style="font-size: 13px; color: #e5e7eb; line-height: 1.5;">
+            💸 <strong>You Get:</strong> A direct cashback reward of <strong>₹100</strong> for <em>every</em> successful registration.<br/>
+            <span style="color: #34d399; font-weight: 600;">1 Referral = ₹100 | 2 Referrals = ₹200 | 10 Referrals = ₹1,000</span><br/>
+            Whatever number of students you refer, you get that much × ₹100! Cashbacks will be credited directly to you. There are absolutely no limits! 🚀
           </div>
         </div>
       </div>

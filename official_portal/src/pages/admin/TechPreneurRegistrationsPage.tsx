@@ -29,8 +29,10 @@ interface Registration {
   status: string;
   notes: string;
   referralCode?: string;
+  usedReferralCode?: string;
   assignedSPOC: string;
   assignedGroup: string;
+  welcomeEmailSent?: boolean;
   createdAt: string;
 }
 
@@ -62,6 +64,7 @@ export default function TechPreneurRegistrationsPage() {
     name: "", email: "", phone: "", college: "", branch: "",
     year: "1st Year", trackPreference: "AI + Web Development",
     razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 1299,
+    usedReferralCode: "",
   });
 
   // Edit modal
@@ -151,6 +154,17 @@ export default function TechPreneurRegistrationsPage() {
     }
   };
 
+  const handleSendWelcomeEmail = async (reg: Registration) => {
+    if (!window.confirm(`Send welcome & referral email to ${reg.name} (${reg.email})?`)) return;
+    try {
+      await techpreneurApi.sendWelcomeEmail(reg._id);
+      alert("✅ Welcome email sent successfully!");
+      fetchRegistrations();
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Failed to send email");
+    }
+  };
+
   const handleManualRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setManualError(null);
@@ -159,7 +173,7 @@ export default function TechPreneurRegistrationsPage() {
     try {
       await techpreneurApi.manualRegister(manualForm);
       setManualSuccess(`✅ Registration saved for ${manualForm.name} (${manualForm.email})`);
-      setManualForm({ name: "", email: "", phone: "", college: "", branch: "", year: "1st Year", trackPreference: "AI + Web Development", razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 1299 });
+      setManualForm({ name: "", email: "", phone: "", college: "", branch: "", year: "1st Year", trackPreference: "AI + Web Development", razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 1299, usedReferralCode: "" });
       fetchRegistrations();
     } catch (err: any) {
       setManualError(err.response?.data?.error || "Failed to save registration.");
@@ -267,6 +281,7 @@ export default function TechPreneurRegistrationsPage() {
                 <th className="px-4 py-3 font-medium">Payment Info</th>
                 <th className="px-4 py-3 font-medium">Invoice</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Welcome Email</th>
                 <th className="px-4 py-3 font-medium">Dashboard</th>
                 <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
@@ -285,6 +300,11 @@ export default function TechPreneurRegistrationsPage() {
                         {reg.referralCode && (
                           <span className="text-[10px] font-mono bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded uppercase tracking-wider" title="Referral Code">
                             {reg.referralCode}
+                          </span>
+                        )}
+                        {reg.usedReferralCode && (
+                          <span className="text-[10px] font-mono bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded uppercase tracking-wider" title="Used Promo/Referral Code">
+                            Used: {reg.usedReferralCode}
                           </span>
                         )}
                       </div>
@@ -322,6 +342,35 @@ export default function TechPreneurRegistrationsPage() {
                       ) : (
                         <span className="flex items-center gap-1 text-orange-500 text-xs font-medium"><Clock className="w-4 h-4" /> Pending</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-1 items-start">
+                        {reg.welcomeEmailSent ? (
+                          <span className="inline-flex items-center gap-1 text-green-600 text-[10px] font-bold uppercase tracking-wider bg-green-50 px-2 py-0.5 rounded">
+                            <CheckCircle2 className="w-3 h-3" /> Sent
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-gray-500 text-[10px] font-bold uppercase tracking-wider bg-gray-100 px-2 py-0.5 rounded">
+                            <Clock className="w-3 h-3" /> Not Sent
+                          </span>
+                        )}
+                        {reg.status === "confirmed" && !reg.welcomeEmailSent && (
+                          <button
+                            onClick={() => handleSendWelcomeEmail(reg)}
+                            className="text-[10px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2 py-1 rounded font-medium transition-colors"
+                          >
+                            Send Email
+                          </button>
+                        )}
+                        {reg.status === "confirmed" && reg.welcomeEmailSent && (
+                          <button
+                            onClick={() => handleSendWelcomeEmail(reg)}
+                            className="text-[9px] text-gray-400 hover:text-indigo-600 underline transition-colors"
+                          >
+                            Resend
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <button
@@ -469,6 +518,11 @@ export default function TechPreneurRegistrationsPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Used Promo / Referral Code</label>
+                <input className={`${inputCls} font-mono`} placeholder="Code used during checkout" value={editForm.usedReferralCode || ""} onChange={e => setEditForm(p => ({ ...p, usedReferralCode: e.target.value.toUpperCase().trim() }))} />
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
@@ -612,6 +666,11 @@ export default function TechPreneurRegistrationsPage() {
                     <option>Industry Productivity Tools</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Used Promo / Referral Code (optional)</label>
+                <input className={`${inputCls} font-mono`} placeholder="e.g. SAVE500, JOHN123" value={manualForm.usedReferralCode} onChange={e => setManualForm(p => ({ ...p, usedReferralCode: e.target.value.toUpperCase().trim() }))} />
               </div>
 
               <button type="submit" disabled={manualLoading} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2">
