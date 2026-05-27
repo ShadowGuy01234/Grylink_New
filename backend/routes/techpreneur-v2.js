@@ -355,12 +355,14 @@ router.get("/referrals/my-stats", requireStudent, async (req, res) => {
 
     const referrals = await TechPreneurReferral.find({
       referrerId: student._id,
-    }).lean();
+    })
+      .populate("referredId", "name email")
+      .lean();
 
     const total = referrals.length;
     const successful = referrals.filter(r => r.status === "verified" || r.status === "paid").length;
     const cashbackEarned = referrals.filter(r => r.cashbackStatus === "paid").reduce((s, r) => s + (r.cashbackAmount || 0), 0);
-    const cashbackPending = successful >= 2 ? (referrals.filter(r => r.cashbackStatus === "eligible").length * 100) : 0;
+    const cashbackPending = referrals.filter(r => r.cashbackStatus === "eligible").length * 100;
 
     res.json({
       referralCode: student.referralCode,

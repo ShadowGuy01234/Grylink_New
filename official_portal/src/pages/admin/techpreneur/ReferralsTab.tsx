@@ -45,9 +45,9 @@ export function ReferralsTab() {
             {referrals.map(r => (
               <tr key={r._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 font-medium text-gray-900">{r.referrerId?.name} ({r.referrerId?.email})</td>
-                <td className="px-6 py-4 text-gray-600">{r.referredUserId?.name} ({r.referredUserId?.email})</td>
+                <td className="px-6 py-4 text-gray-600">{r.referredId?.name || "Unknown"} ({r.referredId?.email || r.referredEmail})</td>
                 <td className="px-6 py-4">
-                  <span className={`text-xs px-2.5 py-1 rounded-full uppercase font-bold tracking-wider ${r.referralStatus === 'verified' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{r.referralStatus}</span>
+                  <span className={`text-xs px-2.5 py-1 rounded-full uppercase font-bold tracking-wider ${r.status === 'verified' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{r.status}</span>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`text-xs px-2.5 py-1 rounded-full uppercase font-bold tracking-wider ${

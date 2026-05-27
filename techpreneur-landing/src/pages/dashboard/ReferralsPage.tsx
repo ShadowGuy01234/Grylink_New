@@ -11,6 +11,7 @@ interface ReferralStats {
   referrals: Array<{
     _id: string;
     referredEmail: string;
+    referredId?: { name: string; email: string };
     status: string;
     createdAt: string;
   }>;
@@ -59,7 +60,7 @@ export function ReferralsPage() {
           {[
             { step: "1", title: "Share Your Code", desc: "Send your unique referral code to friends interested in TechPreneur." },
             { step: "2", title: "They Get ₹200 Off", desc: "Your friend uses your code at checkout and gets an instant ₹200 discount." },
-            { step: "3", title: "You Earn ₹100", desc: "After 2 paid referrals, you're eligible for ₹100 cashback. Admin will contact you." },
+            { step: "3", title: "You Earn ₹100", desc: "For every paid referral, you're eligible for ₹100 cashback. Admin will contact you." },
           ].map((s) => (
             <div key={s.step} className="text-center">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center mx-auto mb-2">
@@ -127,7 +128,9 @@ export function ReferralsPage() {
                 {stats.referrals.map((r) => (
                   <div key={r._id} className="p-5 flex items-center justify-between">
                     <div>
-                      <p className="text-white text-sm font-medium">{r.referredEmail.replace(/(.{2})(.*)(?=@)/, "$1***")}</p>
+                      <p className="text-white text-sm font-medium">
+                        {r.referredId?.name || r.referredEmail.replace(/(.{2})(.*)(?=@)/, "$1***")}
+                      </p>
                       <p className="text-slate-500 text-xs mt-0.5">{new Date(r.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex items-center gap-2">

@@ -255,22 +255,11 @@ router.post("/register", async (req, res) => {
                 referredEmail: registration.email,
                 referredId: registration._id,
                 status: "verified",
+                cashbackStatus: "eligible",
               },
             },
             { upsert: true, new: true }
           );
-
-          // Check if referrer has 2+ successful referrals → mark eligible for cashback
-          const successfulCount = await TechPreneurReferral.countDocuments({
-            referrerId: referrer._id,
-            status: "verified",
-          });
-          if (successfulCount >= 2) {
-            await TechPreneurReferral.updateMany(
-              { referrerId: referrer._id, cashbackStatus: "not_eligible" },
-              { $set: { cashbackStatus: "eligible" } }
-            );
-          }
           console.log(`[TechPreneur] Referral tracked: ${registration.email} referred by ${referrer.email}`);
         }
       }
@@ -846,23 +835,11 @@ router.patch(
                     referredEmail: reg.email,
                     referredId: reg._id,
                     status: "verified",
+                    cashbackStatus: "eligible",
                   },
                 },
                 { upsert: true, new: true }
               );
-
-              // Check if referrer now has 2+ successful referrals → mark eligible for cashback
-              const TechPreneurReferral2 = require("../models/TechPreneurReferral");
-              const successfulCount = await TechPreneurReferral2.countDocuments({
-                referrerId: referrer._id,
-                status: "verified",
-              });
-              if (successfulCount >= 2) {
-                await TechPreneurReferral2.updateMany(
-                  { referrerId: referrer._id, cashbackStatus: "not_eligible" },
-                  { $set: { cashbackStatus: "eligible" } }
-                );
-              }
             }
           }
         }

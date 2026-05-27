@@ -50,6 +50,8 @@ export default function TechPreneurRegistrationsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Manual register modal
   const [showManualModal, setShowManualModal] = useState(false);
@@ -75,9 +77,12 @@ export default function TechPreneurRegistrationsPage() {
       const res = await techpreneurApi.getRegistrations({
         search,
         status: statusFilter || undefined,
+        page,
+        limit: 50,
       });
       setRegistrations(res.data.items);
       setStats(res.data.stats || {});
+      setTotalPages(res.data.pagination?.pages || res.data.pagination?.totalPages || 1);
     } catch (err) {
       console.error(err);
     } finally {
@@ -85,7 +90,7 @@ export default function TechPreneurRegistrationsPage() {
     }
   };
 
-  useEffect(() => { fetchRegistrations(); }, [search, statusFilter]);
+  useEffect(() => { fetchRegistrations(); }, [search, statusFilter, page]);
 
   const handleVerify = async (id: string) => {
     if (!window.confirm("Mark this payment as verified and grant dashboard access?")) return;
@@ -233,7 +238,7 @@ export default function TechPreneurRegistrationsPage() {
               placeholder="Search by name, email, or Payment ID..."
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -241,7 +246,7 @@ export default function TechPreneurRegistrationsPage() {
             <select
               className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
@@ -354,6 +359,31 @@ export default function TechPreneurRegistrationsPage() {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-white">
+            <span className="text-sm text-gray-500 font-medium">
+              Page {page} of {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Edit Registration Modal ── */}
