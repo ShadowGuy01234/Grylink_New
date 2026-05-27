@@ -318,16 +318,28 @@ router.patch("/projects/:id/review", authenticate, authorize("admin", "founder",
 router.get("/referrals/validate/:code", async (req, res) => {
   try {
     const code = req.params.code.toUpperCase().trim();
+
+    // Check if it matches a Promo Code first
+    const TechPreneurPromoCode = require("../models/TechPreneurPromoCode");
+    const promo = await TechPreneurPromoCode.findOne({ code });
+    if (promo) {
+      if (promo.isUsed) {
+        return res.status(400).json({ valid: false, error: "This promo code has already been used." });
+      }
+      return res.json({ valid: true, referrerName: "Promo Code", discount: promo.discount });
+    }
+
+    // Fallback to Referral Code validation
     const referrer = await TechPreneurRegistration.findOne({
       referralCode: code,
       paymentVerified: true,
     }).select("name referralCode");
     if (!referrer) {
-      return res.status(404).json({ valid: false, error: "Invalid or expired referral code." });
+      return res.status(404).json({ valid: false, error: "Invalid or expired code." });
     }
     res.json({ valid: true, referrerName: referrer.name, discount: 100 });
   } catch (err) {
-    res.status(500).json({ error: "Failed to validate referral code." });
+    res.status(500).json({ error: "Failed to validate code." });
   }
 });
 
@@ -498,6 +510,89 @@ router.get("/analytics", authenticate, authorize("admin", "founder", "ops"), asy
   } catch (err) {
     console.error("[TechPreneur] Analytics error:", err);
     res.status(500).json({ error: "Failed to fetch analytics." });
+  }
+});
+
+// =============================================================================
+// PROMO CODES (Admin Managed)
+// =============================================================================
+
+const TechPreneurPromoCode = require("../models/TechPreneurPromoCode");
+
+/**
+ * GET /api/techpreneur-v2/promocodes
+ * Admin — Get all promo codes
+ */
+router.get("/promocodes", authenticate, authorize("admin", "founder", "ops"), async (req, res) => {
+  try {
+    const promoCodes = await TechPreneurPromoCode.find().sort({ createdAt: -1 }).lean();
+    res.json({ promoCodes, total: promoCodes.length });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch promo codes." });
+  }
+});
+
+/**
+ * POST /api/techpreneur-v2/promocodes
+ * Admin — Generate a new promo code
+ */
+router.post("/promocodes", authenticate, authorize("admin", "founder", "ops"), async (req, res) => {
+  try {
+    const { code, discount } = req.body;
+
+    if (!discount || ![300, 500].includes(Number(discount))) {
+      return res.status(400).json({ error: "Discount must be either 300 or 500." });
+    }
+
+    let finalCode = code?.toUpperCase().trim();
+
+    if (!finalCode) {
+      // Auto-generate a unique promo code
+      let isUnique = false;
+      let tries = 0;
+      while (!isUnique && tries < 10) {
+        const randomSuffix = crypto.randomBytes(3).toString("hex").toUpperCase();
+        finalCode = `SAVE${discount}${randomSuffix}`;
+        const existing = await TechPreneurPromoCode.findOne({ code: finalCode });
+        if (!existing) isUnique = true;
+        tries++;
+      }
+    } else {
+      // Check if custom code already exists
+      const existing = await TechPreneurPromoCode.findOne({ code: finalCode });
+      if (existing) {
+        return res.status(409).json({ error: `Promo code '${finalCode}' already exists.` });
+      }
+    }
+
+    const promo = new TechPreneurPromoCode({
+      code: finalCode,
+      discount: Number(discount),
+      createdBy: req.user?.email || "admin",
+    });
+
+    await promo.save();
+    res.status(201).json({ success: true, promoCode: promo });
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ error: Object.values(err.errors).map(e => e.message).join(". ") });
+    }
+    console.error("[TechPreneur] Promo code creation error:", err);
+    res.status(500).json({ error: "Failed to create promo code." });
+  }
+});
+
+/**
+ * DELETE /api/techpreneur-v2/promocodes/:id
+ * Admin — Delete a promo code
+ */
+router.delete("/promocodes/:id", authenticate, authorize("admin", "founder"), async (req, res) => {
+  try {
+    const promo = await TechPreneurPromoCode.findByIdAndDelete(req.params.id);
+    if (!promo) return res.status(404).json({ error: "Promo code not found." });
+    res.json({ success: true, message: "Promo code deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete promo code." });
   }
 });
 

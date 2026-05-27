@@ -4,6 +4,7 @@ import { SessionsTab } from "./techpreneur/SessionsTab";
 import { AnnouncementsTab } from "./techpreneur/AnnouncementsTab";
 import { ProjectsTab } from "./techpreneur/ProjectsTab";
 import { ReferralsTab } from "./techpreneur/ReferralsTab";
+import { PromoCodesTab } from "./techpreneur/PromoCodesTab";
 import {
   CheckCircle2, Search, Filter, XCircle, Clock, FileText, PlusCircle,
   AlertCircle, Pencil, ToggleLeft, ToggleRight
@@ -186,7 +187,8 @@ export default function TechPreneurRegistrationsPage() {
           { id: "sessions", label: "Sessions" },
           { id: "announcements", label: "Announcements" },
           { id: "projects", label: "Projects" },
-          { id: "referrals", label: "Referrals" }
+          { id: "referrals", label: "Referrals" },
+          { id: "promocodes", label: "Promo Codes" }
         ].map(t => (
           <button
             key={t.id}
@@ -202,6 +204,7 @@ export default function TechPreneurRegistrationsPage() {
       {activeTab === "announcements" && <AnnouncementsTab />}
       {activeTab === "projects" && <ProjectsTab />}
       {activeTab === "referrals" && <ReferralsTab />}
+      {activeTab === "promocodes" && <PromoCodesTab />}
 
       {activeTab === "registrations" && (
         <>

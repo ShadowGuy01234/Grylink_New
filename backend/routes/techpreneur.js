@@ -220,9 +220,61 @@ router.post("/register", async (req, res) => {
       paymentVerified: true,
       paymentVerifiedAt: new Date(),
       paymentVerifiedBy: "Razorpay",
+      usedReferralCode: req.body.usedReferralCode ? req.body.usedReferralCode.toUpperCase().trim() : undefined,
     });
 
     await registration.save();
+
+    // Process used code (Promo or Referral)
+    if (registration.usedReferralCode) {
+      const TechPreneurPromoCode = require("../models/TechPreneurPromoCode");
+      const promo = await TechPreneurPromoCode.findOne({
+        code: registration.usedReferralCode,
+        isUsed: false
+      });
+      
+      if (promo) {
+        promo.isUsed = true;
+        promo.usedByEmail = registration.email;
+        promo.usedById = registration._id;
+        promo.usedAt = new Date();
+        await promo.save();
+        console.log(`[TechPreneur] Promo code ${promo.code} marked as USED by ${registration.email}`);
+      } else {
+        // It's a referral code. Track the referral immediately for Razorpay checkouts
+        const TechPreneurReferral = require("../models/TechPreneurReferral");
+        const referrer = await TechPreneurRegistration.findOne({ referralCode: registration.usedReferralCode });
+        if (referrer) {
+          await TechPreneurReferral.findOneAndUpdate(
+            { referrerId: referrer._id, referredEmail: registration.email },
+            {
+              $set: {
+                referrerId: referrer._id,
+                referrerEmail: referrer.email,
+                referrerCode: registration.usedReferralCode,
+                referredEmail: registration.email,
+                referredId: registration._id,
+                status: "verified",
+              },
+            },
+            { upsert: true, new: true }
+          );
+
+          // Check if referrer has 2+ successful referrals → mark eligible for cashback
+          const successfulCount = await TechPreneurReferral.countDocuments({
+            referrerId: referrer._id,
+            status: "verified",
+          });
+          if (successfulCount >= 2) {
+            await TechPreneurReferral.updateMany(
+              { referrerId: referrer._id, cashbackStatus: "not_eligible" },
+              { $set: { cashbackStatus: "eligible" } }
+            );
+          }
+          console.log(`[TechPreneur] Referral tracked: ${registration.email} referred by ${referrer.email}`);
+        }
+      }
+    }
 
     console.log(`[TechPreneur] New registration (Razorpay): ${name} (${email}) — Track: ${trackPreference} — Phase: ${registrationPhase} — ₹${feeAmount}`);
 
@@ -766,36 +818,51 @@ router.patch(
         await TechPreneurRegistration.findByIdAndUpdate(reg._id, { $set: { referralCode: code } });
         reg.referralCode = code;
 
-        // If this student used a referral code, record it and update referral status
+        // If this student used a referral code or promo code, record/process it
         if (reg.usedReferralCode) {
-          const referrer = await TechPreneurRegistration.findOne({ referralCode: reg.usedReferralCode });
-          if (referrer) {
-            await TechPreneurReferral.findOneAndUpdate(
-              { referrerId: referrer._id, referredEmail: reg.email },
-              {
-                $set: {
-                  referrerId: referrer._id,
-                  referrerEmail: referrer.email,
-                  referrerCode: reg.usedReferralCode,
-                  referredEmail: reg.email,
-                  referredId: reg._id,
-                  status: "verified",
-                },
-              },
-              { upsert: true, new: true }
-            );
+          const TechPreneurPromoCode = require("../models/TechPreneurPromoCode");
+          const promo = await TechPreneurPromoCode.findOne({
+            code: reg.usedReferralCode,
+            isUsed: false
+          });
 
-            // Check if referrer now has 2+ successful referrals → mark eligible for cashback
-            const TechPreneurReferral2 = require("../models/TechPreneurReferral");
-            const successfulCount = await TechPreneurReferral2.countDocuments({
-              referrerId: referrer._id,
-              status: "verified",
-            });
-            if (successfulCount >= 2) {
-              await TechPreneurReferral2.updateMany(
-                { referrerId: referrer._id, cashbackStatus: "not_eligible" },
-                { $set: { cashbackStatus: "eligible" } }
+          if (promo) {
+            promo.isUsed = true;
+            promo.usedByEmail = reg.email;
+            promo.usedById = reg._id;
+            promo.usedAt = new Date();
+            await promo.save();
+            console.log(`[TechPreneur] Manual Confirm: Promo code ${promo.code} marked as USED by ${reg.email}`);
+          } else {
+            const referrer = await TechPreneurRegistration.findOne({ referralCode: reg.usedReferralCode });
+            if (referrer) {
+              await TechPreneurReferral.findOneAndUpdate(
+                { referrerId: referrer._id, referredEmail: reg.email },
+                {
+                  $set: {
+                    referrerId: referrer._id,
+                    referrerEmail: referrer.email,
+                    referrerCode: reg.usedReferralCode,
+                    referredEmail: reg.email,
+                    referredId: reg._id,
+                    status: "verified",
+                  },
+                },
+                { upsert: true, new: true }
               );
+
+              // Check if referrer now has 2+ successful referrals → mark eligible for cashback
+              const TechPreneurReferral2 = require("../models/TechPreneurReferral");
+              const successfulCount = await TechPreneurReferral2.countDocuments({
+                referrerId: referrer._id,
+                status: "verified",
+              });
+              if (successfulCount >= 2) {
+                await TechPreneurReferral2.updateMany(
+                  { referrerId: referrer._id, cashbackStatus: "not_eligible" },
+                  { $set: { cashbackStatus: "eligible" } }
+                );
+              }
             }
           }
         }

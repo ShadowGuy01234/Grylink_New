@@ -475,6 +475,11 @@ export const techpreneurApi = {
   // Referrals
   getReferrals: () => api.get("/techpreneur-v2/referrals"),
   payCashback: (id: string) => api.patch(`/techpreneur-v2/referrals/${id}/pay-cashback`),
+
+  // Promo Codes
+  getPromoCodes: () => api.get("/techpreneur-v2/promocodes"),
+  createPromoCode: (data: { code?: string; discount: number }) => api.post("/techpreneur-v2/promocodes", data),
+  deletePromoCode: (id: string) => api.delete(`/techpreneur-v2/promocodes/${id}`),
 };
 
 export { api };
