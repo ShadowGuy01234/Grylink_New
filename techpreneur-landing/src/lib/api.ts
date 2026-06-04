@@ -11,13 +11,12 @@ export interface PricingPhase {
 
 export function getCurrentPricing(): PricingPhase {
   // Make early bird end in the past so the new phase is active NOW
-  const earlyBirdEnd  = new Date("2026-05-26T06:00:00Z"); // 26 May, 11:30 AM IST (Past)
-  const foundingEnd   = new Date("2026-05-27T18:30:00Z"); // 28 May, 12:00 AM IST
-  const programEnd    = new Date("2026-06-28T18:30:00Z");
+  const earlyBirdEnd  = new Date("2026-05-26T06:00:00Z"); // Past
+  const foundingEnd   = new Date("2026-06-03T18:00:00Z"); // Past (End Founder's Batch)
+  const standardEnd   = new Date("2026-06-28T18:30:00Z"); // Future
 
   const now = new Date();
 
-  // If before early bird end (already passed, but kept for logic)
   if (now < earlyBirdEnd) {
     return {
       phase: "early",
@@ -32,13 +31,25 @@ export function getCurrentPricing(): PricingPhase {
   
   if (now < foundingEnd) {
     return {
-      phase: "standard",
-      label: "Founding Batch Registrations Now Live",
+      phase: "founding",
+      label: "Founding Batch",
       amount: 1299,
       originalAmount: 5200,
       deadline: foundingEnd,
-      deadlineLabel: "EARLY BIRD SOLD OUT",
+      deadlineLabel: "FOUNDERS BATCH",
       urgencyText: "⏳ Limited Seats Available",
+    };
+  }
+
+  if (now < standardEnd) {
+    return {
+      phase: "standard",
+      label: "Standard Registrations Open",
+      amount: 1533, // 1299 + 18% GST = 1532.82
+      originalAmount: 5200,
+      deadline: standardEnd,
+      deadlineLabel: "FILLING FAST",
+      urgencyText: "🚀 Batch starting soon — Enroll Now!",
     };
   }
 

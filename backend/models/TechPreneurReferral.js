@@ -19,7 +19,7 @@ const techPreneurReferralSchema = new mongoose.Schema(
       enum: ["pending", "registered", "paid", "verified"],
       default: "pending",
     },
-    discountApplied: { type: Number, default: 200 }, // ₹200 discount for referred user
+    discountApplied: { type: Number, default: 100 }, // ₹100 discount for referred user
     cashbackStatus: {
       type: String,
       enum: ["not_eligible", "eligible", "paid"],

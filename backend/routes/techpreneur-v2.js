@@ -337,7 +337,7 @@ router.get("/referrals/validate/:code", async (req, res) => {
     if (!referrer) {
       return res.status(404).json({ valid: false, error: "Invalid or expired code." });
     }
-    res.json({ valid: true, referrerName: referrer.name, discount: 200 });
+    res.json({ valid: true, referrerName: referrer.name, discount: 100 });
   } catch (err) {
     res.status(500).json({ error: "Failed to validate code." });
   }

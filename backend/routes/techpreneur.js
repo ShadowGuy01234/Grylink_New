@@ -102,7 +102,7 @@ router.post("/pre-register", async (req, res) => {
       branch,
       year,
       trackPreference,
-      feeAmount: 799,
+      feeAmount: 1533,
       registrationPhase: "early",
       status: "pending_payment",
       paymentVerified: false,
@@ -214,7 +214,7 @@ router.post("/register", async (req, res) => {
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       message: message?.trim(),
-      feeAmount: feeAmount || 799,
+      feeAmount: feeAmount || 1533,
       registrationPhase: registrationPhase || "early",
       status: "confirmed",
       paymentVerified: true,
@@ -515,7 +515,7 @@ router.post(
         transactionId: razorpayPaymentId.trim(),
         razorpayOrderId: razorpayOrderId?.trim() || "",
         razorpayPaymentId: razorpayPaymentId.trim(),
-        feeAmount: feeAmount || 799,
+        feeAmount: feeAmount || 1533,
         registrationPhase: "early",
         status: "confirmed",
         paymentVerified: true,
@@ -1013,7 +1013,7 @@ router.post(
         
         <div style="text-align: left; background-color: rgba(3, 7, 18, 0.6); border-radius: 8px; padding: 15px; border: 1px solid #1f2937;">
           <div style="font-size: 13px; color: #e5e7eb; margin-bottom: 8px;">
-            🎁 <strong>Your Peers Get:</strong> An immediate <strong>₹200 discount</strong> on registration when they use your code.
+            🎁 <strong>Your Peers Get:</strong> An immediate <strong>₹100 discount</strong> on registration when they use your code.
           </div>
           <div style="font-size: 13px; color: #e5e7eb; line-height: 1.5;">
             💸 <strong>You Get:</strong> A direct cashback reward of <strong>₹100</strong> for <em>every</em> successful registration.<br/>
