@@ -24,7 +24,7 @@ const bonuses = [
 export default function Pricing({ showHeader = true }: { showHeader?: boolean }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
-  const { phase: currentPhase } = getCurrentPricing();
+  const currentPhase = getCurrentPricing();
 
   const plans = [
     {

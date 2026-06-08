@@ -13,7 +13,7 @@ export function getCurrentPricing(): PricingPhase {
   // Make early bird end in the past so the new phase is active NOW
   const earlyBirdEnd  = new Date("2026-05-26T06:00:00Z"); // Past
   const foundingEnd   = new Date("2026-06-03T18:00:00Z"); // Past (End Founder's Batch)
-  const standardEnd   = new Date("2026-06-28T18:30:00Z"); // Future
+  const standardEnd   = new Date("2026-06-15T18:30:00Z"); // 15 June 2026 (16 June 00:00 IST)
 
   const now = new Date();
 

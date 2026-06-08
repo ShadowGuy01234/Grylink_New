@@ -19,7 +19,7 @@ const isValidPhone = (phone: string) => /^[6-9]\d{9}$/.test(sanitizePhone(phone)
 export default function Registration() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const { phase: currentPhase } = getCurrentPricing();
+  const currentPhase = getCurrentPricing();
   const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [paymentFallback, setPaymentFallback] = useState<{
     paymentId: string;

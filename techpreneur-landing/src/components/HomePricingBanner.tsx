@@ -3,7 +3,7 @@ import { ArrowRight, Zap } from "lucide-react";
 import { getCurrentPricing } from "../lib/api";
 
 export function HomePricingBanner() {
-  const { phase: currentPhase } = getCurrentPricing();
+  const currentPhase = getCurrentPricing();
   
   let price = currentPhase?.amount ? `₹${currentPhase.amount}` : "₹1299";
   let originalPrice = currentPhase?.originalAmount ? `₹${currentPhase.originalAmount}` : "₹5200";
