@@ -27,10 +27,10 @@ export function HomePricingBanner() {
               <span className="text-blue-200 font-medium text-sm">{label}</span>
             </div>
             <h3 className="font-display text-2xl sm:text-3xl font-bold mb-2">
-              Don't miss the ultimate TechPreneur experience
+              Late Registration Window Open
             </h3>
             <p className="text-blue-100 max-w-xl text-sm sm:text-base">
-              Seats are strictly limited. Register today to lock in your spot for the 4-week industrial training program.
+              If you are serious about building practical skills, strengthening your portfolio, and learning directly from professionals, this is your opportunity to join the batch.
             </p>
           </div>
 

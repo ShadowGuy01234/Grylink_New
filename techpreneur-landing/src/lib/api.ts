@@ -43,13 +43,13 @@ export function getCurrentPricing(): PricingPhase {
 
   if (now < standardEnd) {
     return {
-      phase: "standard",
-      label: "Standard Registrations Open",
-      amount: 1533, // 1299 + 18% GST = 1532.82
+      phase: "late",
+      label: "Late Registration Window Open",
+      amount: 1769, // 1499 + 18% GST = 1768.82
       originalAmount: 5200,
       deadline: standardEnd,
       deadlineLabel: "FILLING FAST",
-      urgencyText: "🚀 Batch starting soon — Enroll Now!",
+      urgencyText: "🚀 Batch has started — Late Registrations Open!",
     };
   }
 

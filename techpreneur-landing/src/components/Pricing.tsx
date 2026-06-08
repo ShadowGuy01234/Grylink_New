@@ -5,11 +5,13 @@ import { Link } from "react-router-dom";
 import { getCurrentPricing } from "../lib/api";
 
 const features = [
-  "Live Industry Training",
-  "Practical Learning",
-  "Certification Included",
-  "Networking Opportunities",
-  "Real Project Exposure",
+  "Industry-Oriented Industrial Training Program",
+  "AI & Modern Web Development Track",
+  "Startup & Entrepreneurship Exposure",
+  "Live Mentorship from Industry Professionals",
+  "Real-World Project Experience",
+  "Networking Opportunities with Like-Minded Students",
+  "Official 4-Week Industrial Training Certificate",
 ];
 
 const bonuses = [
@@ -149,7 +151,7 @@ export default function Pricing({ showHeader = true }: { showHeader?: boolean })
 
         <div className="mt-8 max-w-xl mx-auto flex items-start gap-3 p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 text-sm text-slate-600 dark:text-slate-400">
           <AlertCircle className="w-5 h-5 flex-shrink-0 text-amber-500" />
-          <p>Registration closes entirely on 31 May 2026. No entries will be accepted after this date under any circumstances.</p>
+          <p>The Late Registration Window closes soon. No entries will be accepted after this window ends under any circumstances.</p>
         </div>
       </div>
     </section>

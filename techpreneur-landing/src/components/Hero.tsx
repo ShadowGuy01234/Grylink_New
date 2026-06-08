@@ -86,13 +86,17 @@ export function Hero() {
           </span>
         </motion.h1>
 
-        <motion.p
-          variants={itemVariants}
-          className="mb-10 max-w-2xl text-lg sm:text-xl text-slate-600 dark:text-slate-400 leading-relaxed font-medium"
-        >
-          A Startup-Driven Industry Readiness Program for B.Tech Students.
-          Learn, build, and innovate with industry experts.
-        </motion.p>
+        <motion.div variants={itemVariants} className="mb-10 max-w-3xl text-left sm:text-center text-slate-600 dark:text-slate-400 leading-relaxed font-medium space-y-4">
+          <p className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-200">
+            The journey has already begun.
+          </p>
+          <p className="text-base sm:text-lg">
+            Over the past few days, participants of TechPreneur 2026 have attended technical sessions, interacted with industry professionals, and gained valuable insights into modern technology, startups, AI, and career development.
+          </p>
+          <p className="text-base sm:text-lg font-semibold text-gry-blue-main dark:text-blue-400">
+            Due to continued requests from students across multiple colleges, we are opening a Limited Late Registration Window for those who could not register earlier.
+          </p>
+        </motion.div>
 
         {/* Feature Pills */}
         <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mb-12 text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300">

@@ -39,7 +39,7 @@ interface Registration {
 const emptyEdit: Partial<Registration> = {
   name: "", email: "", phone: "", college: "", branch: "",
   year: "1st Year", trackPreference: "AI + Web Development",
-  feeAmount: 1533, registrationPhase: "standard",
+  feeAmount: 1769, registrationPhase: "standard",
   razorpayPaymentId: "", razorpayOrderId: "", transactionId: "",
   status: "pending", paymentVerified: false, dashboardAccess: false,
   notes: "", assignedSPOC: "", assignedGroup: "",
@@ -63,7 +63,7 @@ export default function TechPreneurRegistrationsPage() {
   const [manualForm, setManualForm] = useState({
     name: "", email: "", phone: "", college: "", branch: "",
     year: "1st Year", trackPreference: "AI + Web Development",
-    razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 1533,
+    razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 1769,
     usedReferralCode: "",
   });
 
@@ -173,7 +173,7 @@ export default function TechPreneurRegistrationsPage() {
     try {
       await techpreneurApi.manualRegister(manualForm);
       setManualSuccess(`✅ Registration saved for ${manualForm.name} (${manualForm.email})`);
-      setManualForm({ name: "", email: "", phone: "", college: "", branch: "", year: "1st Year", trackPreference: "AI + Web Development", razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 1533, usedReferralCode: "" });
+      setManualForm({ name: "", email: "", phone: "", college: "", branch: "", year: "1st Year", trackPreference: "AI + Web Development", razorpayPaymentId: "", razorpayOrderId: "", feeAmount: 1769, usedReferralCode: "" });
       fetchRegistrations();
     } catch (err: any) {
       setManualError(err.response?.data?.error || "Failed to save registration.");
