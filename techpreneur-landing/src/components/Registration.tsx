@@ -49,8 +49,11 @@ export default function Registration() {
   const [referralMessage, setReferralMessage] = useState("");
 
   const basePrice = currentPhase?.amount || 1299;
-  const price = Math.max(0, basePrice - referralDiscount);
   const originalPrice = currentPhase?.originalAmount || 5200;
+  const isGSTApplicable = currentPhase?.phase === "late";
+  const gstAmount = isGSTApplicable ? Math.round(basePrice * 0.18) : 0;
+  const totalBeforeDiscount = basePrice + gstAmount;
+  const price = totalBeforeDiscount - referralDiscount;
 
   const validateStep1 = () => {
     const errors: Record<string, string> = {};
@@ -480,13 +483,15 @@ export default function Registration() {
                 ) : (
                   <>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-slate-500 dark:text-slate-400 text-sm">Base Price</span>
-                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{(basePrice / 1.18).toFixed(2)}</span>
+                      <span className="text-slate-500 dark:text-slate-400 text-sm">Program Fee</span>
+                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{basePrice}</span>
                     </div>
-                    <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-200 dark:border-white/10">
-                      <span className="text-slate-500 dark:text-slate-400 text-sm">GST (18%)</span>
-                      <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">₹{(basePrice - (basePrice / 1.18)).toFixed(2)}</span>
-                    </div>
+                    {isGSTApplicable && (
+                      <div className="flex justify-between items-center mb-3 pb-3 border-b border-slate-200 dark:border-white/10">
+                        <span className="text-slate-500 dark:text-slate-400 text-sm">GST (18%)</span>
+                        <span className="text-slate-600 dark:text-slate-300 text-sm font-medium">+ ₹{gstAmount}</span>
+                      </div>
+                    )}
                   </>
                 )}
 

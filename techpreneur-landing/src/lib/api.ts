@@ -45,7 +45,7 @@ export function getCurrentPricing(): PricingPhase {
     return {
       phase: "late",
       label: "Late Registration Window Open",
-      amount: 1769, // 1499 + 18% GST = 1768.82
+      amount: 1499, // Marketing price (GST added at checkout)
       originalAmount: 5200,
       deadline: standardEnd,
       deadlineLabel: "FILLING FAST",
