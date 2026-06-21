@@ -8,16 +8,16 @@ import { fetchMyProject, createTeam, joinTeam, submitDay, leaveTeam } from "../.
 import { useStudentAuth } from "../../context/StudentAuthContext";
 
 const THEMES = [
-  "AI-Powered EdTech & Learning Assistants",
-  "FinTech & Smart Personal Finance",
-  "HealthTech & Remote Patient Care",
-  "GreenTech & Sustainability Tracking",
-  "AI-Driven SaaS & B2B Productivity",
-  "Smart Cities & IoT Logistics",
-  "E-Commerce & Hyperlocal Delivery",
-  "Creator Economy & Content AI",
-  "LegalTech & Document Automation",
-  "CyberSecurity & Data Privacy"
+  "QueueLess (Smart Appointment and Token Management System)",
+  "RentMate (Student Roommate and PG Finder Platform)",
+  "EventSphere (College Event Management Platform)",
+  "LocalKart (Hyperlocal Marketplace)",
+  "SkillSwap (Peer Learning Marketplace)",
+  "GreenBin (Smart Waste Collection System)",
+  "StudyVault (Notes and Resource Marketplace)",
+  "SafeRide (Verified Ride Sharing Platform)",
+  "QuickServe (Restaurant Pre-Ordering System)",
+  "HireHub (Campus Recruitment Portal)"
 ];
 
 interface Teammate {
