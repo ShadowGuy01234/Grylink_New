@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { 
   FolderOpen, Github, HardDrive, CheckCircle, AlertCircle, 
   Users, Plus, Key, Copy, ExternalLink, FileText, Video, 
-  Lock, Unlock, ShieldAlert, Award
+  Lock, Unlock, ShieldAlert, Award, LogOut
 } from "lucide-react";
-import { fetchMyProject, createTeam, joinTeam, submitDay } from "../../lib/api";
+import { fetchMyProject, createTeam, joinTeam, submitDay, leaveTeam } from "../../lib/api";
 import { useStudentAuth } from "../../context/StudentAuthContext";
 
 const THEMES = [
@@ -33,6 +33,7 @@ interface Project {
   theme: string;
   customThemeProblem?: string;
   teamMembers: Teammate[];
+  studentEmail: string;
   submissions?: {
     day1?: { teamName: string; theme: string; customThemeProblem?: string; members: Teammate[]; submittedAt: string };
     day2?: { prdUrl: string; submittedAt: string };
@@ -82,7 +83,7 @@ export function ProjectsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   
-  // Dashboard view toggle: "create" | "join" | null (only when project is null)
+  // Dashboard view toggle: "create" | "join" | null
   const [authMode, setAuthMode] = useState<"create" | "join" | null>(null);
 
   // Active Day Timeline Accordion
@@ -93,11 +94,7 @@ export function ProjectsPage() {
     teamName: "",
     theme: THEMES[0],
     customThemeProblem: "",
-    members: [
-      { name: "", email: "", techId: "" },
-      { name: "", email: "", techId: "" },
-      { name: "", email: "", techId: "" }
-    ]
+    members: ["", "", ""] // Simple string array for teammate emails
   });
 
   // Join Team State
@@ -135,6 +132,8 @@ export function ProjectsPage() {
             portfolioUrl: matchingPortfolio?.portfolioUrl || ""
           });
         }
+      } else {
+        setProject(null);
       }
       setLoading(false);
     } catch {
@@ -167,12 +166,15 @@ export function ProjectsPage() {
     setSuccess(null);
     setSubmitting(true);
     try {
-      const filteredMembers = createData.members.filter(m => m.name.trim() !== "" && m.email.trim() !== "");
+      const filteredEmails = createData.members
+        .filter(email => email.trim() !== "")
+        .map(email => ({ email: email.toLowerCase().trim() }));
+      
       const res = await createTeam({
         teamName: createData.teamName,
         theme: createData.theme,
         customThemeProblem: createData.customThemeProblem,
-        members: filteredMembers
+        members: filteredEmails
       });
       setSuccess("Team created successfully!");
       setProject(res.project);
@@ -207,6 +209,36 @@ export function ProjectsPage() {
       const res = await submitDay(dayNumber, formData);
       setProject(res.project);
       setSuccess(`Day ${dayNumber} submission saved successfully!`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleLeaveTeam = async () => {
+    if (!project) return;
+    const isCreator = project.studentEmail === student?.email;
+    const confirmMsg = isCreator && project.teamMembers.length === 1
+      ? "Are you sure you want to disband and delete this team? All submissions will be lost."
+      : "Are you sure you want to leave this team? You will be removed from all group submissions.";
+    
+    if (!window.confirm(confirmMsg)) return;
+
+    setError(null);
+    setSuccess(null);
+    setSubmitting(true);
+    try {
+      await leaveTeam();
+      setSuccess("You have successfully left the team.");
+      setProject(null);
+      setAuthMode(null);
+      setCreateData({
+        teamName: "",
+        theme: THEMES[0],
+        customThemeProblem: "",
+        members: ["", "", ""]
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -343,40 +375,24 @@ export function ProjectsPage() {
               )}
 
               {/* Add Teammates */}
-              <div className="pt-4 border-t border-white/5">
-                <h3 className="text-white font-semibold text-sm mb-3">Teammates Details (Optional - maximum 3 extra members)</h3>
-                <p className="text-slate-400 text-xs mb-4">Teammates can also join later using your unique Team Code.</p>
-                <div className="space-y-4">
-                  {createData.members.map((member, index) => (
-                    <div key={index} className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Teammate {index + 1} Name</label>
-                        <input
-                          type="text"
-                          value={member.name}
-                          onChange={e => {
-                            const newM = [...createData.members];
-                            newM[index].name = e.target.value;
-                            setCreateData(p => ({ ...p, members: newM }));
-                          }}
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-slate-600 text-xs"
-                          placeholder="Name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Teammate {index + 1} Email</label>
-                        <input
-                          type="email"
-                          value={member.email}
-                          onChange={e => {
-                            const newM = [...createData.members];
-                            newM[index].email = e.target.value;
-                            setCreateData(p => ({ ...p, members: newM }));
-                          }}
-                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-slate-600 text-xs"
-                          placeholder="registered@email.com"
-                        />
-                      </div>
+              <div className="pt-4 border-t border-white/5 text-slate-200">
+                <h3 className="text-white font-semibold text-sm mb-1">Teammates Emails</h3>
+                <p className="text-slate-400 text-xs mb-4">Strictly enter confirmed teammate emails registered on TechPreneur.</p>
+                <div className="space-y-3">
+                  {createData.members.map((email, index) => (
+                    <div key={index} className="flex flex-col">
+                      <label className="block text-xs text-slate-400 mb-1">Teammate {index + 1} Email Address</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => {
+                          const newM = [...createData.members];
+                          newM[index] = e.target.value;
+                          setCreateData(p => ({ ...p, members: newM }));
+                        }}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-slate-600 text-xs focus:ring-1 focus:ring-emerald-500"
+                        placeholder="registered-student@college.edu"
+                      />
                     </div>
                   ))}
                 </div>
@@ -424,12 +440,13 @@ export function ProjectsPage() {
 
   // 2. HAS REGISTERED TEAM
   const overallProgress = Object.keys(project.dailyStatus).filter(k => project.dailyStatus[k as keyof typeof project.dailyStatus] !== "pending").length;
+  const isCreator = project.studentEmail === student?.email;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Team Details Header Card */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-950 border border-white/10 rounded-2xl p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">Active Startup Team</span>
@@ -444,19 +461,32 @@ export function ProjectsPage() {
             )}
           </div>
 
-          {/* Team Code box */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-4 sm:self-center">
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Team Code</p>
-              <code className="text-emerald-400 font-mono font-bold text-base">{project.teamCode}</code>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Team Code box */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-4">
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Team Code</p>
+                <code className="text-emerald-400 font-mono font-bold text-sm">{project.teamCode}</code>
+              </div>
+              <button
+                onClick={handleCopyCode}
+                className={`p-2 rounded-lg transition-all ${
+                  copied ? "bg-green-600/20 text-green-400 border border-green-500/30" : "bg-white/5 text-slate-400 hover:text-white border border-white/10"
+                }`}
+              >
+                {copied ? "Copied!" : <Copy className="w-3.5 h-3.5" />}
+              </button>
             </div>
+
+            {/* Leave/Disband Team button */}
             <button
-              onClick={handleCopyCode}
-              className={`p-2 rounded-lg transition-all ${
-                copied ? "bg-green-600/20 text-green-400 border border-green-500/30" : "bg-white/5 text-slate-400 hover:text-white border border-white/10"
-              }`}
+              onClick={handleLeaveTeam}
+              disabled={submitting}
+              className="p-3 bg-red-950/20 hover:bg-red-900/30 text-red-400 hover:text-red-300 border border-red-500/20 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all disabled:opacity-50"
+              title={isCreator && project.teamMembers.length === 1 ? "Disband Team" : "Leave Team"}
             >
-              {copied ? "Copied!" : <Copy className="w-4 h-4" />}
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">{isCreator && project.teamMembers.length === 1 ? "Disband Team" : "Leave Team"}</span>
             </button>
           </div>
         </div>
@@ -466,9 +496,9 @@ export function ProjectsPage() {
           {project.teamMembers.map((m, idx) => (
             <div key={m.email} className="flex items-center gap-1.5 text-xs text-slate-300">
               <Users className="w-3.5 h-3.5 text-slate-500" />
-              <span>{m.name}</span>
+              <span className={m.email === student?.email ? "font-bold text-white" : ""}>{m.name}</span>
               {m.techId && <span className="text-[10px] bg-slate-800 text-slate-400 px-1 py-0.5 rounded">ID: {m.techId}</span>}
-              {idx === 0 && <span className="text-[9px] text-emerald-400 font-bold">(Founder)</span>}
+              {m.email === project.studentEmail && <span className="text-[9px] text-emerald-400 font-bold">(Founder)</span>}
             </div>
           ))}
         </div>

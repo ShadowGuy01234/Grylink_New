@@ -268,10 +268,21 @@ router.post("/projects/create-team", requireStudent, async (req, res) => {
     // Add extra members if provided in request
     if (Array.isArray(members)) {
       for (const m of members) {
-        if (!m.email || !m.name) continue;
+        if (!m.email) continue;
         const normalizedEmail = m.email.toLowerCase().trim();
         if (normalizedEmail === student.email) continue; // skip duplicates of self
         
+        // Strict Check: Teammate must be registered in confirmed list
+        const registeredTeammate = await TechPreneurRegistration.findOne({
+          email: normalizedEmail,
+          paymentVerified: true
+        });
+        if (!registeredTeammate) {
+          return res.status(400).json({ 
+            error: `Teammate with email ${normalizedEmail} is not a registered student (or payment is not yet verified).` 
+          });
+        }
+
         // Check if this member is already in a team
         const memberInTeam = await TechPreneurProject.findOne({
           $or: [
@@ -284,9 +295,9 @@ router.post("/projects/create-team", requireStudent, async (req, res) => {
         }
 
         teamMembers.push({
-          name: m.name.trim(),
+          name: registeredTeammate.name,
           email: normalizedEmail,
-          techId: m.techId ? m.techId.trim() : m.email.split("@")[0].slice(0, 6).toUpperCase()
+          techId: registeredTeammate._id.toString().slice(-6).toUpperCase()
         });
       }
     }
@@ -391,6 +402,58 @@ router.post("/projects/join-team", requireStudent, async (req, res) => {
   } catch (err) {
     console.error("[Join Team Error]:", err);
     res.status(500).json({ error: "Failed to join team. Please try again." });
+  }
+});
+
+/**
+ * POST /api/techpreneur-v2/projects/leave-team
+ * Student (JWT) — Leave their team
+ */
+router.post("/projects/leave-team", requireStudent, async (req, res) => {
+  try {
+    const student = await TechPreneurRegistration.findById(req.student.studentId);
+    if (!student) return res.status(404).json({ error: "Student not found." });
+
+    const project = await TechPreneurProject.findOne({
+      "teamMembers.email": student.email
+    });
+
+    if (!project) {
+      return res.status(400).json({ error: "You are not a member of any team." });
+    }
+
+    const isCreator = project.studentEmail === student.email;
+
+    if (project.teamMembers.length === 1) {
+      // Creator is the only member, delete the project record so they can start fresh
+      await TechPreneurProject.findByIdAndDelete(project._id);
+      return res.json({ success: true, message: "Team disbanded and deleted successfully." });
+    }
+
+    // Remove the member from the list
+    project.teamMembers = project.teamMembers.filter(m => m.email !== student.email);
+
+    if (isCreator) {
+      // Find the new creator from the remaining members
+      const newCreatorEmail = project.teamMembers[0].email;
+      const newCreator = await TechPreneurRegistration.findOne({ email: newCreatorEmail });
+      if (newCreator) {
+        project.studentId = newCreator._id;
+        project.studentEmail = newCreator.email;
+        project.studentName = newCreator.name;
+      }
+    }
+
+    // Sync Day 1 submissions members list
+    if (project.submissions && project.submissions.day1) {
+      project.submissions.day1.members = project.teamMembers;
+    }
+
+    await project.save();
+    res.json({ success: true, message: "Successfully left the team." });
+  } catch (err) {
+    console.error("[Leave Team Error]:", err);
+    res.status(500).json({ error: "Failed to leave the team. Please try again." });
   }
 });
 

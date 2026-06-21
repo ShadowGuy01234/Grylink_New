@@ -231,6 +231,18 @@ export async function submitDay(dayNumber: number, data: any) {
   return res.json();
 }
 
+export async function leaveTeam() {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/leave-team`, {
+    method: "POST",
+    headers: studentHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Network error" }));
+    throw new Error(err.error || "Failed to leave team");
+  }
+  return res.json();
+}
+
 export async function fetchReferralStats() {
   const res = await fetch(`${API_BASE}/api/techpreneur-v2/referrals/my-stats`, { headers: studentHeaders() });
   if (!res.ok) throw new Error("Failed to fetch referral stats");
