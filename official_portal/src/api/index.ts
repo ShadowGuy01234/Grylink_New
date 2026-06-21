@@ -473,6 +473,8 @@ export const techpreneurApi = {
     api.get("/techpreneur-v2/projects", { params }),
   reviewProject: (id: string, data: { feedback: string; status: string }) => 
     api.patch(`/techpreneur-v2/projects/${id}/review`, data),
+  reviewProjectDay: (id: string, data: { dayNumber: number; status: string; feedback?: string }) => 
+    api.patch(`/techpreneur-v2/projects/${id}/review-day`, data),
 
   // Referrals
   getReferrals: () => api.get("/techpreneur-v2/referrals"),

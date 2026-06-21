@@ -179,14 +179,54 @@ export async function fetchMyProject() {
 }
 
 export async function submitProject(data: { githubUrl?: string; driveUrl?: string; projectTitle?: string; description?: string }) {
-  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/submit`, {
+  // Legacy project submission fallback
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/submit-day`, {
+    method: "POST",
+    headers: studentHeaders(),
+    body: JSON.stringify({ dayNumber: 3, data: { githubUrl: data.githubUrl } }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Network error" }));
+    throw new Error(err.error || "Submission failed");
+  }
+  return res.json();
+}
+
+export async function createTeam(data: { teamName: string; theme: string; customThemeProblem?: string; members?: Array<{ name: string; email: string; techId?: string }> }) {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/create-team`, {
     method: "POST",
     headers: studentHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Network error" }));
-    throw new Error(err.error || "Submission failed");
+    throw new Error(err.error || "Team creation failed");
+  }
+  return res.json();
+}
+
+export async function joinTeam(data: { teamCode: string }) {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/join-team`, {
+    method: "POST",
+    headers: studentHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Network error" }));
+    throw new Error(err.error || "Joining team failed");
+  }
+  return res.json();
+}
+
+export async function submitDay(dayNumber: number, data: any) {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/submit-day`, {
+    method: "POST",
+    headers: studentHeaders(),
+    body: JSON.stringify({ dayNumber, data }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Network error" }));
+    throw new Error(err.error || `Failed to submit day ${dayNumber}`);
   }
   return res.json();
 }

@@ -208,52 +208,324 @@ router.delete("/announcements/:id", authenticate, authorize("admin", "founder"),
 // =============================================================================
 
 /**
- * POST /api/techpreneur-v2/projects/submit
- * Student (JWT) — Submit a project
+ * GET /api/techpreneur-v2/projects/my
+ * Student (JWT) — Get own project/team submission
  */
-router.post("/projects/submit", requireStudent, async (req, res) => {
+router.get("/projects/my", requireStudent, async (req, res) => {
   try {
-    const student = await TechPreneurRegistration.findById(req.student.studentId);
-    if (!student) return res.status(404).json({ error: "Student not found." });
-
-    // Upsert — one submission per student
-    const project = await TechPreneurProject.findOneAndUpdate(
-      { studentId: student._id },
-      {
-        $set: {
-          studentId: student._id,
-          studentEmail: student.email,
-          studentName: student.name,
-          track: student.trackPreference,
-          githubUrl: req.body.githubUrl || "",
-          driveUrl: req.body.driveUrl || "",
-          projectTitle: req.body.projectTitle || "",
-          description: req.body.description || "",
-          status: "submitted",
-        },
-      },
-      { new: true, upsert: true, runValidators: true }
-    );
-
-    res.json({ success: true, project });
+    const project = await TechPreneurProject.findOne({
+      $or: [
+        { studentId: req.student.studentId },
+        { "teamMembers.email": req.student.email }
+      ]
+    });
+    res.json({ project: project || null });
   } catch (err) {
-    if (err.name === "ValidationError") {
-      return res.status(400).json({ error: Object.values(err.errors).map(e => e.message).join(". ") });
-    }
-    res.status(500).json({ error: "Failed to submit project." });
+    res.status(500).json({ error: "Failed to fetch project." });
   }
 });
 
 /**
- * GET /api/techpreneur-v2/projects/my
- * Student (JWT) — Get own project submission
+ * POST /api/techpreneur-v2/projects/create-team
+ * Student (JWT) — Create a team (Day 1)
  */
-router.get("/projects/my", requireStudent, async (req, res) => {
+router.post("/projects/create-team", requireStudent, async (req, res) => {
   try {
-    const project = await TechPreneurProject.findOne({ studentId: req.student.studentId });
-    res.json({ project: project || null });
+    const student = await TechPreneurRegistration.findById(req.student.studentId);
+    if (!student) return res.status(404).json({ error: "Student not found." });
+
+    // Check if the current student is already in a team
+    const existingProject = await TechPreneurProject.findOne({
+      $or: [
+        { studentId: student._id },
+        { "teamMembers.email": student.email }
+      ]
+    });
+    if (existingProject) {
+      return res.status(400).json({ error: "You are already a member of a team." });
+    }
+
+    const { teamName, theme, customThemeProblem, members } = req.body;
+    if (!teamName || !theme) {
+      return res.status(400).json({ error: "Team Name and Project Theme are required." });
+    }
+
+    // Verify team name uniqueness (case-insensitive)
+    const duplicateTeam = await TechPreneurProject.findOne({
+      teamName: { $regex: new RegExp(`^${teamName.trim()}$`, "i") }
+    });
+    if (duplicateTeam) {
+      return res.status(400).json({ error: "This team name is already taken. Please choose another one." });
+    }
+
+    // Initialize member list
+    const teamMembers = [{
+      name: student.name,
+      email: student.email,
+      techId: student._id.toString().slice(-6).toUpperCase(), // generate short techId if not provided
+    }];
+
+    // Add extra members if provided in request
+    if (Array.isArray(members)) {
+      for (const m of members) {
+        if (!m.email || !m.name) continue;
+        const normalizedEmail = m.email.toLowerCase().trim();
+        if (normalizedEmail === student.email) continue; // skip duplicates of self
+        
+        // Check if this member is already in a team
+        const memberInTeam = await TechPreneurProject.findOne({
+          $or: [
+            { studentEmail: normalizedEmail },
+            { "teamMembers.email": normalizedEmail }
+          ]
+        });
+        if (memberInTeam) {
+          return res.status(400).json({ error: `Teammate with email ${normalizedEmail} is already in another team.` });
+        }
+
+        teamMembers.push({
+          name: m.name.trim(),
+          email: normalizedEmail,
+          techId: m.techId ? m.techId.trim() : m.email.split("@")[0].slice(0, 6).toUpperCase()
+        });
+      }
+    }
+
+    if (teamMembers.length > 4) {
+      return res.status(400).json({ error: "A team can have at most 4 members." });
+    }
+
+    // Generate unique teamCode
+    let teamCode;
+    let codeUnique = false;
+    while (!codeUnique) {
+      teamCode = "TEAM_" + Math.random().toString(36).substr(2, 6).toUpperCase();
+      const existingCode = await TechPreneurProject.findOne({ teamCode });
+      if (!existingCode) codeUnique = true;
+    }
+
+    // Create the project
+    const project = new TechPreneurProject({
+      studentId: student._id,
+      studentEmail: student.email,
+      studentName: student.name,
+      track: student.trackPreference,
+      teamName: teamName.trim(),
+      teamCode,
+      theme,
+      customThemeProblem: theme === "other" ? (customThemeProblem || "").trim() : "",
+      teamMembers,
+      projectTitle: teamName.trim(), // sync to legacy
+      description: theme === "other" ? (customThemeProblem || "") : `Theme: ${theme}`,
+      status: "submitted",
+      submissions: {
+        day1: {
+          teamName: teamName.trim(),
+          theme,
+          customThemeProblem: theme === "other" ? (customThemeProblem || "").trim() : "",
+          members: teamMembers,
+          submittedAt: new Date()
+        }
+      },
+      dailyStatus: {
+        day1: "submitted"
+      }
+    });
+
+    await project.save();
+    res.status(201).json({ success: true, project });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch project." });
+    console.error("[Create Team Error]:", err);
+    res.status(500).json({ error: "Failed to create team. Please try again." });
+  }
+});
+
+/**
+ * POST /api/techpreneur-v2/projects/join-team
+ * Student (JWT) — Join a team using team code
+ */
+router.post("/projects/join-team", requireStudent, async (req, res) => {
+  try {
+    const student = await TechPreneurRegistration.findById(req.student.studentId);
+    if (!student) return res.status(404).json({ error: "Student not found." });
+
+    // Check if the current student is already in a team
+    const existingProject = await TechPreneurProject.findOne({
+      $or: [
+        { studentId: student._id },
+        { "teamMembers.email": student.email }
+      ]
+    });
+    if (existingProject) {
+      return res.status(400).json({ error: "You are already a member of a team." });
+    }
+
+    const { teamCode } = req.body;
+    if (!teamCode) {
+      return res.status(400).json({ error: "Team Code is required." });
+    }
+
+    const project = await TechPreneurProject.findOne({ teamCode: teamCode.toUpperCase().trim() });
+    if (!project) {
+      return res.status(404).json({ error: "Team not found. Please check the code." });
+    }
+
+    if (project.teamMembers.length >= 4) {
+      return res.status(400).json({ error: "This team already has the maximum limit of 4 members." });
+    }
+
+    // Add student to the team
+    project.teamMembers.push({
+      name: student.name,
+      email: student.email,
+      techId: student._id.toString().slice(-6).toUpperCase()
+    });
+
+    // Update day 1 submission data
+    if (project.submissions && project.submissions.day1) {
+      project.submissions.day1.members = project.teamMembers;
+    }
+
+    await project.save();
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error("[Join Team Error]:", err);
+    res.status(500).json({ error: "Failed to join team. Please try again." });
+  }
+});
+
+/**
+ * POST /api/techpreneur-v2/projects/submit-day
+ * Student (JWT) — Submit a milestone (Days 1–7)
+ */
+router.post("/projects/submit-day", requireStudent, async (req, res) => {
+  try {
+    const student = await TechPreneurRegistration.findById(req.student.studentId);
+    if (!student) return res.status(404).json({ error: "Student not found." });
+
+    // Find their team/project
+    const project = await TechPreneurProject.findOne({
+      $or: [
+        { studentId: student._id },
+        { "teamMembers.email": student.email }
+      ]
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: "Team not registered yet. Please create or join a team first." });
+    }
+
+    const { dayNumber, data } = req.body;
+    if (!dayNumber || dayNumber < 1 || dayNumber > 7) {
+      return res.status(400).json({ error: "Invalid day number (must be 1-7)." });
+    }
+
+    const now = new Date();
+
+    if (dayNumber === 1) {
+      if (project.dailyStatus?.day1 === "approved" || project.dailyStatus?.day1 === "reviewed") {
+        return res.status(400).json({ error: "Day 1 details are already reviewed and locked." });
+      }
+      const { teamName, theme, customThemeProblem } = data;
+      if (!teamName || !theme) return res.status(400).json({ error: "Team Name and Theme are required." });
+      
+      project.teamName = teamName.trim();
+      project.theme = theme;
+      project.customThemeProblem = theme === "other" ? (customThemeProblem || "").trim() : "";
+      
+      project.submissions.day1 = {
+        teamName: teamName.trim(),
+        theme,
+        customThemeProblem: theme === "other" ? (customThemeProblem || "").trim() : "",
+        members: project.teamMembers,
+        submittedAt: now
+      };
+      project.dailyStatus.day1 = "submitted";
+
+    } else if (dayNumber === 2) {
+      const { prdUrl } = data;
+      if (!prdUrl) return res.status(400).json({ error: "PRD Document URL is required." });
+      if (!prdUrl.startsWith("http")) return res.status(400).json({ error: "Must be a valid HTTP/HTTPS URL." });
+      
+      project.submissions.day2 = { prdUrl, submittedAt: now };
+      project.dailyStatus.day2 = "submitted";
+      project.driveUrl = prdUrl; // legacy sync
+
+    } else if (dayNumber === 3) {
+      const { githubUrl } = data;
+      if (!githubUrl) return res.status(400).json({ error: "GitHub Repository URL is required." });
+      if (!/^https:\/\/github\.com\/.+/.test(githubUrl)) {
+        return res.status(400).json({ error: "Must be a valid GitHub repository link (e.g. https://github.com/user/repo)." });
+      }
+      
+      project.submissions.day3 = { githubUrl, submittedAt: now };
+      project.dailyStatus.day3 = "submitted";
+      project.githubUrl = githubUrl; // legacy sync
+
+    } else if (dayNumber === 4) {
+      const { pitchDeckUrl } = data;
+      if (!pitchDeckUrl) return res.status(400).json({ error: "Pitch Deck URL is required." });
+      if (!pitchDeckUrl.startsWith("http")) return res.status(400).json({ error: "Must be a valid URL." });
+
+      project.submissions.day4 = { pitchDeckUrl, submittedAt: now };
+      project.dailyStatus.day4 = "submitted";
+
+    } else if (dayNumber === 5) {
+      const { mvpVideoUrl, midReportUrl } = data;
+      if (!mvpVideoUrl || !midReportUrl) {
+        return res.status(400).json({ error: "MVP Video URL and Mid-Evaluation Report URL are required." });
+      }
+      if (!mvpVideoUrl.startsWith("http") || !midReportUrl.startsWith("http")) {
+        return res.status(400).json({ error: "Must be valid URLs." });
+      }
+
+      project.submissions.day5 = { mvpVideoUrl, midReportUrl, submittedAt: now };
+      project.dailyStatus.day5 = "submitted";
+
+    } else if (dayNumber === 6) {
+      const { businessSlidesUrl } = data;
+      if (!businessSlidesUrl) return res.status(400).json({ error: "Business Presentation Slides URL is required." });
+      if (!businessSlidesUrl.startsWith("http")) return res.status(400).json({ error: "Must be a valid URL." });
+
+      project.submissions.day6 = { businessSlidesUrl, submittedAt: now };
+      project.dailyStatus.day6 = "submitted";
+
+    } else if (dayNumber === 7) {
+      const { finalMvpUrl, finalPitchDeckUrl, finalReportUrl, portfolioUrl } = data;
+      if (!finalMvpUrl || !finalPitchDeckUrl || !finalReportUrl) {
+        return res.status(400).json({ error: "Final MVP Link, Pitch Deck, and Final Report are required." });
+      }
+      if (!finalMvpUrl.startsWith("http") || !finalPitchDeckUrl.startsWith("http") || !finalReportUrl.startsWith("http")) {
+        return res.status(400).json({ error: "Must be valid URLs." });
+      }
+
+      // Day 7 has individual submissions for portfolios
+      let portfolios = project.submissions.day7?.portfolios || [];
+      if (portfolioUrl) {
+        const index = portfolios.findIndex(p => p.email === student.email);
+        if (index >= 0) {
+          portfolios[index].portfolioUrl = portfolioUrl;
+        } else {
+          portfolios.push({ email: student.email, portfolioUrl });
+        }
+      }
+
+      project.submissions.day7 = {
+        finalMvpUrl,
+        finalPitchDeckUrl,
+        finalReportUrl,
+        portfolios,
+        submittedAt: now
+      };
+      project.dailyStatus.day7 = "submitted";
+      project.status = "submitted"; // sync overall status
+    }
+
+    await project.save();
+    res.json({ success: true, project });
+  } catch (err) {
+    console.error("[Submit Day Error]:", err);
+    res.status(500).json({ error: "Failed to submit deliverables. Please try again." });
   }
 });
 
@@ -269,9 +541,9 @@ router.get("/projects", authenticate, authorize("admin", "founder", "ops"), asyn
     if (status) filter.status = status;
     if (search) {
       filter.$or = [
+        { teamName: { $regex: search, $options: "i" } },
         { studentName: { $regex: search, $options: "i" } },
         { studentEmail: { $regex: search, $options: "i" } },
-        { projectTitle: { $regex: search, $options: "i" } },
       ];
     }
     const projects = await TechPreneurProject.find(filter).sort({ createdAt: -1 }).lean();
@@ -282,27 +554,41 @@ router.get("/projects", authenticate, authorize("admin", "founder", "ops"), asyn
 });
 
 /**
- * PATCH /api/techpreneur-v2/projects/:id/review
- * Admin — Add feedback and update review status
+ * PATCH /api/techpreneur-v2/projects/:id/review-day
+ * Admin — Review milestone and add feedback
  */
-router.patch("/projects/:id/review", authenticate, authorize("admin", "founder", "ops"), async (req, res) => {
+router.patch("/projects/:id/review-day", authenticate, authorize("admin", "founder", "ops"), async (req, res) => {
   try {
-    const { feedback, status } = req.body;
+    const { dayNumber, status, feedback } = req.body;
+    if (!dayNumber || dayNumber < 1 || dayNumber > 7) {
+      return res.status(400).json({ error: "Invalid day number (must be 1-7)." });
+    }
+    if (!status) return res.status(400).json({ error: "Status is required." });
+
+    const updateObj = {
+      $set: {
+        [`dailyStatus.day${dayNumber}`]: status,
+        [`dailyFeedback.day${dayNumber}`]: feedback || "",
+        reviewedBy: req.user?.email,
+        reviewedAt: new Date()
+      }
+    };
+
+    if (dayNumber === 7) {
+      updateObj.$set.status = status;
+      updateObj.$set.feedback = feedback || "";
+    }
+
     const project = await TechPreneurProject.findByIdAndUpdate(
       req.params.id,
-      {
-        $set: {
-          feedback,
-          status: status || "reviewed",
-          reviewedBy: req.user?.email,
-          reviewedAt: new Date(),
-        },
-      },
+      updateObj,
       { new: true }
     );
+
     if (!project) return res.status(404).json({ error: "Project not found." });
     res.json({ success: true, project });
   } catch (err) {
+    console.error("[Review Day Error]:", err);
     res.status(500).json({ error: "Failed to update project review." });
   }
 });
