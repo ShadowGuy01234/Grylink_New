@@ -14,6 +14,8 @@ const TechPreneurSession = require("../models/TechPreneurSession");
 const TechPreneurAnnouncement = require("../models/TechPreneurAnnouncement");
 const TechPreneurProject = require("../models/TechPreneurProject");
 const TechPreneurReferral = require("../models/TechPreneurReferral");
+const TechPreneurCertificate = require("../models/TechPreneurCertificate");
+const TechPreneurCertificateTemplate = require("../models/TechPreneurCertificateTemplate");
 
 const TP_JWT_SECRET = process.env.TP_JWT_SECRET || process.env.JWT_SECRET || "tp_secret_change_me";
 
@@ -946,5 +948,295 @@ router.delete("/promocodes/:id", authenticate, authorize("admin", "founder"), as
     res.status(500).json({ error: "Failed to delete promo code." });
   }
 });
+
+// =============================================================================
+// CERTIFICATES & REPORTS
+// =============================================================================
+
+/**
+ * GET /api/techpreneur-v2/projects/certificates/my
+ * Student (JWT) — Get own certificate and scorecard
+ */
+router.get("/projects/certificates/my", requireStudent, async (req, res) => {
+  try {
+    const certificate = await TechPreneurCertificate.findOne({
+      studentId: req.student.studentId
+    }).populate("templateId");
+    
+    res.json({ certificate: certificate || null });
+  } catch (err) {
+    console.error("[TechPreneur] fetch certificate error:", err);
+    res.status(500).json({ error: "Failed to fetch certificate." });
+  }
+});
+
+/**
+ * GET /api/techpreneur-v2/projects/certificates/verification/:id
+ * Public — Verify a certificate and get student scorecard details (no auth)
+ */
+router.get("/projects/certificates/verification/:id", async (req, res) => {
+  try {
+    const certificate = await TechPreneurCertificate.findOne({
+      certificateId: req.params.id.trim()
+    })
+      .populate("templateId")
+      .populate("studentId", "name email college branch year trackPreference")
+      .lean();
+
+    if (!certificate) {
+      return res.status(404).json({ error: "Certificate not found." });
+    }
+
+    res.json({ certificate });
+  } catch (err) {
+    console.error("[TechPreneur] verify certificate error:", err);
+    res.status(500).json({ error: "Failed to verify certificate." });
+  }
+});
+
+/**
+ * GET /api/techpreneur-v2/projects/certificates/templates
+ * Admin — List all templates
+ */
+router.get(
+  "/projects/certificates/templates",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const templates = await TechPreneurCertificateTemplate.find().sort({ createdAt: -1 });
+      res.json({ templates });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch templates." });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur-v2/projects/certificates/templates
+ * Admin — Create or update a certificate template
+ */
+router.post(
+  "/projects/certificates/templates",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { id, name, imageUrl, variables, isActive } = req.body;
+      if (!name || !imageUrl) {
+        return res.status(400).json({ error: "Name and image URL are required." });
+      }
+
+      if (isActive) {
+        // Deactivate other templates if this one is active
+        await TechPreneurCertificateTemplate.updateMany({}, { $set: { isActive: false } });
+      }
+
+      let template;
+      if (id) {
+        template = await TechPreneurCertificateTemplate.findByIdAndUpdate(
+          id,
+          { name, imageUrl, variables, isActive },
+          { new: true }
+        );
+      } else {
+        template = new TechPreneurCertificateTemplate({
+          name,
+          imageUrl,
+          variables,
+          isActive
+        });
+        await template.save();
+      }
+
+      res.status(201).json({ success: true, template });
+    } catch (err) {
+      console.error("[TechPreneur] Save template error:", err);
+      res.status(500).json({ error: "Failed to save template." });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur-v2/projects/certificates/issue
+ * Admin — Issue or update a certificate/scorecard for a single student
+ */
+router.post(
+  "/projects/certificates/issue",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { studentId, scores, efforts, finalRemarks, templateId } = req.body;
+      if (!studentId) return res.status(400).json({ error: "Student ID is required." });
+
+      const student = await TechPreneurRegistration.findById(studentId);
+      if (!student) return res.status(404).json({ error: "Student not found." });
+
+      // Resolve template
+      let activeTemplateId = templateId;
+      if (!activeTemplateId) {
+        const activeTemplate = await TechPreneurCertificateTemplate.findOne({ isActive: true });
+        if (activeTemplate) activeTemplateId = activeTemplate._id;
+      }
+
+      // Upsert certificate
+      let certificate = await TechPreneurCertificate.findOne({ studentId });
+      
+      if (certificate) {
+        certificate.scores = scores || certificate.scores;
+        certificate.efforts = efforts || certificate.efforts;
+        certificate.finalRemarks = finalRemarks !== undefined ? finalRemarks : certificate.finalRemarks;
+        if (activeTemplateId) certificate.templateId = activeTemplateId;
+        await certificate.save();
+      } else {
+        // Generate unique certificate ID
+        let certificateId;
+        let isUnique = false;
+        while (!isUnique) {
+          certificateId = "CERT-TP26-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+          const existing = await TechPreneurCertificate.findOne({ certificateId });
+          if (!existing) isUnique = true;
+        }
+
+        certificate = new TechPreneurCertificate({
+          studentId: student._id,
+          studentEmail: student.email,
+          studentName: student.name,
+          college: student.college,
+          certificateId,
+          templateId: activeTemplateId,
+          scores: scores || {},
+          efforts: efforts || {},
+          finalRemarks: finalRemarks || ""
+        });
+        await certificate.save();
+      }
+
+      res.json({ success: true, certificate });
+    } catch (err) {
+      console.error("[TechPreneur] issue certificate error:", err);
+      res.status(500).json({ error: "Failed to issue certificate." });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur-v2/projects/certificates/issue-bulk
+ * Admin — Bulk issue/upload certificates
+ */
+router.post(
+  "/projects/certificates/issue-bulk",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { csvData, templateId } = req.body;
+      
+      // Resolve template
+      let activeTemplateId = templateId;
+      if (!activeTemplateId) {
+        const activeTemplate = await TechPreneurCertificateTemplate.findOne({ isActive: true });
+        if (activeTemplate) activeTemplateId = activeTemplate._id;
+      }
+
+      let count = 0;
+
+      if (Array.isArray(csvData) && csvData.length > 0) {
+        // Bulk import via CSV parsed data structure
+        for (const row of csvData) {
+          const email = row.email?.toLowerCase().trim();
+          if (!email) continue;
+
+          const student = await TechPreneurRegistration.findOne({ email, paymentVerified: true });
+          if (!student) continue;
+
+          const scores = {
+            week1: Number(row.week1Score) || 0,
+            week2: Number(row.week2Score) || 0,
+            week3: Number(row.week3Score) || 0,
+            week4: Number(row.week4Score) || 0,
+            projectContribution: Number(row.projectScore) || 0
+          };
+
+          const efforts = {
+            week1: row.week1Remarks || "",
+            week2: row.week2Remarks || "",
+            week3: row.week3Remarks || "",
+            week4: row.week4Remarks || "",
+            projectContribution: row.projectRemarks || ""
+          };
+
+          const finalRemarks = row.finalRemarks || "";
+
+          let certificate = await TechPreneurCertificate.findOne({ studentId: student._id });
+          if (certificate) {
+            certificate.scores = scores;
+            certificate.efforts = efforts;
+            certificate.finalRemarks = finalRemarks;
+            if (activeTemplateId) certificate.templateId = activeTemplateId;
+            await certificate.save();
+          } else {
+            let certificateId;
+            let isUnique = false;
+            while (!isUnique) {
+              certificateId = "CERT-TP26-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+              const existing = await TechPreneurCertificate.findOne({ certificateId });
+              if (!existing) isUnique = true;
+            }
+
+            certificate = new TechPreneurCertificate({
+              studentId: student._id,
+              studentEmail: student.email,
+              studentName: student.name,
+              college: student.college,
+              certificateId,
+              templateId: activeTemplateId,
+              scores,
+              efforts,
+              finalRemarks
+            });
+            await certificate.save();
+          }
+          count++;
+        }
+      } else {
+        // Default bulk issue: generate blank certificate slots for all confirmed students who don't have one
+        const confirmedStudents = await TechPreneurRegistration.find({ paymentVerified: true });
+        for (const student of confirmedStudents) {
+          const existing = await TechPreneurCertificate.findOne({ studentId: student._id });
+          if (existing) continue;
+
+          let certificateId;
+          let isUnique = false;
+          while (!isUnique) {
+            certificateId = "CERT-TP26-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+            const existCheck = await TechPreneurCertificate.findOne({ certificateId });
+            if (!existCheck) isUnique = true;
+          }
+
+          const certificate = new TechPreneurCertificate({
+            studentId: student._id,
+            studentEmail: student.email,
+            studentName: student.name,
+            college: student.college,
+            certificateId,
+            templateId: activeTemplateId,
+            scores: { week1: 0, week2: 0, week3: 0, week4: 0, projectContribution: 0 },
+            efforts: { week1: "", week2: "", week3: "", week4: "", projectContribution: "" },
+            finalRemarks: ""
+          });
+          await certificate.save();
+          count++;
+        }
+      }
+
+      res.json({ success: true, count });
+    } catch (err) {
+      console.error("[TechPreneur] bulk issue error:", err);
+      res.status(500).json({ error: "Failed to process bulk issuance." });
+    }
+  }
+);
 
 module.exports = router;

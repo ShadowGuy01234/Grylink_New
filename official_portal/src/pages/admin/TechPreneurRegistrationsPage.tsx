@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { techpreneurApi } from "../../api";
 import { SessionsTab } from "./techpreneur/SessionsTab";
 import { AnnouncementsTab } from "./techpreneur/AnnouncementsTab";
@@ -191,12 +192,26 @@ export default function TechPreneurRegistrationsPage() {
           <h1 className="text-2xl font-bold text-gray-900">TechPreneur Operations</h1>
           <p className="text-gray-500 text-sm mt-1">Manage attendees, sessions, announcements, and track projects</p>
         </div>
-        <button
-          onClick={() => { setShowManualModal(true); setManualError(null); setManualSuccess(null); }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-        >
-          <PlusCircle className="w-4 h-4" /> Add Manual Registration
-        </button>
+        <div className="flex gap-2">
+          <Link
+            to="/admin/techpreneur/certificate-builder"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            🎨 Certificate Builder
+          </Link>
+          <Link
+            to="/admin/techpreneur/certificates"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            🎓 Issue Certificates
+          </Link>
+          <button
+            onClick={() => { setShowManualModal(true); setManualError(null); setManualSuccess(null); }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <PlusCircle className="w-4 h-4" /> Add Manual Registration
+          </button>
+        </div>
       </div>
 
       {/* Tabs Navigation */}

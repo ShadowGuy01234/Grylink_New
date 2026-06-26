@@ -249,3 +249,17 @@ export async function fetchReferralStats() {
   return res.json();
 }
 
+export async function fetchMyCertificate() {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/certificates/my`, { headers: studentHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch certificate");
+  return res.json();
+}
+
+export async function verifyCertificate(certId: string) {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/certificates/verification/${encodeURIComponent(certId.trim())}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Certificate not found." }));
+    throw new Error(err.error || "Failed to verify certificate.");
+  }
+  return res.json();
+}

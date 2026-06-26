@@ -22,6 +22,8 @@ import AuditLogPage from "./pages/AuditLogPage";
 import PublicInsightsPage from "./pages/PublicInsightsPage";
 import ChatbotAnalyticsPage from "./pages/ChatbotAnalyticsPage";
 import TechPreneurRegistrationsPage from "./pages/admin/TechPreneurRegistrationsPage";
+import CertificateBuilderPage from "./pages/admin/techpreneur/CertificateBuilderPage";
+import CertificateIssuancePage from "./pages/admin/techpreneur/CertificateIssuancePage";
 // Ops dedicated pages
 import EpcVerificationPage from "./pages/ops/EpcVerificationPage";
 import BillVerificationPage from "./pages/ops/BillVerificationPage";
@@ -274,6 +276,26 @@ const AppRoutes = () => {
           element={
             ["admin", "founder", "sales", "ops"].includes(user.role) ? (
               <TechPreneurRegistrationsPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="admin/techpreneur/certificate-builder"
+          element={
+            ["admin", "founder", "ops"].includes(user.role) ? (
+              <CertificateBuilderPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="admin/techpreneur/certificates"
+          element={
+            ["admin", "founder", "ops"].includes(user.role) ? (
+              <CertificateIssuancePage />
             ) : (
               <Navigate to={homeRoute} replace />
             )

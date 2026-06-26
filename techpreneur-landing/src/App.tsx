@@ -13,6 +13,7 @@ import { AnnouncementsPage } from "./pages/dashboard/AnnouncementsPage";
 import { ProjectsPage } from "./pages/dashboard/ProjectsPage";
 import { ReferralsPage } from "./pages/dashboard/ReferralsPage";
 import { CertificatePage } from "./pages/dashboard/CertificatePage";
+import { VerifyCertificate } from "./pages/VerifyCertificate";
 
 export default function App() {
   return (
@@ -24,10 +25,13 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/program" element={<ProgramPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify" element={<VerifyCertificate />} />
+            <Route path="/verify-certificate/:certId" element={<VerifyCertificate />} />
           </Route>
 
           {/* Student auth */}
           <Route path="/login" element={<LoginPage />} />
+
 
           {/* Protected student dashboard */}
           <Route path="/dashboard" element={<DashboardLayout />}>

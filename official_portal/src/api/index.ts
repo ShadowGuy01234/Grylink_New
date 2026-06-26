@@ -480,6 +480,12 @@ export const techpreneurApi = {
   getReferrals: () => api.get("/techpreneur-v2/referrals"),
   payCashback: (id: string) => api.patch(`/techpreneur-v2/referrals/${id}/pay-cashback`),
 
+  // Certificates
+  getCertificateTemplates: () => api.get("/techpreneur-v2/projects/certificates/templates"),
+  saveCertificateTemplate: (data: any) => api.post("/techpreneur-v2/projects/certificates/templates", data),
+  issueCertificate: (data: any) => api.post("/techpreneur-v2/projects/certificates/issue", data),
+  bulkIssueCertificates: (data: any) => api.post("/techpreneur-v2/projects/certificates/issue-bulk", data),
+
   // Promo Codes
   getPromoCodes: () => api.get("/techpreneur-v2/promocodes"),
   createPromoCode: (data: { code?: string; discount: number }) => api.post("/techpreneur-v2/promocodes", data),
