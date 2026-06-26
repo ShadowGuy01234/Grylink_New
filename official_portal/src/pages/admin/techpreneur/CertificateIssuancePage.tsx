@@ -16,6 +16,7 @@ interface Student {
 
 export default function CertificateIssuancePage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [certificates, setCertificates] = useState<Record<string, any>>({}); // Key: studentId
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
@@ -45,20 +46,21 @@ export default function CertificateIssuancePage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Fetch verified registrations (limit 200 for operations)
-      const regRes = await techpreneurApi.getRegistrations({ limit: 200 });
+      
+      // Fetch registrations and certificates in parallel
+      const [regRes, certsRes] = await Promise.all([
+        techpreneurApi.getRegistrations({ limit: 200 }),
+        techpreneurApi.getCertificates()
+      ]);
+      
       const verifiedList = (regRes.data.items || []).filter((s: Student) => s.paymentVerified);
       setStudents(verifiedList);
 
-      // Fetch projects/milestones to see if any certificates exist
-      // Fetch active certificates to show status
-      // We will look up certificates dynamically as we render, but to populate, we can hit `/verify-certificate` OR backend list.
-      // Let's call our verify verification api endpoint or list. Since we only verify single, we can fetch all registrations and load.
-      // Wait, let's look up if certificates are available. We can fetch them. Let's write a backend route or populate.
-      // For now, since we have the projects tab we can display whether certificates are issued.
-      // Let's fetch all certificates from a backend endpoint if we want, or just query.
-      // Wait, let's fetch my project and active statuses. In our backend v2, we can fetch projects. We can see if certificates exist.
-      // Let's create an endpoint or just fetch them. To keep things clean, let's load them as we query, or fetch in parallel.
+      const certsMap: Record<string, any> = {};
+      (certsRes.data.certificates || []).forEach((c: any) => {
+        certsMap[c.studentId] = c;
+      });
+      setCertificates(certsMap);
       
       setLoading(false);
     } catch (err) {
@@ -74,24 +76,33 @@ export default function CertificateIssuancePage() {
   const openScorecardDrawer = async (student: Student) => {
     setSelectedStudent(student);
     
-    // Check if certificate already exists for this student
-    // We can search the project or certificate list. Let's initialize form defaults:
-    setScoreForm({
-      week1Score: 0, week2Score: 0, week3Score: 0, week4Score: 0, projectScore: 0,
-      week1Remarks: "Participated actively in kickoff sessions and set up team theme.",
-      week2Remarks: "Formulated problem statement and target audience specs inside PRD.",
-      week3Remarks: "Structured GitHub project folders and set up repository setup.",
-      week4Remarks: "Developed revenue canvas slides and competitor matrices for pitch deck.",
-      projectRemarks: "Contributed effectively to core programming and live MVP execution.",
-      finalRemarks: "Excellent performance and technical delivery throughout the cohort."
-    });
-
-    try {
-      // Fetch single certificate verification if issued (we can fetch it by calling verification with certId, or search)
-      // For simplicity, we fetch from backend if exist. Or we can just load the defaults.
-      // Let's search if the student has a certificate. To find out, we call our API or just let the admin save.
-      // Since it's a new portal, most are defaults. Let's search.
-    } catch {}
+    // Check if certificate already exists in state
+    const existingCert = certificates[student._id];
+    if (existingCert) {
+      setScoreForm({
+        week1Score: existingCert.scores?.week1 || 0,
+        week2Score: existingCert.scores?.week2 || 0,
+        week3Score: existingCert.scores?.week3 || 0,
+        week4Score: existingCert.scores?.week4 || 0,
+        projectScore: existingCert.scores?.projectContribution || 0,
+        week1Remarks: existingCert.efforts?.week1 || "",
+        week2Remarks: existingCert.efforts?.week2 || "",
+        week3Remarks: existingCert.efforts?.week3 || "",
+        week4Remarks: existingCert.efforts?.week4 || "",
+        projectRemarks: existingCert.efforts?.projectContribution || "",
+        finalRemarks: existingCert.finalRemarks || ""
+      });
+    } else {
+      setScoreForm({
+        week1Score: 0, week2Score: 0, week3Score: 0, week4Score: 0, projectScore: 0,
+        week1Remarks: "Participated actively in kickoff sessions and set up team theme.",
+        week2Remarks: "Formulated problem statement and target audience specs inside PRD.",
+        week3Remarks: "Structured GitHub project folders and set up repository setup.",
+        week4Remarks: "Developed revenue canvas slides and competitor matrices for pitch deck.",
+        projectRemarks: "Contributed effectively to core programming and live MVP execution.",
+        finalRemarks: "Excellent performance and technical delivery throughout the cohort."
+      });
+    }
     
     setShowDrawer(true);
   };
@@ -256,31 +267,53 @@ export default function CertificateIssuancePage() {
                     <td colSpan={4} className="px-6 py-8 text-center text-gray-400">No matching students found.</td>
                   </tr>
                 ) : (
-                  filteredStudents.map(s => (
-                    <tr key={s._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-gray-900">{s.name}</div>
-                        <div className="text-xs text-gray-500">{s.email}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-gray-900 font-medium text-xs sm:text-sm">{s.college}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{s.branch} · {s.year}</div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
-                          Ready to Issue
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => openScorecardDrawer(s)}
-                          className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors"
-                        >
-                          Edit Scorecard / Issue
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  filteredStudents.map(s => {
+                    const cert = certificates[s._id];
+                    return (
+                      <tr key={s._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-gray-900">{s.name}</div>
+                          <div className="text-xs text-gray-500">{s.email}</div>
+                          {cert && (
+                            <div className="mt-1 text-[11px] font-mono text-blue-600 font-semibold flex items-center gap-1.5">
+                              <span>ID: {cert.certificateId}</span>
+                              <a 
+                                href={`https://techpreneur.grylink.com/verify-certificate/${cert.certificateId}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="hover:underline text-[10px] text-gray-400 font-normal"
+                              >
+                                (View ↗)
+                              </a>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-gray-900 font-medium text-xs sm:text-sm">{s.college}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{s.branch} · {s.year}</div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {cert ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              Issued
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                              Not Issued
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => openScorecardDrawer(s)}
+                            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors"
+                          >
+                            {cert ? "Edit Scorecard / Reissue" : "Edit Scorecard / Issue"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

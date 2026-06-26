@@ -481,6 +481,7 @@ export const techpreneurApi = {
   payCashback: (id: string) => api.patch(`/techpreneur-v2/referrals/${id}/pay-cashback`),
 
   // Certificates
+  getCertificates: () => api.get("/techpreneur-v2/projects/certificates"),
   getCertificateTemplates: () => api.get("/techpreneur-v2/projects/certificates/templates"),
   saveCertificateTemplate: (data: any) => api.post("/techpreneur-v2/projects/certificates/templates", data),
   issueCertificate: (data: any) => api.post("/techpreneur-v2/projects/certificates/issue", data),

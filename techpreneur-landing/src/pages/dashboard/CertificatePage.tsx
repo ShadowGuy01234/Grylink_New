@@ -38,6 +38,14 @@ interface CertificateData {
     imageUrl: string;
     variables: CertificateVar[];
   };
+  studentId?: {
+    name: string;
+    email: string;
+    college: string;
+    branch: string;
+    year: string;
+    trackPreference: string;
+  };
 }
 
 export function CertificatePage() {
@@ -222,15 +230,30 @@ export function CertificatePage() {
               }
 
               let val = "";
-              if (v.name === "studentName") val = certificate.studentName;
-              if (v.name === "collegeName") val = certificate.college;
-              if (v.name === "certificateId") val = certificate.certificateId;
-              if (v.name === "issuedDate") {
+              if (v.name === "studentName") {
+                val = certificate.studentName;
+              } else if (v.name === "collegeName") {
+                val = certificate.college;
+              } else if (v.name === "certificateId") {
+                val = certificate.certificateId;
+              } else if (v.name === "issuedDate") {
                 val = new Date(certificate.issuedAt).toLocaleDateString("en-US", { 
                   year: 'numeric', 
                   month: 'long', 
                   day: 'numeric' 
                 });
+              } else if (v.name === "studentEmail") {
+                val = certificate.studentEmail;
+              } else if (v.name === "finalRemarks") {
+                val = certificate.finalRemarks;
+              } else if (v.name === "branch") {
+                val = certificate.studentId?.branch || "";
+              } else if (v.name === "year") {
+                val = certificate.studentId?.year || "";
+              } else if (v.name === "trackPreference" || v.name === "track") {
+                val = certificate.studentId?.trackPreference || "";
+              } else {
+                val = (certificate as any)[v.name] || (certificate.studentId as any)?.[v.name] || "";
               }
 
               return (

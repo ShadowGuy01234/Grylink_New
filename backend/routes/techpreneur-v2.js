@@ -994,6 +994,26 @@ router.get("/projects/certificates/verification/:id", async (req, res) => {
   }
 });
 
+
+/**
+ * GET /api/techpreneur-v2/projects/certificates
+ * Admin — List all certificates
+ */
+router.get(
+  "/projects/certificates",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const certificates = await TechPreneurCertificate.find().lean();
+      res.json({ success: true, certificates });
+    } catch (err) {
+      console.error("[TechPreneur] fetch certificates list error:", err);
+      res.status(500).json({ error: "Failed to fetch certificates." });
+    }
+  }
+);
+
 /**
  * GET /api/techpreneur-v2/projects/certificates/templates
  * Admin — List all templates

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { techpreneurApi } from "../../../api";
-import { ArrowLeft, Save, Move } from "lucide-react";
+import { ArrowLeft, Save, Plus, Move } from "lucide-react";
 
 interface TemplateVar {
   name: string;
@@ -45,6 +45,7 @@ export default function CertificateBuilderPage() {
     isActive: true
   });
   const [selectedVarIndex, setSelectedVarIndex] = useState<number>(0);
+  const [newVarName, setNewVarName] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -115,6 +116,40 @@ export default function CertificateBuilderPage() {
       ...fields
     };
     setTemplate(prev => ({ ...prev, variables: updatedVars }));
+  };
+
+  const handleAddVariable = () => {
+    const name = newVarName.trim();
+    if (!name) return;
+    if (template.variables.some(v => v.name.toLowerCase() === name.toLowerCase())) {
+      alert("A variable with this name already exists.");
+      return;
+    }
+    const newVar: TemplateVar = {
+      name,
+      x: 50,
+      y: 50,
+      fontSize: 16,
+      fontColor: "#1e293b",
+      fontFamily: "Inter"
+    };
+    const updatedVars = [...template.variables, newVar];
+    setTemplate(prev => ({ ...prev, variables: updatedVars }));
+    setSelectedVarIndex(updatedVars.length - 1);
+    setNewVarName("");
+  };
+
+  const handleDeleteSelectedVar = () => {
+    if (template.variables.length <= 1) {
+      alert("You must keep at least one variable on the certificate template.");
+      return;
+    }
+    const varToDelete = template.variables[selectedVarIndex];
+    if (window.confirm(`Are you sure you want to delete the variable "${varToDelete.name}"?`)) {
+      const updatedVars = template.variables.filter((_, i) => i !== selectedVarIndex);
+      setTemplate(prev => ({ ...prev, variables: updatedVars }));
+      setSelectedVarIndex(0);
+    }
   };
 
   if (fetching) {
@@ -196,6 +231,29 @@ export default function CertificateBuilderPage() {
                   <span className="text-[10px] font-mono text-gray-400">{v.x}%, {v.y}%</span>
                 </button>
               ))}
+            </div>
+
+            {/* Add Custom Variable Form */}
+            <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+              <label className="block text-xs font-semibold text-gray-700">Add Variable</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. cohortName"
+                  value={newVarName}
+                  onChange={e => setNewVarName(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
+                  className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddVariable}
+                  className="inline-flex items-center justify-center p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200"
+                  title="Add variable"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-[9px] text-gray-400 leading-tight">camelCase (alphanumeric only). Custom vars will look up DB values dynamically.</p>
             </div>
           </div>
 
@@ -283,6 +341,15 @@ export default function CertificateBuilderPage() {
                     </select>
                   </div>
                 )}
+                
+                {/* Delete Selected Variable */}
+                <button
+                  type="button"
+                  onClick={handleDeleteSelectedVar}
+                  className="w-full mt-4 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-semibold rounded-lg text-xs transition-colors"
+                >
+                  Delete Selected Variable
+                </button>
               </div>
             </div>
           )}
@@ -356,6 +423,7 @@ export default function CertificateBuilderPage() {
                     {v.name === "collegeName" && "IIT Delhi (Campus Portal)"}
                     {v.name === "certificateId" && "CERT-TP26-A8D3F9"}
                     {v.name === "issuedDate" && "June 28, 2026"}
+                    {!["studentName", "collegeName", "certificateId", "issuedDate", "qrCode"].includes(v.name) && `[${v.name}]`}
                   </div>
                 );
               })}
