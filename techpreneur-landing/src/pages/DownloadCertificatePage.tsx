@@ -297,6 +297,9 @@ export function DownloadCertificatePage() {
             top: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
+            max-width: none !important;
+            max-height: none !important;
+            aspect-ratio: auto !important;
             margin: 0 !important;
             padding: 0 !important;
             border: none !important;
