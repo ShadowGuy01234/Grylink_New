@@ -1456,35 +1456,14 @@ router.post(
               contentType: "application/pdf"
             });
 
-            const variables = cert.templateId.variables || [];
             certificateInlineHtml = `
-              <div style="position:relative; width:100%; max-width:600px; margin:20px auto; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
-                <img src="${cert.templateId.imageUrl}" style="width:100%; display:block; border-radius:8px;" />
-                ${variables.map(v => {
-                  if (v.name === "qrCode") return "";
-                  let val = "";
-                  if (v.name === "studentName") val = cert.studentName;
-                  else if (v.name === "collegeName") val = cert.college;
-                  else if (v.name === "certificateId") val = cert.certificateId;
-                  else if (v.name === "issuedDate") {
-                    val = new Date(cert.issuedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric"
-                    });
-                  } else if (v.name === "studentEmail") val = cert.studentEmail;
-                  else if (v.name === "finalRemarks") val = cert.finalRemarks;
-                  else if (v.name === "branch") val = cert.studentId?.branch || "";
-                  else if (v.name === "year") val = cert.studentId?.year || "";
-                  else if (v.name === "trackPreference" || v.name === "track") val = cert.studentId?.trackPreference || "";
-                  else val = cert[v.name] || "";
-
-                  return `
-                    <div style="position:absolute; left:${v.x}%; top:${v.y}%; font-size:${v.fontSize * 0.45}px; color:${v.fontColor || '#000000'}; font-family:${v.fontFamily || 'sans-serif'}; font-weight:bold; transform:translate(-50%, -50%); -webkit-transform:translate(-50%, -50%); text-align:center; white-space:nowrap;">
-                      ${val}
-                    </div>
-                  `;
-                }).join("")}
+              <div style="max-width:560px; margin:24px auto; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px; padding:24px; text-align:center;">
+                <span style="font-size:36px; display:block; margin-bottom:12px;">📜</span>
+                <h4 style="margin:0 0 8px 0; color:#1e293b; font-size:16px; font-weight:bold; font-family:'Segoe UI',Arial,sans-serif;">Official Verifiable Certificate Issued</h4>
+                <p style="margin:0 0 16px 0; color:#64748b; font-size:13px; line-height:1.5; font-family:'Segoe UI',Arial,sans-serif;">Your high-quality printable PDF certificate is attached to this email. You can verify, share, and view your achievement online.</p>
+                <a href="${verifyLink}" style="color:#2563eb; font-weight:bold; text-decoration:none; font-size:14px; display:inline-block; font-family:'Segoe UI',Arial,sans-serif; border-bottom: 2px solid #2563eb; padding-bottom: 2px;">
+                  View Public Verification Profile & Scorecard →
+                </a>
               </div>
             `;
           } catch (pdfErr) {
