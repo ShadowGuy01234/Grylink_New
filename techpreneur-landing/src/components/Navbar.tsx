@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Zap, Mail } from "lucide-react";
+import { Menu, X, Zap, Mail, ShieldCheck } from "lucide-react";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -85,9 +85,9 @@ export function Navbar() {
               </a>
 
               <div className="hidden md:block">
-                <Link to="/register" className="btn-green py-2 px-5 text-sm">
-                  <Zap className="w-4 h-4" />
-                  Register Now
+                <Link to="/verify" className="btn-green py-2 px-5 text-sm bg-emerald-600 hover:bg-emerald-500 border-none">
+                  <ShieldCheck className="w-4 h-4" />
+                  Verify Credentials
                 </Link>
               </div>
 
@@ -160,11 +160,11 @@ export function Navbar() {
 
               <div className="p-5 border-t border-white/10">
                 <Link
-                  to="/register"
-                  className="btn-green w-full justify-center"
+                  to="/verify"
+                  className="btn-green w-full justify-center bg-emerald-600 hover:bg-emerald-500 border-none"
                 >
-                  <Zap className="w-4 h-4" />
-                  Register Now
+                  <ShieldCheck className="w-4 h-4" />
+                  Verify Credentials
                 </Link>
               </div>
             </motion.div>
