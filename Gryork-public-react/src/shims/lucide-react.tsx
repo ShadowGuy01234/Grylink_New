@@ -49,6 +49,7 @@ export const Clock3 = createIcon("M12 6v6l4 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 1
 export const SlidersHorizontal = createIcon("M4 6h16M4 12h16M4 18h16M8 5v2M16 11v2M12 17v2");
 
 export const Bolt = createIcon("M13 2L4 14h6l-1 8 9-12h-6l1-8z");
+export const Zap = createIcon("M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z");
 export const BadgePercent = createIcon("M8 16l8-8M8.5 8.5h.01M15.5 15.5h.01M12 2l2.5 2.5L18 5l-.5 3.5L20 11l-2.5 2.5L18 17l-3.5.5L12 20l-2.5-2.5L6 17l.5-3.5L4 11l2.5-2.5L6 5l3.5-.5L12 2z");
 export const FileCheck2 = createIcon("M14 2H6a2 2 0 0 0-2 2v16h16V8l-6-6zm0 1v5h5M8 14l2 2 4-4");
 export const LayoutDashboard = createIcon("M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z");
