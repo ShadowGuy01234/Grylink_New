@@ -195,15 +195,27 @@ export default function TechPreneurRegistrationsPage() {
         <div className="flex gap-2">
           <Link
             to="/admin/techpreneur/certificate-builder"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold transition-colors"
           >
             🎨 Certificate Builder
           </Link>
           <Link
             to="/admin/techpreneur/certificates"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-colors"
           >
             🎓 Issue Certificates
+          </Link>
+          <Link
+            to="/admin/techpreneur/joining-letter-builder"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-lg text-xs font-semibold transition-colors"
+          >
+            ✉️ Letter Builder
+          </Link>
+          <Link
+            to="/admin/techpreneur/joining-letters"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors"
+          >
+            💼 Issue Letters
           </Link>
           <button
             onClick={() => { setShowManualModal(true); setManualError(null); setManualSuccess(null); }}

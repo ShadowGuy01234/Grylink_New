@@ -16,6 +16,9 @@ const TechPreneurProject = require("../models/TechPreneurProject");
 const TechPreneurReferral = require("../models/TechPreneurReferral");
 const TechPreneurCertificate = require("../models/TechPreneurCertificate");
 const TechPreneurCertificateTemplate = require("../models/TechPreneurCertificateTemplate");
+const TechPreneurJoiningLetter = require("../models/TechPreneurJoiningLetter");
+const TechPreneurJoiningLetterTemplate = require("../models/TechPreneurJoiningLetterTemplate");
+const emailService = require("../services/emailService");
 
 const TP_JWT_SECRET = process.env.TP_JWT_SECRET || process.env.JWT_SECRET || "tp_secret_change_me";
 
@@ -961,9 +964,19 @@ router.get("/projects/certificates/my", requireStudent, async (req, res) => {
   try {
     const certificate = await TechPreneurCertificate.findOne({
       studentId: req.student.studentId
-    }).populate("templateId");
+    }).populate("templateId").lean();
     
-    res.json({ certificate: certificate || null });
+    let project = null;
+    if (certificate) {
+      project = await TechPreneurProject.findOne({
+        $or: [
+          { studentEmail: certificate.studentEmail },
+          { "teamMembers.email": certificate.studentEmail }
+        ]
+      }).lean();
+    }
+    
+    res.json({ certificate: certificate || null, project });
   } catch (err) {
     console.error("[TechPreneur] fetch certificate error:", err);
     res.status(500).json({ error: "Failed to fetch certificate." });
@@ -987,7 +1000,14 @@ router.get("/projects/certificates/verification/:id", async (req, res) => {
       return res.status(404).json({ error: "Certificate not found." });
     }
 
-    res.json({ certificate });
+    const project = await TechPreneurProject.findOne({
+      $or: [
+        { studentEmail: certificate.studentEmail },
+        { "teamMembers.email": certificate.studentEmail }
+      ]
+    }).lean();
+
+    res.json({ certificate, project });
   } catch (err) {
     console.error("[TechPreneur] verify certificate error:", err);
     res.status(500).json({ error: "Failed to verify certificate." });
@@ -1258,5 +1278,368 @@ router.post(
     }
   }
 );
+
+/**
+ * POST /api/techpreneur-v2/projects/certificates/send-emails
+ * Admin — Bulk dispatch certificate email notices to selected students
+ */
+router.post(
+  "/projects/certificates/send-emails",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { studentIds } = req.body;
+      if (!Array.isArray(studentIds) || studentIds.length === 0) {
+        return res.status(400).json({ error: "No student IDs provided." });
+      }
+
+      const certificates = await TechPreneurCertificate.find({
+        studentId: { $in: studentIds }
+      });
+
+      let count = 0;
+      for (const cert of certificates) {
+        const domain = process.env.FRONTEND_URL || "https://techpreneur.grylink.com";
+        const verifyLink = `${domain}/verify-certificate/${cert.certificateId}`;
+        const dashboardLink = `${domain}/login`;
+
+        const emailHtml = `
+          <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;">
+            <h2 style="color:#1e3a8a;margin-bottom:10px;">Congratulations, ${cert.studentName}! 🎉</h2>
+            <p style="color:#475569;font-size:15px;line-height:1.6;">
+              We are proud to share your official <strong>TechPreneur 2026 Completion Certificate & Scorecard Report</strong>. 
+              You have successfully completed the 4-week industrial startup training and accelerator program.
+            </p>
+            <div style="background:#f8fafc;padding:15px;border-radius:12px;margin:20px 0;border:1px solid #f1f5f9;">
+              <p style="margin:5px 0;font-size:13px;color:#64748b;"><strong>Certificate ID:</strong> <span style="font-family:monospace;color:#0f172a;font-weight:bold;">${cert.certificateId}</span></p>
+              <p style="margin:5px 0;font-size:13px;color:#64748b;"><strong>College:</strong> <span style="color:#0f172a;">${cert.college}</span></p>
+              <p style="margin:5px 0;font-size:13px;color:#64748b;"><strong>Evaluation Score:</strong> <span style="color:#10b981;font-weight:bold;">${Object.values(cert.scores).reduce((a,b)=>a+b, 0)} / 100</span></p>
+            </div>
+            <p style="text-align:center;margin:30px 0;">
+              <a href="${verifyLink}" style="background:#2563eb;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;box-shadow:0 4px 12px rgba(37,99,235,0.2);">
+                Verify & Download Certificate
+              </a>
+            </p>
+            <p style="color:#64748b;font-size:12px;line-height:1.6;margin-top:40px;border-top:1px solid #e2e8f0;padding-top:15px;">
+              You can also log into your <a href="${dashboardLink}" style="color:#2563eb;text-decoration:none;">Student Dashboard</a> to download print-ready templates of your selection/joining letter and other evaluation documents.
+            </p>
+          </div>
+        `;
+
+        await emailService.sendEmail(cert.studentEmail, "Your TechPreneur 2026 Certificate & Performance Report", emailHtml);
+        cert.emailSent = true;
+        cert.emailSentAt = new Date();
+        await cert.save();
+        count++;
+      }
+
+      res.json({ success: true, count });
+    } catch (err) {
+      console.error("[TechPreneur] send certificate emails error:", err);
+      res.status(500).json({ error: "Failed to send certificate emails." });
+    }
+  }
+);
+
+/**
+ * GET /api/techpreneur-v2/projects/joining-letters
+ * Admin — List all issued selection letters
+ */
+router.get(
+  "/projects/joining-letters",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const letters = await TechPreneurJoiningLetter.find().lean();
+      res.json({ success: true, joiningLetters: letters });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch joining letters." });
+    }
+  }
+);
+
+/**
+ * GET /api/techpreneur-v2/projects/joining-letters/templates
+ * Admin — List letter templates
+ */
+router.get(
+  "/projects/joining-letters/templates",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const templates = await TechPreneurJoiningLetterTemplate.find().sort({ createdAt: -1 });
+      res.json({ templates });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch templates." });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur-v2/projects/joining-letters/templates
+ * Admin — Create or update a joining letter template
+ */
+router.post(
+  "/projects/joining-letters/templates",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { id, name, imageUrl, variables, isActive } = req.body;
+      if (!name || !imageUrl) {
+        return res.status(400).json({ error: "Name and template image URL are required." });
+      }
+
+      let template;
+      if (isActive === true) {
+        await TechPreneurJoiningLetterTemplate.updateMany({}, { $set: { isActive: false } });
+      }
+
+      if (id) {
+        template = await TechPreneurJoiningLetterTemplate.findByIdAndUpdate(
+          id,
+          { name, imageUrl, variables, isActive: !!isActive },
+          { new: true }
+        );
+      } else {
+        template = new TechPreneurJoiningLetterTemplate({
+          name,
+          imageUrl,
+          variables: variables || [],
+          isActive: !!isActive
+        });
+        await template.save();
+      }
+
+      res.json({ success: true, template });
+    } catch (err) {
+      console.error("[TechPreneur] save template error:", err);
+      res.status(500).json({ error: "Failed to save template." });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur-v2/projects/joining-letters/issue
+ * Admin — Issue selection letter for a single student
+ */
+router.post(
+  "/projects/joining-letters/issue",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { studentId, joiningDate, variablesData, templateId } = req.body;
+      if (!studentId) {
+        return res.status(400).json({ error: "Student ID is required." });
+      }
+
+      const student = await TechPreneurRegistration.findById(studentId);
+      if (!student) {
+        return res.status(404).json({ error: "Student registration not found." });
+      }
+
+      let activeTemplateId = templateId;
+      if (!activeTemplateId) {
+        const activeTemplate = await TechPreneurJoiningLetterTemplate.findOne({ isActive: true });
+        if (activeTemplate) activeTemplateId = activeTemplate._id;
+      }
+
+      let letter = await TechPreneurJoiningLetter.findOne({ studentId });
+      if (letter) {
+        letter.joiningDate = joiningDate || letter.joiningDate;
+        letter.variablesData = variablesData || letter.variablesData;
+        if (activeTemplateId) letter.templateId = activeTemplateId;
+        await letter.save();
+      } else {
+        let joiningLetterId;
+        let isUnique = false;
+        while (!isUnique) {
+          joiningLetterId = "JL-TP26-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+          const check = await TechPreneurJoiningLetter.findOne({ joiningLetterId });
+          if (!check) isUnique = true;
+        }
+
+        letter = new TechPreneurJoiningLetter({
+          studentId: student._id,
+          studentEmail: student.email,
+          studentName: student.name,
+          college: student.college,
+          joiningLetterId,
+          joiningDate: joiningDate || new Date(),
+          templateId: activeTemplateId,
+          variablesData: variablesData || {}
+        });
+        await letter.save();
+      }
+
+      res.json({ success: true, joiningLetter: letter });
+    } catch (err) {
+      console.error("[TechPreneur] issue joining letter error:", err);
+      res.status(500).json({ error: "Failed to issue joining letter." });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur-v2/projects/joining-letters/issue-bulk
+ * Admin — Bulk issue onboarding joining letters for confirmed registrations
+ */
+router.post(
+  "/projects/joining-letters/issue-bulk",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { templateId } = req.body;
+      let activeTemplateId = templateId;
+      if (!activeTemplateId) {
+        const activeTemplate = await TechPreneurJoiningLetterTemplate.findOne({ isActive: true });
+        if (activeTemplate) activeTemplateId = activeTemplate._id;
+      }
+
+      let count = 0;
+      const confirmedStudents = await TechPreneurRegistration.find({ paymentVerified: true });
+      for (const student of confirmedStudents) {
+        const existing = await TechPreneurJoiningLetter.findOne({ studentId: student._id });
+        if (existing) continue;
+
+        let joiningLetterId;
+        let isUnique = false;
+        while (!isUnique) {
+          joiningLetterId = "JL-TP26-" + crypto.randomBytes(3).toString("hex").toUpperCase();
+          const existCheck = await TechPreneurJoiningLetter.findOne({ joiningLetterId });
+          if (!existCheck) isUnique = true;
+        }
+
+        const letter = new TechPreneurJoiningLetter({
+          studentId: student._id,
+          studentEmail: student.email,
+          studentName: student.name,
+          college: student.college,
+          joiningLetterId,
+          joiningDate: new Date(),
+          templateId: activeTemplateId
+        });
+        await letter.save();
+        count++;
+      }
+
+      res.json({ success: true, count });
+    } catch (err) {
+      console.error("[TechPreneur] bulk issue joining letters error:", err);
+      res.status(500).json({ error: "Failed to bulk issue joining letters." });
+    }
+  }
+);
+
+/**
+ * POST /api/techpreneur-v2/projects/joining-letters/send-emails
+ * Admin — Bulk dispatch onboarding selection letters to selected students
+ */
+router.post(
+  "/projects/joining-letters/send-emails",
+  authenticate,
+  authorize("admin", "founder", "ops"),
+  async (req, res) => {
+    try {
+      const { studentIds } = req.body;
+      if (!Array.isArray(studentIds) || studentIds.length === 0) {
+        return res.status(400).json({ error: "No student IDs provided." });
+      }
+
+      const letters = await TechPreneurJoiningLetter.find({
+        studentId: { $in: studentIds }
+      });
+
+      let count = 0;
+      for (const letter of letters) {
+        const domain = process.env.FRONTEND_URL || "https://techpreneur.grylink.com";
+        const verifyLink = `${domain}/verify-joining-letter/${letter.joiningLetterId}`;
+        const dashboardLink = `${domain}/login`;
+
+        const emailHtml = `
+          <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;">
+            <h2 style="color:#0f172a;margin-bottom:10px;">Official Onboarding & Joining Letter 💼</h2>
+            <p style="color:#475569;font-size:15px;line-height:1.6;">
+              Dear <strong>${letter.studentName}</strong>,
+            </p>
+            <p style="color:#475569;font-size:15px;line-height:1.6;">
+              Congratulations! We are pleased to issue your official **Selection & Joining Letter** for your program track in the TechPreneur accelerator.
+            </p>
+            <div style="background:#f8fafc;padding:15px;border-radius:12px;margin:20px 0;border:1px solid #f1f5f9;">
+              <p style="margin:5px 0;font-size:13px;color:#64748b;"><strong>Reference Letter ID:</strong> <span style="font-family:monospace;color:#0f172a;font-weight:bold;">${letter.joiningLetterId}</span></p>
+              <p style="margin:5px 0;font-size:13px;color:#64748b;"><strong>Joining Date:</strong> <span style="color:#0f172a;">${new Date(letter.joiningDate).toLocaleDateString("en-IN", {day:'numeric', month:'long', year:'numeric'})}</span></p>
+              <p style="margin:5px 0;font-size:13px;color:#64748b;"><strong>College:</strong> <span style="color:#0f172a;">${letter.college}</span></p>
+            </div>
+            <p style="text-align:center;margin:30px 0;">
+              <a href="${verifyLink}" style="background:#10b981;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;box-shadow:0 4px 12px rgba(16,185,129,0.2);">
+                View & Download Joining Letter
+              </a>
+            </p>
+            <p style="color:#64748b;font-size:12px;line-height:1.6;margin-top:40px;border-top:1px solid #e2e8f0;padding-top:15px;">
+              You can also log into the <a href="${dashboardLink}" style="color:#10b981;text-decoration:none;">Student Dashboard</a> to download and print your onboarding materials.
+            </p>
+          </div>
+        `;
+
+        await emailService.sendEmail(letter.studentEmail, "Your TechPreneur Onboarding Joining Letter", emailHtml);
+        letter.emailSent = true;
+        letter.emailSentAt = new Date();
+        await letter.save();
+        count++;
+      }
+
+      res.json({ success: true, count });
+    } catch (err) {
+      console.error("[TechPreneur] send letter emails error:", err);
+      res.status(500).json({ error: "Failed to send letter emails." });
+    }
+  }
+);
+
+/**
+ * GET /api/techpreneur-v2/projects/joining-letters/my
+ * Student (JWT) — Get own joining letter
+ */
+router.get("/projects/joining-letters/my", requireStudent, async (req, res) => {
+  try {
+    const joiningLetter = await TechPreneurJoiningLetter.findOne({
+      studentId: req.student.studentId
+    }).populate("templateId").lean();
+
+    res.json({ joiningLetter: joiningLetter || null });
+  } catch (err) {
+    console.error("[TechPreneur] fetch my joining letter error:", err);
+    res.status(500).json({ error: "Failed to fetch joining letter." });
+  }
+});
+
+/**
+ * GET /api/techpreneur-v2/projects/joining-letters/verification/:id
+ * Public — Verify Selection Letter by ID
+ */
+router.get("/projects/joining-letters/verification/:id", async (req, res) => {
+  try {
+    const joiningLetter = await TechPreneurJoiningLetter.findOne({
+      joiningLetterId: req.params.id.trim()
+    })
+      .populate("templateId")
+      .populate("studentId", "name email college branch year trackPreference")
+      .lean();
+
+    if (!joiningLetter) {
+      return res.status(404).json({ error: "Joining letter not found." });
+    }
+
+    res.json({ joiningLetter });
+  } catch (err) {
+    console.error("[TechPreneur] verify joining letter error:", err);
+    res.status(500).json({ error: "Failed to verify joining letter." });
+  }
+});
 
 module.exports = router;

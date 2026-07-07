@@ -263,3 +263,18 @@ export async function verifyCertificate(certId: string) {
   }
   return res.json();
 }
+
+export async function fetchMyJoiningLetter() {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/joining-letters/my`, { headers: studentHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch joining letter");
+  return res.json();
+}
+
+export async function verifyJoiningLetter(letterId: string) {
+  const res = await fetch(`${API_BASE}/api/techpreneur-v2/projects/joining-letters/verification/${encodeURIComponent(letterId.trim())}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Joining letter not found." }));
+    throw new Error(err.error || "Failed to verify joining letter.");
+  }
+  return res.json();
+}

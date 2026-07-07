@@ -20,6 +20,8 @@ export default function CertificateIssuancePage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [sendingEmails, setSendingEmails] = useState(false);
   
   // Modal/Drawer state
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -185,6 +187,22 @@ export default function CertificateIssuancePage() {
     }
   };
 
+  const handleSendEmails = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to dispatch certificate emails to the ${selectedIds.length} selected student(s)?`)) return;
+    setSendingEmails(true);
+    try {
+      const res = await techpreneurApi.sendCertificateEmails({ studentIds: selectedIds });
+      alert(`Successfully dispatched emails to ${res.data.count} student(s)!`);
+      setSelectedIds([]);
+      fetchData();
+    } catch (err: any) {
+      alert("Failed to dispatch emails: " + (err.response?.data?.error || err.message));
+    } finally {
+      setSendingEmails(false);
+    }
+  };
+
   const filteredStudents = students.filter(s => 
     s.name.toLowerCase().includes(search.toLowerCase()) || 
     s.email.toLowerCase().includes(search.toLowerCase()) || 
@@ -212,6 +230,15 @@ export default function CertificateIssuancePage() {
           </div>
         </div>
         <div className="flex gap-2">
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleSendEmails}
+              disabled={sendingEmails}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold rounded-lg text-sm transition-colors shadow-sm"
+            >
+              ✉️ Send Emails ({selectedIds.length})
+            </button>
+          )}
           <button
             onClick={() => setShowBulkModal(true)}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg text-sm transition-colors shadow-sm"
@@ -255,6 +282,20 @@ export default function CertificateIssuancePage() {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase text-xs font-semibold">
                 <tr>
+                  <th className="px-4 py-4 w-12 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length === filteredStudents.length && filteredStudents.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(filteredStudents.map(s => s._id));
+                        } else {
+                          setSelectedIds([]);
+                        }
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                  </th>
                   <th className="px-6 py-4">Student Details</th>
                   <th className="px-6 py-4">College & Program Track</th>
                   <th className="px-6 py-4 text-center">Status</th>
@@ -264,13 +305,28 @@ export default function CertificateIssuancePage() {
               <tbody className="divide-y divide-gray-100">
                 {filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-400">No matching students found.</td>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-400">No matching students found.</td>
                   </tr>
                 ) : (
                   filteredStudents.map(s => {
                     const cert = certificates[s._id];
+                    const isChecked = selectedIds.includes(s._id);
                     return (
-                      <tr key={s._id} className="hover:bg-gray-50">
+                      <tr key={s._id} className={`hover:bg-gray-50/80 transition-colors ${isChecked ? "bg-blue-50/20" : ""}`}>
+                        <td className="px-4 py-4 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedIds(prev => [...prev, s._id]);
+                              } else {
+                                setSelectedIds(prev => prev.filter(id => id !== s._id));
+                              }
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
                         <td className="px-6 py-4">
                           <div className="font-semibold text-gray-900">{s.name}</div>
                           <div className="text-xs text-gray-500">{s.email}</div>
@@ -292,11 +348,26 @@ export default function CertificateIssuancePage() {
                           <div className="text-gray-900 font-medium text-xs sm:text-sm">{s.college}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{s.branch} · {s.year}</div>
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-6 py-4 text-center space-y-1">
                           {cert ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                              Issued
-                            </span>
+                            <>
+                              <div>
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                  Issued
+                                </span>
+                              </div>
+                              <div>
+                                {cert.emailSent ? (
+                                  <span className="inline-flex items-center text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                                    ✓ Emailed
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center text-[10px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
+                                    Not Emailed
+                                  </span>
+                                )}
+                              </div>
+                            </>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                               Not Issued
@@ -306,7 +377,7 @@ export default function CertificateIssuancePage() {
                         <td className="px-6 py-4 text-right">
                           <button
                             onClick={() => openScorecardDrawer(s)}
-                            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors"
+                            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors shadow-sm"
                           >
                             {cert ? "Edit Scorecard / Reissue" : "Edit Scorecard / Issue"}
                           </button>

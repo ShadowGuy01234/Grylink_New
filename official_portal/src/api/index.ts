@@ -486,6 +486,15 @@ export const techpreneurApi = {
   saveCertificateTemplate: (data: any) => api.post("/techpreneur-v2/projects/certificates/templates", data),
   issueCertificate: (data: any) => api.post("/techpreneur-v2/projects/certificates/issue", data),
   bulkIssueCertificates: (data: any) => api.post("/techpreneur-v2/projects/certificates/issue-bulk", data),
+  sendCertificateEmails: (data: { studentIds: string[] }) => api.post("/techpreneur-v2/projects/certificates/send-emails", data),
+
+  // Joining Letters
+  getJoiningLetters: () => api.get("/techpreneur-v2/projects/joining-letters"),
+  getJoiningLetterTemplates: () => api.get("/techpreneur-v2/projects/joining-letters/templates"),
+  saveJoiningLetterTemplate: (data: any) => api.post("/techpreneur-v2/projects/joining-letters/templates", data),
+  issueJoiningLetter: (data: any) => api.post("/techpreneur-v2/projects/joining-letters/issue", data),
+  bulkIssueJoiningLetters: (data: any) => api.post("/techpreneur-v2/projects/joining-letters/issue-bulk", data),
+  sendJoiningLetterEmails: (data: { studentIds: string[] }) => api.post("/techpreneur-v2/projects/joining-letters/send-emails", data),
 
   // Promo Codes
   getPromoCodes: () => api.get("/techpreneur-v2/promocodes"),

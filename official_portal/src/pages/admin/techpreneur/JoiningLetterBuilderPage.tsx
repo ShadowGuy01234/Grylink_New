@@ -21,11 +21,12 @@ interface Template {
 }
 
 const DEFAULT_VARIABLES: TemplateVar[] = [
-  { name: "studentName", x: 50, y: 48, fontSize: 36, fontColor: "#1e293b", fontFamily: "Great Vibes" },
-  { name: "collegeName", x: 50, y: 58, fontSize: 20, fontColor: "#475569", fontFamily: "Outfit" },
-  { name: "certificateId", x: 18, y: 84, fontSize: 14, fontColor: "#64748b", fontFamily: "Courier Prime" },
-  { name: "issuedDate", x: 80, y: 84, fontSize: 14, fontColor: "#64748b", fontFamily: "Outfit" },
-  { name: "qrCode", x: 50, y: 72, fontSize: 80, fontColor: "#000000", fontFamily: "Inter" } // size is represented by fontSize here
+  { name: "studentName", x: 25, y: 35, fontSize: 18, fontColor: "#1e293b", fontFamily: "Outfit" },
+  { name: "collegeName", x: 25, y: 38, fontSize: 14, fontColor: "#475569", fontFamily: "Outfit" },
+  { name: "joiningLetterId", x: 75, y: 15, fontSize: 12, fontColor: "#64748b", fontFamily: "Courier Prime" },
+  { name: "joiningDate", x: 75, y: 18, fontSize: 12, fontColor: "#64748b", fontFamily: "Outfit" },
+  { name: "trackPreference", x: 45, y: 45, fontSize: 14, fontColor: "#0f172a", fontFamily: "Inter" },
+  { name: "qrCode", x: 80, y: 85, fontSize: 70, fontColor: "#000000", fontFamily: "Inter" }
 ];
 
 const FONTS = [
@@ -37,10 +38,10 @@ const FONTS = [
   { value: "Courier Prime", label: "Courier Prime (Typewriter)" }
 ];
 
-export default function CertificateBuilderPage() {
+export default function JoiningLetterBuilderPage() {
   const [template, setTemplate] = useState<Template>({
-    name: "TechPreneur 2026 Completion Template",
-    imageUrl: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?auto=format&fit=crop&q=80&w=1200",
+    name: "TechPreneur 2026 Selection & Joining Letter",
+    imageUrl: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&q=80&w=1200",
     variables: [...DEFAULT_VARIABLES],
     isActive: true
   });
@@ -52,7 +53,7 @@ export default function CertificateBuilderPage() {
 
   useEffect(() => {
     // Load existing active template if any
-    techpreneurApi.getCertificateTemplates()
+    techpreneurApi.getJoiningLetterTemplates()
       .then(res => {
         const templates = res.data.templates || [];
         const active = templates.find((t: any) => t.isActive) || templates[0];
@@ -71,7 +72,7 @@ export default function CertificateBuilderPage() {
   }, []);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || template.variables.length === 0) return;
     const rect = canvasRef.current.getBoundingClientRect();
     
     // Calculate click coordinates in relative percentages
@@ -94,16 +95,16 @@ export default function CertificateBuilderPage() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await techpreneurApi.saveCertificateTemplate({
+      await techpreneurApi.saveJoiningLetterTemplate({
         id: template._id,
         name: template.name,
         imageUrl: template.imageUrl,
         variables: template.variables,
         isActive: template.isActive
       });
-      alert("Certificate template saved successfully!");
+      alert("Joining Letter template saved successfully!");
     } catch (err: any) {
-      alert("Failed to save template: " + err.message);
+      alert("Failed to save template: " + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -129,7 +130,7 @@ export default function CertificateBuilderPage() {
       name,
       x: 50,
       y: 50,
-      fontSize: 16,
+      fontSize: 14,
       fontColor: "#1e293b",
       fontFamily: "Inter"
     };
@@ -137,19 +138,6 @@ export default function CertificateBuilderPage() {
     setTemplate(prev => ({ ...prev, variables: updatedVars }));
     setSelectedVarIndex(updatedVars.length - 1);
     setNewVarName("");
-  };
-
-  const handleDeleteSelectedVar = () => {
-    if (template.variables.length <= 1) {
-      alert("You must keep at least one variable on the certificate template.");
-      return;
-    }
-    const varToDelete = template.variables[selectedVarIndex];
-    if (window.confirm(`Are you sure you want to delete the variable "${varToDelete.name}"?`)) {
-      const updatedVars = template.variables.filter((_, i) => i !== selectedVarIndex);
-      setTemplate(prev => ({ ...prev, variables: updatedVars }));
-      setSelectedVarIndex(0);
-    }
   };
 
   if (fetching) {
@@ -171,8 +159,8 @@ export default function CertificateBuilderPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Certificate Template Builder</h1>
-            <p className="text-xs text-gray-500">Design the variable placements on the certificate layout</p>
+            <h1 className="text-xl font-bold text-gray-900">Joining Letter Template Builder</h1>
+            <p className="text-xs text-gray-500">Design variable placements on the onboarding selection letterhead</p>
           </div>
         </div>
         <button
@@ -202,13 +190,13 @@ export default function CertificateBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Background Image URL</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Background letterhead URL</label>
                 <input
                   type="url"
                   value={template.imageUrl}
                   onChange={e => setTemplate(p => ({ ...p, imageUrl: e.target.value }))}
                   className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Link to certificate background image"
+                  placeholder="Link to selection letter layout"
                 />
               </div>
             </div>
@@ -239,7 +227,7 @@ export default function CertificateBuilderPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (template.variables.length <= 1) {
-                        alert("You must keep at least one variable on the certificate template.");
+                        alert("You must keep at least one variable on the template.");
                         return;
                       }
                       if (window.confirm(`Are you sure you want to delete the variable "${v.name}"?`)) {
@@ -263,7 +251,7 @@ export default function CertificateBuilderPage() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="e.g. cohortName"
+                  placeholder="e.g. salaryCode"
                   value={newVarName}
                   onChange={e => setNewVarName(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))}
                   className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -277,14 +265,13 @@ export default function CertificateBuilderPage() {
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-[9px] text-gray-400 leading-tight">camelCase (alphanumeric only). Custom vars will look up DB values dynamically.</p>
+              <p className="text-[9px] text-gray-400 leading-tight">camelCase (alphanumeric only). Custom vars lookup DB values dynamically.</p>
             </div>
           </div>
 
           {selectedVar && (
             <div className="pt-6 border-t border-gray-100 space-y-4">
               <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-1">Variable Settings</h2>
-              <p className="text-[10px] text-gray-500 italic">Adjust sliders or click anywhere on the template preview to position the selected layer.</p>
               
               <div className="space-y-3">
                 {/* X Coordinate */}
@@ -365,15 +352,6 @@ export default function CertificateBuilderPage() {
                     </select>
                   </div>
                 )}
-                
-                {/* Delete Selected Variable */}
-                <button
-                  type="button"
-                  onClick={handleDeleteSelectedVar}
-                  className="w-full mt-4 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-semibold rounded-lg text-xs transition-colors"
-                >
-                  Delete Selected Variable
-                </button>
               </div>
             </div>
           )}
@@ -381,9 +359,9 @@ export default function CertificateBuilderPage() {
 
         {/* Right Side: Canva Visual Preview Canvas */}
         <div className="flex-1 p-6 flex items-center justify-center overflow-auto bg-gray-100">
-          <div className="max-w-4xl w-full">
+          <div className="max-w-3xl w-full">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 text-center flex items-center justify-center gap-1.5">
-              <Move className="w-3.5 h-3.5" /> Interactive Template Preview
+              <Move className="w-3.5 h-3.5" /> Letter Preview Canvas
             </h3>
             
             {/* Template Container */}
@@ -391,11 +369,11 @@ export default function CertificateBuilderPage() {
               ref={canvasRef}
               onClick={handleCanvasClick}
               className="relative bg-white shadow-lg border border-gray-300 rounded overflow-hidden select-none cursor-crosshair mx-auto"
-              style={{ aspectRatio: "16/10" }} // standard certificate ratio
+              style={{ aspectRatio: "1/1.414" }} // standard A4 portrait letterhead ratio
             >
               <img 
                 src={template.imageUrl} 
-                alt="Certificate template background" 
+                alt="Selection letter template background" 
                 className="w-full h-full object-fill pointer-events-none"
               />
 
@@ -420,8 +398,8 @@ export default function CertificateBuilderPage() {
                         isActive ? "border-blue-600 ring-2 ring-blue-500/20 z-20" : "border-gray-800 border-dashed"
                       }`}
                     >
-                      <div className="text-[18px]">🏁</div>
-                      <span>[QR Code]</span>
+                      <div className="text-[14px]">🏁</div>
+                      <span>[QR]</span>
                     </div>
                   );
                 }
@@ -433,7 +411,7 @@ export default function CertificateBuilderPage() {
                       position: "absolute",
                       left: `${v.x}%`,
                       top: `${v.y}%`,
-                      fontSize: `${v.fontSize * 0.8}px`, // scale down font sizes slightly for visual fit
+                      fontSize: `${v.fontSize * 0.8}px`,
                       color: v.fontColor,
                       fontFamily: v.fontFamily,
                       transform: "translate(-50%, -50%)",
@@ -444,15 +422,16 @@ export default function CertificateBuilderPage() {
                     }`}
                   >
                     {v.name === "studentName" && "John Doe"}
-                    {v.name === "collegeName" && "IIT Delhi (Campus Portal)"}
-                    {v.name === "certificateId" && "CERT-TP26-A8D3F9"}
-                    {v.name === "issuedDate" && "June 28, 2026"}
-                    {!["studentName", "collegeName", "certificateId", "issuedDate", "qrCode"].includes(v.name) && `[${v.name}]`}
+                    {v.name === "collegeName" && "IIT Bombay"}
+                    {v.name === "joiningLetterId" && "JL-TP26-A8D3F9"}
+                    {v.name === "joiningDate" && "July 12, 2026"}
+                    {v.name === "trackPreference" && "Full-Stack Web Track"}
+                    {!["studentName", "collegeName", "joiningLetterId", "joiningDate", "trackPreference", "qrCode"].includes(v.name) && `[${v.name}]`}
                   </div>
                 );
               })}
             </div>
-            <p className="text-[10px] text-gray-500 text-center mt-3">Click on any variable in the left pane, then click anywhere on the certificate template image to place it.</p>
+            <p className="text-[10px] text-gray-500 text-center mt-3">Click on any variable in the left pane, then click anywhere on the selection letter template background image to place it.</p>
           </div>
         </div>
       </div>

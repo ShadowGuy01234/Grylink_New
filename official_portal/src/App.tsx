@@ -24,6 +24,8 @@ import ChatbotAnalyticsPage from "./pages/ChatbotAnalyticsPage";
 import TechPreneurRegistrationsPage from "./pages/admin/TechPreneurRegistrationsPage";
 import CertificateBuilderPage from "./pages/admin/techpreneur/CertificateBuilderPage";
 import CertificateIssuancePage from "./pages/admin/techpreneur/CertificateIssuancePage";
+import JoiningLetterBuilderPage from "./pages/admin/techpreneur/JoiningLetterBuilderPage";
+import JoiningLetterIssuancePage from "./pages/admin/techpreneur/JoiningLetterIssuancePage";
 // Ops dedicated pages
 import EpcVerificationPage from "./pages/ops/EpcVerificationPage";
 import BillVerificationPage from "./pages/ops/BillVerificationPage";
@@ -296,6 +298,26 @@ const AppRoutes = () => {
           element={
             ["admin", "founder", "ops"].includes(user.role) ? (
               <CertificateIssuancePage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="admin/techpreneur/joining-letter-builder"
+          element={
+            ["admin", "founder", "ops"].includes(user.role) ? (
+              <JoiningLetterBuilderPage />
+            ) : (
+              <Navigate to={homeRoute} replace />
+            )
+          }
+        />
+        <Route
+          path="admin/techpreneur/joining-letters"
+          element={
+            ["admin", "founder", "ops"].includes(user.role) ? (
+              <JoiningLetterIssuancePage />
             ) : (
               <Navigate to={homeRoute} replace />
             )

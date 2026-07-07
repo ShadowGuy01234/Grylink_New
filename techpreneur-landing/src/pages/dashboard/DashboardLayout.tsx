@@ -1,7 +1,7 @@
 import { NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
 import { useStudentAuth } from "../../context/StudentAuthContext";
 import {
-  LayoutDashboard, Calendar, Video, Bell, FolderOpen, Gift, Award, LogOut, Menu, X
+  LayoutDashboard, Calendar, Video, Bell, FolderOpen, Gift, Award, LogOut, Menu, X, FileText
 } from "lucide-react";
 import { useState } from "react";
 
@@ -12,6 +12,7 @@ const navItems = [
   { to: "/dashboard/announcements", icon: Bell, label: "Announcements" },
   { to: "/dashboard/projects", icon: FolderOpen, label: "Projects" },
   { to: "/dashboard/referrals", icon: Gift, label: "Referral Rewards" },
+  { to: "/dashboard/joining-letter", icon: FileText, label: "Joining Letter" },
   { to: "/dashboard/certificate", icon: Award, label: "Certificate" },
 ];
 

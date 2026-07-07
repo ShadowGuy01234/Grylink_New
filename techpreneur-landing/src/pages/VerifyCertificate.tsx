@@ -55,6 +55,7 @@ export function VerifyCertificate() {
   const [searchId, setSearchId] = useState(certId || "");
   const [loading, setLoading] = useState(false);
   const [certificate, setCertificate] = useState<CertificateData | null>(null);
+  const [project, setProject] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export function VerifyCertificate() {
       handleVerify(certId);
     } else {
       setCertificate(null);
+      setProject(null);
       setError(null);
     }
   }, [certId]);
@@ -74,12 +76,14 @@ export function VerifyCertificate() {
       const data = await verifyCertificate(id.trim());
       if (data && data.certificate) {
         setCertificate(data.certificate);
+        setProject(data.project || null);
       } else {
         setError("Certificate not found.");
       }
     } catch (err: any) {
       setError(err.message || "Failed to verify certificate.");
       setCertificate(null);
+      setProject(null);
     } finally {
       setLoading(false);
     }
@@ -322,13 +326,16 @@ export function VerifyCertificate() {
               
               {/* Header Info */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-slate-800">
-                <div>
-                  <h2 className="text-lg font-bold text-white tracking-wide">
-                    STUDENT EFFORT REPORT & PERFORMANCE INDEX
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Program: TechPreneur 2026 (4-Week Intensive Startup Accelerator)
-                  </p>
+                <div className="flex items-center gap-3">
+                  <img src="/logo.png" alt="Gryork Consultants" className="h-10 w-auto object-contain bg-white/5 p-1.5 rounded border border-white/10" />
+                  <div>
+                    <h2 className="text-lg font-bold text-white tracking-wide">
+                      STUDENT PERFORMANCE SCORECARD
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Gryork Consultants · TechPreneur Accelerator 2026
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800/60 font-mono">
                   <Calendar className="w-3.5 h-3.5 text-blue-500" />
@@ -492,6 +499,86 @@ export function VerifyCertificate() {
                       <p className="text-xs text-slate-300 leading-relaxed">{certificate.efforts.projectContribution}</p>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Project Submissions Details Link Card */}
+              {project && (
+                <div className="space-y-4 pt-6 border-t border-slate-800">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest block">
+                    Incubated Startup Initiative: <span className="text-white normal-case">{project.teamName || "Project Showcase"}</span>
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {project.submissions?.day2?.prdUrl && (
+                      <a 
+                        href={project.submissions.day2.prdUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-4 py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+                      >
+                        📄 Product Requirements (PRD) ↗
+                      </a>
+                    )}
+                    {project.submissions?.day3?.githubUrl && (
+                      <a 
+                        href={project.submissions.day3.githubUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-4 py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+                      >
+                        💻 GitHub Code Repository ↗
+                      </a>
+                    )}
+                    {project.submissions?.day5?.mvpVideoUrl && (
+                      <a 
+                        href={project.submissions.day5.mvpVideoUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-4 py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+                      >
+                        🎥 Mid-Term MVP Demo ↗
+                      </a>
+                    )}
+                    {project.submissions?.day7?.finalPitchDeckUrl && (
+                      <a 
+                        href={project.submissions.day7.finalPitchDeckUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-4 py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+                      >
+                        📊 Investor Pitch Deck ↗
+                      </a>
+                    )}
+                    {project.submissions?.day7?.finalMvpUrl && (
+                      <a 
+                        href={project.submissions.day7.finalMvpUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-4 py-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+                      >
+                        🚀 Live MVP Deployment ↗
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Startup Incubator Curriculum Outline */}
+              <div className="space-y-4 pt-6 border-t border-slate-800">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest block">
+                  Startup Incubator Curriculum Outline
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800/60 space-y-2">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase">Week 1</span>
+                    <h4 className="text-xs font-semibold text-white">Market & Customer Discovery</h4>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">Ideation mechanics, identifying customer personas, validating pain points, and TAM/SAM/SOM sizing.</p>
+                  </div>
+                  <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800/60 space-y-2">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase">Week 2</span>
+                    <h4 className="text-xs font-semibold text-white">Value Prop & Specs (PRD)</h4>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">Mapping value propositions, drafting PRDs, and wireframe designs.</p>
+                  </div>
+                  <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800/60 space-y-2">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase">Week 3</span>
+                    <h4 className="text-xs font-semibold text-white">Architecture & Git Workflows</h4>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">Full-stack database models, modular project setup, and Git branching.</p>
+                  </div>
+                  <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800/60 space-y-2">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase">Week 4</span>
+                    <h4 className="text-xs font-semibold text-white">Revenue Models & Pitching</h4>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">Unit economics modeling, cost/revenue canvas design, pitch deck layouts, and pitching.</p>
+                  </div>
                 </div>
               </div>
 

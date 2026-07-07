@@ -13,7 +13,9 @@ import { AnnouncementsPage } from "./pages/dashboard/AnnouncementsPage";
 import { ProjectsPage } from "./pages/dashboard/ProjectsPage";
 import { ReferralsPage } from "./pages/dashboard/ReferralsPage";
 import { CertificatePage } from "./pages/dashboard/CertificatePage";
+import { JoiningLetterPage } from "./pages/dashboard/JoiningLetterPage";
 import { VerifyCertificate } from "./pages/VerifyCertificate";
+import { VerifyJoiningLetter } from "./pages/VerifyJoiningLetter";
 
 export default function App() {
   return (
@@ -27,6 +29,7 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/verify" element={<VerifyCertificate />} />
             <Route path="/verify-certificate/:certId" element={<VerifyCertificate />} />
+            <Route path="/verify-joining-letter/:letterId" element={<VerifyJoiningLetter />} />
           </Route>
 
           {/* Student auth */}
@@ -42,6 +45,7 @@ export default function App() {
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="referrals" element={<ReferralsPage />} />
             <Route path="certificate" element={<CertificatePage />} />
+            <Route path="joining-letter" element={<JoiningLetterPage />} />
           </Route>
 
           {/* Fallback */}
