@@ -95,12 +95,14 @@ export function JoiningLetterPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={handlePrint}
+          <a
+            href={`/download-joining-letter/${letter.joiningLetterId}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-pink-600 hover:bg-pink-500 text-xs font-semibold rounded-lg text-white transition-colors shadow-sm"
           >
-            <Printer className="w-3.5 h-3.5" /> Print / Save PDF
-          </button>
+            <Printer className="w-3.5 h-3.5" /> Download / Print Letter
+          </a>
           <a
             href={verificationUrl}
             target="_blank"

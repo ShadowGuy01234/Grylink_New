@@ -211,12 +211,14 @@ export function VerifyCertificate() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handlePrint}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold rounded-lg text-slate-200 transition-colors"
+              <a
+                href={`/download-certificate/${certificate.certificateId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-semibold rounded-lg text-slate-200 transition-colors shadow-sm"
               >
-                <Printer className="w-3.5 h-3.5" /> Print Certificate
-              </button>
+                <Printer className="w-3.5 h-3.5" /> Download / Print Certificate
+              </a>
             </div>
 
             {/* Certificate Print-only Container Helper */}

@@ -263,7 +263,7 @@ export default function JoiningLetterIssuancePage() {
                             <div className="mt-1 text-[11px] font-mono text-pink-600 font-semibold flex items-center gap-1.5">
                               <span>Ref: {letter.joiningLetterId}</span>
                               <a 
-                                href={`https://techpreneur.grylink.com/verify-joining-letter/${letter.joiningLetterId}`} 
+                                href={`https://training.gryork.com/verify-joining-letter/${letter.joiningLetterId}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
                                 className="hover:underline text-[10px] text-gray-400 font-normal"

@@ -164,12 +164,14 @@ export function CertificatePage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-xs font-semibold rounded-lg text-white transition-colors"
+          <a
+            href={`/download-certificate/${certificate.certificateId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-xs font-semibold rounded-lg text-white transition-colors shadow-sm"
           >
-            <Printer className="w-3.5 h-3.5" /> Print Certificate
-          </button>
+            <Printer className="w-3.5 h-3.5" /> Download / Print Certificate
+          </a>
           <a
             href={verificationUrl}
             target="_blank"

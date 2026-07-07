@@ -16,12 +16,18 @@ import { CertificatePage } from "./pages/dashboard/CertificatePage";
 import { JoiningLetterPage } from "./pages/dashboard/JoiningLetterPage";
 import { VerifyCertificate } from "./pages/VerifyCertificate";
 import { VerifyJoiningLetter } from "./pages/VerifyJoiningLetter";
+import { DownloadCertificatePage } from "./pages/DownloadCertificatePage";
+import { DownloadJoiningLetterPage } from "./pages/DownloadJoiningLetterPage";
 
 export default function App() {
   return (
     <StudentAuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Standalone clean print views */}
+          <Route path="/download-certificate/:certId" element={<DownloadCertificatePage />} />
+          <Route path="/download-joining-letter/:letterId" element={<DownloadJoiningLetterPage />} />
+
           {/* Public marketing pages */}
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />

@@ -162,12 +162,14 @@ export function VerifyJoiningLetter() {
                   <p className="text-slate-500 text-xs mt-0.5">Reference ID: {letter.joiningLetterId}</p>
                 </div>
               </div>
-              <button
-                onClick={handlePrint}
-                className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-pink-600 hover:bg-pink-500 text-xs font-semibold rounded-lg text-white transition-colors"
+              <a
+                href={`/download-joining-letter/${letter.joiningLetterId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-pink-600 hover:bg-pink-500 text-xs font-semibold rounded-lg text-white transition-colors text-center shadow-sm"
               >
-                <Printer className="w-3.5 h-3.5" /> Print Onboarding Document
-              </button>
+                <Printer className="w-3.5 h-3.5" /> Download / Print Letter
+              </a>
             </div>
 
             {/* Document Details Sheet */}

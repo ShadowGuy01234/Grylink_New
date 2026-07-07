@@ -19,6 +19,7 @@ const TechPreneurCertificateTemplate = require("../models/TechPreneurCertificate
 const TechPreneurJoiningLetter = require("../models/TechPreneurJoiningLetter");
 const TechPreneurJoiningLetterTemplate = require("../models/TechPreneurJoiningLetterTemplate");
 const emailService = require("../services/emailService");
+const PDFDocument = require("pdfkit");
 
 const TP_JWT_SECRET = process.env.TP_JWT_SECRET || process.env.JWT_SECRET || "tp_secret_change_me";
 
@@ -39,6 +40,133 @@ function generateReferralCode(name) {
   const prefix = name.replace(/[^a-zA-Z]/g, "").slice(0, 4).toUpperCase();
   const suffix = crypto.randomBytes(3).toString("hex").toUpperCase();
   return `${prefix}${suffix}`;
+}
+
+// ─── Helpers: PDF Generation using PDFKit ──────────────────────────────────────
+async function generateCertificatePDF(cert, template, verifyLink) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: [841.89, 595.28], margin: 0 });
+      const chunks = [];
+      doc.on("data", chunk => chunks.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", err => reject(err));
+
+      const bgResponse = await fetch(template.imageUrl);
+      if (!bgResponse.ok) throw new Error("Failed to fetch template background image");
+      const bgBuffer = Buffer.from(await bgResponse.arrayBuffer());
+
+      doc.image(bgBuffer, 0, 0, { width: 841.89, height: 595.28 });
+
+      const variables = template.variables || [];
+      for (const v of variables) {
+        const pdfX = (v.x / 100) * 841.89;
+        const pdfY = (v.y / 100) * 595.28;
+
+        if (v.name === "qrCode") {
+          const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyLink)}&color=000000&bgcolor=ffffff`;
+          const qrResponse = await fetch(qrCodeUrl);
+          if (qrResponse.ok) {
+            const qrBuffer = Buffer.from(await qrResponse.arrayBuffer());
+            const qrSize = (v.fontSize || 70) * (841.89 / 1000) * 1.5;
+            doc.image(qrBuffer, pdfX - qrSize / 2, pdfY - qrSize / 2, { width: qrSize, height: qrSize });
+          }
+          continue;
+        }
+
+        let val = "";
+        if (v.name === "studentName") val = cert.studentName;
+        else if (v.name === "collegeName") val = cert.college;
+        else if (v.name === "certificateId") val = cert.certificateId;
+        else if (v.name === "issuedDate") {
+          val = new Date(cert.issuedAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          });
+        } else if (v.name === "studentEmail") val = cert.studentEmail;
+        else if (v.name === "finalRemarks") val = cert.finalRemarks;
+        else if (v.name === "branch") val = cert.studentId?.branch || "";
+        else if (v.name === "year") val = cert.studentId?.year || "";
+        else if (v.name === "trackPreference" || v.name === "track") val = cert.studentId?.trackPreference || "";
+        else val = cert[v.name] || "";
+
+        const pdfFontSize = (v.fontSize || 24) * (841.89 / 1000) * 1.3;
+        doc.fillColor(v.fontColor || "#000000")
+           .fontSize(pdfFontSize);
+
+        const txtWidth = doc.widthOfString(val);
+        const txtHeight = pdfFontSize;
+        doc.text(val, pdfX - txtWidth / 2, pdfY - txtHeight / 2);
+      }
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+async function generateJoiningLetterPDF(letter, template, verifyLink) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: "A4", margin: 0 });
+      const chunks = [];
+      doc.on("data", chunk => chunks.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", err => reject(err));
+
+      const bgResponse = await fetch(template.imageUrl);
+      if (!bgResponse.ok) throw new Error("Failed to fetch template background image");
+      const bgBuffer = Buffer.from(await bgResponse.arrayBuffer());
+
+      doc.image(bgBuffer, 0, 0, { width: 595.28, height: 841.89 });
+
+      const variables = template.variables || [];
+      for (const v of variables) {
+        const pdfX = (v.x / 100) * 595.28;
+        const pdfY = (v.y / 100) * 841.89;
+
+        if (v.name === "qrCode") {
+          const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyLink)}&color=000000&bgcolor=ffffff`;
+          const qrResponse = await fetch(qrCodeUrl);
+          if (qrResponse.ok) {
+            const qrBuffer = Buffer.from(await qrResponse.arrayBuffer());
+            const qrSize = (v.fontSize || 70) * (595.28 / 1000) * 1.5;
+            doc.image(qrBuffer, pdfX - qrSize / 2, pdfY - qrSize / 2, { width: qrSize, height: qrSize });
+          }
+          continue;
+        }
+
+        let textContent = (letter.variablesData && letter.variablesData.get) ? letter.variablesData.get(v.name) : (letter.variablesData?.[v.name] || "");
+        if (v.name === "studentName") textContent = letter.studentName;
+        else if (v.name === "collegeName") textContent = letter.college;
+        else if (v.name === "joiningLetterId") textContent = letter.joiningLetterId;
+        else if (v.name === "joiningDate") {
+          textContent = new Date(letter.joiningDate).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+          });
+        } else if (v.name === "trackPreference") {
+          const studentReg = await TechPreneurRegistration.findById(letter.studentId);
+          textContent = studentReg?.trackPreference || studentReg?.track || "Track Cohort Access";
+        }
+
+        const pdfFontSize = (v.fontSize || 14) * (595.28 / 1000) * 1.3;
+        doc.fillColor(v.fontColor || "#1e293b")
+           .fontSize(pdfFontSize);
+
+        const txtWidth = doc.widthOfString(textContent);
+        const txtHeight = pdfFontSize;
+        doc.text(textContent, pdfX - txtWidth / 2, pdfY - txtHeight / 2);
+      }
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
 }
 
 // =============================================================================
@@ -1296,13 +1424,61 @@ router.post(
 
       const certificates = await TechPreneurCertificate.find({
         studentId: { $in: studentIds }
-      });
+      }).populate("templateId studentId");
 
       let count = 0;
       for (const cert of certificates) {
-        const domain = process.env.FRONTEND_URL || "https://techpreneur.grylink.com";
+        const domain = process.env.FRONTEND_URL || "https://training.gryork.com";
         const verifyLink = `${domain}/verify-certificate/${cert.certificateId}`;
         const dashboardLink = `${domain}/login`;
+
+        let attachments = [];
+        let certificateInlineHtml = "";
+
+        if (cert.templateId && cert.templateId.imageUrl) {
+          try {
+            const pdfBuffer = await generateCertificatePDF(cert, cert.templateId, verifyLink);
+            attachments.push({
+              filename: `TechPreneur_Certificate_${cert.certificateId}.pdf`,
+              content: pdfBuffer,
+              contentType: "application/pdf"
+            });
+
+            const variables = cert.templateId.variables || [];
+            certificateInlineHtml = `
+              <div style="position:relative; width:100%; max-width:600px; margin:20px auto; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+                <img src="${cert.templateId.imageUrl}" style="width:100%; display:block; border-radius:8px;" />
+                ${variables.map(v => {
+                  if (v.name === "qrCode") return "";
+                  let val = "";
+                  if (v.name === "studentName") val = cert.studentName;
+                  else if (v.name === "collegeName") val = cert.college;
+                  else if (v.name === "certificateId") val = cert.certificateId;
+                  else if (v.name === "issuedDate") {
+                    val = new Date(cert.issuedAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric"
+                    });
+                  } else if (v.name === "studentEmail") val = cert.studentEmail;
+                  else if (v.name === "finalRemarks") val = cert.finalRemarks;
+                  else if (v.name === "branch") val = cert.studentId?.branch || "";
+                  else if (v.name === "year") val = cert.studentId?.year || "";
+                  else if (v.name === "trackPreference" || v.name === "track") val = cert.studentId?.trackPreference || "";
+                  else val = cert[v.name] || "";
+
+                  return `
+                    <div style="position:absolute; left:${v.x}%; top:${v.y}%; font-size:${v.fontSize * 0.45}px; color:${v.fontColor || '#000000'}; font-family:${v.fontFamily || 'sans-serif'}; font-weight:bold; transform:translate(-50%, -50%); -webkit-transform:translate(-50%, -50%); text-align:center; white-space:nowrap;">
+                      ${val}
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            `;
+          } catch (pdfErr) {
+            console.error("Failed to generate PDF for certificate", cert.certificateId, pdfErr);
+          }
+        }
 
         const emailHtml = `
           <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;">
@@ -1311,6 +1487,9 @@ router.post(
               We are proud to share your official <strong>TechPreneur 2026 Completion Certificate & Scorecard Report</strong>. 
               You have successfully completed the 4-week industrial startup training and accelerator program.
             </p>
+            
+            ${certificateInlineHtml}
+
             <div style="background:#f8fafc;padding:15px;border-radius:12px;margin:20px 0;border:1px solid #f1f5f9;">
               <p style="margin:5px 0;font-size:13px;color:#64748b;"><strong>Certificate ID:</strong> <span style="font-family:monospace;color:#0f172a;font-weight:bold;">${cert.certificateId}</span></p>
               <p style="margin:5px 0;font-size:13px;color:#64748b;"><strong>College:</strong> <span style="color:#0f172a;">${cert.college}</span></p>
@@ -1327,7 +1506,12 @@ router.post(
           </div>
         `;
 
-        await emailService.sendEmail(cert.studentEmail, "Your TechPreneur 2026 Certificate & Performance Report", emailHtml);
+        await emailService.sendEmail(
+          cert.studentEmail, 
+          "Your TechPreneur 2026 Certificate & Performance Report", 
+          emailHtml,
+          attachments
+        );
         cert.emailSent = true;
         cert.emailSentAt = new Date();
         await cert.save();
@@ -1553,13 +1737,27 @@ router.post(
 
       const letters = await TechPreneurJoiningLetter.find({
         studentId: { $in: studentIds }
-      });
+      }).populate("templateId studentId");
 
       let count = 0;
       for (const letter of letters) {
-        const domain = process.env.FRONTEND_URL || "https://techpreneur.grylink.com";
+        const domain = process.env.FRONTEND_URL || "https://training.gryork.com";
         const verifyLink = `${domain}/verify-joining-letter/${letter.joiningLetterId}`;
         const dashboardLink = `${domain}/login`;
+
+        let attachments = [];
+        if (letter.templateId && letter.templateId.imageUrl) {
+          try {
+            const pdfBuffer = await generateJoiningLetterPDF(letter, letter.templateId, verifyLink);
+            attachments.push({
+              filename: `TechPreneur_Selection_Letter_${letter.joiningLetterId}.pdf`,
+              content: pdfBuffer,
+              contentType: "application/pdf"
+            });
+          } catch (pdfErr) {
+            console.error("Failed to generate PDF for selection letter", letter.joiningLetterId, pdfErr);
+          }
+        }
 
         const emailHtml = `
           <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;">
@@ -1586,7 +1784,12 @@ router.post(
           </div>
         `;
 
-        await emailService.sendEmail(letter.studentEmail, "Your TechPreneur Onboarding Joining Letter", emailHtml);
+        await emailService.sendEmail(
+          letter.studentEmail, 
+          "Your TechPreneur Onboarding Joining Letter", 
+          emailHtml, 
+          attachments
+        );
         letter.emailSent = true;
         letter.emailSentAt = new Date();
         await letter.save();

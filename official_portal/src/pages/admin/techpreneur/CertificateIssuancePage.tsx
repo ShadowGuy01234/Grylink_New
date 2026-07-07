@@ -334,7 +334,7 @@ export default function CertificateIssuancePage() {
                             <div className="mt-1 text-[11px] font-mono text-blue-600 font-semibold flex items-center gap-1.5">
                               <span>ID: {cert.certificateId}</span>
                               <a 
-                                href={`https://techpreneur.grylink.com/verify-certificate/${cert.certificateId}`} 
+                                href={`https://training.gryork.com/verify-certificate/${cert.certificateId}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
                                 className="hover:underline text-[10px] text-gray-400 font-normal"
