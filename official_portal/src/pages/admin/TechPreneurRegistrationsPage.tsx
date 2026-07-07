@@ -197,13 +197,13 @@ export default function TechPreneurRegistrationsPage() {
             to="/admin/techpreneur/certificate-builder"
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            🎨 Certificate Builder
+            Certificate Builder
           </Link>
           <Link
             to="/admin/techpreneur/certificates"
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            🎓 Issue Certificates
+            Issue Certificates
           </Link>
           <button
             onClick={() => { setShowManualModal(true); setManualError(null); setManualSuccess(null); }}
