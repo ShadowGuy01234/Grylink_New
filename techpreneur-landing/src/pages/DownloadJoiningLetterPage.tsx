@@ -84,7 +84,10 @@ export function DownloadJoiningLetterPage() {
       <div 
         id="printable-letter-container"
         className="w-full max-w-lg bg-white shadow-2xl rounded border border-gray-200 relative print:border-none print:shadow-none print:rounded-none"
-        style={{ aspectRatio: "1/1.414" }}
+        style={{ 
+          aspectRatio: "1/1.414",
+          containerType: "inline-size"
+        }}
       >
         {template.imageUrl ? (
           <img 
@@ -103,24 +106,20 @@ export function DownloadJoiningLetterPage() {
           if (v.name === "qrCode") {
             const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verificationUrl)}&color=000000&bgcolor=ffffff`;
             return (
-              <div
+              <img
                 key={v.name}
+                src={qrCodeUrl}
+                alt="Onboarding verification code"
                 style={{
                   position: "absolute",
                   left: `${v.x}%`,
                   top: `${v.y}%`,
-                  width: `${v.fontSize * 1.5}px`,
-                  height: `${v.fontSize * 1.5}px`,
+                  width: `calc(${v.fontSize} * 0.3cqi)`,
+                  height: `calc(${v.fontSize} * 0.3cqi)`,
                   transform: "translate(-50%, -50%)"
                 }}
                 className="bg-white p-0.5 border border-gray-200"
-              >
-                <img
-                  src={qrCodeUrl}
-                  alt="Onboarding verification code"
-                  className="w-full h-full object-contain"
-                />
-              </div>
+              />
             );
           }
 
@@ -147,7 +146,7 @@ export function DownloadJoiningLetterPage() {
                 position: "absolute",
                 left: `${v.x}%`,
                 top: `${v.y}%`,
-                fontSize: `${v.fontSize * 0.8}px`,
+                fontSize: `calc(${v.fontSize} * 0.16cqi)`,
                 color: v.fontColor || "#1e293b",
                 fontFamily: v.fontFamily || "Outfit",
                 transform: v.align === "left" 
@@ -168,6 +167,10 @@ export function DownloadJoiningLetterPage() {
 
       {/* CSS Print Styles */}
       <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 0;
+        }
         @media print {
           body, html {
             background-color: white !important;
@@ -182,11 +185,11 @@ export function DownloadJoiningLetterPage() {
             margin: 0 !important;
           }
           #printable-letter-container {
-            position: absolute !important;
+            position: fixed !important;
             left: 0 !important;
             top: 0 !important;
             width: 100vw !important;
-            height: 141.4vw !important;
+            height: 100vh !important;
             margin: 0 !important;
             padding: 0 !important;
             border: none !important;

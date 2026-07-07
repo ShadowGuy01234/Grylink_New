@@ -274,6 +274,10 @@ export function DownloadCertificatePage() {
 
       {/* CSS Print Styles */}
       <style>{`
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
         @media print {
           body, html {
             background-color: white !important;
@@ -288,11 +292,11 @@ export function DownloadCertificatePage() {
             margin: 0 !important;
           }
           #printable-certificate-container {
-            position: absolute !important;
+            position: fixed !important;
             left: 0 !important;
             top: 0 !important;
             width: 100vw !important;
-            height: 62.5vw !important;
+            height: 100vh !important;
             margin: 0 !important;
             padding: 0 !important;
             border: none !important;
