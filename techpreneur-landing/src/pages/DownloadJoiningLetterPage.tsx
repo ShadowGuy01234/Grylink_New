@@ -150,10 +150,15 @@ export function DownloadJoiningLetterPage() {
                 fontSize: `${v.fontSize * 0.8}px`,
                 color: v.fontColor || "#1e293b",
                 fontFamily: v.fontFamily || "Outfit",
-                transform: "translate(-50%, -50%)",
+                transform: v.align === "left" 
+                  ? "translateY(-50%)" 
+                  : v.align === "right" 
+                    ? "translate(-100%, -50%)" 
+                    : "translate(-50%, -50%)",
+                textAlign: v.align || "center",
                 whiteSpace: "nowrap"
               }}
-              className="font-medium text-center"
+              className={`font-medium ${v.align === "left" ? "text-left" : v.align === "right" ? "text-right" : "text-center"}`}
             >
               {val}
             </div>
@@ -171,6 +176,11 @@ export function DownloadJoiningLetterPage() {
             padding: 0 !important;
             overflow: hidden !important;
           }
+          #root, .min-h-screen {
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
           #printable-letter-container {
             position: absolute !important;
             left: 0 !important;
@@ -183,9 +193,6 @@ export function DownloadJoiningLetterPage() {
             box-shadow: none !important;
             background-color: white !important;
             z-index: 99999 !important;
-          }
-          body > :not(#printable-letter-container) {
-            display: none !important;
           }
         }
       `}</style>

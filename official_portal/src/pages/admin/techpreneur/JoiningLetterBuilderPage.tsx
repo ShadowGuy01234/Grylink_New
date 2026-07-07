@@ -10,6 +10,7 @@ interface TemplateVar {
   fontSize: number;
   fontColor: string;
   fontFamily: string;
+  align?: string;
 }
 
 interface Template {
@@ -21,12 +22,12 @@ interface Template {
 }
 
 const DEFAULT_VARIABLES: TemplateVar[] = [
-  { name: "studentName", x: 25, y: 35, fontSize: 18, fontColor: "#1e293b", fontFamily: "Outfit" },
-  { name: "collegeName", x: 25, y: 38, fontSize: 14, fontColor: "#475569", fontFamily: "Outfit" },
-  { name: "joiningLetterId", x: 75, y: 15, fontSize: 12, fontColor: "#64748b", fontFamily: "Courier Prime" },
-  { name: "joiningDate", x: 75, y: 18, fontSize: 12, fontColor: "#64748b", fontFamily: "Outfit" },
-  { name: "trackPreference", x: 45, y: 45, fontSize: 14, fontColor: "#0f172a", fontFamily: "Inter" },
-  { name: "qrCode", x: 80, y: 85, fontSize: 70, fontColor: "#000000", fontFamily: "Inter" }
+  { name: "studentName", x: 25, y: 35, fontSize: 18, fontColor: "#1e293b", fontFamily: "Outfit", align: "left" },
+  { name: "collegeName", x: 25, y: 38, fontSize: 14, fontColor: "#475569", fontFamily: "Outfit", align: "left" },
+  { name: "joiningLetterId", x: 75, y: 15, fontSize: 12, fontColor: "#64748b", fontFamily: "Courier Prime", align: "left" },
+  { name: "joiningDate", x: 75, y: 18, fontSize: 12, fontColor: "#64748b", fontFamily: "Outfit", align: "left" },
+  { name: "trackPreference", x: 45, y: 45, fontSize: 14, fontColor: "#0f172a", fontFamily: "Inter", align: "left" },
+  { name: "qrCode", x: 80, y: 85, fontSize: 70, fontColor: "#000000", fontFamily: "Inter", align: "center" }
 ];
 
 const FONTS = [
@@ -352,6 +353,22 @@ export default function JoiningLetterBuilderPage() {
                     </select>
                   </div>
                 )}
+
+                {/* Text Alignment */}
+                {selectedVar.name !== "qrCode" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Alignment</label>
+                    <select
+                      value={selectedVar.align || "center"}
+                      onChange={e => updateSelectedVar({ align: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="left">Left Align</option>
+                      <option value="center">Center Align</option>
+                      <option value="right">Right Align</option>
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -414,12 +431,17 @@ export default function JoiningLetterBuilderPage() {
                       fontSize: `${v.fontSize * 0.8}px`,
                       color: v.fontColor,
                       fontFamily: v.fontFamily,
-                      transform: "translate(-50%, -50%)",
+                      transform: v.align === "left" 
+                        ? "translateY(-50%)" 
+                        : v.align === "right" 
+                          ? "translate(-100%, -50%)" 
+                          : "translate(-50%, -50%)",
+                      textAlign: (v.align || "center") as any,
                       whiteSpace: "nowrap"
                     }}
                     className={`px-1.5 py-0.5 rounded ${
                       isActive ? "bg-blue-100/40 outline outline-2 outline-blue-500 z-20" : ""
-                    }`}
+                    } ${v.align === "left" ? "text-left" : v.align === "right" ? "text-right" : "text-center"}`}
                   >
                     {v.name === "studentName" && "John Doe"}
                     {v.name === "collegeName" && "IIT Bombay"}

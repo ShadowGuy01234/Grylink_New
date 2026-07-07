@@ -256,10 +256,15 @@ export function DownloadCertificatePage() {
                 fontSize: `calc(${v.fontSize} * 0.08cqi)`,
                 color: v.fontColor || "#000000",
                 fontFamily: v.fontFamily || "Inter",
-                transform: "translate(-50%, -50%)",
+                transform: v.align === "left" 
+                  ? "translateY(-50%)" 
+                  : v.align === "right" 
+                    ? "translate(-100%, -50%)" 
+                    : "translate(-50%, -50%)",
+                textAlign: v.align || "center",
                 whiteSpace: "nowrap"
               }}
-              className="font-bold text-center"
+              className={`font-bold ${v.align === "left" ? "text-left" : v.align === "right" ? "text-right" : "text-center"}`}
             >
               {val}
             </div>
@@ -277,6 +282,11 @@ export function DownloadCertificatePage() {
             padding: 0 !important;
             overflow: hidden !important;
           }
+          #root, .min-h-screen {
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
           #printable-certificate-container {
             position: absolute !important;
             left: 0 !important;
@@ -290,9 +300,6 @@ export function DownloadCertificatePage() {
             background-color: white !important;
             z-index: 99999 !important;
             container-type: inline-size !important;
-          }
-          body > :not(#printable-certificate-container) {
-            display: none !important;
           }
         }
       `}</style>

@@ -10,6 +10,7 @@ interface TemplateVar {
   fontSize: number;
   fontColor: string;
   fontFamily: string;
+  align?: string;
 }
 
 interface Template {
@@ -21,11 +22,11 @@ interface Template {
 }
 
 const DEFAULT_VARIABLES: TemplateVar[] = [
-  { name: "studentName", x: 50, y: 48, fontSize: 36, fontColor: "#1e293b", fontFamily: "Great Vibes" },
-  { name: "collegeName", x: 50, y: 58, fontSize: 20, fontColor: "#475569", fontFamily: "Outfit" },
-  { name: "certificateId", x: 18, y: 84, fontSize: 14, fontColor: "#64748b", fontFamily: "Courier Prime" },
-  { name: "issuedDate", x: 80, y: 84, fontSize: 14, fontColor: "#64748b", fontFamily: "Outfit" },
-  { name: "qrCode", x: 50, y: 72, fontSize: 80, fontColor: "#000000", fontFamily: "Inter" } // size is represented by fontSize here
+  { name: "studentName", x: 50, y: 48, fontSize: 36, fontColor: "#1e293b", fontFamily: "Great Vibes", align: "center" },
+  { name: "collegeName", x: 50, y: 58, fontSize: 20, fontColor: "#475569", fontFamily: "Outfit", align: "center" },
+  { name: "certificateId", x: 18, y: 84, fontSize: 14, fontColor: "#64748b", fontFamily: "Courier Prime", align: "center" },
+  { name: "issuedDate", x: 80, y: 84, fontSize: 14, fontColor: "#64748b", fontFamily: "Outfit", align: "center" },
+  { name: "qrCode", x: 50, y: 72, fontSize: 80, fontColor: "#000000", fontFamily: "Inter", align: "center" }
 ];
 
 const FONTS = [
@@ -365,6 +366,22 @@ export default function CertificateBuilderPage() {
                     </select>
                   </div>
                 )}
+
+                {/* Text Alignment */}
+                {selectedVar.name !== "qrCode" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Alignment</label>
+                    <select
+                      value={selectedVar.align || "center"}
+                      onChange={e => updateSelectedVar({ align: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="left">Left Align</option>
+                      <option value="center">Center Align</option>
+                      <option value="right">Right Align</option>
+                    </select>
+                  </div>
+                )}
                 
                 {/* Delete Selected Variable */}
                 <button
@@ -436,12 +453,17 @@ export default function CertificateBuilderPage() {
                       fontSize: `${v.fontSize * 0.8}px`, // scale down font sizes slightly for visual fit
                       color: v.fontColor,
                       fontFamily: v.fontFamily,
-                      transform: "translate(-50%, -50%)",
+                      transform: v.align === "left" 
+                        ? "translateY(-50%)" 
+                        : v.align === "right" 
+                          ? "translate(-100%, -50%)" 
+                          : "translate(-50%, -50%)",
+                      textAlign: (v.align || "center") as any,
                       whiteSpace: "nowrap"
                     }}
                     className={`px-1.5 py-0.5 rounded ${
                       isActive ? "bg-blue-100/40 outline outline-2 outline-blue-500 z-20" : ""
-                    }`}
+                    } ${v.align === "left" ? "text-left" : v.align === "right" ? "text-right" : "text-center"}`}
                   >
                     {v.name === "studentName" && "John Doe"}
                     {v.name === "collegeName" && "IIT Delhi (Campus Portal)"}

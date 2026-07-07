@@ -12,7 +12,8 @@ const techPreneurCertificateTemplateSchema = new mongoose.Schema(
         y: { type: Number, required: true }, // percentage from top
         fontSize: { type: Number, default: 24 },
         fontColor: { type: String, default: "#000000" },
-        fontFamily: { type: String, default: "Inter" }
+        fontFamily: { type: String, default: "Inter" },
+        align: { type: String, default: "center" }
       }
     ],
     isActive: { type: Boolean, default: false }

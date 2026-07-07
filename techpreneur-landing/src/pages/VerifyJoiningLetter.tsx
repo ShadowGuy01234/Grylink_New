@@ -282,10 +282,15 @@ export function VerifyJoiningLetter() {
                           fontSize: `${v.fontSize * 0.8}px`,
                           color: v.fontColor || "#1e293b",
                           fontFamily: v.fontFamily || "Outfit",
-                          transform: "translate(-50%, -50%)",
+                          transform: v.align === "left" 
+                            ? "translateY(-50%)" 
+                            : v.align === "right" 
+                              ? "translate(-100%, -50%)" 
+                              : "translate(-50%, -50%)",
+                          textAlign: v.align || "center",
                           whiteSpace: "nowrap"
                         }}
-                        className="font-semibold"
+                        className={`font-semibold ${v.align === "left" ? "text-left" : v.align === "right" ? "text-right" : "text-center"}`}
                       >
                         {textContent}
                       </div>

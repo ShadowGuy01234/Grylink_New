@@ -303,9 +303,15 @@ export function VerifyCertificate() {
                           fontSize: `calc(${v.fontSize} * 0.08cqi)`,
                           color: v.fontColor,
                           fontFamily: v.fontFamily,
-                          transform: "translate(-50%, -50%)",
+                          transform: v.align === "left" 
+                            ? "translateY(-50%)" 
+                            : v.align === "right" 
+                              ? "translate(-100%, -50%)" 
+                              : "translate(-50%, -50%)",
+                          textAlign: v.align || "center",
                           whiteSpace: "nowrap"
                         }}
+                        className={`font-semibold ${v.align === "left" ? "text-left" : v.align === "right" ? "text-right" : "text-center"}`}
                       >
                         {val}
                       </div>

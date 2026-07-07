@@ -97,7 +97,13 @@ async function generateCertificatePDF(cert, template, verifyLink) {
 
         const txtWidth = doc.widthOfString(val);
         const txtHeight = pdfFontSize;
-        doc.text(val, pdfX - txtWidth / 2, pdfY - txtHeight / 2);
+        let drawX = pdfX;
+        if (!v.align || v.align === "center") {
+          drawX = pdfX - txtWidth / 2;
+        } else if (v.align === "right") {
+          drawX = pdfX - txtWidth;
+        }
+        doc.text(val, drawX, pdfY - txtHeight / 2);
       }
 
       doc.end();
@@ -159,7 +165,13 @@ async function generateJoiningLetterPDF(letter, template, verifyLink) {
 
         const txtWidth = doc.widthOfString(textContent);
         const txtHeight = pdfFontSize;
-        doc.text(textContent, pdfX - txtWidth / 2, pdfY - txtHeight / 2);
+        let drawX = pdfX;
+        if (!v.align || v.align === "center") {
+          drawX = pdfX - txtWidth / 2;
+        } else if (v.align === "right") {
+          drawX = pdfX - txtWidth;
+        }
+        doc.text(textContent, drawX, pdfY - txtHeight / 2);
       }
 
       doc.end();
